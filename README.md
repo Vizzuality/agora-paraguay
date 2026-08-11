@@ -69,13 +69,17 @@ One build, two targets, both driven by Nitro. The preset comes from `NITRO_PRESE
 
 ### Vercel — current
 
-Set in the Vercel project:
+Configuration lives in `vercel.json`, so it is versioned rather than set by hand in the dashboard:
+framework `null`, `pnpm install --frozen-lockfile`, `pnpm build`, and `NITRO_PRESET=vercel` for the
+build step.
 
-- Framework preset: **Other**
-- Build command: `pnpm build`, output directory: `.output`
-- Environment variable: `NITRO_PRESET=vercel`
+With that preset Nitro emits the [Build Output API v3](https://vercel.com/docs/build-output-api/v3)
+layout at **`.vercel/output`** — _not_ `.output`. Vercel detects that directory automatically, so
+no output directory needs configuring. Confirm the build log reports the `vercel` preset rather
+than `node-server`.
 
-Confirm the build log reports the `vercel` preset and not `node-server`.
+Connecting the repo to a Vercel project is a one-time manual step (`vercel link`, or importing the
+repo in the dashboard).
 
 ### Docker — handover
 
@@ -126,3 +130,14 @@ Linting and formatting follow [ADR 001](https://github.com/Vizzuality/vizzuality
 
 CI runs typecheck, lint, format check, tests, the production build, and the Docker build on every
 pull request.
+
+## Releases
+
+[release-please](https://github.com/googleapis/release-please) keeps a release pull request open,
+accumulating commits since the last release. Merging it bumps the version in `package.json`, writes
+`CHANGELOG.md`, and tags the release.
+
+This only works if commit subjects follow
+[Conventional Commits](https://www.conventionalcommits.org/) — `fix:` produces a patch bump,
+`feat:` a minor one, and `feat!:` or a `BREAKING CHANGE:` footer a major one. A commit that does not
+parse contributes nothing to the changelog.
