@@ -114,6 +114,10 @@ on 2026-08-11.
 - **prek for git hooks, not Husky.** Husky is the Adopt-tier default and prek is Trial, so this is a
   deliberate exception following the `climate_risk_index_for_biodiversity` precedent. Do not install
   Husky alongside it: Husky sets `core.hooksPath=.husky`, which silently disables prek's hook.
+- **Node 24, not 26.** Vercel only offers `20.x`, `22.x` and `24.x`, and Node 26 is still in its
+  Current phase — it reaches LTS around October 2026, which is also when Vercel is expected to offer
+  it. Dependabot is configured to ignore major bumps of `node` and `@types/node` so local, CI,
+  Vercel and the container stay on the same major. Revisit in October.
 - **Native `queryOptions`**, not `query-key-factory` (Hold tier, unmaintained).
 - **Query data loads client-side after hydration.** SSR prefetch via
   `@tanstack/react-router-ssr-query` was deferred until there is a real API and real payload sizes.
