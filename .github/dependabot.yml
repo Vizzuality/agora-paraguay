@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # @types/node tracks the Node major we run on. Vercel only offers 20.x/22.x/24.x,
+    # so major bumps are a deliberate decision, not a routine update. Revisit when
+    # Node 26 reaches LTS and Vercel adds it.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       tanstack:
         patterns:
@@ -27,3 +33,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # Same reasoning as @types/node: the container must stay on the Node major that
+    # Vercel and CI run, so the environments do not diverge.
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
