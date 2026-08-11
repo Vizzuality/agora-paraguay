@@ -45,7 +45,7 @@ jobs:
 
       # The client's backend team deploys this image at handover. Building it on
       # every PR is what stops it rotting between now and then.
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           push: false
