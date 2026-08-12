@@ -15,8 +15,8 @@ export default defineConfig({
     include: ["src/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      // lcov is what SonarQube Cloud reads (see sonar-project.properties);
-      // text keeps the summary visible in CI logs.
+      // text-summary keeps the number visible in CI logs; lcov is the interchange
+      // format editors and coverage services read.
       reporter: ["text-summary", "lcov"],
       reportsDirectory: "coverage",
       include: ["src/**/*.ts", "src/**/*.tsx"],
