@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # SonarQube uses git history to assign new code to authors and dates.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
 
@@ -35,7 +38,26 @@ jobs:
 
       - run: pnpm format:check
 
-      - run: pnpm test
+      - run: pnpm test:coverage
+
+      # The scan runs in this job, not a separate one: it needs coverage/lcov.info
+      # from the step above, and jobs do not share a workspace.
+      - name: Check for SONAR_TOKEN
+        id: sonar_guard
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: echo "configured=${SONAR_TOKEN:+yes}" >> "$GITHUB_OUTPUT"
+
+      - name: SonarQube scan
+        if: steps.sonar_guard.outputs.configured == 'yes'
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Warn when SonarQube is not configured
+        if: steps.sonar_guard.outputs.configured != 'yes'
+        run: |
+          echo "::warning title=SonarQube not configured::SONAR_TOKEN is not set, so no analysis ran. The handbook requires SonarQube Cloud on open source projects."
 
   docker:
     name: Docker image builds
@@ -50,24 +72,3 @@ jobs:
           context: .
           push: false
           tags: agora-paraguay:ci
-
-  sonarqube:
-    name: SonarQube Cloud
-    runs-on: ubuntu-latest
-    needs: checks
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Check for SONAR_TOKEN
-        id: guard
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: echo "configured=${SONAR_TOKEN:+yes}" >> "$GITHUB_OUTPUT"
-
-      - name: SonarQube scan
-        if: steps.guard.outputs.configured == 'yes'
-        uses: SonarSource/sonarqube-scan-action@v8
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

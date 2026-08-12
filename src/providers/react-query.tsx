@@ -9,8 +9,8 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000,
-            // Retry policy stays deliberately dumb until there is a real API to
-            // classify errors from — 4xx handling belongs with the real client.
+            // Deliberately simple: classifying 4xx from 5xx belongs with the real
+            // API client, which owns the error shapes.
             retry: 1,
           },
         },
