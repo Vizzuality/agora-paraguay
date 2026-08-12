@@ -11,6 +11,11 @@ updates:
     ignore:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # The Terra Draw MapLibre adapter was published before MapLibre 6 existed, so
+      # its ">=4" peer range is not a claim of support. Drawing is the next phase.
+      # Revisit once that adapter ships a release tested against v6.
+      - dependency-name: "maplibre-gl"
+        update-types: ["version-update:semver-major"]
     groups:
       tanstack:
         patterns:
