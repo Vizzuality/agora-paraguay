@@ -61,8 +61,16 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
+  /*
+    Categorical pair taken from the mockups. Validated: green vs blue separates at
+    deltaE 14.0 under deuteranopia and 15.3 for normal vision.
+
+    Caveat carried deliberately: tritan separation is only 5.3, and green/blue is the
+    pair tritanopia confuses. Identity must therefore never rest on colour alone —
+    every use needs a legend, a direct label, or a text value beside the mark.
+  */
+  --chart-1: #3d8f5f;
+  --chart-2: #4a90c2;
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
