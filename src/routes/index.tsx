@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 
 import { MapView } from "@/components/map";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { placeholderQueries } from "@/lib/api/queries";
 
 export const Route = createFileRoute("/")({
@@ -13,7 +15,7 @@ function Home() {
     <main className="relative h-screen w-full">
       {/* MapLibre touches window and document at import time, so it must never run
           during SSR. The fallback keeps the layout stable while it loads. */}
-      <ClientOnly fallback={<div className="h-full w-full bg-gray-100" />}>
+      <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
         <MapView />
       </ClientOnly>
 
@@ -24,23 +26,30 @@ function Home() {
 
 /** Placeholder panel exercising the mock data path end to end. */
 function Panel() {
-  const { data, isPending, isError, error } = useQuery(placeholderQueries.all());
+  const { data, isPending, isError, error, refetch } = useQuery(placeholderQueries.all());
 
   return (
-    <aside className="absolute top-4 left-4 z-10 w-72 rounded-lg bg-white/95 p-4 shadow-lg backdrop-blur">
-      <h1 className="text-lg font-semibold">Ágora Paraguay</h1>
-      <p className="mt-1 text-xs text-gray-600">
-        Placeholder basemap. The client's vector tiles are not wired in.
-      </p>
+    <Card className="absolute top-4 left-4 z-10 w-80 gap-4 py-4">
+      <CardHeader className="px-4">
+        <CardTitle>Ágora Paraguay</CardTitle>
+        <CardDescription>
+          Placeholder basemap. The client's vector tiles are not wired in.
+        </CardDescription>
+      </CardHeader>
 
-      <section aria-live="polite" className="mt-3">
-        {isPending && <p className="text-sm text-gray-600">Loading…</p>}
+      <CardContent className="px-4" aria-live="polite">
+        {isPending && <p className="text-sm text-muted-foreground">Loading…</p>}
 
         {isError && (
-          <p className="text-sm text-red-700">Failed to load: {(error as Error).message}</p>
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-destructive">Failed to load: {(error as Error).message}</p>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          </div>
         )}
 
-        {data && data.length === 0 && <p className="text-sm text-gray-600">No data.</p>}
+        {data && data.length === 0 && <p className="text-sm text-muted-foreground">No data.</p>}
 
         {data && data.length > 0 && (
           <ul className="flex flex-col gap-1">
@@ -52,7 +61,7 @@ function Panel() {
             ))}
           </ul>
         )}
-      </section>
-    </aside>
+      </CardContent>
+    </Card>
   );
 }
