@@ -22,10 +22,7 @@ function Home() {
   );
 }
 
-/**
- * Temporary panel proving the mock data path still renders end to end.
- * Replaced once there are real indicators and a design to build to.
- */
+/** Placeholder panel exercising the mock data path end to end. */
 function Panel() {
   const { data, isPending, isError, error } = useQuery(placeholderQueries.all());
 
@@ -33,7 +30,7 @@ function Panel() {
     <aside className="absolute top-4 left-4 z-10 w-72 rounded-lg bg-white/95 p-4 shadow-lg backdrop-blur">
       <h1 className="text-lg font-semibold">Ágora Paraguay</h1>
       <p className="mt-1 text-xs text-gray-600">
-        Phase 1 shell. Basemap is a placeholder until the client's vector tiles are available.
+        Placeholder basemap. The client's vector tiles are not wired in.
       </p>
 
       <section aria-live="polite" className="mt-3">

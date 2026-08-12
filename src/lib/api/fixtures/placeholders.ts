@@ -1,5 +1,5 @@
 /**
- * Mock data for the placeholder model. See `../schemas.ts` — throwaway.
+ * Mock data for the placeholder model. See `../schemas.ts`.
  *
  * Nothing outside `src/lib/api/` may import this file. `client.ts` is the only
  * module that knows the data is fake; that is what makes the swap to the real API

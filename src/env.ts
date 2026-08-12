@@ -17,7 +17,7 @@ export const env = createEnv({
 
     /**
      * Basemap style URL. Defaults to a keyless public style so the map works with no
-     * setup; replace with the client's tile endpoint when it exists.
+     * setup. Point this at the client's tile endpoint to override.
      */
     VITE_BASEMAP_STYLE_URL: z
       .url()

@@ -30,8 +30,8 @@ describe("placeholderSchema", () => {
 });
 
 describe("fixtures", () => {
-  // The fixtures are the app's only data source right now. If they drift from the
-  // schema, every downstream assumption drifts with them silently.
+  // The fixtures are the app's only data source. If they drift from the schema,
+  // every downstream assumption drifts with them silently.
   it("conform to the schema", () => {
     expect(() => placeholderListSchema.parse(placeholderFixtures)).not.toThrow();
   });
