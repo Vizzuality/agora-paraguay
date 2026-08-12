@@ -11,8 +11,9 @@ import { z } from "zod";
  */
 export const placeholderSchema = z.object({
   id: z.string().min(1),
-  label: z.string().min(1),
+  title: z.string().min(1),
   value: z.number(),
+  description: z.string().min(1),
 });
 
 export type Placeholder = z.infer<typeof placeholderSchema>;
