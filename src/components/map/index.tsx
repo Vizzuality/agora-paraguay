@@ -6,6 +6,7 @@ import Map, {
   type ViewStateChangeEvent,
 } from "react-map-gl/maplibre";
 
+import { DrawControl } from "@/components/map/draw-control";
 import { BASEMAP_STYLE_URL, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/basemap";
 import { normalizeViewState } from "@/lib/map/view-state";
 
@@ -59,6 +60,7 @@ export function MapView({ children }: { children?: ReactNode }) {
     >
       <NavigationControl position="top-right" showCompass={false} />
       <ScaleControl position="bottom-right" />
+      <DrawControl />
       {children}
     </Map>
   );
