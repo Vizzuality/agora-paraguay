@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { placeholderFixtures, placeholderEmptyFixture } from "./fixtures/placeholders";
-import { placeholderListSchema, placeholderSchema } from "./schemas";
+import { placeholderFixtures, placeholderEmptyFixture } from "@/lib/api/fixtures/placeholders";
+import { placeholderListSchema, placeholderSchema } from "@/lib/api/schemas";
 
 describe("placeholderSchema", () => {
   it("accepts a well-formed record", () => {

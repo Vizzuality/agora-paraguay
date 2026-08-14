@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { fetchPlaceholders } from "./client";
-import { placeholderListSchema } from "./schemas";
+import { fetchPlaceholders } from "@/lib/api/client";
+import { placeholderListSchema } from "@/lib/api/schemas";
 
 describe("fetchPlaceholders", () => {
   it("returns data that satisfies the schema", async () => {

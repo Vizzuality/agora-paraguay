@@ -21,20 +21,44 @@ pnpm dev            # http://localhost:3000
 
 ## Scripts
 
-| Script              | What it does                                            |
-| ------------------- | ------------------------------------------------------- |
-| `pnpm dev`          | Dev server on port 3000                                 |
-| `pnpm build`        | Production build into `.output`                         |
-| `pnpm start`        | Runs the built server (`node .output/server/index.mjs`) |
-| `pnpm test`         | Vitest, single run                                      |
-| `pnpm test:watch`   | Vitest, watch mode                                      |
-| `pnpm typecheck`    | `tsc --noEmit`                                          |
-| `pnpm lint`         | oxlint                                                  |
-| `pnpm format`       | oxfmt, writes                                           |
-| `pnpm format:check` | oxfmt, check only (what CI runs)                        |
+| Script                 | What it does                                            |
+| ---------------------- | ------------------------------------------------------- |
+| `pnpm dev`             | Dev server on port 3000                                 |
+| `pnpm build`           | Production build into `.output`                         |
+| `pnpm start`           | Runs the built server (`node .output/server/index.mjs`) |
+| `pnpm test`            | Unit tests (Vitest), single run                         |
+| `pnpm test:unit`       | Same as `pnpm test`                                     |
+| `pnpm test:unit:watch` | Unit tests, watch mode                                  |
+| `pnpm test:coverage`   | Unit tests with coverage into `coverage/`               |
+| `pnpm test:e2e`        | End-to-end tests (Playwright)                           |
+| `pnpm test:e2e:ui`     | Playwright UI mode                                      |
+| `pnpm typecheck`       | `tsc --noEmit`                                          |
+| `pnpm lint`            | oxlint                                                  |
+| `pnpm format`          | oxfmt, writes                                           |
+| `pnpm format:check`    | oxfmt, check only (what CI runs)                        |
 
 `pnpm build` generates `src/routeTree.gen.ts`, which `typecheck` and `lint` both need. On a fresh
 clone, build before either.
+
+## Tests
+
+Tests live outside `src`, split by kind:
+
+```
+tests/
+  unit/   # Vitest, node environment — mirrors the src/ path of what it covers
+  e2e/    # Playwright, real browser against the dev server
+```
+
+Unit tests cover pure logic (schemas, the mock client, map view and draw state); component
+tests would need jsdom + testing-library, which is not set up. End-to-end specs drive the
+real UI and stub the basemap style, so they need no network.
+
+First run of `pnpm test:e2e` on a machine needs the browser once:
+
+```bash
+pnpm exec playwright install chromium
+```
 
 ## Data layer
 
@@ -132,8 +156,8 @@ Linting and formatting follow [ADR 001](https://github.com/Vizzuality/vizzuality
 — **oxlint and oxfmt**, not ESLint or Prettier. `prek` installs the pre-commit hooks via
 `pnpm install`.
 
-CI runs typecheck, lint, format check, tests, the production build, and the Docker build on every
-pull request.
+CI runs typecheck, lint, format check, unit tests, end-to-end tests, the production build, and the
+Docker build on every pull request.
 
 ## Releases
 
