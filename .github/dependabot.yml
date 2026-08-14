@@ -11,6 +11,11 @@ updates:
     ignore:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # MapLibre 6 was tried and reverted: the basemap style never finishes loading,
+      # so the map renders blank. Nothing in CI catches it — types, lint, tests and
+      # the build all pass. Revisit with a browser, not a green pipeline.
+      - dependency-name: "maplibre-gl"
+        update-types: ["version-update:semver-major"]
     groups:
       tanstack:
         patterns:

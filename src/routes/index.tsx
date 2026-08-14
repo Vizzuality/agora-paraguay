@@ -3,6 +3,7 @@ import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { MapView } from "@/components/map";
+import { DrawControls } from "@/components/map/draw-controls";
 import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +21,9 @@ function Home() {
       <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
         <MapView />
       </ClientOnly>
+
+      {/* Outside the map: the drawn geometry is global state, not map-scoped. */}
+      <DrawControls />
 
       <Panel />
     </main>
