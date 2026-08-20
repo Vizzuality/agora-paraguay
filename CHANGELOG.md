@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.2.0...v0.3.0) (2026-08-20)
+
+
+### Features
+
+* add shadcn/ui foundation ([#17](https://github.com/Vizzuality/agora-paraguay/issues/17)) ([166155d](https://github.com/Vizzuality/agora-paraguay/commit/166155d9037b5b3204790eed98ff3575f698ae2f))
+* match widget cards to the design ([#20](https://github.com/Vizzuality/agora-paraguay/issues/20)) ([4100281](https://github.com/Vizzuality/agora-paraguay/commit/4100281133c302927d9fc2ab43d1db5eabef1eee))
+
 ## [0.2.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.1.0...v0.2.0) (2026-08-12)
 
 
