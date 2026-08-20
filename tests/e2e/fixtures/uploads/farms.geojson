@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-59.4, -24.4],
+              [-59.4, -22.4],
+              [-57.4, -22.4],
+              [-57.4, -24.4],
+              [-59.4, -24.4]
+            ]
+          ],
+          [
+            [
+              [-56.9, -24.0],
+              [-56.9, -23.0],
+              [-55.9, -23.0],
+              [-55.9, -24.0],
+              [-56.9, -24.0]
+            ]
+          ]
+        ]
+      },
+      "properties": { "name": "Estancia Norte" }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-59.0, -26.0],
+            [-59.0, -25.0],
+            [-58.0, -25.0],
+            [-58.0, -26.0],
+            [-59.0, -26.0]
+          ]
+        ]
+      },
+      "properties": { "name": "Campo Sur" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-57.0, -26.5] },
+      "properties": { "name": "Casa" }
+    }
+  ]
+}

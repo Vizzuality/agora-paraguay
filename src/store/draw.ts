@@ -1,32 +1,19 @@
 import { atom } from "jotai";
-import { atomWithReducer } from "jotai/utils";
 import type { GeoJSONStoreFeatures, TerraDraw } from "terra-draw";
 
 import { drawnPolygons, type FeatureId } from "@/lib/map/draw-features";
-import {
-  drawReducer,
-  INITIAL_DRAW_STATE,
-  terraDrawMode,
-  type DrawTool,
-} from "@/lib/map/draw-state";
+import { terraDrawMode, type DrawTool } from "@/lib/map/draw-state";
+import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
 
 /**
- * The drawn areas of interest, as global state.
+ * Drawing and editing the areas of interest, as global state.
  *
  * The Terra Draw instance can only be created inside `<Map>` — it needs the MapLibre map
  * from react-map-gl's context — but the geometry has to be readable from the controls,
  * the panel, and eventually whatever queries the API with the drawn areas. Atoms in a
  * module put it where all of them can reach it without threading a provider through the
- * tree.
- *
- * These live on Jotai's default store, which is shared per module rather than per render
- * tree. That is safe here only because nothing writes to it during SSR: the state is
- * seeded by `bindDrawAtom`, which runs in an effect on the client.
+ * tree. (SSR caveats live on `draw-core.ts`.)
  */
-const drawStateAtom = atomWithReducer(INITIAL_DRAW_STATE, drawReducer);
-
-/** The instance itself. Written by `bindDrawAtom`, read only by the command atoms. */
-const drawInstanceAtom = atom<TerraDraw | null>(null);
 
 /** The whole control state, for the cluster that renders every button at once. */
 export const drawAtom = atom((get) => get(drawStateAtom));

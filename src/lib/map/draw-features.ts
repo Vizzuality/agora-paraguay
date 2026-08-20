@@ -32,3 +32,14 @@ export function isDrawnPolygon(feature: GeoJSONStoreFeatures): feature is DrawnP
 export function drawnPolygons(snapshot: GeoJSONStoreFeatures[]): DrawnPolygon[] {
   return snapshot.filter(isDrawnPolygon);
 }
+
+/**
+ * Display name for the polygon list. Uploaded polygons carry `properties.name` from
+ * their source file (set in `src/lib/upload/normalize.ts`); hand-drawn ones have no
+ * name, so they fall back to their 1-based position in the list.
+ */
+export function polygonName(polygon: DrawnPolygon, index: number): string {
+  const { name } = polygon.properties;
+
+  return typeof name === "string" && name.trim() !== "" ? name : `Drawn area ${index + 1}`;
+}

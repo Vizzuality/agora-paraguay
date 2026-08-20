@@ -14,6 +14,12 @@ export type DrawState = {
   polygons: DrawnPolygon[];
   /** Selection is single: Terra Draw's select mode holds one feature at a time. */
   selectedId: FeatureId | null;
+  /**
+   * The polygon picked for analysis — app-owned, unlike `selectedId`, which Terra Draw
+   * owns and which only lives while the edit tool is active. Picking a farm to analyse
+   * must not require entering edit mode, where drags mutate geometry.
+   */
+  analysisId: FeatureId | null;
 };
 
 export type DrawAction =
@@ -22,13 +28,16 @@ export type DrawAction =
   | { type: "tool"; tool: DrawTool | null }
   | { type: "geometry"; polygons: DrawnPolygon[] }
   | { type: "selected"; id: FeatureId }
-  | { type: "deselected"; id: FeatureId };
+  | { type: "deselected"; id: FeatureId }
+  | { type: "analysisSelected"; id: FeatureId }
+  | { type: "analysisCleared" };
 
 export const INITIAL_DRAW_STATE: DrawState = {
   bound: false,
   tool: null,
   polygons: [],
   selectedId: null,
+  analysisId: null,
 };
 
 export function drawReducer(state: DrawState, action: DrawAction): DrawState {
@@ -54,9 +63,12 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
         ...state,
         polygons: action.polygons,
         // A selection outliving the polygon it points at would leave Delete enabled with
-        // nothing to delete.
+        // nothing to delete — and an analysis selection would highlight nothing.
         selectedId: action.polygons.some((polygon) => polygon.id === state.selectedId)
           ? state.selectedId
+          : null,
+        analysisId: action.polygons.some((polygon) => polygon.id === state.analysisId)
+          ? state.analysisId
           : null,
       };
 
@@ -67,6 +79,14 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
       // A late deselect for a feature that is already gone must not clear a newer
       // selection.
       return state.selectedId === action.id ? { ...state, selectedId: null } : state;
+
+    // Unlike `selectedId`, the analysis selection survives tool changes: it is not tied
+    // to any Terra Draw mode.
+    case "analysisSelected":
+      return { ...state, analysisId: action.id };
+
+    case "analysisCleared":
+      return { ...state, analysisId: null };
   }
 }
 

@@ -15,10 +15,14 @@ import {
   reportDeselectedAtom,
   reportGeometryAtom,
   reportSelectedAtom,
-} from "@/lib/map/draw-atoms";
+} from "@/store/draw";
 
 /**
  * Binds Terra Draw to the MapLibre instance rendered by react-map-gl.
+ *
+ * Terra Draw, its MapLibre adapter and react-map-gl all touch the DOM at import time,
+ * so nothing here may be pulled into a server render — the map renders inside
+ * `<ClientOnly>` (see `src/routes/index.tsx`).
  *
  * Terra Draw is imperative and framework-agnostic, so the lifecycle is ours to own:
  * it must start after the style has loaded, because the adapter installs its own
@@ -28,8 +32,8 @@ import {
  * the mode effect below would run once against a null instance and never again —
  * leaving the map in `static` mode with the control showing as on.
  *
- * The drawn geometry itself lives in the atoms in `draw-atoms.ts`, because the controls
- * and the panel that read it are outside this subtree.
+ * The drawn geometry itself lives in the atoms in `src/store/draw.ts`, because the
+ * controls and the panel that read it are outside this subtree.
  */
 export function useTerraDraw() {
   const { current: mapRef } = useMap();

@@ -6,6 +6,7 @@ import Map, {
   type ViewStateChangeEvent,
 } from "react-map-gl/maplibre";
 
+import { AnalysisHighlight } from "@/components/map/analysis-highlight";
 import { DrawLayer } from "@/components/map/draw-layer";
 import { BASEMAP_STYLE_URL, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/basemap";
 import { normalizeViewState } from "@/lib/map/view-state";
@@ -61,6 +62,7 @@ export function MapView({ children }: { children?: ReactNode }) {
       <NavigationControl position="top-right" showCompass={false} />
       <ScaleControl position="bottom-right" />
       <DrawLayer />
+      <AnalysisHighlight />
       {children}
     </Map>
   );

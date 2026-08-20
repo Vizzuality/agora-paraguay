@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Farms</name>
+    <Placemark>
+      <name>Estancia KML</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -59.2,-24.2,0 -59.2,-22.6,0 -57.6,-22.6,0 -57.6,-24.2,0 -59.2,-24.2,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Campo KML</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -57.0,-25.8,0 -57.0,-25.0,0 -56.2,-25.0,0 -56.2,-25.8,0 -57.0,-25.8,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

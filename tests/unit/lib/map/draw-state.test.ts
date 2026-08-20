@@ -69,6 +69,33 @@ describe("drawReducer", () => {
   });
 });
 
+describe("analysis selection", () => {
+  const analysing: DrawState = { ...drawn, analysisId: first.id };
+
+  it("selects and clears the analysis polygon", () => {
+    expect(drawReducer(drawn, { type: "analysisSelected", id: first.id }).analysisId).toBe(
+      first.id,
+    );
+    expect(drawReducer(analysing, { type: "analysisCleared" }).analysisId).toBeNull();
+  });
+
+  it("survives tool changes, unlike the edit selection", () => {
+    expect(drawReducer(analysing, { type: "tool", tool: "draw" }).analysisId).toBe(first.id);
+    expect(drawReducer(analysing, { type: "tool", tool: null }).analysisId).toBe(first.id);
+  });
+
+  it("is pruned when its polygon leaves the store", () => {
+    expect(drawReducer(analysing, { type: "geometry", polygons: [first] }).analysisId).toBe(
+      first.id,
+    );
+    expect(drawReducer(analysing, { type: "geometry", polygons: [second] }).analysisId).toBeNull();
+  });
+
+  it("resets on unbind with everything else", () => {
+    expect(drawReducer(analysing, { type: "unbound" }).analysisId).toBeNull();
+  });
+});
+
 describe("terraDrawMode", () => {
   it("is static until the instance is bound", () => {
     expect(terraDrawMode({ ...INITIAL_DRAW_STATE, tool: "draw" })).toBe("static");

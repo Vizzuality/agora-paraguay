@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { MapView } from "@/components/map";
 import { DrawControls } from "@/components/map/draw-controls";
+import { PolygonList } from "@/components/map/polygon-list";
 import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -22,8 +23,13 @@ function Home() {
         <MapView />
       </ClientOnly>
 
-      {/* Outside the map: the drawn geometry is global state, not map-scoped. */}
-      <DrawControls />
+      {/* Outside the map — the drawn geometry is global state, not map-scoped — but
+          still client-only: the controls are inert until Terra Draw has started, and
+          keeping them off the server keeps the atom store out of a shared module-level
+          store that every SSR request would see. */}
+      <ClientOnly>
+        <DrawControls />
+      </ClientOnly>
 
       <Panel />
     </main>
@@ -42,6 +48,11 @@ function Panel() {
           Placeholder basemap. The client's vector tiles are not wired in.
         </p>
       </header>
+
+      {/* Client-only for the same reason as the controls: it reads the draw atoms. */}
+      <ClientOnly>
+        <PolygonList />
+      </ClientOnly>
 
       <section aria-live="polite" className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
