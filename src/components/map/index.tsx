@@ -1,3 +1,5 @@
+import { setWorkerUrl } from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { parseAsFloat, useQueryStates } from "nuqs";
 import { useCallback, type ReactNode } from "react";
 import Map, {
@@ -12,6 +14,18 @@ import { BASEMAP_STYLE_URL, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/bas
 import { normalizeViewState } from "@/lib/map/view-state";
 
 import "maplibre-gl/dist/maplibre-gl.css";
+
+/**
+ * MapLibre v6 locates its render worker with `new URL("maplibre-gl-worker.mjs",
+ * import.meta.url)` at runtime — a URL no bundler can rewrite: Vite's dev pre-bundle
+ * and the production build both leave it pointing at a file that is never served, the
+ * worker request 404s, the style never finishes loading and the map renders blank
+ * (the v6 upgrade was reverted once over exactly this, in 875e865).
+ *
+ * `?worker&url` makes Vite compile the worker and its imports into a chunk of its own
+ * and hand back its URL, in dev and build alike; `setWorkerUrl` points MapLibre at it.
+ */
+setWorkerUrl(maplibreWorkerUrl);
 
 /**
  * The camera lives in the URL, so a view is shareable and survives a reload.
