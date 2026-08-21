@@ -23,12 +23,12 @@ const DRAWN_POLYGON = [
 
 function controls(page: Page) {
   return {
-    upload: page.getByRole("button", { name: "Upload areas" }),
+    upload: page.getByRole("button", { name: "Subir áreas" }),
     input: page.locator('input[type="file"]'),
-    edit: page.getByRole("button", { name: "Select and edit areas" }),
-    remove: page.getByRole("button", { name: "Delete the selected area" }),
-    status: page.getByRole("group", { name: "Drawing tools" }).locator("p"),
-    notices: page.getByRole("region", { name: "Upload notices" }),
+    edit: page.getByRole("button", { name: "Seleccionar y editar áreas" }),
+    remove: page.getByRole("button", { name: "Eliminar el área seleccionada" }),
+    status: page.getByRole("group", { name: "Herramientas de dibujo" }).locator("p"),
+    notices: page.getByRole("region", { name: "Avisos de subida" }),
   };
 }
 
@@ -55,15 +55,15 @@ test("imports a GeoJSON upload, exploding its MultiPolygon", async ({ page }) =>
 
   await upload(page, "farms.geojson");
 
-  await expect(status).toHaveText("3 areas drawn. Imported 3 areas from farms.geojson.");
+  await expect(status).toHaveText("3 áreas dibujadas. Se importaron 3 áreas de farms.geojson.");
 
   // The MultiPolygon became two named parts; the lone point became a warning.
   await expect(areaButton(page, "Estancia Norte (1/2)")).toBeVisible();
   await expect(areaButton(page, "Estancia Norte (2/2)")).toBeVisible();
   await expect(areaButton(page, "Campo Sur")).toBeVisible();
-  await expect(notices).toContainText("Skipped 1 non-polygon feature.");
+  await expect(notices).toContainText("Se omitió 1 entidad que no es un polígono.");
 
-  // The first polygon is auto-selected for analysis.
+  // The first polygon is auto-selected for the analysis highlight.
   await expect(areaButton(page, "Estancia Norte (1/2)")).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -76,20 +76,24 @@ test("switches the analysis selection from the list", async ({ page }) => {
   await expect(areaButton(page, "Estancia Norte (1/2)")).toHaveAttribute("aria-pressed", "false");
 });
 
-test("a new upload replaces the uploaded polygons and keeps the drawn ones", async ({ page }) => {
+// Both replacements at once: an upload clears the drawn polygons, and the next upload
+// clears the previous one.
+test("an upload replaces everything already on the map", async ({ page }) => {
   const { status } = controls(page);
 
-  await upload(page, "farms.geojson");
-  await expect(status).toContainText("3 areas drawn.");
-
-  await page.getByRole("button", { name: "Draw an area" }).click();
+  await page.getByRole("button", { name: "Dibujar un área" }).click();
   await drawPolygon(page, DRAWN_POLYGON);
-  await expect(status).toContainText("4 areas drawn.");
+  await expect(status).toContainText("1 área dibujada.");
+
+  await upload(page, "farms.geojson");
+
+  await expect(status).toHaveText("3 áreas dibujadas. Se importaron 3 áreas de farms.geojson.");
+  await expect(areaButton(page, "Área dibujada 1")).toBeHidden();
+  await expect(areaButton(page, "Campo Sur")).toBeVisible();
 
   await upload(page, "farms.kml");
 
-  await expect(status).toHaveText("3 areas drawn. Imported 2 areas from farms.kml.");
-  await expect(areaButton(page, "Drawn area 1")).toBeVisible();
+  await expect(status).toHaveText("2 áreas dibujadas. Se importaron 2 áreas de farms.kml.");
   await expect(areaButton(page, "Estancia KML")).toBeVisible();
   await expect(areaButton(page, "Campo KML")).toBeVisible();
   await expect(areaButton(page, "Campo Sur")).toBeHidden();
@@ -106,7 +110,7 @@ test("uploaded polygons are editable: select and delete one", async ({ page }) =
 
   await remove.click();
 
-  await expect(status).toContainText("2 areas drawn.");
+  await expect(status).toContainText("2 áreas dibujadas.");
   await expect(areaButton(page, "Estancia Norte (1/2)")).toBeHidden();
 });
 
@@ -115,7 +119,7 @@ test("imports a KMZ with names from the KML inside", async ({ page }) => {
 
   await upload(page, "farms.kmz");
 
-  await expect(status).toHaveText("2 areas drawn. Imported 2 areas from farms.kmz.");
+  await expect(status).toHaveText("2 áreas dibujadas. Se importaron 2 áreas de farms.kmz.");
   await expect(areaButton(page, "Estancia KML")).toBeVisible();
   await expect(areaButton(page, "Campo KML")).toBeVisible();
 });
@@ -125,7 +129,7 @@ test("imports a UTM 21S shapefile, reprojected via its .prj", async ({ page }) =
 
   await upload(page, "farms-utm21s.zip");
 
-  await expect(status).toHaveText("2 areas drawn. Imported 2 areas from farms-utm21s.zip.");
+  await expect(status).toHaveText("2 áreas dibujadas. Se importaron 2 áreas de farms-utm21s.zip.");
   await expect(areaButton(page, "Estancia San Pedro")).toBeVisible();
   await expect(areaButton(page, "Campo Verde")).toBeVisible();
 });
@@ -135,11 +139,11 @@ test("skips holed polygons with a warning naming them", async ({ page }) => {
 
   await upload(page, "farms-holes.geojson");
 
-  await expect(status).toHaveText("1 area drawn. Imported 1 area from farms-holes.geojson.");
-  await expect(notices).toContainText('"Laguna Grande" has interior rings (holes)');
+  await expect(status).toHaveText("1 área dibujada. Se importó 1 área de farms-holes.geojson.");
+  await expect(notices).toContainText('"Laguna Grande" tiene anillos interiores (huecos)');
   await expect(areaButton(page, "Potrero")).toBeVisible();
 
-  await notices.getByRole("button", { name: "Dismiss upload notices" }).click();
+  await notices.getByRole("button", { name: "Descartar los avisos de subida" }).click();
   await expect(notices).toBeHidden();
 });
 
@@ -147,12 +151,14 @@ test("a failed upload keeps the polygons already on the map", async ({ page }) =
   const { status, notices } = controls(page);
 
   await upload(page, "farms.geojson");
-  await expect(status).toContainText("3 areas drawn.");
+  await expect(status).toContainText("3 áreas dibujadas.");
 
   await upload(page, "points.geojson");
 
-  await expect(notices).toContainText("The file contains no importable polygons — found 2 points.");
-  await expect(status).toContainText("3 areas drawn.");
+  await expect(notices).toContainText(
+    "El archivo no contiene polígonos importables — se encontraron 2 puntos.",
+  );
+  await expect(status).toContainText("3 áreas dibujadas.");
   await expect(areaButton(page, "Campo Sur")).toBeVisible();
 });
 
@@ -161,7 +167,7 @@ test("rejects a corrupt zip with a readable error", async ({ page }) => {
 
   await upload(page, "corrupt.zip");
 
-  await expect(notices).toContainText("The file could not be read as a zip archive.");
+  await expect(notices).toContainText("No se pudo leer el archivo como archivo zip.");
 });
 
 // Uploads live in the same in-memory store as drawn polygons, and only the camera is
@@ -170,11 +176,11 @@ test("loses the upload on reload", async ({ page }) => {
   const { status } = controls(page);
 
   await upload(page, "farms.geojson");
-  await expect(status).toContainText("3 areas drawn.");
+  await expect(status).toContainText("3 áreas dibujadas.");
 
   await page.reload();
 
   await expect(controls(page).upload).toBeEnabled();
-  await expect(controls(page).status).toHaveText("No areas drawn.");
+  await expect(controls(page).status).toHaveText("No hay áreas dibujadas.");
   await expect(areaButton(page, "Campo Sur")).toBeHidden();
 });

@@ -21,11 +21,11 @@ const SECOND_POLYGON = [
 
 function controls(page: Page) {
   return {
-    draw: page.getByRole("button", { name: "Draw an area" }),
-    edit: page.getByRole("button", { name: "Select and edit areas" }),
-    remove: page.getByRole("button", { name: "Delete the selected area" }),
-    clear: page.getByRole("button", { name: "Delete all areas" }),
-    status: page.getByRole("group", { name: "Drawing tools" }).locator("p"),
+    draw: page.getByRole("button", { name: "Dibujar un área" }),
+    edit: page.getByRole("button", { name: "Seleccionar y editar áreas" }),
+    remove: page.getByRole("button", { name: "Eliminar el área seleccionada" }),
+    clear: page.getByRole("button", { name: "Eliminar todas las áreas" }),
+    status: page.getByRole("group", { name: "Herramientas de dibujo" }).locator("p"),
   };
 }
 
@@ -42,7 +42,7 @@ test.beforeEach(async ({ page }) => {
 test("starts with nothing drawn and only drawing available", async ({ page }) => {
   const { edit, remove, clear, status } = controls(page);
 
-  await expect(status).toHaveText("No areas drawn.");
+  await expect(status).toHaveText("No hay áreas dibujadas.");
   await expect(edit).toBeDisabled();
   await expect(remove).toBeDisabled();
   await expect(clear).toBeDisabled();
@@ -53,12 +53,12 @@ test("draws several polygons without leaving draw mode", async ({ page }) => {
 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await expect(status).toHaveText("1 area drawn.");
+  await expect(status).toHaveText("1 área dibujada.");
 
   // Still armed: the second polygon needs no trip back to the toolbar.
   await expect(draw).toHaveAttribute("aria-pressed", "true");
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(status).toHaveText("2 areas drawn.");
+  await expect(status).toHaveText("2 áreas dibujadas.");
 
   await expect(edit).toBeEnabled();
   await expect(clear).toBeEnabled();
@@ -70,7 +70,7 @@ test("deletes one selected polygon and keeps the rest", async ({ page }) => {
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(status).toHaveText("2 areas drawn.");
+  await expect(status).toHaveText("2 áreas dibujadas.");
 
   await edit.click();
   await expect(remove).toBeDisabled();
@@ -80,7 +80,7 @@ test("deletes one selected polygon and keeps the rest", async ({ page }) => {
   await expect(remove).toBeEnabled();
 
   await remove.click();
-  await expect(status).toHaveText("1 area drawn.");
+  await expect(status).toHaveText("1 área dibujada.");
   await expect(remove).toBeDisabled();
 });
 
@@ -90,12 +90,29 @@ test("clears every polygon at once", async ({ page }) => {
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(status).toHaveText("2 areas drawn.");
+  await expect(status).toHaveText("2 áreas dibujadas.");
 
   await clear.click();
-  await expect(status).toHaveText("No areas drawn.");
+  await expect(status).toHaveText("No hay áreas dibujadas.");
   await expect(clear).toBeDisabled();
   await expect(edit).toBeDisabled();
+});
+
+// Activating the draw tool starts a session from scratch: whatever was on the map goes.
+test("reactivating draw clears the previous session", async ({ page }) => {
+  const { draw, status } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await expect(status).toHaveText("1 área dibujada.");
+
+  // Toggling off keeps the polygon; toggling back on clears it.
+  await draw.click();
+  await expect(status).toHaveText("1 área dibujada.");
+
+  await draw.click();
+  await expect(draw).toHaveAttribute("aria-pressed", "true");
+  await expect(status).toHaveText("No hay áreas dibujadas.");
 });
 
 // The geometry is in-memory global state by design: only the camera is persisted, and it
@@ -105,10 +122,10 @@ test("loses the drawing on reload", async ({ page }) => {
 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await expect(status).toHaveText("1 area drawn.");
+  await expect(status).toHaveText("1 área dibujada.");
 
   await page.reload();
 
   await expect(controls(page).draw).toBeEnabled();
-  await expect(controls(page).status).toHaveText("No areas drawn.");
+  await expect(controls(page).status).toHaveText("No hay áreas dibujadas.");
 });

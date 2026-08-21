@@ -41,5 +41,5 @@ export function drawnPolygons(snapshot: GeoJSONStoreFeatures[]): DrawnPolygon[] 
 export function polygonName(polygon: DrawnPolygon, index: number): string {
   const { name } = polygon.properties;
 
-  return typeof name === "string" && name.trim() !== "" ? name : `Drawn area ${index + 1}`;
+  return typeof name === "string" && name.trim() !== "" ? name : `Área dibujada ${index + 1}`;
 }

@@ -3,6 +3,7 @@ import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { MapView } from "@/components/map";
+import { AnalyzeButton } from "@/components/map/analyze-button";
 import { DrawControls } from "@/components/map/draw-controls";
 import { PolygonList } from "@/components/map/polygon-list";
 import { StatCard } from "@/components/stat-card";
@@ -45,32 +46,33 @@ function Panel() {
       <header>
         <h1 className="text-lg font-semibold">Ágora Paraguay</h1>
         <p className="text-xs text-muted-foreground">
-          Placeholder basemap. The client's vector tiles are not wired in.
+          Mapa base provisional. Las teselas vectoriales del cliente no están conectadas.
         </p>
       </header>
 
       {/* Client-only for the same reason as the controls: it reads the draw atoms. */}
       <ClientOnly>
         <PolygonList />
+        <AnalyzeButton />
       </ClientOnly>
 
       <section aria-live="polite" className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Placeholder layers
+          Capas provisionales
         </h2>
 
-        {isPending && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {isPending && <p className="text-sm text-muted-foreground">Cargando…</p>}
 
         {isError && (
           <div className="flex flex-col items-start gap-2">
-            <p className="text-sm text-destructive">Failed to load: {(error as Error).message}</p>
+            <p className="text-sm text-destructive">Error al cargar: {(error as Error).message}</p>
             <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
+              Reintentar
             </Button>
           </div>
         )}
 
-        {data && data.length === 0 && <p className="text-sm text-muted-foreground">No data.</p>}
+        {data && data.length === 0 && <p className="text-sm text-muted-foreground">Sin datos.</p>}
 
         {data?.map((item, index) => (
           <LayerCard
@@ -92,13 +94,13 @@ function LayerCard({ label, value, hue }: Readonly<{ label: string; value: numbe
     <StatCard
       label={label}
       value={`${value}%`}
-      caption="of all parcels"
+      caption="de todas las parcelas"
       meter={{ value, color: hue }}
       action={
         <Switch
           checked={visible}
           onCheckedChange={setVisible}
-          aria-label={`Show ${label} on the map`}
+          aria-label={`Mostrar ${label} en el mapa`}
         />
       }
     />

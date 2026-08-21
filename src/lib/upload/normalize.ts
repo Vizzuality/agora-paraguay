@@ -44,7 +44,7 @@ export function normalizeUnknown(value: unknown, description: string): ParseOutc
   const parsed = uploadGeoJsonSchema.safeParse(value);
 
   if (!parsed.success) {
-    throw new UploadError("unreadable", `The file could not be read as ${description}.`);
+    throw new UploadError("unreadable", `No se pudo leer el archivo como ${description}.`);
   }
 
   return normalizeFeatures(parsed.data);
@@ -54,7 +54,7 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
   const inputs = toFeatureInputs(root);
 
   if (inputs.length === 0) {
-    throw new UploadError("empty", "The file contains no features.");
+    throw new UploadError("empty", "El archivo no contiene entidades.");
   }
 
   const features: UploadFeature[] = [];
@@ -68,7 +68,7 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
 
     if (parts.length === 0) continue;
 
-    const name = featureName(input.properties) ?? `Polygon ${++unnamed}`;
+    const name = featureName(input.properties) ?? `Polígono ${++unnamed}`;
 
     parts.forEach((rings, index) => {
       // MultiPolygon parts become independent polygons (user-confirmed): the suffix is
@@ -81,7 +81,7 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
           featureName: partName,
           // Skipped rather than stripped: silently deleting interior rings would
           // inflate the farm's area for any future analysis.
-          message: `"${partName}" has interior rings (holes) and was skipped — remove them in the source data.`,
+          message: `"${partName}" tiene anillos interiores (huecos) y se omitió — hay que eliminarlos en los datos de origen.`,
         });
         return;
       }
@@ -104,7 +104,7 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
   if (outOfRange) {
     throw new UploadError(
       "bad-crs",
-      "Coordinates are not longitude/latitude — the file's coordinate system could not be read.",
+      "Las coordenadas no son longitud/latitud — no se pudo leer el sistema de coordenadas del archivo.",
     );
   }
 
@@ -116,7 +116,10 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
 
   if (nonPolygons > 0) {
     warnings.push({
-      message: `Skipped ${nonPolygons} non-polygon feature${nonPolygons === 1 ? "" : "s"}.`,
+      message:
+        nonPolygons === 1
+          ? "Se omitió 1 entidad que no es un polígono."
+          : `Se omitieron ${nonPolygons} entidades que no son polígonos.`,
     });
   }
 
@@ -206,13 +209,15 @@ function closeRing(ring: LngLat[]): LngLat[] {
 function noPolygonsMessage(skipped: SkipCounts, holed: number): string {
   const found: string[] = [];
 
-  if (holed > 0) found.push(`${holed} polygon${holed === 1 ? "" : "s"} with holes`);
-  if (skipped.points > 0) found.push(`${skipped.points} point${skipped.points === 1 ? "" : "s"}`);
-  if (skipped.lines > 0) found.push(`${skipped.lines} line${skipped.lines === 1 ? "" : "s"}`);
+  if (holed > 0) found.push(`${holed} polígono${holed === 1 ? "" : "s"} con huecos`);
+  if (skipped.points > 0) found.push(`${skipped.points} punto${skipped.points === 1 ? "" : "s"}`);
+  if (skipped.lines > 0) found.push(`${skipped.lines} línea${skipped.lines === 1 ? "" : "s"}`);
   if (skipped.nested > 0)
-    found.push(`${skipped.nested} nested collection${skipped.nested === 1 ? "" : "s"}`);
+    found.push(
+      `${skipped.nested} colección${skipped.nested === 1 ? "" : "es"} anidada${skipped.nested === 1 ? "" : "s"}`,
+    );
 
   return found.length > 0
-    ? `The file contains no importable polygons — found ${found.join(", ")}.`
-    : "The file contains no importable polygons.";
+    ? `El archivo no contiene polígonos importables — se encontraron ${found.join(", ")}.`
+    : "El archivo no contiene polígonos importables.";
 }

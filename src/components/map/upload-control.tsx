@@ -35,7 +35,7 @@ export function UploadControl() {
 
       uploadFeatures({ fileName: file.name, outcome });
     } catch (error) {
-      const message = error instanceof UploadError ? error.message : "The file could not be read.";
+      const message = error instanceof UploadError ? error.message : "No se pudo leer el archivo.";
 
       setUploadResult({ fileName: file.name, accepted: 0, warnings: [], error: message });
     }
@@ -48,8 +48,8 @@ export function UploadControl() {
         size="icon"
         onClick={() => inputRef.current?.click()}
         disabled={!draw.bound}
-        aria-label="Upload areas"
-        title="Upload areas"
+        aria-label="Subir áreas"
+        title="Subir áreas"
       >
         <Upload />
       </Button>

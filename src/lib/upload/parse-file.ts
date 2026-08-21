@@ -19,7 +19,7 @@ export async function parseUploadFile(file: File): Promise<ParseOutcome> {
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new UploadError(
       "too-large",
-      `The file is larger than ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`,
+      `El archivo supera los ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`,
     );
   }
 
@@ -42,7 +42,7 @@ export async function parseUploadFile(file: File): Promise<ParseOutcome> {
     default:
       throw new UploadError(
         "unsupported-type",
-        "Unsupported file type. Upload a zipped shapefile (.zip), KML/KMZ, or GeoJSON.",
+        "Tipo de archivo no compatible. Sube un shapefile comprimido (.zip), KML/KMZ o GeoJSON.",
       );
   }
 }

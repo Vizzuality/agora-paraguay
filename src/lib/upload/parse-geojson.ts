@@ -12,7 +12,7 @@ export function parseGeoJson(text: string): ParseOutcome {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new UploadError("unreadable", "The file could not be read as GeoJSON.");
+    throw new UploadError("unreadable", "No se pudo leer el archivo como GeoJSON.");
   }
 
   return normalizeUnknown(raw, "GeoJSON");

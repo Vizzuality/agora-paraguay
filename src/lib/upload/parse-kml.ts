@@ -16,7 +16,7 @@ export async function parseKmlText(text: string): Promise<ParseOutcome> {
 
   // DOMParser reports XML errors as a document containing <parsererror>, not by throwing.
   if (doc.getElementsByTagName("parsererror").length > 0) {
-    throw new UploadError("unreadable", "The file could not be read as KML.");
+    throw new UploadError("unreadable", "No se pudo leer el archivo como KML.");
   }
 
   return normalizeUnknown(kml(doc), "KML");
@@ -30,7 +30,7 @@ export async function parseKmz(buffer: ArrayBuffer): Promise<ParseOutcome> {
   try {
     entries = unzipSync(new Uint8Array(buffer));
   } catch {
-    throw new UploadError("unreadable", "The file could not be read as a KMZ archive.");
+    throw new UploadError("unreadable", "No se pudo leer el archivo como archivo KMZ.");
   }
 
   const kmlNames = Object.keys(entries).filter((name) => name.toLowerCase().endsWith(".kml"));
@@ -38,14 +38,14 @@ export async function parseKmz(buffer: ArrayBuffer): Promise<ParseOutcome> {
   const chosen = kmlNames.find((name) => name.toLowerCase() === "doc.kml") ?? kmlNames[0];
 
   if (chosen === undefined) {
-    throw new UploadError("unreadable", "The KMZ archive contains no KML document.");
+    throw new UploadError("unreadable", "El archivo KMZ no contiene ningún documento KML.");
   }
 
   const outcome = await parseKmlText(new TextDecoder().decode(entries[chosen]));
 
   if (kmlNames.length > 1) {
     outcome.warnings.push({
-      message: `The KMZ contains ${kmlNames.length} KML documents; only "${chosen}" was read.`,
+      message: `El KMZ contiene ${kmlNames.length} documentos KML; solo se leyó "${chosen}".`,
     });
   }
 

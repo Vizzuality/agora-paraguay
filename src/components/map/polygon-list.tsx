@@ -22,7 +22,7 @@ export function PolygonList() {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-        Areas of interest
+        Áreas de interés
       </h2>
 
       <ul className="flex flex-col gap-1">

@@ -4,6 +4,7 @@ import type { GeoJSONStoreFeatures, TerraDraw } from "terra-draw";
 import { drawnPolygons, type FeatureId } from "@/lib/map/draw-features";
 import { terraDrawMode, type DrawTool } from "@/lib/map/draw-state";
 import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
+import { uploadResultAtom } from "@/store/upload";
 
 /**
  * Drawing and editing the areas of interest, as global state.
@@ -32,6 +33,27 @@ export const drawModeAtom = atom((get) => terraDrawMode(get(drawStateAtom)));
 
 export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => {
   set(drawStateAtom, { type: "tool", tool });
+});
+
+/**
+ * Activates the draw tool. A drawing session starts from scratch: every polygon on the
+ * map — hand-drawn and uploaded — is cleared first. (The reducer's `geometry` action
+ * prunes `selectedId` and `analysisId` with the polygons, so the highlight goes too.)
+ */
+export const startDrawAtom = atom(null, (get, set) => {
+  const draw = get(drawInstanceAtom);
+
+  if (!draw?.enabled) return;
+
+  if (get(drawStateAtom).polygons.length > 0) {
+    draw.clear();
+    // `clear()` does not surface as a `change` event, so report it by hand.
+    set(drawStateAtom, { type: "geometry", polygons: [] });
+  }
+
+  // A stale "Imported N areas" notice must not outlive the areas it counted.
+  set(uploadResultAtom, null);
+  set(drawStateAtom, { type: "tool", tool: "draw" });
 });
 
 /** Called with the started instance, and with `null` when it is torn down. */

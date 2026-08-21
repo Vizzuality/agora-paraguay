@@ -7,7 +7,13 @@ import { Toggle } from "@/components/ui/toggle";
 import { canClear, canDelete, canEdit } from "@/lib/map/draw-state";
 import type { UploadResult } from "@/lib/upload/types";
 import { cn } from "@/lib/utils";
-import { clearDrawAtom, deleteSelectedAtom, drawAtom, setDrawToolAtom } from "@/store/draw";
+import {
+  clearDrawAtom,
+  deleteSelectedAtom,
+  drawAtom,
+  setDrawToolAtom,
+  startDrawAtom,
+} from "@/store/draw";
 import { uploadResultAtom } from "@/store/upload";
 
 /** How many upload warnings are shown before collapsing into "and N more". */
@@ -26,6 +32,7 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
   const draw = useAtomValue(drawAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
   const setTool = useSetAtom(setDrawToolAtom);
+  const startDraw = useSetAtom(startDrawAtom);
   const deleteSelected = useSetAtom(deleteSelectedAtom);
   const clear = useSetAtom(clearDrawAtom);
 
@@ -37,14 +44,15 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
           className,
         )}
       >
-        <legend className="sr-only">Drawing tools</legend>
+        <legend className="sr-only">Herramientas de dibujo</legend>
 
         <Toggle
           pressed={draw.tool === "draw"}
-          onPressedChange={(pressed) => setTool(pressed ? "draw" : null)}
+          // Activation clears the map — a draw session always starts from scratch.
+          onPressedChange={(pressed) => (pressed ? startDraw() : setTool(null))}
           disabled={!draw.bound}
-          aria-label="Draw an area"
-          title="Draw an area"
+          aria-label="Dibujar un área"
+          title="Dibujar un área"
         >
           <PenTool />
         </Toggle>
@@ -53,8 +61,8 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
           pressed={draw.tool === "edit"}
           onPressedChange={(pressed) => setTool(pressed ? "edit" : null)}
           disabled={!canEdit(draw)}
-          aria-label="Select and edit areas"
-          title="Select and edit areas"
+          aria-label="Seleccionar y editar áreas"
+          title="Seleccionar y editar áreas"
         >
           <MousePointer2 />
         </Toggle>
@@ -70,8 +78,8 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
           size="icon"
           onClick={deleteSelected}
           disabled={!canDelete(draw)}
-          aria-label="Delete the selected area"
-          title="Delete the selected area"
+          aria-label="Eliminar el área seleccionada"
+          title="Eliminar el área seleccionada"
         >
           <Trash2 />
         </Button>
@@ -81,8 +89,8 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
           size="icon"
           onClick={clear}
           disabled={!canClear(draw)}
-          aria-label="Delete all areas"
-          title="Delete all areas"
+          aria-label="Eliminar todas las áreas"
+          title="Eliminar todas las áreas"
         >
           <Eraser />
         </Button>
@@ -101,15 +109,17 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
 }
 
 function drawnStatus(count: number): string {
-  if (count === 0) return "No areas drawn.";
+  if (count === 0) return "No hay áreas dibujadas.";
 
-  return `${count} ${count === 1 ? "area" : "areas"} drawn.`;
+  return count === 1 ? "1 área dibujada." : `${count} áreas dibujadas.`;
 }
 
 function uploadStatus(result: UploadResult): string {
-  if (result.error !== null) return `Upload failed: ${result.error}`;
+  if (result.error !== null) return `Error al subir: ${result.error}`;
 
-  return `Imported ${result.accepted} ${result.accepted === 1 ? "area" : "areas"} from ${result.fileName}.`;
+  return result.accepted === 1
+    ? `Se importó 1 área de ${result.fileName}.`
+    : `Se importaron ${result.accepted} áreas de ${result.fileName}.`;
 }
 
 /** The visible counterpart of the live region: upload errors and per-polygon warnings. */
@@ -125,19 +135,19 @@ function UploadNotices() {
 
   return (
     <section
-      aria-label="Upload notices"
+      aria-label="Avisos de subida"
       className="absolute top-16 right-16 z-10 flex w-80 flex-col gap-1 rounded-lg bg-background/95 p-3 text-sm shadow-lg backdrop-blur"
     >
       <header className="flex items-start justify-between gap-2">
         <p className={cn("font-medium", uploadResult.error !== null && "text-destructive")}>
-          {uploadResult.error ?? `Imported from ${uploadResult.fileName} with warnings:`}
+          {uploadResult.error ?? `Se importó ${uploadResult.fileName} con advertencias:`}
         </p>
         <Button
           variant="ghost"
           size="icon"
           className="-mt-1 -mr-1 size-6 shrink-0"
           onClick={() => setUploadResult(null)}
-          aria-label="Dismiss upload notices"
+          aria-label="Descartar los avisos de subida"
         >
           <X />
         </Button>
@@ -148,7 +158,7 @@ function UploadNotices() {
           {visible.map((warning) => (
             <li key={warning.message}>{warning.message}</li>
           ))}
-          {hidden > 0 && <li>and {hidden} more.</li>}
+          {hidden > 0 && <li>y {hidden} más.</li>}
         </ul>
       )}
     </section>

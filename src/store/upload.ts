@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-import { drawnPolygons, type FeatureId } from "@/lib/map/draw-features";
+import { drawnPolygons } from "@/lib/map/draw-features";
 import type { ParseOutcome, UploadResult } from "@/lib/upload/types";
 import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
 
@@ -17,9 +17,9 @@ import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
 export const uploadResultAtom = atom<UploadResult | null>(null);
 
 /**
- * Injects a parsed upload into the store. Replace semantics: the previous upload's
- * polygons go, hand-drawn ones stay — and only once the new parse has succeeded, so a
- * failed upload never costs the polygons already on the map.
+ * Injects a parsed upload into the store. Replace semantics: everything on the map goes
+ * — the previous upload AND the hand-drawn polygons — and only once the new parse has
+ * succeeded, so a failed upload never costs the polygons already on the map.
  */
 export const uploadFeaturesAtom = atom(
   null,
@@ -30,11 +30,7 @@ export const uploadFeaturesAtom = atom(
 
     const { features, warnings } = upload.outcome;
 
-    const previousIds = draw
-      .getSnapshot()
-      .filter((feature) => feature.properties.origin === "upload")
-      .map((feature) => feature.id)
-      .filter((id): id is FeatureId => id !== undefined);
+    const previousIds = drawnPolygons(draw.getSnapshot()).map((polygon) => polygon.id);
 
     // Deselect first, mirroring `deleteSelectedAtom`: selection points must not outlive
     // the geometry they annotate.
@@ -63,7 +59,8 @@ export const uploadFeaturesAtom = atom(
 
         return {
           featureName: feature.properties.name,
-          message: `"${feature.properties.name}" was rejected: ${reason ?? "invalid geometry"}.`,
+          // Terra Draw's `reason` is library text and stays in English.
+          message: `"${feature.properties.name}" fue rechazado: ${reason ?? "geometría inválida"}.`,
         };
       });
 

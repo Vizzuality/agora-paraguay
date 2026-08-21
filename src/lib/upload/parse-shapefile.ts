@@ -22,7 +22,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
   try {
     entryNames = Object.keys(unzipSync(new Uint8Array(buffer)));
   } catch {
-    throw new UploadError("unreadable", "The file could not be read as a zip archive.");
+    throw new UploadError("unreadable", "No se pudo leer el archivo como archivo zip.");
   }
 
   const has = (extension: string) =>
@@ -31,7 +31,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
   if (!has(".shp")) {
     throw new UploadError(
       "unreadable",
-      "The zip does not contain a .shp file — it is not a zipped shapefile.",
+      "El zip no contiene ningún archivo .shp — no es un shapefile comprimido.",
     );
   }
 
@@ -39,7 +39,8 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
 
   if (!has(".dbf")) {
     warnings.push({
-      message: "No attribute table (.dbf) found — polygons were named automatically.",
+      message:
+        "No se encontró la tabla de atributos (.dbf) — los polígonos se nombraron automáticamente.",
     });
   }
 
@@ -52,7 +53,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
   } catch {
     throw new UploadError(
       "unreadable",
-      "The shapefile could not be read — its contents or coordinate system may be unsupported.",
+      "No se pudo leer el shapefile — su contenido o sistema de coordenadas puede no ser compatible.",
     );
   }
 
@@ -62,7 +63,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
 
   if (collections.length > 1) {
     warnings.push({
-      message: `The zip contains ${collections.length} shapefiles; their features were combined.`,
+      message: `El zip contiene ${collections.length} shapefiles; sus entidades se combinaron.`,
     });
   }
 
@@ -74,12 +75,12 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
   let outcome: ParseOutcome;
 
   try {
-    outcome = normalizeUnknown(merged, "a shapefile");
+    outcome = normalizeUnknown(merged, "un shapefile");
   } catch (error) {
     if (error instanceof UploadError && error.code === "bad-crs" && missingPrj) {
       throw new UploadError(
         "bad-crs",
-        "Coordinates are not longitude/latitude — the shapefile is missing its .prj projection file.",
+        "Las coordenadas no son longitud/latitud — al shapefile le falta su archivo de proyección .prj.",
       );
     }
 
@@ -88,7 +89,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
 
   if (missingPrj) {
     warnings.push({
-      message: "The shapefile has no .prj file — WGS84 coordinates were assumed.",
+      message: "El shapefile no tiene archivo .prj — se asumieron coordenadas WGS84.",
     });
   }
 

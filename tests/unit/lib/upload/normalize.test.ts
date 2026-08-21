@@ -93,7 +93,7 @@ describe("MultiPolygon explosion", () => {
     ]);
     expect(warnings).toHaveLength(1);
     expect(warnings[0].featureName).toBe("Estancia (2/3)");
-    expect(warnings[0].message).toContain("holes");
+    expect(warnings[0].message).toContain("huecos");
   });
 });
 
@@ -187,9 +187,9 @@ describe("naming", () => {
     );
 
     expect(features.map((item) => item.properties.name)).toEqual([
-      "Polygon 1",
-      "Polygon 2",
-      "Polygon 3",
+      "Polígono 1",
+      "Polígono 2",
+      "Polígono 3",
     ]);
   });
 });
@@ -211,7 +211,7 @@ describe("non-polygon input", () => {
     );
 
     expect(features).toHaveLength(1);
-    expect(warnings).toEqual([{ message: "Skipped 2 non-polygon features." }]);
+    expect(warnings).toEqual([{ message: "Se omitieron 2 entidades que no son polígonos." }]);
   });
 
   it("recurses one level into a GeometryCollection and skips deeper nesting", () => {
@@ -231,7 +231,7 @@ describe("non-polygon input", () => {
     );
 
     expect(features).toHaveLength(1);
-    expect(warnings).toEqual([{ message: "Skipped 1 non-polygon feature." }]);
+    expect(warnings).toEqual([{ message: "Se omitió 1 entidad que no es un polígono." }]);
   });
 
   it("errors naming what was found when nothing is importable", () => {
@@ -249,7 +249,7 @@ describe("non-polygon input", () => {
     }
 
     expect(caught?.code).toBe("no-polygons");
-    expect(caught?.message).toContain("2 points");
+    expect(caught?.message).toContain("2 puntos");
   });
 
   it("errors on an empty FeatureCollection", () => {

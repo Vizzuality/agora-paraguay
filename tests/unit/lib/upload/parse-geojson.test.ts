@@ -16,7 +16,9 @@ const SQUARE = [
 describe("parseGeoJson", () => {
   it("rejects text that is not JSON", () => {
     expect(() => parseGeoJson("not json {{{")).toThrowError(UploadError);
-    expect(() => parseGeoJson("not json {{{")).toThrowError("could not be read as GeoJSON");
+    expect(() => parseGeoJson("not json {{{")).toThrowError(
+      "No se pudo leer el archivo como GeoJSON",
+    );
   });
 
   it("rejects JSON that is not GeoJSON", () => {
