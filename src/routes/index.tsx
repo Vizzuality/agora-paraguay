@@ -85,7 +85,7 @@ function Panel() {
   );
 }
 
-function LayerCard({ label, value, hue }: { label: string; value: number; hue: string }) {
+function LayerCard({ label, value, hue }: Readonly<{ label: string; value: number; hue: string }>) {
   const [visible, setVisible] = useState(true);
 
   return (

@@ -22,7 +22,7 @@ const MAX_VISIBLE_WARNINGS = 5;
  * for five controls that are all worth a tab stop, and the lint rules prefer the
  * semantic element over `role="group"`.
  */
-export function DrawControls({ className }: { className?: string }) {
+export function DrawControls({ className }: Readonly<{ className?: string }>) {
   const draw = useAtomValue(drawAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
   const setTool = useSetAtom(setDrawToolAtom);
@@ -90,9 +90,7 @@ export function DrawControls({ className }: { className?: string }) {
         {/* Disabled buttons take no focus, so without this a screen reader user has no way
             to tell why the cluster is inert, or that a drawing or an upload landed. */}
         <p aria-live="polite" className="sr-only">
-          {draw.polygons.length === 0
-            ? "No areas drawn."
-            : `${draw.polygons.length} ${draw.polygons.length === 1 ? "area" : "areas"} drawn.`}
+          {drawnStatus(draw.polygons.length)}
           {uploadResult !== null && ` ${uploadStatus(uploadResult)}`}
         </p>
       </fieldset>
@@ -100,6 +98,12 @@ export function DrawControls({ className }: { className?: string }) {
       <UploadNotices />
     </>
   );
+}
+
+function drawnStatus(count: number): string {
+  if (count === 0) return "No areas drawn.";
+
+  return `${count} ${count === 1 ? "area" : "areas"} drawn.`;
 }
 
 function uploadStatus(result: UploadResult): string {

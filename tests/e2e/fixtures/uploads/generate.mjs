@@ -145,7 +145,7 @@ function buildDbf(names) {
   header.writeUInt16LE(headerSize, 8);
   header.writeUInt16LE(recordSize, 10);
   header.write("NOMBRE", 32, "ascii");
-  header[32 + 11] = "C".charCodeAt(0);
+  header[32 + 11] = "C".codePointAt(0);
   header[32 + 16] = fieldLength;
   header[headerSize - 1] = 0x0d;
 
