@@ -28,7 +28,7 @@
     "@tanstack/react-start": "1.168.46",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "lucide-react": "1.31.0",
+    "lucide-react": "1.33.0",
     "maplibre-gl": "5.24.0",
     "nuqs": "2.9.5",
     "react": "19.2.8",
