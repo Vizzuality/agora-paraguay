@@ -62,6 +62,10 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
       return {
         ...state,
         polygons: action.polygons,
+        // The edit tool cannot outlive the geometry it edits: with an empty store the
+        // toggle would render disabled yet pressed, and Terra Draw would sit in select
+        // mode with nothing selectable.
+        tool: action.polygons.length === 0 && state.tool === "edit" ? null : state.tool,
         // A selection outliving the polygon it points at would leave Delete enabled with
         // nothing to delete — and an analysis selection would highlight nothing.
         selectedId: action.polygons.some((polygon) => polygon.id === state.selectedId)

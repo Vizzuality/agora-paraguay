@@ -30,23 +30,18 @@ export const uploadFeaturesAtom = atom(
 
     const { features, warnings } = upload.outcome;
 
+    // Disarm whatever tool is active before touching the store: stopping polygon mode
+    // sweeps an in-progress ring, which `previousIds` below cannot see — it only holds
+    // finished polygons — and which must not stay armed over an import.
+    const { selectedId } = get(drawStateAtom);
+    set(drawStateAtom, { type: "tool", tool: null });
+
     const previousIds = drawnPolygons(draw.getSnapshot()).map((polygon) => polygon.id);
 
-    // Deselect first, mirroring `deleteSelectedAtom`: selection points must not outlive
-    // the geometry they annotate.
-    const { selectedId } = get(drawStateAtom);
-
-    if (selectedId !== null && previousIds.includes(selectedId)) {
-      draw.deselectFeature(selectedId);
-      set(drawStateAtom, { type: "deselected", id: selectedId });
-    }
-
-    if (previousIds.length > 0) {
-      draw.removeFeatures(previousIds);
-    }
-
     // The store validates each feature on its own: valid ones land, invalid ones come
-    // back with a reason and become warnings rather than failing the upload.
+    // back with a reason and become warnings rather than failing the upload. Adding
+    // happens BEFORE removing, so a fully-rejected upload never costs the polygons
+    // already on the map.
     const validations = draw.addFeatures(features);
     const rejectedIds = new Set(
       validations.filter((validation) => !validation.valid).map((validation) => validation.id),
@@ -64,11 +59,36 @@ export const uploadFeaturesAtom = atom(
         };
       });
 
+    const accepted = features.filter((feature) => !rejectedIds.has(feature.id));
+
+    // Nothing landed: the map is untouched, so the previous polygons stay and the
+    // outcome is an error, not a "with warnings" import of zero areas.
+    if (accepted.length === 0) {
+      set(uploadResultAtom, {
+        fileName: upload.fileName,
+        accepted: 0,
+        warnings: [...warnings, ...rejectionWarnings],
+        error: `Ninguna área de "${upload.fileName}" pudo importarse.`,
+      });
+
+      return;
+    }
+
+    // Replace semantics: with the new areas accepted, everything that was on the map
+    // goes. Deselect first, mirroring `deleteSelectedAtom`: selection points must not
+    // outlive the geometry they annotate.
+    if (selectedId !== null && previousIds.includes(selectedId)) {
+      draw.deselectFeature(selectedId);
+      set(drawStateAtom, { type: "deselected", id: selectedId });
+    }
+
+    if (previousIds.length > 0) {
+      draw.removeFeatures(previousIds);
+    }
+
     // Like `clear()`, adding and removing features is not trusted to surface as a
     // `change` event — report the new geometry by hand. Idempotent if the event fires.
     set(drawStateAtom, { type: "geometry", polygons: drawnPolygons(draw.getSnapshot()) });
-
-    const accepted = features.filter((feature) => !rejectedIds.has(feature.id));
 
     set(uploadResultAtom, {
       fileName: upload.fileName,
@@ -78,8 +98,6 @@ export const uploadFeaturesAtom = atom(
     });
 
     // Auto-select the first polygon for analysis, so an upload is immediately usable.
-    if (accepted.length > 0) {
-      set(drawStateAtom, { type: "analysisSelected", id: accepted[0].id });
-    }
+    set(drawStateAtom, { type: "analysisSelected", id: accepted[0].id });
   },
 );

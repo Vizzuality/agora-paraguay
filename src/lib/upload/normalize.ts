@@ -1,4 +1,6 @@
 import {
+  featureCollectionEnvelopeSchema,
+  featureSchema,
   uploadGeoJsonSchema,
   type UploadFeatureInput,
   type UploadGeoJson,
@@ -41,6 +43,25 @@ type SkipCounts = {
 
 /** Validates a parsed-but-untrusted GeoJSON value, then normalises it. */
 export function normalizeUnknown(value: unknown, description: string): ParseOutcome {
+  // A FeatureCollection is validated feature by feature: one malformed entity becomes a
+  // skip-with-warning like every other degradation in this pipeline, instead of refusing
+  // a file that is otherwise readable.
+  const envelope = featureCollectionEnvelopeSchema.safeParse(value);
+
+  if (envelope.success) {
+    const inputs: UploadFeatureInput[] = [];
+    let invalid = 0;
+
+    for (const candidate of envelope.data.features) {
+      const feature = featureSchema.safeParse(candidate);
+
+      if (feature.success) inputs.push(feature.data);
+      else invalid += 1;
+    }
+
+    return normalizeInputs(inputs, invalid);
+  }
+
   const parsed = uploadGeoJsonSchema.safeParse(value);
 
   if (!parsed.success) {
@@ -51,10 +72,17 @@ export function normalizeUnknown(value: unknown, description: string): ParseOutc
 }
 
 export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
-  const inputs = toFeatureInputs(root);
+  return normalizeInputs(toFeatureInputs(root), 0);
+}
 
+function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOutcome {
   if (inputs.length === 0) {
-    throw new UploadError("empty", "El archivo no contiene entidades.");
+    throw new UploadError(
+      "empty",
+      invalid > 0
+        ? "El archivo no contiene entidades válidas."
+        : "El archivo no contiene entidades.",
+    );
   }
 
   const features: UploadFeature[] = [];
@@ -120,6 +148,15 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
         nonPolygons === 1
           ? "Se omitió 1 entidad que no es un polígono."
           : `Se omitieron ${nonPolygons} entidades que no son polígonos.`,
+    });
+  }
+
+  if (invalid > 0) {
+    warnings.push({
+      message:
+        invalid === 1
+          ? "Se omitió 1 entidad no válida."
+          : `Se omitieron ${invalid} entidades no válidas.`,
     });
   }
 

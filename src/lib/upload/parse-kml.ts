@@ -33,7 +33,14 @@ export async function parseKmz(buffer: ArrayBuffer): Promise<ParseOutcome> {
     throw new UploadError("unreadable", "No se pudo leer el archivo como archivo KMZ.");
   }
 
-  const kmlNames = Object.keys(entries).filter((name) => name.toLowerCase().endsWith(".kml"));
+  // Finder-zipped archives carry AppleDouble copies (`__MACOSX/._x.kml`) whose payload
+  // is a resource fork, not KML — counting or reading them breaks valid files.
+  const kmlNames = Object.keys(entries).filter((name) => {
+    if (name.startsWith("__MACOSX/")) return false;
+    if ((name.split("/").at(-1) ?? name).startsWith("._")) return false;
+
+    return name.toLowerCase().endsWith(".kml");
+  });
   // The spec says the main document is `doc.kml`; fall back to whatever KML is there.
   const chosen = kmlNames.find((name) => name.toLowerCase() === "doc.kml") ?? kmlNames[0];
 

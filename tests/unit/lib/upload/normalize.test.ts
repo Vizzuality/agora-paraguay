@@ -278,4 +278,34 @@ describe("normalizeUnknown", () => {
   it("rejects values that are not GeoJSON with an unreadable error", () => {
     expect(code(() => normalizeUnknown({ hello: "world" }, "GeoJSON"))).toBe("unreadable");
   });
+
+  it("skips a malformed feature with a warning instead of rejecting the whole collection", () => {
+    const twoPositionRing = feature({
+      type: "Polygon",
+      coordinates: [
+        [
+          [0, 0],
+          [1, 1],
+        ],
+      ],
+    });
+
+    const { features, warnings } = normalizeUnknown(
+      collection(polygon({ name: "Válido" }), twoPositionRing),
+      "GeoJSON",
+    );
+
+    expect(features.map((item) => item.properties.name)).toEqual(["Válido"]);
+    expect(warnings.map((warning) => warning.message)).toContain("Se omitió 1 entidad no válida.");
+  });
+
+  it("errors when every feature in the collection is malformed", () => {
+    expect(code(() => normalizeUnknown(collection({ type: "Feature" }), "GeoJSON"))).toBe("empty");
+  });
+
+  it("still hard-fails a malformed lone-feature root, which has nothing to degrade to", () => {
+    const bare = feature({ type: "Polygon", coordinates: [[[0, 0]]] });
+
+    expect(code(() => normalizeUnknown(bare, "GeoJSON"))).toBe("unreadable");
+  });
 });

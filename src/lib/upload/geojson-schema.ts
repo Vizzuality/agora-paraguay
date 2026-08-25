@@ -49,11 +49,20 @@ const geometrySchema: z.ZodType<UploadGeometry> = z.lazy(() =>
   ]),
 );
 
-const featureSchema = z.object({
+export const featureSchema = z.object({
   type: z.literal("Feature"),
   // togeojson emits null geometry for placemarks without one.
   geometry: geometrySchema.nullable(),
   properties: z.record(z.string(), z.unknown()).nullish(),
+});
+
+/**
+ * Just the collection envelope, features left unvalidated — `normalize.ts` checks them
+ * one by one so a single malformed entity cannot take down an otherwise readable file.
+ */
+export const featureCollectionEnvelopeSchema = z.object({
+  type: z.literal("FeatureCollection"),
+  features: z.array(z.unknown()),
 });
 
 const featureCollectionSchema = z.object({

@@ -46,6 +46,19 @@ describe("drawReducer", () => {
     expect(drawReducer(selected, { type: "tool", tool: null }).selectedId).toBeNull();
   });
 
+  it("releases the edit tool when the last polygon goes, so the toggle cannot stick pressed", () => {
+    const next = drawReducer(selected, { type: "geometry", polygons: [] });
+
+    expect(next.tool).toBeNull();
+    expect(terraDrawMode(next)).toBe("static");
+  });
+
+  it("keeps the draw tool over an empty map — a drawing session starts from scratch", () => {
+    const drawing: DrawState = { ...bound, tool: "draw" };
+
+    expect(drawReducer(drawing, { type: "geometry", polygons: [] }).tool).toBe("draw");
+  });
+
   it("keeps every polygon reported, not just the newest", () => {
     const next = drawReducer(bound, { type: "geometry", polygons: [first, second] });
 
