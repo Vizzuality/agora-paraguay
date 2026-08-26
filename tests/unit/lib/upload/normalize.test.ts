@@ -4,14 +4,20 @@ import type { UploadGeoJson } from "@/lib/upload/geojson-schema";
 import { normalizeFeatures, normalizeUnknown } from "@/lib/upload/normalize";
 import { UploadError } from "@/lib/upload/types";
 
-/** A closed unit square offset by `at`, the smallest valid store polygon. */
+/**
+ * A closed square inside Paraguay offset by `at`, the smallest valid store polygon.
+ * Anchored near Asunción because normalization rejects geometry outside the country.
+ */
 function square(at = 0): number[][] {
+  const lng = -58 + at * 0.05;
+  const lat = -24 + at * 0.05;
+
   return [
-    [at, at],
-    [at, at + 1],
-    [at + 1, at + 1],
-    [at + 1, at],
-    [at, at],
+    [lng, lat],
+    [lng, lat + 0.5],
+    [lng + 0.5, lat + 0.5],
+    [lng + 0.5, lat],
+    [lng, lat],
   ];
 }
 
@@ -160,6 +166,34 @@ describe("coordinate repair", () => {
 
     expect(code(() => normalizeFeatures(collection(polygon({}), polygon({}, projected))))).toBe(
       "bad-crs",
+    );
+  });
+});
+
+describe("Paraguay bounds", () => {
+  it("rejects valid lng/lat geometry outside Paraguay", () => {
+    const paris = square().map(([lng, lat]) => [lng + 60.3, lat + 72.8]);
+
+    expect(code(() => normalizeFeatures(collection(polygon({ name: "París" }, paris))))).toBe(
+      "out-of-paraguay",
+    );
+  });
+
+  it("rejects small projected coordinates that slip the world-range check", () => {
+    // A shapefile without its .prj whose local-grid numbers are ≤ 180: read as lng/lat
+    // they land near (0,0) — the Gulf of Guinea failure this check exists to stop.
+    const nearNullIsland = square().map(([lng, lat]) => [lng + 58, lat + 24]);
+
+    expect(code(() => normalizeFeatures(collection(polygon({}, nearNullIsland))))).toBe(
+      "out-of-paraguay",
+    );
+  });
+
+  it("rejects the whole file when one polygon of several strays outside", () => {
+    const outside = square().map(([lng, lat]) => [lng + 30, lat]);
+
+    expect(code(() => normalizeFeatures(collection(polygon({}), polygon({}, outside))))).toBe(
+      "out-of-paraguay",
     );
   });
 });

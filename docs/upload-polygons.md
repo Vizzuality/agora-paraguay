@@ -60,11 +60,14 @@ without its `.prj`.
 - **Precision**: geometry is not byte-identical to the source. Any future
   hash-of-geometry keying must hash post-normalisation coordinates.
 - **Main-thread parsing**: shpjs + proj4 near the 10 MB cap (`MAX_UPLOAD_BYTES`) can
-  block for seconds. Web Worker parsing is the future fix if the cap rises.
-- **CRS trust is heuristic**: a missing `.prj` with projected coordinates near (0,0)
-  can slip the range check and render in the Gulf of Guinea.
+  block for seconds. In practice Paraguay-scale uploads (single farms and parcel groups)
+  sit far below the cap; Web Worker parsing is the future fix if the cap ever rises.
 - **Shapefile realities**: multi-`.shp` zips are flattened with a warning; non-UTF8
   DBF names may mojibake; `.prj` dialects proj4 cannot read fail as unreadable.
+- **Geometry must lie within Paraguay**: `normalize.ts` rejects files with coordinates
+  outside the country's bounds (`out-of-paraguay`). This also closes the old
+  missing-`.prj` heuristic gap where small projected coordinates slipped the
+  world-range check and rendered in the Gulf of Guinea.
 - **KMZ**: only `doc.kml` (or the first `.kml`) is read; `<NetworkLink>` is not
   fetched.
 - **Extension-based dispatch**: a mislabelled file fails with its claimed format's

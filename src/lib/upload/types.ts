@@ -51,6 +51,7 @@ export type UploadErrorCode =
   | "too-large"
   | "unreadable"
   | "bad-crs"
+  | "out-of-paraguay"
   | "no-polygons"
   | "empty";
 

@@ -117,7 +117,10 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
       features.push({
         id: crypto.randomUUID(),
         type: "Feature",
-        geometry: { type: "Polygon", coordinates: [closeRing(cleanRing(rings[0]))] },
+        geometry: {
+          type: "Polygon",
+          coordinates: [closeRing(cleanRing(rings[0]))],
+        },
         properties: { mode: "polygon", origin: "upload", name: partName },
       });
     });
@@ -133,6 +136,20 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
     throw new UploadError(
       "bad-crs",
       "Las coordenadas no son longitud/latitud — no se pudo leer el sistema de coordenadas del archivo.",
+    );
+  }
+
+  // The platform is Paraguay-only, so anything outside the country is wrong data, not a
+  // wrong CRS: valid lng/lat in the wrong place (a file for another country, or projected
+  // coordinates small enough to pass the world-range check and land in the Gulf of Guinea).
+  const outsideParaguay = features.some((feature) =>
+    feature.geometry.coordinates[0].some((position) => !withinParaguay(position)),
+  );
+
+  if (outsideParaguay) {
+    throw new UploadError(
+      "out-of-paraguay",
+      "El archivo contiene geometría fuera de Paraguay — esta plataforma solo analiza áreas dentro del país.",
     );
   }
 
@@ -231,6 +248,18 @@ function cleanRing(ring: Ring): LngLat[] {
  */
 function roundCoordinate(value: number): number {
   return Number(value.toFixed(COORDINATE_DECIMALS));
+}
+
+/**
+ * The platform is Paraguay-only: every uploaded coordinate must fall inside the
+ * country's bounding box, or `normalizeFeatures` rejects the whole file with
+ * `out-of-paraguay`. Positions arrive already cleaned as [lng, lat].
+ */
+function withinParaguay([lng, lat]: LngLat): boolean {
+  // Paraguay's bounding box (lng −62.65…−54.26, lat −27.61…−19.29) plus most of a
+  // degree of slack, so border-hugging farms survive rounding while wrong-country
+  // files and near-(0,0) projected coordinates are still rejected.
+  return lng >= -63.5 && lng <= -53.5 && lat >= -28.5 && lat <= -18.5;
 }
 
 /** Hand-made GeoJSON often leaves rings unclosed; the store wants first === last. */
