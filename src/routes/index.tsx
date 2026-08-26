@@ -74,12 +74,12 @@ function Panel() {
 
         {data && data.length === 0 && <p className="text-sm text-muted-foreground">Sin datos.</p>}
 
-        {data?.map((item, index) => (
+        {data?.map((item) => (
           <LayerCard
             key={item.id}
-            label={item.label}
+            title={item.title}
             value={item.value}
-            hue={index % 2 === 0 ? "var(--chart-1)" : "var(--chart-2)"}
+            description={item.description}
           />
         ))}
       </section>
@@ -87,20 +87,30 @@ function Panel() {
   );
 }
 
-function LayerCard({ label, value, hue }: Readonly<{ label: string; value: number; hue: string }>) {
+function LayerCard({
+  title,
+  value,
+  description,
+}: Readonly<{
+  title: string;
+  value: number;
+  description: string;
+}>) {
   const [visible, setVisible] = useState(true);
 
   return (
     <StatCard
-      label={label}
-      value={`${value}%`}
-      caption="de todas las parcelas"
-      meter={{ value, color: hue }}
+      label={title}
+      // Locale is pinned rather than left to the runtime: this panel is server
+      // rendered, and a server whose locale differs from the browser's would format
+      // the number differently and break hydration.
+      value={value.toLocaleString("es-PY")}
+      caption={description}
       action={
         <Switch
           checked={visible}
           onCheckedChange={setVisible}
-          aria-label={`Mostrar ${label} en el mapa`}
+          aria-label={`Mostrar ${title} en el mapa`}
         />
       }
     />
