@@ -7,7 +7,7 @@ import {
   normalizeViewState,
   normalizeZoom,
   ZOOM_RANGE,
-} from "./view-state";
+} from "@/lib/map/view-state";
 
 describe("normalizeLatitude", () => {
   it("clamps beyond the Web Mercator limit", () => {

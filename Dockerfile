@@ -4,7 +4,9 @@ FROM base AS deps
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+# --ignore-scripts: dependency lifecycle scripts are a supply-chain vector and the
+# build needs none of them — esbuild's platform binary is an optionalDependency.
+RUN corepack enable pnpm && pnpm i --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
 WORKDIR /app

@@ -16,12 +16,11 @@ export const env = createEnv({
       .transform((value) => value === "true"),
 
     /**
-     * Basemap style URL. Defaults to a keyless public style so the map works with no
-     * setup. Point this at the client's tile endpoint to override.
+     * Basemap style URL override. Unset, the app uses the built-in satellite style
+     * (see `src/lib/map/basemap.ts`). Point this at the client's tile endpoint to
+     * override.
      */
-    VITE_BASEMAP_STYLE_URL: z
-      .url()
-      .default("https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"),
+    VITE_BASEMAP_STYLE_URL: z.url().optional(),
   },
   runtimeEnv: import.meta.env,
   emptyStringAsUndefined: true,
