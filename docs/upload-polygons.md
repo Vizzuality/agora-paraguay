@@ -57,8 +57,6 @@ without its `.prj`.
 - **MultiPolygon identity is lost** by explosion: parts are separate list entries and
   separate analysis selections. If whole-farm analysis becomes a requirement, mint a
   shared `properties.groupId` at explosion time — an easy retrofit.
-- **Editability drift**: an accidental vertex drag silently diverges the map polygon
-  from the uploaded file.
 - **Precision**: geometry is not byte-identical to the source. Any future
   hash-of-geometry keying must hash post-normalisation coordinates.
 - **Main-thread parsing**: shpjs + proj4 near the 10 MB cap (`MAX_UPLOAD_BYTES`) can
