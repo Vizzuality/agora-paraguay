@@ -10,7 +10,7 @@ import Map, {
 
 import { DrawLayer } from "@/components/map/draw-layer";
 import { ParcelPattern } from "@/components/map/parcel-pattern";
-import { BASEMAP_STYLE_URL, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/basemap";
+import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/basemap";
 import { normalizeViewState } from "@/lib/map/view-state";
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -67,7 +67,7 @@ export function MapView({ children }: { children?: ReactNode }) {
         latitude: viewState.lat,
         zoom: viewState.zoom,
       }}
-      mapStyle={BASEMAP_STYLE_URL}
+      mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
       onMoveEnd={handleMoveEnd}
       style={{ width: "100%", height: "100%" }}

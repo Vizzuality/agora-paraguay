@@ -1,29 +1,23 @@
 import type { Page } from "@playwright/test";
 
-/**
- * A valid MapLibre style with nothing in it.
- *
- * The app's default basemap is CARTO Positron, fetched from a CDN. Letting the specs hit
- * it would make them slow and dependent on someone else's uptime, and none of what they
- * assert is about tiles — so the style request is stubbed with an empty one. MapLibre
- * still fires `load`, which is what starts Terra Draw.
- */
-const EMPTY_STYLE = {
-  version: 8,
-  sources: {},
-  layers: [
-    {
-      id: "background",
-      type: "background",
-      paint: { "background-color": "#f5f5f5" },
-    },
-  ],
-};
+/** A 1×1 transparent PNG, so stubbed raster tiles decode cleanly. */
+const BLANK_TILE = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+  "base64",
+);
 
-/** Stubs the basemap so the map loads without network access. */
+/**
+ * Stubs the basemap so the map loads without network access.
+ *
+ * The app's built-in basemap is an inline satellite style (see
+ * `src/lib/map/basemap.ts`), so there is no style.json request to stub — only its
+ * raster tile requests to Esri. Letting the specs hit them would make them slow and
+ * dependent on someone else's uptime, and none of what they assert is about tiles.
+ * The inline style loads regardless, and `load` is what starts Terra Draw.
+ */
 export async function stubBasemap(page: Page) {
-  await page.route("https://basemaps.cartocdn.com/**", (route) =>
-    route.fulfill({ json: EMPTY_STYLE }),
+  await page.route("https://server.arcgisonline.com/**", (route) =>
+    route.fulfill({ contentType: "image/png", body: BLANK_TILE }),
   );
 }
 
