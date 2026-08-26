@@ -59,16 +59,22 @@ export const PARCEL_STYLES = {
  * The dot texture the Figma parcel fill repeats every 50px, generated as raw RGBA
  * pixels so no image asset or DOM canvas is needed — MapLibre's `addImage` accepts
  * `{ width, height, data }` directly.
+ *
+ * One dot at the tile center, so the repeat is an axis-aligned square grid — center
+ * placement keeps the dot whole inside the tile, so tiles join seamlessly.
+ *
+ * The dot is a square (Chebyshev distance, not Euclidean): at this size a rasterised
+ * disc reads as a diamond, and the design's marks are squares.
  */
 export function dotPatternImage(size = 50, radius = 2, alpha = 178) {
   const data = new Uint8ClampedArray(size * size * 4);
-  const center = size / 2;
+  // Pixel centers sit at x + 0.5, so measure from center - 0.5 to keep the square
+  // symmetric inside an even-sized tile.
+  const center = size / 2 - 0.5;
 
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
-      const inDot = (x - center) ** 2 + (y - center) ** 2 <= radius ** 2;
-
-      if (!inDot) continue;
+      if (Math.max(Math.abs(x - center), Math.abs(y - center)) > radius) continue;
 
       const offset = (y * size + x) * 4;
 

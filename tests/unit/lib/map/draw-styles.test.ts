@@ -65,11 +65,25 @@ describe("dotPatternImage", () => {
     expect(image.data).toHaveLength(50 * 50 * 4);
   });
 
-  it("draws an opaque-ish dot at the center and nothing at the corner", () => {
+  it("draws one dot at the tile center — an axis-aligned square grid", () => {
     const image = dotPatternImage(50, 2, 178);
-    const center = (25 * 50 + 25) * 4;
+    const at = (x: number, y: number) => (y * 50 + x) * 4 + 3;
 
-    expect(image.data[center + 3]).toBe(178);
-    expect(image.data[3]).toBe(0);
+    expect(image.data[at(25, 25)]).toBe(178);
+    // No corner dots: those turned the repeat into a 45°-rotated (diamond) lattice.
+    expect(image.data[at(0, 0)]).toBe(0);
+    expect(image.data[at(25, 0)]).toBe(0);
+  });
+
+  it("draws the dot as a square, not a disc that rasterises into a diamond", () => {
+    const image = dotPatternImage(50, 2, 178);
+    const at = (x: number, y: number) => (y * 50 + x) * 4 + 3;
+
+    // The 4×4 square spans 23..26 — a Euclidean disc would clip these corners.
+    expect(image.data[at(23, 23)]).toBe(178);
+    expect(image.data[at(26, 26)]).toBe(178);
+    // One past the square in every direction is empty.
+    expect(image.data[at(22, 23)]).toBe(0);
+    expect(image.data[at(27, 26)]).toBe(0);
   });
 });
