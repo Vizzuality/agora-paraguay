@@ -57,7 +57,7 @@
     "@types/react-dom": "19.2.4",
     "@types/shpjs": "3.4.7",
     "@vitejs/plugin-react": "6.1.0",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "oxfmt": "0.64.0",
     "oxlint": "1.79.0",
     "tailwindcss": "4.3.3",
