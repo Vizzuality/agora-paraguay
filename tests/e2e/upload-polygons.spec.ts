@@ -10,15 +10,16 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "uplo
 /**
  * Screen position inside the first part of the uploaded "Estancia Norte" MultiPolygon:
  * the part spans 59.4°W–57.4°W / 24.4°S–22.4°S, which contains the initial camera
- * centre (58.44°W, 23.44°S) — the middle of the default 1280×720 viewport.
+ * centre (58.44°W, 23.44°S) — the middle of the canvas, which is the right half of
+ * the 1280×720 viewport (~640×720).
  */
-const INSIDE_UPLOADED_POLYGON = { x: 640, y: 360 };
+const INSIDE_UPLOADED_POLYGON = { x: 320, y: 360 };
 
 /** Clear of every overlay and of the uploaded polygons; from `draw-controls.spec.ts`. */
 const DRAWN_POLYGON = [
-  { x: 880, y: 450 },
-  { x: 1000, y: 450 },
-  { x: 1000, y: 550 },
+  { x: 440, y: 450 },
+  { x: 500, y: 450 },
+  { x: 500, y: 550 },
 ];
 
 function controls(page: Page) {

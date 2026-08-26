@@ -2,21 +2,22 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { drawPolygon, mapCanvas, stubBasemap } from "./fixtures/map";
 
-// Well clear of the two overlays: the panel occupies the left ~400px, the toolbar the
-// top-right corner. Clicks landing on either would never reach the map canvas.
+// Positions are relative to the canvas, which is the right half of the 1280×720
+// viewport (~640px wide) — the sidebar has the left half. Clear of the toolbar in the
+// map's top-right corner.
 const FIRST_POLYGON = [
-  { x: 600, y: 250 },
-  { x: 720, y: 250 },
-  { x: 720, y: 350 },
+  { x: 300, y: 250 },
+  { x: 360, y: 250 },
+  { x: 360, y: 350 },
 ];
 
 /** Inside the triangle above — what selecting the first polygon clicks on. */
-const INSIDE_FIRST_POLYGON = { x: 700, y: 300 };
+const INSIDE_FIRST_POLYGON = { x: 350, y: 300 };
 
 const SECOND_POLYGON = [
-  { x: 880, y: 450 },
-  { x: 1000, y: 450 },
-  { x: 1000, y: 550 },
+  { x: 440, y: 450 },
+  { x: 500, y: 450 },
+  { x: 500, y: 550 },
 ];
 
 function controls(page: Page) {

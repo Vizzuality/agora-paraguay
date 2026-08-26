@@ -17,22 +17,25 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <main className="relative h-screen w-full">
-      {/* MapLibre touches window and document at import time, so it must never run
-          during SSR. The fallback keeps the layout stable while it loads. */}
-      <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
-        <MapView />
-      </ClientOnly>
-
-      {/* Outside the map — the drawn geometry is global state, not map-scoped — but
-          still client-only: the controls are inert until Terra Draw has started, and
-          keeping them off the server keeps the atom store out of a shared module-level
-          store that every SSR request would see. */}
-      <ClientOnly>
-        <DrawControls />
-      </ClientOnly>
-
+    <main className="flex h-screen w-full">
       <Panel />
+
+      {/* The map's positioning context: the draw controls anchor to it, not the page. */}
+      <div className="relative h-full w-1/2">
+        {/* MapLibre touches window and document at import time, so it must never run
+            during SSR. The fallback keeps the layout stable while it loads. */}
+        <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
+          <MapView />
+        </ClientOnly>
+
+        {/* Outside the map — the drawn geometry is global state, not map-scoped — but
+            still client-only: the controls are inert until Terra Draw has started, and
+            keeping them off the server keeps the atom store out of a shared module-level
+            store that every SSR request would see. */}
+        <ClientOnly>
+          <DrawControls />
+        </ClientOnly>
+      </div>
     </main>
   );
 }
@@ -42,7 +45,7 @@ function Panel() {
   const { data, isPending, isError, error, refetch } = useQuery(placeholderQueries.all());
 
   return (
-    <aside className="absolute top-4 left-4 z-10 flex max-h-[calc(100vh-2rem)] w-96 flex-col gap-4 overflow-y-auto rounded-xl bg-background/95 p-4 shadow-lg backdrop-blur">
+    <aside className="flex h-full w-1/2 flex-col gap-4 overflow-y-auto bg-background p-6">
       <header>
         <h1 className="text-lg font-semibold">Ágora Paraguay</h1>
         <p className="text-xs text-muted-foreground">
@@ -74,14 +77,18 @@ function Panel() {
 
         {data && data.length === 0 && <p className="text-sm text-muted-foreground">Sin datos.</p>}
 
-        {data?.map((item) => (
-          <LayerCard
-            key={item.id}
-            title={item.title}
-            value={item.value}
-            description={item.description}
-          />
-        ))}
+        {/* Two columns: the sidebar is half the viewport now, wide enough to pair the
+            widget cards. */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {data?.map((item) => (
+            <LayerCard
+              key={item.id}
+              title={item.title}
+              value={item.value}
+              description={item.description}
+            />
+          ))}
+        </div>
       </section>
     </aside>
   );
