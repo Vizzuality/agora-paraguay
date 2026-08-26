@@ -9,6 +9,7 @@ import {
 } from "terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 
+import { PARCEL_STYLES } from "@/lib/map/draw-styles";
 import {
   bindDrawAtom,
   drawModeAtom,
@@ -59,7 +60,7 @@ export function useTerraDraw() {
       started = new TerraDraw({
         adapter: new TerraDrawMapLibreGLAdapter({ map }),
         modes: [
-          new TerraDrawPolygonMode(),
+          new TerraDrawPolygonMode({ styles: PARCEL_STYLES }),
           new TerraDrawSelectMode({
             // Without a flags entry for `polygon`, select mode refuses to select
             // anything: no select or deselect event ever fires and editing is a silent

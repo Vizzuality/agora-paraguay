@@ -2,6 +2,7 @@ import { atom } from "jotai";
 
 import { drawnPolygons } from "@/lib/map/draw-features";
 import type { ParseOutcome, UploadResult } from "@/lib/upload/types";
+import { selectAnalysisPolygonAtom } from "@/store/analysis";
 import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
 
 /**
@@ -98,6 +99,8 @@ export const uploadFeaturesAtom = atom(
     });
 
     // Auto-select the first polygon for analysis, so an upload is immediately usable.
-    set(drawStateAtom, { type: "analysisSelected", id: accepted[0].id });
+    // Via the command atom, not a bare dispatch: it also mirrors the selection onto
+    // the feature so Terra Draw paints it.
+    set(selectAnalysisPolygonAtom, accepted[0].id);
   },
 );

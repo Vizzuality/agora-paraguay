@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 
 import type { FeatureId } from "@/lib/map/draw-features";
-import { drawStateAtom } from "@/store/draw-core";
+import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
 
 /**
  * The polygon picked for analysis — app-owned, unlike Terra Draw's edit selection,
@@ -23,5 +23,20 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
   // A stale id — the polygon was deleted while the click was in flight — selects nothing.
   if (!get(drawStateAtom).polygons.some((polygon) => polygon.id === id)) return;
 
+  const previous = get(drawStateAtom).analysisId;
+
   set(drawStateAtom, { type: "analysisSelected", id });
+
+  // The selection is mirrored onto the feature itself so Terra Draw's style functions
+  // can paint it (`draw-styles.ts`): a property change is a feature change, which is
+  // what makes Terra Draw repaint — no imperative restyle call needed.
+  const draw = get(drawInstanceAtom);
+
+  if (!draw?.enabled) return;
+
+  if (previous !== null && previous !== id && draw.getSnapshotFeature(previous)) {
+    draw.updateFeatureProperties(previous, { analysis: undefined });
+  }
+
+  draw.updateFeatureProperties(id, { analysis: true });
 });
