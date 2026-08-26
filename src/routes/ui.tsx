@@ -378,7 +378,6 @@ function UiKitPage() {
                 label="Cobertura forestal"
                 value="48 %"
                 caption="Dentro del área dibujada"
-                meter={{ value: 48 }}
                 action={<Switch defaultChecked aria-label="Mostrar capa" />}
               />
             </div>
