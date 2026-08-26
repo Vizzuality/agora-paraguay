@@ -26,6 +26,26 @@ export function mapCanvas(page: Page) {
   return page.locator("canvas.maplibregl-canvas");
 }
 
+/** Pans the camera by dragging from the canvas centre, then waits for the URL to update. */
+export async function panMap(page: Page, delta: { dx: number; dy: number }) {
+  const urlBefore = page.url();
+  const box = await mapCanvas(page).boundingBox();
+  if (!box) throw new Error("Map canvas has no bounding box");
+
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2;
+
+  await page.mouse.move(centerX, centerY);
+  await page.mouse.down();
+  await page.mouse.move(centerX + delta.dx, centerY + delta.dy, { steps: 10 });
+  await page.mouse.up();
+
+  // The camera is written to the URL throttled (200ms) after moveend.
+  await page.waitForFunction((previous) => window.location.href !== previous, urlBefore, {
+    timeout: 5_000,
+  });
+}
+
 /**
  * Draws a polygon through the canvas: a click per vertex, then Enter, which is Terra
  * Draw's own finish shortcut in polygon mode.
