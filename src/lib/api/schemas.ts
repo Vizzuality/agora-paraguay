@@ -54,6 +54,28 @@ export const analysisRequestSchema = z.object({
 
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
 
+/**
+ * TODO(mock-parcels): invented contract, not agreed with the API. Replace with the
+ * real parcel schema when the real layer is available (grep `mock-parcels`).
+ *
+ * The shape mirrors what a cadastral endpoint would plausibly return: a
+ * FeatureCollection of named Polygons.
+ */
+export const parcelFeatureSchema = z.object({
+  type: z.literal("Feature"),
+  properties: z.object({ id: z.string().min(1), name: z.string().min(1) }),
+  geometry: polygonGeometrySchema,
+});
+
+export type ParcelFeature = z.infer<typeof parcelFeatureSchema>;
+
+export const parcelCollectionSchema = z.object({
+  type: z.literal("FeatureCollection"),
+  features: z.array(parcelFeatureSchema),
+});
+
+export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
+
 export const analysisResponseSchema = z.object({
   id: z.uuid(),
   status: z.literal("accepted"),

@@ -2,7 +2,7 @@ import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 import type { DrawnPolygon } from "@/lib/map/draw-features";
 
-import { fetchPlaceholders, submitAnalysis } from "./client";
+import { fetchParcels, fetchPlaceholders, submitAnalysis } from "./client";
 import { toAnalysisRequest } from "./schemas";
 
 /**
@@ -16,6 +16,17 @@ export const placeholderQueries = {
     queryOptions({
       queryKey: ["placeholders"] as const,
       queryFn: fetchPlaceholders,
+    }),
+};
+
+export const parcelQueries = {
+  all: () =>
+    queryOptions({
+      queryKey: ["parcels"] as const,
+      queryFn: fetchParcels,
+      // TODO(mock-parcels): staleTime pinned to Infinity only because the fixture is
+      // static — revisit when the real parcel layer replaces the mock.
+      staleTime: Infinity,
     }),
 };
 
