@@ -4,6 +4,7 @@ import { drawnPolygons } from "@/lib/map/draw-features";
 import type { ParseOutcome, UploadResult } from "@/lib/upload/types";
 import { selectAnalysisPolygonAtom } from "@/store/analysis";
 import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
+import { selectedParcelsAtom } from "@/store/parcels";
 
 /**
  * Uploaded areas of interest. Parsing lives in `src/lib/upload/`; this file is only the
@@ -90,6 +91,10 @@ export const uploadFeaturesAtom = atom(
     // Like `clear()`, adding and removing features is not trusted to surface as a
     // `change` event — report the new geometry by hand. Idempotent if the event fires.
     set(drawStateAtom, { type: "geometry", polygons: drawnPolygons(draw.getSnapshot()) });
+
+    // Replace semantics extend to the clicked cadastral parcels: an upload starts the
+    // selection over.
+    set(selectedParcelsAtom, []);
 
     set(uploadResultAtom, {
       fileName: upload.fileName,

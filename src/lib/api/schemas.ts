@@ -85,13 +85,19 @@ export const analysisResponseSchema = z.object({
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
 
 /**
+ * An area the analysis can be asked about: a drawn or uploaded Terra Draw polygon, or
+ * a cadastral parcel selected by clicking it on the map.
+ */
+export type AnalysisArea = DrawnPolygon | ParcelFeature;
+
+/**
  * Request payload: every polygon on the map becomes a named Feature. The parse both
  * validates and strips Terra Draw's internal properties (`mode`, `currentlyDrawing`,
  * `origin`) — the feature schema only declares `name`, and Zod rebuilds objects and
  * arrays, so the payload never aliases the draw store. Throws on an empty list: the
  * contract requires at least one feature, callers guard before mapping.
  */
-export function toAnalysisRequest(polygons: DrawnPolygon[]): AnalysisRequest {
+export function toAnalysisRequest(polygons: AnalysisArea[]): AnalysisRequest {
   return analysisRequestSchema.parse({
     type: "FeatureCollection",
     features: polygons.map((polygon, index) => ({

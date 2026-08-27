@@ -8,6 +8,7 @@ import {
   placeholderListSchema,
   placeholderSchema,
   toAnalysisRequest,
+  type ParcelFeature,
 } from "@/lib/api/schemas";
 import type { DrawnPolygon } from "@/lib/map/draw-features";
 
@@ -179,6 +180,23 @@ describe("toAnalysisRequest", () => {
 
   it("throws on an empty polygon list — the contract wants at least one feature", () => {
     expect(() => toAnalysisRequest([])).toThrow(ZodError);
+  });
+
+  it("accepts cadastral parcel features alongside drawn polygons, named and id-stripped", () => {
+    const parcel = {
+      type: "Feature",
+      properties: { id: "p-1", name: "Parcela 12-3" },
+      geometry: { type: "Polygon", coordinates: [SQUARE] },
+    } as ParcelFeature;
+
+    const request = toAnalysisRequest([drawnPolygon("a"), parcel]);
+
+    expect(request.features.map((feature) => feature.properties.name)).toEqual([
+      "Área dibujada 1",
+      "Parcela 12-3",
+    ]);
+    // The contract's feature schema declares `name` only: the parcel's `id` goes.
+    expect(Object.keys(request.features[1].properties)).toEqual(["name"]);
   });
 });
 

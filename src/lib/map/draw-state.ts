@@ -20,6 +20,12 @@ export type DrawState = {
    * must not require entering edit mode, where drags mutate geometry.
    */
   analysisId: FeatureId | null;
+  /**
+   * True once the current polygons have been submitted for analysis. Ends the
+   * click-to-select session on the map; any new session activity (a tool, new
+   * geometry) clears it.
+   */
+  analyzed: boolean;
 };
 
 export type DrawAction =
@@ -30,7 +36,8 @@ export type DrawAction =
   | { type: "selected"; id: FeatureId }
   | { type: "deselected"; id: FeatureId }
   | { type: "analysisSelected"; id: FeatureId }
-  | { type: "analysisCleared" };
+  | { type: "analysisCleared" }
+  | { type: "analysisSubmitted" };
 
 export const INITIAL_DRAW_STATE: DrawState = {
   bound: false,
@@ -38,6 +45,7 @@ export const INITIAL_DRAW_STATE: DrawState = {
   polygons: [],
   selectedId: null,
   analysisId: null,
+  analyzed: false,
 };
 
 export function drawReducer(state: DrawState, action: DrawAction): DrawState {
@@ -56,12 +64,17 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
         // Only select mode holds a selection, and Terra Draw does not promise a
         // `deselect` when the mode is swapped out from under it.
         selectedId: action.tool === "edit" ? state.selectedId : null,
+        // Picking up a tool resumes the session. Putting it down (`null`) does not:
+        // that is how "analysisSubmitted" itself parks the tool.
+        analyzed: action.tool === null ? state.analyzed : false,
       };
 
     case "geometry":
       return {
         ...state,
         polygons: action.polygons,
+        // New geometry is a new session — an upload after Analizar must be clickable.
+        analyzed: false,
         // The edit tool cannot outlive the geometry it edits: with an empty store the
         // toggle would render disabled yet pressed, and Terra Draw would sit in select
         // mode with nothing selectable.
@@ -91,6 +104,9 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
 
     case "analysisCleared":
       return { ...state, analysisId: null };
+
+    case "analysisSubmitted":
+      return { ...state, analyzed: true };
   }
 }
 
@@ -115,4 +131,15 @@ export function canDelete(state: DrawState): boolean {
 
 export function canClear(state: DrawState): boolean {
   return state.bound && state.polygons.length > 0;
+}
+
+/**
+ * Whether a click on the map should pick a parcel for analysis — drawn polygons and
+ * cadastral parcels alike, which is why an empty draw store does not disable it. Only
+ * while no tool is active: in draw mode a click places a vertex, in edit mode Terra
+ * Draw's select mode owns the click. Ends when the session is analyzed, resumes with
+ * any new session.
+ */
+export function canSelectParcel(state: DrawState): boolean {
+  return state.bound && state.tool === null && !state.analyzed;
 }

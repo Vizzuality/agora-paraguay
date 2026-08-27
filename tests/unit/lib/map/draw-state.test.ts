@@ -6,6 +6,7 @@ import {
   canDelete,
   canDraw,
   canEdit,
+  canSelectParcel,
   drawReducer,
   INITIAL_DRAW_STATE,
   terraDrawMode,
@@ -109,6 +110,32 @@ describe("analysis selection", () => {
   });
 });
 
+describe("analyzed session", () => {
+  const idle: DrawState = { ...bound, tool: null, polygons: [first, second] };
+  const submitted: DrawState = { ...idle, analyzed: true };
+
+  it("marks the session analyzed on submit", () => {
+    expect(drawReducer(idle, { type: "analysisSubmitted" }).analyzed).toBe(true);
+  });
+
+  it("survives parking the tool, which is how submitting itself ends the session", () => {
+    expect(drawReducer(submitted, { type: "tool", tool: null }).analyzed).toBe(true);
+  });
+
+  it("clears when any tool is picked up — a new session starts", () => {
+    expect(drawReducer(submitted, { type: "tool", tool: "draw" }).analyzed).toBe(false);
+    expect(drawReducer(submitted, { type: "tool", tool: "edit" }).analyzed).toBe(false);
+  });
+
+  it("clears on new geometry, so an upload after Analizar is clickable", () => {
+    expect(drawReducer(submitted, { type: "geometry", polygons: [first] }).analyzed).toBe(false);
+  });
+
+  it("resets on unbind with everything else", () => {
+    expect(drawReducer(submitted, { type: "unbound" }).analyzed).toBe(false);
+  });
+});
+
 describe("terraDrawMode", () => {
   it("is static until the instance is bound", () => {
     expect(terraDrawMode({ ...INITIAL_DRAW_STATE, tool: "draw" })).toBe("static");
@@ -145,5 +172,18 @@ describe("control availability", () => {
   it("allows editing and clearing once any polygon exists, deleting only with a selection", () => {
     expect([canEdit(drawn), canClear(drawn), canDelete(drawn)]).toEqual([true, true, false]);
     expect(canDelete(selected)).toBe(true);
+  });
+
+  it("allows parcel clicks only idle and before Analizar", () => {
+    const idle: DrawState = { ...bound, tool: null, polygons: [first, second] };
+
+    expect(canSelectParcel(idle)).toBe(true);
+    expect(canSelectParcel({ ...idle, bound: false })).toBe(false);
+    expect(canSelectParcel({ ...idle, tool: "draw" })).toBe(false);
+    expect(canSelectParcel({ ...idle, tool: "edit" })).toBe(false);
+    // An empty draw store still allows clicks: cadastral parcels are selectable
+    // without anything drawn.
+    expect(canSelectParcel({ ...idle, polygons: [] })).toBe(true);
+    expect(canSelectParcel({ ...idle, analyzed: true })).toBe(false);
   });
 });

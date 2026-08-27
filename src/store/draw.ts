@@ -4,6 +4,7 @@ import type { GeoJSONStoreFeatures, TerraDraw } from "terra-draw";
 import { drawnPolygons, type FeatureId } from "@/lib/map/draw-features";
 import { terraDrawMode, type DrawTool } from "@/lib/map/draw-state";
 import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
+import { selectedParcelsAtom } from "@/store/parcels";
 import { uploadResultAtom } from "@/store/upload";
 
 /**
@@ -51,8 +52,10 @@ export const startDrawAtom = atom(null, (get, set) => {
     set(drawStateAtom, { type: "geometry", polygons: [] });
   }
 
-  // A stale "Imported N areas" notice must not outlive the areas it counted.
+  // A stale "Imported N areas" notice must not outlive the areas it counted, and a
+  // from-scratch session drops the clicked cadastral parcels with everything else.
   set(uploadResultAtom, null);
+  set(selectedParcelsAtom, []);
   set(drawStateAtom, { type: "tool", tool: "draw" });
 });
 

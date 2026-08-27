@@ -56,7 +56,11 @@ export function MapView({ children }: { children?: ReactNode }) {
         zoom: event.viewState.zoom,
       });
 
-      void setViewState({ lng: next.longitude, lat: next.latitude, zoom: next.zoom });
+      void setViewState({
+        lng: next.longitude,
+        lat: next.latitude,
+        zoom: next.zoom,
+      });
     },
     [setViewState],
   );
