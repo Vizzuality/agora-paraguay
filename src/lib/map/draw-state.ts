@@ -1,10 +1,10 @@
-import type { DrawnPolygon, FeatureId } from "@/lib/map/draw-features";
+import type { DrawnPolygon, FeatureId } from '@/lib/map/draw-features';
 
 /** What the user picked in the control cluster. `null` is idle: the map pans normally. */
-export type DrawTool = "draw" | "edit";
+export type DrawTool = 'draw' | 'edit';
 
 /** The Terra Draw mode names this app registers, plus its built-in no-op mode. */
-export type TerraDrawModeName = "polygon" | "select" | "static";
+export type TerraDrawModeName = 'polygon' | 'select' | 'static';
 
 export type DrawState = {
   /** Terra Draw has started and its events are wired up. False during SSR and teardown. */
@@ -29,15 +29,15 @@ export type DrawState = {
 };
 
 export type DrawAction =
-  | { type: "bound" }
-  | { type: "unbound" }
-  | { type: "tool"; tool: DrawTool | null }
-  | { type: "geometry"; polygons: DrawnPolygon[] }
-  | { type: "selected"; id: FeatureId }
-  | { type: "deselected"; id: FeatureId }
-  | { type: "analysisSelected"; id: FeatureId }
-  | { type: "analysisCleared" }
-  | { type: "analysisSubmitted" };
+  | { type: 'bound' }
+  | { type: 'unbound' }
+  | { type: 'tool'; tool: DrawTool | null }
+  | { type: 'geometry'; polygons: DrawnPolygon[] }
+  | { type: 'selected'; id: FeatureId }
+  | { type: 'deselected'; id: FeatureId }
+  | { type: 'analysisSelected'; id: FeatureId }
+  | { type: 'analysisCleared' }
+  | { type: 'analysisSubmitted' };
 
 export const INITIAL_DRAW_STATE: DrawState = {
   bound: false,
@@ -50,26 +50,26 @@ export const INITIAL_DRAW_STATE: DrawState = {
 
 export function drawReducer(state: DrawState, action: DrawAction): DrawState {
   switch (action.type) {
-    case "bound":
+    case 'bound':
       return { ...state, bound: true };
 
     // The instance owned the geometry: it went with the map, so nothing survives.
-    case "unbound":
+    case 'unbound':
       return INITIAL_DRAW_STATE;
 
-    case "tool":
+    case 'tool':
       return {
         ...state,
         tool: action.tool,
         // Only select mode holds a selection, and Terra Draw does not promise a
         // `deselect` when the mode is swapped out from under it.
-        selectedId: action.tool === "edit" ? state.selectedId : null,
+        selectedId: action.tool === 'edit' ? state.selectedId : null,
         // Picking up a tool resumes the session. Putting it down (`null`) does not:
         // that is how "analysisSubmitted" itself parks the tool.
         analyzed: action.tool === null ? state.analyzed : false,
       };
 
-    case "geometry":
+    case 'geometry':
       return {
         ...state,
         polygons: action.polygons,
@@ -78,7 +78,7 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
         // The edit tool cannot outlive the geometry it edits: with an empty store the
         // toggle would render disabled yet pressed, and Terra Draw would sit in select
         // mode with nothing selectable.
-        tool: action.polygons.length === 0 && state.tool === "edit" ? null : state.tool,
+        tool: action.polygons.length === 0 && state.tool === 'edit' ? null : state.tool,
         // A selection outliving the polygon it points at would leave Delete enabled with
         // nothing to delete — and an analysis selection would highlight nothing.
         selectedId: action.polygons.some((polygon) => polygon.id === state.selectedId)
@@ -89,32 +89,32 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
           : null,
       };
 
-    case "selected":
+    case 'selected':
       return { ...state, selectedId: action.id };
 
-    case "deselected":
+    case 'deselected':
       // A late deselect for a feature that is already gone must not clear a newer
       // selection.
       return state.selectedId === action.id ? { ...state, selectedId: null } : state;
 
     // Unlike `selectedId`, the analysis selection survives tool changes: it is not tied
     // to any Terra Draw mode.
-    case "analysisSelected":
+    case 'analysisSelected':
       return { ...state, analysisId: action.id };
 
-    case "analysisCleared":
+    case 'analysisCleared':
       return { ...state, analysisId: null };
 
-    case "analysisSubmitted":
+    case 'analysisSubmitted':
       return { ...state, analyzed: true };
   }
 }
 
 /** The single place that decides which Terra Draw mode a given state means. */
 export function terraDrawMode(state: DrawState): TerraDrawModeName {
-  if (!state.bound || state.tool === null) return "static";
+  if (!state.bound || state.tool === null) return 'static';
 
-  return state.tool === "draw" ? "polygon" : "select";
+  return state.tool === 'draw' ? 'polygon' : 'select';
 }
 
 export function canDraw(state: DrawState): boolean {

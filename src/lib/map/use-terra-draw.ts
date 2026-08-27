@@ -1,22 +1,22 @@
-import { useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useState } from "react";
-import { useMap } from "react-map-gl/maplibre";
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { useMap } from 'react-map-gl/maplibre';
 import {
   TerraDraw,
   TerraDrawPolygonMode,
   TerraDrawSelectMode,
   type TerraDrawEventListeners,
-} from "terra-draw";
-import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
+} from 'terra-draw';
+import { TerraDrawMapLibreGLAdapter } from 'terra-draw-maplibre-gl-adapter';
 
-import { PARCEL_STYLES } from "@/lib/map/draw-styles";
+import { PARCEL_STYLES } from '@/lib/map/draw-styles';
 import {
   bindDrawAtom,
   drawModeAtom,
   reportDeselectedAtom,
   reportGeometryAtom,
   reportSelectedAtom,
-} from "@/store/draw";
+} from '@/store/draw';
 
 /**
  * Binds Terra Draw to the MapLibre instance rendered by react-map-gl.
@@ -81,12 +81,12 @@ export function useTerraDraw() {
 
       // Drawing stays armed after a polygon is finished, so several can be drawn in a
       // row without going back to the toolbar.
-      const onFinish: TerraDrawEventListeners["finish"] = () => {
+      const onFinish: TerraDrawEventListeners['finish'] = () => {
         reportGeometry(instance.getSnapshot());
       };
 
-      const onChange: TerraDrawEventListeners["change"] = (_ids, type) => {
-        if (type === "styling") return;
+      const onChange: TerraDrawEventListeners['change'] = (_ids, type) => {
+        if (type === 'styling') return;
 
         reportGeometry(instance.getSnapshot());
       };
@@ -94,16 +94,16 @@ export function useTerraDraw() {
       // Both handlers recompute from `getSnapshot()` rather than from the event's ids,
       // so a change that arrives while another is being handled still converges on the
       // same answer.
-      instance.on("finish", onFinish);
-      instance.on("change", onChange);
-      instance.on("select", reportSelected);
-      instance.on("deselect", reportDeselected);
+      instance.on('finish', onFinish);
+      instance.on('change', onChange);
+      instance.on('select', reportSelected);
+      instance.on('deselect', reportDeselected);
 
       detach = () => {
-        instance.off("finish", onFinish);
-        instance.off("change", onChange);
-        instance.off("select", reportSelected);
-        instance.off("deselect", reportDeselected);
+        instance.off('finish', onFinish);
+        instance.off('change', onChange);
+        instance.off('select', reportSelected);
+        instance.off('deselect', reportDeselected);
       };
 
       // Listeners are attached before `start()` because `ready` fires inside it.
@@ -118,11 +118,11 @@ export function useTerraDraw() {
     if (map.isStyleLoaded() || map.loaded()) {
       start();
     } else {
-      map.once("load", start);
+      map.once('load', start);
     }
 
     return () => {
-      map.off("load", start);
+      map.off('load', start);
       bind(null);
       started?.stop();
       detach?.();

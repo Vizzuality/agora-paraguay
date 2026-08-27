@@ -1,4 +1,4 @@
-import type { GeoJSONStoreFeatures, HexColor } from "terra-draw";
+import type { GeoJSONStoreFeatures, HexColor } from 'terra-draw';
 
 /**
  * Per-feature Terra Draw styling for the parcel polygons (Figma parcel styles).
@@ -19,23 +19,23 @@ type ParcelVariant = {
 
 /** Selected for analysis: the design's highlight yellow at 50%. */
 const ANALYSIS: ParcelVariant = {
-  fill: "#F1FF28",
+  fill: '#F1FF28',
   fillOpacity: 0.5,
-  outline: "#F1FF28",
+  outline: '#F1FF28',
   outlineWidth: 2,
 };
 
 /** Uploaded parcels: white at 10% with a white outline. */
 const UPLOAD: ParcelVariant = {
-  fill: "#FFFFFF",
+  fill: '#FFFFFF',
   fillOpacity: 0.1,
-  outline: "#FFFFFF",
+  outline: '#FFFFFF',
   outlineWidth: 2,
 };
 
 function variant(feature: GeoJSONStoreFeatures): ParcelVariant | undefined {
   if (feature.properties.analysis === true) return ANALYSIS;
-  if (feature.properties.origin === "upload") return UPLOAD;
+  if (feature.properties.origin === 'upload') return UPLOAD;
 
   return undefined;
 }

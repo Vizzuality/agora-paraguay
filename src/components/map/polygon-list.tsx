@@ -1,9 +1,9 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from 'jotai';
 
-import { Button } from "@/components/ui/button";
-import { polygonName } from "@/lib/map/draw-features";
-import { selectAnalysisPolygonAtom } from "@/store/analysis";
-import { drawAtom } from "@/store/draw";
+import { Button } from '@/components/ui/button';
+import { polygonName } from '@/lib/map/draw-features';
+import { selectAnalysisPolygonAtom } from '@/store/analysis';
+import { drawAtom } from '@/store/draw';
 
 /**
  * One entry per polygon on the map — drawn and uploaded alike — each selectable as
@@ -32,7 +32,7 @@ export function PolygonList() {
           return (
             <li key={polygon.id}>
               <Button
-                variant={selected ? "secondary" : "ghost"}
+                variant={selected ? 'secondary' : 'ghost'}
                 size="sm"
                 className="w-full justify-start"
                 aria-pressed={selected}

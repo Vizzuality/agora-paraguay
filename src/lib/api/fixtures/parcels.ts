@@ -1,4 +1,4 @@
-import type { ParcelCollection, ParcelFeature } from "@/lib/api/schemas";
+import type { ParcelCollection, ParcelFeature } from '@/lib/api/schemas';
 
 /**
  * TODO(mock-parcels): this whole module is a stand-in. When the real parcel layer is
@@ -97,7 +97,7 @@ function jitteredCorners(random: () => number, columnEdges: number[], rowEdges: 
 
 function quad(corners: [number, number][][], col: number, row: number) {
   return {
-    type: "Polygon",
+    type: 'Polygon',
     coordinates: [
       [
         corners[col][row],
@@ -107,7 +107,7 @@ function quad(corners: [number, number][][], col: number, row: number) {
         corners[col][row],
       ],
     ],
-  } satisfies ParcelFeature["geometry"];
+  } satisfies ParcelFeature['geometry'];
 }
 
 export function generateParcelFixtures(seed = 20260826): ParcelCollection {
@@ -143,7 +143,7 @@ export function generateParcelFixtures(seed = 20260826): ParcelCollection {
           const id = `parcel-${features.length + 1}`;
 
           features.push({
-            type: "Feature",
+            type: 'Feature',
             properties: { id, name: `Parcela ${features.length + 1}` },
             geometry: quad(corners, col, row),
           });
@@ -152,7 +152,7 @@ export function generateParcelFixtures(seed = 20260826): ParcelCollection {
     }
   }
 
-  return { type: "FeatureCollection", features };
+  return { type: 'FeatureCollection', features };
 }
 
 export const parcelFixtures = generateParcelFixtures();

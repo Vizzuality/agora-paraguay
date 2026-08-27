@@ -1,11 +1,11 @@
-import { atom } from "jotai";
-import type { GeoJSONStoreFeatures, TerraDraw } from "terra-draw";
+import { atom } from 'jotai';
+import type { GeoJSONStoreFeatures, TerraDraw } from 'terra-draw';
 
-import { drawnPolygons, type FeatureId } from "@/lib/map/draw-features";
-import { terraDrawMode, type DrawTool } from "@/lib/map/draw-state";
-import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
-import { selectedParcelsAtom } from "@/store/parcels";
-import { uploadResultAtom } from "@/store/upload";
+import { drawnPolygons, type FeatureId } from '@/lib/map/draw-features';
+import { terraDrawMode, type DrawTool } from '@/lib/map/draw-state';
+import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
+import { selectedParcelsAtom } from '@/store/parcels';
+import { uploadResultAtom } from '@/store/upload';
 
 /**
  * Drawing and editing the areas of interest, as global state.
@@ -33,7 +33,7 @@ export const drawModeAtom = atom((get) => terraDrawMode(get(drawStateAtom)));
  */
 
 export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => {
-  set(drawStateAtom, { type: "tool", tool });
+  set(drawStateAtom, { type: 'tool', tool });
 });
 
 /**
@@ -49,32 +49,32 @@ export const startDrawAtom = atom(null, (get, set) => {
   if (get(drawStateAtom).polygons.length > 0) {
     draw.clear();
     // `clear()` does not surface as a `change` event, so report it by hand.
-    set(drawStateAtom, { type: "geometry", polygons: [] });
+    set(drawStateAtom, { type: 'geometry', polygons: [] });
   }
 
   // A stale "Imported N areas" notice must not outlive the areas it counted, and a
   // from-scratch session drops the clicked cadastral parcels with everything else.
   set(uploadResultAtom, null);
   set(selectedParcelsAtom, []);
-  set(drawStateAtom, { type: "tool", tool: "draw" });
+  set(drawStateAtom, { type: 'tool', tool: 'draw' });
 });
 
 /** Called with the started instance, and with `null` when it is torn down. */
 export const bindDrawAtom = atom(null, (_get, set, draw: TerraDraw | null) => {
   set(drawInstanceAtom, draw);
-  set(drawStateAtom, { type: draw ? "bound" : "unbound" });
+  set(drawStateAtom, { type: draw ? 'bound' : 'unbound' });
 });
 
 export const reportGeometryAtom = atom(null, (_get, set, snapshot: GeoJSONStoreFeatures[]) => {
-  set(drawStateAtom, { type: "geometry", polygons: drawnPolygons(snapshot) });
+  set(drawStateAtom, { type: 'geometry', polygons: drawnPolygons(snapshot) });
 });
 
 export const reportSelectedAtom = atom(null, (_get, set, id: FeatureId) => {
-  set(drawStateAtom, { type: "selected", id });
+  set(drawStateAtom, { type: 'selected', id });
 });
 
 export const reportDeselectedAtom = atom(null, (_get, set, id: FeatureId) => {
-  set(drawStateAtom, { type: "deselected", id });
+  set(drawStateAtom, { type: 'deselected', id });
 });
 
 export const deleteSelectedAtom = atom(null, (get, set) => {
@@ -87,7 +87,7 @@ export const deleteSelectedAtom = atom(null, (get, set) => {
   draw.deselectFeature(selectedId);
   draw.removeFeatures([selectedId]);
 
-  set(drawStateAtom, { type: "deselected", id: selectedId });
+  set(drawStateAtom, { type: 'deselected', id: selectedId });
 });
 
 export const clearDrawAtom = atom(null, (get, set) => {
@@ -97,5 +97,5 @@ export const clearDrawAtom = atom(null, (get, set) => {
 
   draw.clear();
   // `clear()` does not surface as a `change` event, so report it by hand.
-  set(drawStateAtom, { type: "geometry", polygons: [] });
+  set(drawStateAtom, { type: 'geometry', polygons: [] });
 });

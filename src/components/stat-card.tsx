@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type StatCardProps = {
   /** Sentence case, no trailing colon. */
@@ -31,7 +31,7 @@ export function StatCard({ label, value, caption, action, className }: StatCardP
   return (
     <Card
       className={cn(
-        "min-h-[254px] justify-between gap-6 rounded-[24px] border-0 bg-widget p-6 text-widget-foreground shadow-none",
+        'min-h-[254px] justify-between gap-6 rounded-[24px] border-0 bg-widget p-6 text-widget-foreground shadow-none',
         className,
       )}
     >

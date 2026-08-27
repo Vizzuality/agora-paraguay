@@ -1,6 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from '@playwright/test';
 
-import { drawPolygon, mapCanvas, stubBasemap } from "./fixtures/map";
+import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
 // Same canvas-relative coordinates as draw-controls.spec.ts (the canvas is the right
 // half of the viewport, ~640px wide).
@@ -18,21 +18,21 @@ const SECOND_POLYGON = [
 
 function controls(page: Page) {
   return {
-    draw: page.getByRole("button", { name: "Dibujar un área" }),
-    analyze: page.getByRole("button", { name: "Analizar" }),
-    status: page.getByRole("group", { name: "Herramientas de dibujo" }).locator("p"),
+    draw: page.getByRole('button', { name: 'Dibujar un área' }),
+    analyze: page.getByRole('button', { name: 'Analizar' }),
+    status: page.getByRole('group', { name: 'Herramientas de dibujo' }).locator('p'),
   };
 }
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
-  await page.goto("/");
+  await page.goto('/');
 
   await expect(controls(page).draw).toBeEnabled();
   await expect(mapCanvas(page)).toBeVisible();
 });
 
-test("analyzes every polygon on the map and ends the drawing session", async ({ page }) => {
+test('analyzes every polygon on the map and ends the drawing session', async ({ page }) => {
   const { draw, analyze, status } = controls(page);
 
   // Nothing on the map yet: analysis has nothing to send.
@@ -41,20 +41,20 @@ test("analyzes every polygon on the map and ends the drawing session", async ({ 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(status).toHaveText("2 áreas dibujadas.");
+  await expect(status).toHaveText('2 áreas dibujadas.');
   await expect(analyze).toBeEnabled();
 
   await analyze.click();
 
   // The fake endpoint accepts all polygons — no selection involved.
-  await expect(page.getByText("Análisis aceptado: se enviaron 2 áreas.")).toBeVisible();
+  await expect(page.getByText('Análisis aceptado: se enviaron 2 áreas.')).toBeVisible();
 
   // Analyze exits drawing mode; the polygons stay on the map.
-  await expect(draw).toHaveAttribute("aria-pressed", "false");
-  await expect(status).toHaveText("2 áreas dibujadas.");
+  await expect(draw).toHaveAttribute('aria-pressed', 'false');
+  await expect(status).toHaveText('2 áreas dibujadas.');
 
   // Drawing again starts the next session from scratch.
   await draw.click();
-  await expect(status).toHaveText("No hay áreas dibujadas.");
+  await expect(status).toHaveText('No hay áreas dibujadas.');
   await expect(analyze).toBeDisabled();
 });

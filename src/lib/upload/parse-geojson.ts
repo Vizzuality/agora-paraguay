@@ -1,5 +1,5 @@
-import { normalizeUnknown } from "@/lib/upload/normalize";
-import { UploadError, type ParseOutcome } from "@/lib/upload/types";
+import { normalizeUnknown } from '@/lib/upload/normalize';
+import { UploadError, type ParseOutcome } from '@/lib/upload/types';
 
 /**
  * GeoJSON needs no parsing library: `JSON.parse` plus the Zod schema inside
@@ -12,8 +12,8 @@ export function parseGeoJson(text: string): ParseOutcome {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new UploadError("unreadable", "No se pudo leer el archivo como GeoJSON.");
+    throw new UploadError('unreadable', 'No se pudo leer el archivo como GeoJSON.');
   }
 
-  return normalizeUnknown(raw, "GeoJSON");
+  return normalizeUnknown(raw, 'GeoJSON');
 }

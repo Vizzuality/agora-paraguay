@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
-import type { UploadGeoJson } from "@/lib/upload/geojson-schema";
-import { normalizeFeatures, normalizeUnknown } from "@/lib/upload/normalize";
-import { UploadError } from "@/lib/upload/types";
+import type { UploadGeoJson } from '@/lib/upload/geojson-schema';
+import { normalizeFeatures, normalizeUnknown } from '@/lib/upload/normalize';
+import { UploadError } from '@/lib/upload/types';
 
 /**
  * A closed square inside Paraguay offset by `at`, the smallest valid store polygon.
@@ -22,16 +22,16 @@ function square(at = 0): number[][] {
 }
 
 function feature(geometry: unknown, properties: Record<string, unknown> = {}) {
-  return { type: "Feature", geometry, properties };
+  return { type: 'Feature', geometry, properties };
 }
 
 function collection(...features: unknown[]) {
-  return { type: "FeatureCollection", features } as UploadGeoJson;
+  return { type: 'FeatureCollection', features } as UploadGeoJson;
 }
 
 function polygon(properties: Record<string, unknown> = {}, ...rings: number[][][]) {
   return feature(
-    { type: "Polygon", coordinates: rings.length > 0 ? rings : [square()] },
+    { type: 'Polygon', coordinates: rings.length > 0 ? rings : [square()] },
     properties,
   );
 }
@@ -48,35 +48,35 @@ function code(run: () => unknown): string | null {
   return null;
 }
 
-describe("MultiPolygon explosion", () => {
-  it("explodes a MultiPolygon into independent polygons with (i/n) names", () => {
+describe('MultiPolygon explosion', () => {
+  it('explodes a MultiPolygon into independent polygons with (i/n) names', () => {
     const { features, warnings } = normalizeFeatures(
       collection(
         feature(
-          { type: "MultiPolygon", coordinates: [[square(0)], [square(10)], [square(20)]] },
-          { name: "Estancia Norte" },
+          { type: 'MultiPolygon', coordinates: [[square(0)], [square(10)], [square(20)]] },
+          { name: 'Estancia Norte' },
         ),
       ),
     );
 
     expect(features.map((item) => item.properties.name)).toEqual([
-      "Estancia Norte (1/3)",
-      "Estancia Norte (2/3)",
-      "Estancia Norte (3/3)",
+      'Estancia Norte (1/3)',
+      'Estancia Norte (2/3)',
+      'Estancia Norte (3/3)',
     ]);
-    expect(features.every((item) => item.geometry.type === "Polygon")).toBe(true);
+    expect(features.every((item) => item.geometry.type === 'Polygon')).toBe(true);
     expect(warnings).toEqual([]);
   });
 
-  it("keeps the plain name for a single-part MultiPolygon", () => {
+  it('keeps the plain name for a single-part MultiPolygon', () => {
     const { features } = normalizeFeatures(
-      collection(feature({ type: "MultiPolygon", coordinates: [[square()]] }, { name: "Campo" })),
+      collection(feature({ type: 'MultiPolygon', coordinates: [[square()]] }, { name: 'Campo' })),
     );
 
-    expect(features.map((item) => item.properties.name)).toEqual(["Campo"]);
+    expect(features.map((item) => item.properties.name)).toEqual(['Campo']);
   });
 
-  it("keeps the hole-free parts when one part of a MultiPolygon has holes", () => {
+  it('keeps the hole-free parts when one part of a MultiPolygon has holes', () => {
     const inner = [
       [0.2, 0.2],
       [0.2, 0.4],
@@ -86,25 +86,25 @@ describe("MultiPolygon explosion", () => {
     const { features, warnings } = normalizeFeatures(
       collection(
         feature(
-          { type: "MultiPolygon", coordinates: [[square(0)], [square(10), inner], [square(20)]] },
-          { name: "Estancia" },
+          { type: 'MultiPolygon', coordinates: [[square(0)], [square(10), inner], [square(20)]] },
+          { name: 'Estancia' },
         ),
       ),
     );
 
     // The suffix is computed over all parts, so the skipped one keeps its slot.
     expect(features.map((item) => item.properties.name)).toEqual([
-      "Estancia (1/3)",
-      "Estancia (3/3)",
+      'Estancia (1/3)',
+      'Estancia (3/3)',
     ]);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0].featureName).toBe("Estancia (2/3)");
-    expect(warnings[0].message).toContain("huecos");
+    expect(warnings[0].featureName).toBe('Estancia (2/3)');
+    expect(warnings[0].message).toContain('huecos');
   });
 });
 
-describe("holes", () => {
-  it("skips a holed polygon with a warning naming it, keeping its siblings", () => {
+describe('holes', () => {
+  it('skips a holed polygon with a warning naming it, keeping its siblings', () => {
     const inner = [
       [0.2, 0.2],
       [0.2, 0.4],
@@ -112,14 +112,14 @@ describe("holes", () => {
       [0.2, 0.2],
     ];
     const { features, warnings } = normalizeFeatures(
-      collection(polygon({ name: "Holed" }, square(), inner), polygon({ name: "Clean" })),
+      collection(polygon({ name: 'Holed' }, square(), inner), polygon({ name: 'Clean' })),
     );
 
-    expect(features.map((item) => item.properties.name)).toEqual(["Clean"]);
-    expect(warnings[0].featureName).toBe("Holed");
+    expect(features.map((item) => item.properties.name)).toEqual(['Clean']);
+    expect(warnings[0].featureName).toBe('Holed');
   });
 
-  it("errors when every polygon is holed, mentioning the holes", () => {
+  it('errors when every polygon is holed, mentioning the holes', () => {
     const inner = [
       [0.2, 0.2],
       [0.2, 0.4],
@@ -128,22 +128,22 @@ describe("holes", () => {
     ];
 
     expect(code(() => normalizeFeatures(collection(polygon({}, square(), inner))))).toBe(
-      "no-polygons",
+      'no-polygons',
     );
   });
 });
 
-describe("coordinate repair", () => {
-  it("caps precision at 9 decimals, which the store enforces", () => {
+describe('coordinate repair', () => {
+  it('caps precision at 9 decimals, which the store enforces', () => {
     const ring = square().map(([lng, lat]) => [lng + 0.12345678912345, lat]);
     const { features } = normalizeFeatures(collection(polygon({}, ring)));
 
     for (const [lng] of features[0].geometry.coordinates[0]) {
-      expect(String(lng).split(".")[1].length).toBeLessThanOrEqual(9);
+      expect(String(lng).split('.')[1].length).toBeLessThanOrEqual(9);
     }
   });
 
-  it("drops z and m values", () => {
+  it('drops z and m values', () => {
     const ring = square().map(([lng, lat]) => [lng, lat, 120, 0]);
     const { features } = normalizeFeatures(collection(polygon({}, ring)));
 
@@ -152,7 +152,7 @@ describe("coordinate repair", () => {
     );
   });
 
-  it("closes an unclosed ring", () => {
+  it('closes an unclosed ring', () => {
     const open = square().slice(0, -1);
     const { features } = normalizeFeatures(collection(polygon({}, open)));
     const ring = features[0].geometry.coordinates[0];
@@ -161,81 +161,81 @@ describe("coordinate repair", () => {
     expect(ring).toHaveLength(open.length + 1);
   });
 
-  it("rejects the whole file when any coordinate is outside lon/lat range", () => {
+  it('rejects the whole file when any coordinate is outside lon/lat range', () => {
     const projected = square().map(([lng, lat]) => [lng + 435000, lat + 7200000]);
 
     expect(code(() => normalizeFeatures(collection(polygon({}), polygon({}, projected))))).toBe(
-      "bad-crs",
+      'bad-crs',
     );
   });
 });
 
-describe("Paraguay bounds", () => {
-  it("rejects valid lng/lat geometry outside Paraguay", () => {
+describe('Paraguay bounds', () => {
+  it('rejects valid lng/lat geometry outside Paraguay', () => {
     const paris = square().map(([lng, lat]) => [lng + 60.3, lat + 72.8]);
 
-    expect(code(() => normalizeFeatures(collection(polygon({ name: "París" }, paris))))).toBe(
-      "out-of-paraguay",
+    expect(code(() => normalizeFeatures(collection(polygon({ name: 'París' }, paris))))).toBe(
+      'out-of-paraguay',
     );
   });
 
-  it("rejects small projected coordinates that slip the world-range check", () => {
+  it('rejects small projected coordinates that slip the world-range check', () => {
     // A shapefile without its .prj whose local-grid numbers are ≤ 180: read as lng/lat
     // they land near (0,0) — the Gulf of Guinea failure this check exists to stop.
     const nearNullIsland = square().map(([lng, lat]) => [lng + 58, lat + 24]);
 
     expect(code(() => normalizeFeatures(collection(polygon({}, nearNullIsland))))).toBe(
-      "out-of-paraguay",
+      'out-of-paraguay',
     );
   });
 
-  it("rejects the whole file when one polygon of several strays outside", () => {
+  it('rejects the whole file when one polygon of several strays outside', () => {
     const outside = square().map(([lng, lat]) => [lng + 30, lat]);
 
     expect(code(() => normalizeFeatures(collection(polygon({}), polygon({}, outside))))).toBe(
-      "out-of-paraguay",
+      'out-of-paraguay',
     );
   });
 });
 
-describe("naming", () => {
-  it("prefers name, then nombre, case-insensitively", () => {
+describe('naming', () => {
+  it('prefers name, then nombre, case-insensitively', () => {
     const { features } = normalizeFeatures(
       collection(
-        polygon({ name: "By name", NOMBRE: "ignored" }),
-        polygon({ NOMBRE: "By nombre" }),
-        polygon({ TITLE: "By title" }),
+        polygon({ name: 'By name', NOMBRE: 'ignored' }),
+        polygon({ NOMBRE: 'By nombre' }),
+        polygon({ TITLE: 'By title' }),
       ),
     );
 
     expect(features.map((item) => item.properties.name)).toEqual([
-      "By name",
-      "By nombre",
-      "By title",
+      'By name',
+      'By nombre',
+      'By title',
     ]);
   });
 
-  it("falls back to a 1-based Polygon N and ignores non-string values", () => {
+  it('falls back to a 1-based Polygon N and ignores non-string values', () => {
     const { features } = normalizeFeatures(
-      collection(polygon({ name: 42 }), polygon({ name: "  " }), polygon()),
+      collection(polygon({ name: 42 }), polygon({ name: '  ' }), polygon()),
     );
 
     expect(features.map((item) => item.properties.name)).toEqual([
-      "Polígono 1",
-      "Polígono 2",
-      "Polígono 3",
+      'Polígono 1',
+      'Polígono 2',
+      'Polígono 3',
     ]);
   });
 });
 
-describe("non-polygon input", () => {
-  it("counts skipped points and lines into one warning", () => {
+describe('non-polygon input', () => {
+  it('counts skipped points and lines into one warning', () => {
     const { features, warnings } = normalizeFeatures(
       collection(
-        polygon({ name: "Kept" }),
-        feature({ type: "Point", coordinates: [0, 0] }),
+        polygon({ name: 'Kept' }),
+        feature({ type: 'Point', coordinates: [0, 0] }),
         feature({
-          type: "LineString",
+          type: 'LineString',
           coordinates: [
             [0, 0],
             [1, 1],
@@ -245,77 +245,77 @@ describe("non-polygon input", () => {
     );
 
     expect(features).toHaveLength(1);
-    expect(warnings).toEqual([{ message: "Se omitieron 2 entidades que no son polígonos." }]);
+    expect(warnings).toEqual([{ message: 'Se omitieron 2 entidades que no son polígonos.' }]);
   });
 
-  it("recurses one level into a GeometryCollection and skips deeper nesting", () => {
+  it('recurses one level into a GeometryCollection and skips deeper nesting', () => {
     const { features, warnings } = normalizeFeatures(
       collection(
         feature(
           {
-            type: "GeometryCollection",
+            type: 'GeometryCollection',
             geometries: [
-              { type: "Polygon", coordinates: [square()] },
-              { type: "GeometryCollection", geometries: [] },
+              { type: 'Polygon', coordinates: [square()] },
+              { type: 'GeometryCollection', geometries: [] },
             ],
           },
-          { name: "Mixed" },
+          { name: 'Mixed' },
         ),
       ),
     );
 
     expect(features).toHaveLength(1);
-    expect(warnings).toEqual([{ message: "Se omitió 1 entidad que no es un polígono." }]);
+    expect(warnings).toEqual([{ message: 'Se omitió 1 entidad que no es un polígono.' }]);
   });
 
-  it("errors naming what was found when nothing is importable", () => {
+  it('errors naming what was found when nothing is importable', () => {
     let caught: UploadError | undefined;
 
     try {
       normalizeFeatures(
         collection(
-          feature({ type: "Point", coordinates: [0, 0] }),
-          feature({ type: "Point", coordinates: [1, 1] }),
+          feature({ type: 'Point', coordinates: [0, 0] }),
+          feature({ type: 'Point', coordinates: [1, 1] }),
         ),
       );
     } catch (error) {
       caught = error as UploadError;
     }
 
-    expect(caught?.code).toBe("no-polygons");
-    expect(caught?.message).toContain("2 puntos");
+    expect(caught?.code).toBe('no-polygons');
+    expect(caught?.message).toContain('2 puntos');
   });
 
-  it("errors on an empty FeatureCollection", () => {
-    expect(code(() => normalizeFeatures(collection()))).toBe("empty");
+  it('errors on an empty FeatureCollection', () => {
+    expect(code(() => normalizeFeatures(collection()))).toBe('empty');
   });
 });
 
-describe("root forms and ids", () => {
-  it("accepts a lone Feature and a bare geometry as the file root", () => {
-    expect(normalizeFeatures(polygon({ name: "Lone" }) as UploadGeoJson).features).toHaveLength(1);
+describe('root forms and ids', () => {
+  it('accepts a lone Feature and a bare geometry as the file root', () => {
+    expect(normalizeFeatures(polygon({ name: 'Lone' }) as UploadGeoJson).features).toHaveLength(1);
     expect(
-      normalizeFeatures({ type: "Polygon", coordinates: [square()] } as UploadGeoJson).features,
+      normalizeFeatures({ type: 'Polygon', coordinates: [square()] } as UploadGeoJson).features,
     ).toHaveLength(1);
   });
 
-  it("mints a unique id per feature so auto-select can address them", () => {
+  it('mints a unique id per feature so auto-select can address them', () => {
     const { features } = normalizeFeatures(
-      collection(feature({ type: "MultiPolygon", coordinates: [[square(0)], [square(10)]] })),
+      collection(feature({ type: 'MultiPolygon', coordinates: [[square(0)], [square(10)]] })),
     );
 
     expect(new Set(features.map((item) => item.id)).size).toBe(features.length);
   });
 });
 
-describe("normalizeUnknown", () => {
-  it("rejects values that are not GeoJSON with an unreadable error", () => {
-    expect(code(() => normalizeUnknown({ hello: "world" }, "GeoJSON"))).toBe("unreadable");
+describe('normalizeUnknown', () => {
+  it('rejects values that are not GeoJSON with an unreadable error', () => {
+    expect(code(() => normalizeUnknown({ hello: 'world' }, 'GeoJSON'))).toBe('unreadable');
   });
 
-  it("skips a malformed feature with a warning instead of rejecting the whole collection", () => {
+  it('skips a malformed feature with a warning instead of rejecting the whole collection', () => {
     const twoPositionRing = feature({
-      type: "Polygon",
+      type: 'Polygon',
       coordinates: [
         [
           [0, 0],
@@ -325,21 +325,21 @@ describe("normalizeUnknown", () => {
     });
 
     const { features, warnings } = normalizeUnknown(
-      collection(polygon({ name: "Válido" }), twoPositionRing),
-      "GeoJSON",
+      collection(polygon({ name: 'Válido' }), twoPositionRing),
+      'GeoJSON',
     );
 
-    expect(features.map((item) => item.properties.name)).toEqual(["Válido"]);
-    expect(warnings.map((warning) => warning.message)).toContain("Se omitió 1 entidad no válida.");
+    expect(features.map((item) => item.properties.name)).toEqual(['Válido']);
+    expect(warnings.map((warning) => warning.message)).toContain('Se omitió 1 entidad no válida.');
   });
 
-  it("errors when every feature in the collection is malformed", () => {
-    expect(code(() => normalizeUnknown(collection({ type: "Feature" }), "GeoJSON"))).toBe("empty");
+  it('errors when every feature in the collection is malformed', () => {
+    expect(code(() => normalizeUnknown(collection({ type: 'Feature' }), 'GeoJSON'))).toBe('empty');
   });
 
-  it("still hard-fails a malformed lone-feature root, which has nothing to degrade to", () => {
-    const bare = feature({ type: "Polygon", coordinates: [[[0, 0]]] });
+  it('still hard-fails a malformed lone-feature root, which has nothing to degrade to', () => {
+    const bare = feature({ type: 'Polygon', coordinates: [[[0, 0]]] });
 
-    expect(code(() => normalizeUnknown(bare, "GeoJSON"))).toBe("unreadable");
+    expect(code(() => normalizeUnknown(bare, 'GeoJSON'))).toBe('unreadable');
   });
 });

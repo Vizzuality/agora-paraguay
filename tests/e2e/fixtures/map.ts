@@ -1,9 +1,9 @@
-import type { Page } from "@playwright/test";
+import type { Page } from '@playwright/test';
 
 /** A 1×1 transparent PNG, so stubbed raster tiles decode cleanly. */
 const BLANK_TILE = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-  "base64",
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64',
 );
 
 /**
@@ -16,21 +16,21 @@ const BLANK_TILE = Buffer.from(
  * The inline style loads regardless, and `load` is what starts Terra Draw.
  */
 export async function stubBasemap(page: Page) {
-  await page.route("https://server.arcgisonline.com/**", (route) =>
-    route.fulfill({ contentType: "image/png", body: BLANK_TILE }),
+  await page.route('https://server.arcgisonline.com/**', (route) =>
+    route.fulfill({ contentType: 'image/png', body: BLANK_TILE }),
   );
 }
 
 /** The MapLibre canvas, which is what draw interactions click on. */
 export function mapCanvas(page: Page) {
-  return page.locator("canvas.maplibregl-canvas");
+  return page.locator('canvas.maplibregl-canvas');
 }
 
 /** Pans the camera by dragging from the canvas centre, then waits for the URL to update. */
 export async function panMap(page: Page, delta: { dx: number; dy: number }) {
   const urlBefore = page.url();
   const box = await mapCanvas(page).boundingBox();
-  if (!box) throw new Error("Map canvas has no bounding box");
+  if (!box) throw new Error('Map canvas has no bounding box');
 
   const centerX = box.x + box.width / 2;
   const centerY = box.y + box.height / 2;
@@ -57,5 +57,5 @@ export async function drawPolygon(page: Page, vertices: { x: number; y: number }
     await canvas.click({ position });
   }
 
-  await page.keyboard.press("Enter");
+  await page.keyboard.press('Enter');
 }

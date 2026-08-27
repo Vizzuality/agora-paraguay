@@ -1,11 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useMutation } from '@tanstack/react-query';
+import { useAtomValue, useSetAtom } from 'jotai';
 
-import { Button } from "@/components/ui/button";
-import { analysisMutations } from "@/lib/api/queries";
-import { endAnalysisSessionAtom } from "@/store/analysis";
-import { drawPolygonsAtom } from "@/store/draw";
-import { selectedParcelsAtom } from "@/store/parcels";
+import { Button } from '@/components/ui/button';
+import { analysisMutations } from '@/lib/api/queries';
+import { endAnalysisSessionAtom } from '@/store/analysis';
+import { drawPolygonsAtom } from '@/store/draw';
+import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
  * Submits every area on the map — drawn, uploaded, and the cadastral parcels selected
@@ -35,7 +35,7 @@ export function AnalyzeButton() {
         disabled={areas.length === 0 || mutation.isPending}
         onClick={() => mutation.mutate(areas)}
       >
-        {mutation.isPending ? "Analizando…" : "Analizar"}
+        {mutation.isPending ? 'Analizando…' : 'Analizar'}
       </Button>
 
       {areas.length === 0 && (
@@ -59,6 +59,6 @@ export function AnalyzeButton() {
 
 function acceptedStatus(count: number): string {
   return count === 1
-    ? "Análisis aceptado: se envió 1 área."
+    ? 'Análisis aceptado: se envió 1 área.'
     : `Análisis aceptado: se enviaron ${count} áreas.`;
 }

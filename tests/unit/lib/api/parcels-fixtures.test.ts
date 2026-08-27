@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
-import { generateParcelFixtures } from "@/lib/api/fixtures/parcels";
-import { parcelCollectionSchema, type ParcelFeature } from "@/lib/api/schemas";
+import { generateParcelFixtures } from '@/lib/api/fixtures/parcels';
+import { parcelCollectionSchema, type ParcelFeature } from '@/lib/api/schemas';
 
 // TODO(mock-parcels): tests for the mock generator — delete this file with it when
 // the real parcel layer replaces the mock (grep `mock-parcels`).
@@ -37,14 +37,14 @@ function centroid(feature: ParcelFeature): [number, number] {
   return [sum[0] / points.length, sum[1] / points.length];
 }
 
-describe("generateParcelFixtures", () => {
+describe('generateParcelFixtures', () => {
   const collection = generateParcelFixtures();
 
-  it("parses against the parcel contract", () => {
+  it('parses against the parcel contract', () => {
     expect(() => parcelCollectionSchema.parse(collection)).not.toThrow();
   });
 
-  it("covers an extensive area with plenty of parcels", () => {
+  it('covers an extensive area with plenty of parcels', () => {
     expect(collection.features.length).toBeGreaterThanOrEqual(300);
 
     const lngs = collection.features.flatMap((f) => ring(f).map(([lng]) => lng));
@@ -55,7 +55,7 @@ describe("generateParcelFixtures", () => {
     expect(Math.max(...lats) - Math.min(...lats)).toBeGreaterThan(1);
   });
 
-  it("keeps every parcel inside Paraguay", () => {
+  it('keeps every parcel inside Paraguay', () => {
     for (const feature of collection.features) {
       for (const [lng, lat] of ring(feature)) {
         expect(lng).toBeGreaterThan(PARAGUAY.west);
@@ -66,7 +66,7 @@ describe("generateParcelFixtures", () => {
     }
   });
 
-  it("makes every parcel an irregular polygon, not an axis-aligned rectangle", () => {
+  it('makes every parcel an irregular polygon, not an axis-aligned rectangle', () => {
     const axisAligned = collection.features.filter((feature) => {
       const points = ring(feature);
 
@@ -79,7 +79,7 @@ describe("generateParcelFixtures", () => {
     expect(axisAligned).toHaveLength(0);
   });
 
-  it("never overlaps two parcels (no centroid falls inside another parcel)", () => {
+  it('never overlaps two parcels (no centroid falls inside another parcel)', () => {
     for (const feature of collection.features) {
       const inside = collection.features.filter(
         (other) => other !== feature && contains(other, centroid(feature)),
@@ -89,7 +89,7 @@ describe("generateParcelFixtures", () => {
     }
   });
 
-  it("places parcels flush against neighbours (shared corner vertices)", () => {
+  it('places parcels flush against neighbours (shared corner vertices)', () => {
     const seen = new Map<string, number>();
 
     for (const feature of collection.features) {
@@ -106,7 +106,7 @@ describe("generateParcelFixtures", () => {
     expect(shared).toBeGreaterThan(collection.features.length / 2);
   });
 
-  it("is deterministic for a given seed", () => {
+  it('is deterministic for a given seed', () => {
     expect(generateParcelFixtures(7)).toEqual(generateParcelFixtures(7));
     expect(generateParcelFixtures(7)).not.toEqual(generateParcelFixtures(8));
   });

@@ -5,14 +5,14 @@ import {
   type UploadFeatureInput,
   type UploadGeoJson,
   type UploadGeometry,
-} from "@/lib/upload/geojson-schema";
+} from '@/lib/upload/geojson-schema';
 import {
   UploadError,
   type LngLat,
   type ParseOutcome,
   type UploadFeature,
   type UploadWarning,
-} from "@/lib/upload/types";
+} from '@/lib/upload/types';
 
 /**
  * Where every parser converges: validated GeoJSON in, store-ready polygons out.
@@ -31,7 +31,7 @@ const COORDINATE_DECIMALS = 9;
  * compared case-insensitively: `NOMBRE` is what Paraguayan DBF columns tend to hold,
  * `name` is what togeojson extracts from KML.
  */
-const NAME_KEYS = ["name", "nombre", "title", "label", "id"];
+const NAME_KEYS = ['name', 'nombre', 'title', 'label', 'id'];
 
 type Ring = number[][];
 
@@ -65,7 +65,7 @@ export function normalizeUnknown(value: unknown, description: string): ParseOutc
   const parsed = uploadGeoJsonSchema.safeParse(value);
 
   if (!parsed.success) {
-    throw new UploadError("unreadable", `No se pudo leer el archivo como ${description}.`);
+    throw new UploadError('unreadable', `No se pudo leer el archivo como ${description}.`);
   }
 
   return normalizeFeatures(parsed.data);
@@ -78,10 +78,10 @@ export function normalizeFeatures(root: UploadGeoJson): ParseOutcome {
 function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOutcome {
   if (inputs.length === 0) {
     throw new UploadError(
-      "empty",
+      'empty',
       invalid > 0
-        ? "El archivo no contiene entidades válidas."
-        : "El archivo no contiene entidades.",
+        ? 'El archivo no contiene entidades válidas.'
+        : 'El archivo no contiene entidades.',
     );
   }
 
@@ -116,12 +116,12 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
 
       features.push({
         id: crypto.randomUUID(),
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "Polygon",
+          type: 'Polygon',
           coordinates: [closeRing(cleanRing(rings[0]))],
         },
-        properties: { mode: "polygon", origin: "upload", name: partName },
+        properties: { mode: 'polygon', origin: 'upload', name: partName },
       });
     });
   }
@@ -134,8 +134,8 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
 
   if (outOfRange) {
     throw new UploadError(
-      "bad-crs",
-      "Las coordenadas no son longitud/latitud — no se pudo leer el sistema de coordenadas del archivo.",
+      'bad-crs',
+      'Las coordenadas no son longitud/latitud — no se pudo leer el sistema de coordenadas del archivo.',
     );
   }
 
@@ -148,13 +148,13 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
 
   if (outsideParaguay) {
     throw new UploadError(
-      "out-of-paraguay",
-      "El archivo contiene geometría fuera de Paraguay — esta plataforma solo analiza áreas dentro del país.",
+      'out-of-paraguay',
+      'El archivo contiene geometría fuera de Paraguay — esta plataforma solo analiza áreas dentro del país.',
     );
   }
 
   if (features.length === 0) {
-    throw new UploadError("no-polygons", noPolygonsMessage(skipped, holed));
+    throw new UploadError('no-polygons', noPolygonsMessage(skipped, holed));
   }
 
   const nonPolygons = skipped.points + skipped.lines + skipped.nested;
@@ -163,7 +163,7 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
     warnings.push({
       message:
         nonPolygons === 1
-          ? "Se omitió 1 entidad que no es un polígono."
+          ? 'Se omitió 1 entidad que no es un polígono.'
           : `Se omitieron ${nonPolygons} entidades que no son polígonos.`,
     });
   }
@@ -172,7 +172,7 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
     warnings.push({
       message:
         invalid === 1
-          ? "Se omitió 1 entidad no válida."
+          ? 'Se omitió 1 entidad no válida.'
           : `Se omitieron ${invalid} entidades no válidas.`,
     });
   }
@@ -182,10 +182,10 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
 
 /** The file root may be a FeatureCollection, a lone Feature, or a bare geometry. */
 function toFeatureInputs(root: UploadGeoJson): UploadFeatureInput[] {
-  if (root.type === "FeatureCollection") return root.features;
-  if (root.type === "Feature") return [root];
+  if (root.type === 'FeatureCollection') return root.features;
+  if (root.type === 'Feature') return [root];
 
-  return [{ type: "Feature", geometry: root, properties: {} }];
+  return [{ type: 'Feature', geometry: root, properties: {} }];
 }
 
 /**
@@ -194,13 +194,13 @@ function toFeatureInputs(root: UploadGeoJson): UploadFeatureInput[] {
  */
 function polygonParts(geometry: UploadGeometry, skipped: SkipCounts, depth = 0): Ring[][] {
   switch (geometry.type) {
-    case "Polygon":
+    case 'Polygon':
       return [geometry.coordinates];
 
-    case "MultiPolygon":
+    case 'MultiPolygon':
       return geometry.coordinates;
 
-    case "GeometryCollection":
+    case 'GeometryCollection':
       if (depth >= 1) {
         skipped.nested += 1;
 
@@ -209,26 +209,26 @@ function polygonParts(geometry: UploadGeometry, skipped: SkipCounts, depth = 0):
 
       return geometry.geometries.flatMap((member) => polygonParts(member, skipped, depth + 1));
 
-    case "Point":
-    case "MultiPoint":
+    case 'Point':
+    case 'MultiPoint':
       skipped.points += 1;
 
       return [];
 
-    case "LineString":
-    case "MultiLineString":
+    case 'LineString':
+    case 'MultiLineString':
       skipped.lines += 1;
 
       return [];
   }
 }
 
-function featureName(properties: UploadFeatureInput["properties"]): string | null {
+function featureName(properties: UploadFeatureInput['properties']): string | null {
   if (!properties) return null;
 
   for (const wanted of NAME_KEYS) {
     for (const [key, value] of Object.entries(properties)) {
-      if (key.toLowerCase() === wanted && typeof value === "string" && value.trim() !== "") {
+      if (key.toLowerCase() === wanted && typeof value === 'string' && value.trim() !== '') {
         return value.trim();
       }
     }
@@ -275,15 +275,15 @@ function closeRing(ring: LngLat[]): LngLat[] {
 function noPolygonsMessage(skipped: SkipCounts, holed: number): string {
   const found: string[] = [];
 
-  if (holed > 0) found.push(`${holed} polígono${holed === 1 ? "" : "s"} con huecos`);
-  if (skipped.points > 0) found.push(`${skipped.points} punto${skipped.points === 1 ? "" : "s"}`);
-  if (skipped.lines > 0) found.push(`${skipped.lines} línea${skipped.lines === 1 ? "" : "s"}`);
+  if (holed > 0) found.push(`${holed} polígono${holed === 1 ? '' : 's'} con huecos`);
+  if (skipped.points > 0) found.push(`${skipped.points} punto${skipped.points === 1 ? '' : 's'}`);
+  if (skipped.lines > 0) found.push(`${skipped.lines} línea${skipped.lines === 1 ? '' : 's'}`);
   if (skipped.nested > 0)
     found.push(
-      `${skipped.nested} colección${skipped.nested === 1 ? "" : "es"} anidada${skipped.nested === 1 ? "" : "s"}`,
+      `${skipped.nested} colección${skipped.nested === 1 ? '' : 'es'} anidada${skipped.nested === 1 ? '' : 's'}`,
     );
 
   return found.length > 0
-    ? `El archivo no contiene polígonos importables — se encontraron ${found.join(", ")}.`
-    : "El archivo no contiene polígonos importables.";
+    ? `El archivo no contiene polígonos importables — se encontraron ${found.join(', ')}.`
+    : 'El archivo no contiene polígonos importables.';
 }

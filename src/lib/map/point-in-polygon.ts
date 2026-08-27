@@ -1,4 +1,4 @@
-import type { DrawnPolygon, FeatureId } from "@/lib/map/draw-features";
+import type { DrawnPolygon, FeatureId } from '@/lib/map/draw-features';
 
 /** A geographic point, as MapLibre hands it to click handlers. */
 export type MapPoint = { lng: number; lat: number };

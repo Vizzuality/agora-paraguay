@@ -1,7 +1,7 @@
-import { Moon, Sun } from "lucide-react";
-import { useState } from "react";
+import { Moon, Sun } from 'lucide-react';
+import { useState } from 'react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 
 /**
  * Session-only theme switch: applies the `.dark` class on <html> so the token
@@ -13,7 +13,7 @@ export function ThemeToggle() {
 
   function toggleTheme() {
     const next = !isDark;
-    document.documentElement.classList.toggle("dark", next);
+    document.documentElement.classList.toggle('dark', next);
     setIsDark(next);
   }
 

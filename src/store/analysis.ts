@@ -1,9 +1,9 @@
-import { atom } from "jotai";
+import { atom } from 'jotai';
 
-import type { FeatureId } from "@/lib/map/draw-features";
-import { canSelectParcel } from "@/lib/map/draw-state";
-import { polygonAtPoint, type MapPoint } from "@/lib/map/point-in-polygon";
-import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
+import type { FeatureId } from '@/lib/map/draw-features';
+import { canSelectParcel } from '@/lib/map/draw-state';
+import { polygonAtPoint, type MapPoint } from '@/lib/map/point-in-polygon';
+import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 
 /**
  * The polygon picked for analysis — app-owned, unlike Terra Draw's edit selection,
@@ -27,7 +27,7 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
 
   const previous = get(drawStateAtom).analysisId;
 
-  set(drawStateAtom, { type: "analysisSelected", id });
+  set(drawStateAtom, { type: 'analysisSelected', id });
 
   // The selection is mirrored onto the feature itself so Terra Draw's style functions
   // can paint it (`draw-styles.ts`): a property change is a feature change, which is
@@ -67,6 +67,6 @@ export const selectParcelAtPointAtom = atom(null, (get, set, point: MapPoint) =>
  * selection. The polygons stay on the map until a new session replaces them.
  */
 export const endAnalysisSessionAtom = atom(null, (_get, set) => {
-  set(drawStateAtom, { type: "tool", tool: null });
-  set(drawStateAtom, { type: "analysisSubmitted" });
+  set(drawStateAtom, { type: 'tool', tool: null });
+  set(drawStateAtom, { type: 'analysisSubmitted' });
 });

@@ -1,8 +1,8 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 /* Geologica is the AGORA design's typeface. Self-hosted rather than pulled from a
    font CDN, so no third-party request is needed to render the page. */
-@import "@fontsource-variable/geologica";
+@import '@fontsource-variable/geologica';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -46,8 +46,8 @@
   --color-widget: var(--widget);
   --color-widget-foreground: var(--widget-foreground);
   --font-sans:
-    "Geologica Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+    'Geologica Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
 }
 
 :root {

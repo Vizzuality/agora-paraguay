@@ -1,10 +1,10 @@
-import type { GeoJSONStoreFeatures, GeoJSONStoreGeometries, TerraDrawExtend } from "terra-draw";
+import type { GeoJSONStoreFeatures, GeoJSONStoreGeometries, TerraDrawExtend } from 'terra-draw';
 
 export type FeatureId = TerraDrawExtend.FeatureId;
 
 // `geojson` is only a transitive dependency, so the geometry type is pulled out of the
 // union Terra Draw already exports rather than imported directly.
-type PolygonGeometry = Extract<GeoJSONStoreGeometries, { type: "Polygon" }>;
+type PolygonGeometry = Extract<GeoJSONStoreGeometries, { type: 'Polygon' }>;
 
 /** A finished polygon drawn by the user, as Terra Draw stores it. */
 export type DrawnPolygon = GeoJSONStoreFeatures<PolygonGeometry> & { id: FeatureId };
@@ -22,8 +22,8 @@ export type DrawnPolygon = GeoJSONStoreFeatures<PolygonGeometry> & { id: Feature
 export function isDrawnPolygon(feature: GeoJSONStoreFeatures): feature is DrawnPolygon {
   return (
     feature.id !== undefined &&
-    feature.geometry.type === "Polygon" &&
-    feature.properties.mode === "polygon" &&
+    feature.geometry.type === 'Polygon' &&
+    feature.properties.mode === 'polygon' &&
     feature.properties.currentlyDrawing !== true
   );
 }
@@ -43,5 +43,5 @@ export function drawnPolygons(snapshot: GeoJSONStoreFeatures[]): DrawnPolygon[] 
 export function polygonName(polygon: { properties: { name?: unknown } }, index: number): string {
   const { name } = polygon.properties;
 
-  return typeof name === "string" && name.trim() !== "" ? name : `Área dibujada ${index + 1}`;
+  return typeof name === 'string' && name.trim() !== '' ? name : `Área dibujada ${index + 1}`;
 }
