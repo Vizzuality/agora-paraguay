@@ -7,6 +7,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
+    "setup": "pnpm build && pnpm exec playwright install chromium",
+    "check": "pnpm build && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:coverage",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
