@@ -1,6 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from '@playwright/test';
 
-import { mapCanvas, stubBasemap } from "./fixtures/map";
+import { mapCanvas, stubBasemap } from './fixtures/map';
 
 /**
  * Canvas positions likely to hit the mock cadastral cluster (the fixture is seeded and
@@ -18,8 +18,8 @@ const PROBE_POSITIONS = [
 
 function locators(page: Page) {
   return {
-    draw: page.getByRole("button", { name: "Dibujar un área" }),
-    analyze: page.getByRole("button", { name: "Analizar" }),
+    draw: page.getByRole('button', { name: 'Dibujar un área' }),
+    analyze: page.getByRole('button', { name: 'Analizar' }),
   };
 }
 
@@ -39,12 +39,12 @@ async function clickAParcel(page: Page) {
     }
   }
 
-  throw new Error("No probe position hit a cadastral parcel");
+  throw new Error('No probe position hit a cadastral parcel');
 }
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
-  await page.goto("/");
+  await page.goto('/');
 
   // The draw button arming is the signal that Terra Draw is bound, which also gates
   // the parcel clicks.
@@ -52,7 +52,7 @@ test.beforeEach(async ({ page }) => {
   await expect(mapCanvas(page)).toBeVisible();
 });
 
-test("clicking cadastral parcels selects until Analizar ends the session", async ({ page }) => {
+test('clicking cadastral parcels selects until Analizar ends the session', async ({ page }) => {
   const { analyze } = locators(page);
 
   // Nothing drawn and nothing selected: analysis has nothing to send.
@@ -69,7 +69,7 @@ test("clicking cadastral parcels selects until Analizar ends the session", async
   await expect(analyze).toBeEnabled();
 
   await analyze.click();
-  await expect(page.getByText("Análisis aceptado: se envió 1 área.")).toBeVisible();
+  await expect(page.getByText('Análisis aceptado: se envió 1 área.')).toBeVisible();
 
   // The session is over: the same click no longer toggles the parcel off, so the
   // selection (and with it the button) survives.

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Just enough GeoJSON to validate an upload before `normalize.ts` touches it. All three
@@ -17,25 +17,25 @@ const positionSchema = z.array(z.number()).min(2);
 const ringSchema = z.array(positionSchema).min(3);
 
 const polygonSchema = z.object({
-  type: z.literal("Polygon"),
+  type: z.literal('Polygon'),
   coordinates: z.array(ringSchema).min(1),
 });
 
 const multiPolygonSchema = z.object({
-  type: z.literal("MultiPolygon"),
+  type: z.literal('MultiPolygon'),
   coordinates: z.array(z.array(ringSchema).min(1)).min(1),
 });
 
 /** Recognised but not importable; carried through so `normalize.ts` can count them. */
 const otherGeometrySchema = z.object({
-  type: z.enum(["Point", "MultiPoint", "LineString", "MultiLineString"]),
+  type: z.enum(['Point', 'MultiPoint', 'LineString', 'MultiLineString']),
 });
 
 export type UploadGeometry =
   | z.infer<typeof polygonSchema>
   | z.infer<typeof multiPolygonSchema>
   | z.infer<typeof otherGeometrySchema>
-  | { type: "GeometryCollection"; geometries: UploadGeometry[] };
+  | { type: 'GeometryCollection'; geometries: UploadGeometry[] };
 
 const geometrySchema: z.ZodType<UploadGeometry> = z.lazy(() =>
   z.union([
@@ -43,14 +43,14 @@ const geometrySchema: z.ZodType<UploadGeometry> = z.lazy(() =>
     multiPolygonSchema,
     otherGeometrySchema,
     z.object({
-      type: z.literal("GeometryCollection"),
+      type: z.literal('GeometryCollection'),
       geometries: z.array(geometrySchema),
     }),
   ]),
 );
 
 export const featureSchema = z.object({
-  type: z.literal("Feature"),
+  type: z.literal('Feature'),
   // togeojson emits null geometry for placemarks without one.
   geometry: geometrySchema.nullable(),
   properties: z.record(z.string(), z.unknown()).nullish(),
@@ -61,12 +61,12 @@ export const featureSchema = z.object({
  * one by one so a single malformed entity cannot take down an otherwise readable file.
  */
 export const featureCollectionEnvelopeSchema = z.object({
-  type: z.literal("FeatureCollection"),
+  type: z.literal('FeatureCollection'),
   features: z.array(z.unknown()),
 });
 
 const featureCollectionSchema = z.object({
-  type: z.literal("FeatureCollection"),
+  type: z.literal('FeatureCollection'),
   features: z.array(featureSchema),
 });
 

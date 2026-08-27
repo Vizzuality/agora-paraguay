@@ -1,9 +1,9 @@
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
+import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router';
 
-import { QueryProvider } from "@/providers/react-query";
+import { QueryProvider } from '@/providers/react-query';
 
-import appCss from "@/styles/globals.css?url";
+import appCss from '@/styles/globals.css?url';
 
 export const Route = createRootRoute({
   // No `retainSearchParams` middleware here on purpose: the nuqs TanStack Router
@@ -13,13 +13,13 @@ export const Route = createRootRoute({
   // Guarded by tests/e2e/camera-url.spec.ts.
   head: () => ({
     meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ágora Paraguay" },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'Ágora Paraguay' },
     ],
     links: [
-      { rel: "icon", href: "/favicon.ico" },
-      { rel: "stylesheet", href: appCss },
+      { rel: 'icon', href: '/favicon.ico' },
+      { rel: 'stylesheet', href: appCss },
     ],
   }),
   component: RootComponent,

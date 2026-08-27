@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
-import { mapCanvas, panMap, stubBasemap } from "./fixtures/map";
+import { mapCanvas, panMap, stubBasemap } from './fixtures/map';
 
 /**
  * Regression: the nuqs TanStack Router adapter passes the camera's query string inside
@@ -9,9 +9,9 @@ import { mapCanvas, panMap, stubBasemap } from "./fixtures/map";
  * (`/?lat=X?lat=Y?lat=Z…`) and the URL grew without bound. Fixed by dropping
  * `retainSearchParams(true)` from the root route.
  */
-test("panning twice keeps the camera URL well-formed", async ({ page }) => {
+test('panning twice keeps the camera URL well-formed', async ({ page }) => {
   await stubBasemap(page);
-  await page.goto("/");
+  await page.goto('/');
   await expect(mapCanvas(page)).toBeVisible();
 
   // Two moves, because the doubling only shows up once the URL already has params.
@@ -27,7 +27,7 @@ test("panning twice keeps the camera URL well-formed", async ({ page }) => {
   // Panning changes lng/lat only — zoom stays at its default and nuqs omits it.
   const params = new URL(url).searchParams;
 
-  for (const key of ["lng", "lat"]) {
+  for (const key of ['lng', 'lat']) {
     const values = params.getAll(key);
 
     expect(values).toHaveLength(1);

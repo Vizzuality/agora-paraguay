@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
@@ -9,32 +9,32 @@ updates:
     # so major bumps are a deliberate decision, not a routine update. Revisit when
     # Node 26 reaches LTS and Vercel adds it.
     ignore:
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       tanstack:
         patterns:
-          - "@tanstack/*"
+          - '@tanstack/*'
       dev-tooling:
         patterns:
-          - "oxlint"
-          - "oxfmt"
-          - "vite"
-          - "vitest"
-          - "typescript"
-          - "@types/*"
+          - 'oxlint'
+          - 'oxfmt'
+          - 'vite'
+          - 'vitest'
+          - 'typescript'
+          - '@types/*'
 
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
 
   - package-ecosystem: docker
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
     # Same reasoning as @types/node: the container must stay on the Node major that
     # Vercel and CI run, so the environments do not diverge.
     ignore:
-      - dependency-name: "node"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'node'
+        update-types: ['version-update:semver-major']

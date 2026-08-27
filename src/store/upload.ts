@@ -1,10 +1,10 @@
-import { atom } from "jotai";
+import { atom } from 'jotai';
 
-import { drawnPolygons } from "@/lib/map/draw-features";
-import type { ParseOutcome, UploadResult } from "@/lib/upload/types";
-import { selectAnalysisPolygonAtom } from "@/store/analysis";
-import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
-import { selectedParcelsAtom } from "@/store/parcels";
+import { drawnPolygons } from '@/lib/map/draw-features';
+import type { ParseOutcome, UploadResult } from '@/lib/upload/types';
+import { selectAnalysisPolygonAtom } from '@/store/analysis';
+import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
+import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
  * Uploaded areas of interest. Parsing lives in `src/lib/upload/`; this file is only the
@@ -36,7 +36,7 @@ export const uploadFeaturesAtom = atom(
     // sweeps an in-progress ring, which `previousIds` below cannot see — it only holds
     // finished polygons — and which must not stay armed over an import.
     const { selectedId } = get(drawStateAtom);
-    set(drawStateAtom, { type: "tool", tool: null });
+    set(drawStateAtom, { type: 'tool', tool: null });
 
     const previousIds = drawnPolygons(draw.getSnapshot()).map((polygon) => polygon.id);
 
@@ -57,7 +57,7 @@ export const uploadFeaturesAtom = atom(
         return {
           featureName: feature.properties.name,
           // Terra Draw's `reason` is library text and stays in English.
-          message: `"${feature.properties.name}" fue rechazado: ${reason ?? "geometría inválida"}.`,
+          message: `"${feature.properties.name}" fue rechazado: ${reason ?? 'geometría inválida'}.`,
         };
       });
 
@@ -81,7 +81,7 @@ export const uploadFeaturesAtom = atom(
     // outlive the geometry they annotate.
     if (selectedId !== null && previousIds.includes(selectedId)) {
       draw.deselectFeature(selectedId);
-      set(drawStateAtom, { type: "deselected", id: selectedId });
+      set(drawStateAtom, { type: 'deselected', id: selectedId });
     }
 
     if (previousIds.length > 0) {
@@ -90,7 +90,7 @@ export const uploadFeaturesAtom = atom(
 
     // Like `clear()`, adding and removing features is not trusted to surface as a
     // `change` event — report the new geometry by hand. Idempotent if the event fires.
-    set(drawStateAtom, { type: "geometry", polygons: drawnPolygons(draw.getSnapshot()) });
+    set(drawStateAtom, { type: 'geometry', polygons: drawnPolygons(draw.getSnapshot()) });
 
     // Replace semantics extend to the clicked cadastral parcels: an upload starts the
     // selection over.

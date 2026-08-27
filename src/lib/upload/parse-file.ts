@@ -1,10 +1,10 @@
-import { parseGeoJson } from "@/lib/upload/parse-geojson";
-import { parseKmlText, parseKmz } from "@/lib/upload/parse-kml";
-import { parseShapefile } from "@/lib/upload/parse-shapefile";
-import { MAX_UPLOAD_BYTES, UploadError, type ParseOutcome } from "@/lib/upload/types";
+import { parseGeoJson } from '@/lib/upload/parse-geojson';
+import { parseKmlText, parseKmz } from '@/lib/upload/parse-kml';
+import { parseShapefile } from '@/lib/upload/parse-shapefile';
+import { MAX_UPLOAD_BYTES, UploadError, type ParseOutcome } from '@/lib/upload/types';
 
 /** What the hidden file input advertises. Must match the dispatch below. */
-export const UPLOAD_ACCEPT = ".zip,.kml,.kmz,.geojson,.json";
+export const UPLOAD_ACCEPT = '.zip,.kml,.kmz,.geojson,.json';
 
 /**
  * The upload pipeline's single entry point: size cap, extension dispatch, and the
@@ -18,31 +18,31 @@ export const UPLOAD_ACCEPT = ".zip,.kml,.kmz,.geojson,.json";
 export async function parseUploadFile(file: File): Promise<ParseOutcome> {
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new UploadError(
-      "too-large",
+      'too-large',
       `El archivo supera los ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`,
     );
   }
 
-  const extension = file.name.toLowerCase().split(".").pop() ?? "";
+  const extension = file.name.toLowerCase().split('.').pop() ?? '';
 
   switch (extension) {
-    case "geojson":
-    case "json":
+    case 'geojson':
+    case 'json':
       return parseGeoJson(await file.text());
 
-    case "kml":
+    case 'kml':
       return parseKmlText(await file.text());
 
-    case "kmz":
+    case 'kmz':
       return parseKmz(await file.arrayBuffer());
 
-    case "zip":
+    case 'zip':
       return parseShapefile(await file.arrayBuffer());
 
     default:
       throw new UploadError(
-        "unsupported-type",
-        "Tipo de archivo no compatible. Sube un shapefile comprimido (.zip), KML/KMZ o GeoJSON.",
+        'unsupported-type',
+        'Tipo de archivo no compatible. Sube un shapefile comprimido (.zip), KML/KMZ o GeoJSON.',
       );
   }
 }

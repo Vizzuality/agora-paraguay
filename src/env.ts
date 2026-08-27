@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 /**
  * Environment variables, validated at module load.
@@ -8,12 +8,12 @@ import { z } from "zod";
  * external API is being built. See `src/lib/api/client.ts`.
  */
 export const env = createEnv({
-  clientPrefix: "VITE_",
+  clientPrefix: 'VITE_',
   client: {
     VITE_USE_MOCK_API: z
-      .enum(["true", "false"])
-      .default("true")
-      .transform((value) => value === "true"),
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
 
     /**
      * Basemap style URL override. Unset, the app uses the built-in satellite style

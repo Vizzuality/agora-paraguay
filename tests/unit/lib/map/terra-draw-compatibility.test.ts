@@ -1,5 +1,5 @@
-import type { Map as MapLibreMap } from "maplibre-gl";
-import { describe, expect, it } from "vitest";
+import type { Map as MapLibreMap } from 'maplibre-gl';
+import { describe, expect, it } from 'vitest';
 
 /**
  * The MapLibre API surface `terra-draw-maplibre-gl-adapter` uses, read off its bundled
@@ -16,25 +16,25 @@ import { describe, expect, it } from "vitest";
  * and compilation fails.
  */
 const ADAPTER_MAP_METHODS = [
-  "addImage",
-  "addLayer",
-  "addSource",
-  "getCanvas",
-  "getContainer",
-  "getSource",
-  "hasImage",
-  "loadImage",
-  "moveLayer",
-  "project",
-  "removeLayer",
-  "removeSource",
-  "unproject",
-  "dragPan",
-  "dragRotate",
+  'addImage',
+  'addLayer',
+  'addSource',
+  'getCanvas',
+  'getContainer',
+  'getSource',
+  'hasImage',
+  'loadImage',
+  'moveLayer',
+  'project',
+  'removeLayer',
+  'removeSource',
+  'unproject',
+  'dragPan',
+  'dragRotate',
 ] as const satisfies readonly (keyof MapLibreMap)[];
 
-describe("terra-draw MapLibre adapter", () => {
-  it("depends on a surface MapLibre still declares", () => {
+describe('terra-draw MapLibre adapter', () => {
+  it('depends on a surface MapLibre still declares', () => {
     // The assertion that matters is the `satisfies` above, checked at compile time.
     // This keeps the guard visible in the test run rather than only in tsc output.
     expect(ADAPTER_MAP_METHODS).toHaveLength(15);

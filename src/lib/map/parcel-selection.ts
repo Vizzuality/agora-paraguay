@@ -1,5 +1,5 @@
-import type { ParcelFeature } from "@/lib/api/schemas";
-import { ringContains, type MapPoint } from "@/lib/map/point-in-polygon";
+import type { ParcelFeature } from '@/lib/api/schemas';
+import { ringContains, type MapPoint } from '@/lib/map/point-in-polygon';
 
 /**
  * Selection logic for the cadastral parcels layer — pure, node-tested. The selection

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 const SEGMENTS = 28;
 
@@ -26,12 +26,12 @@ type MeterProps = {
  * number twice. That printed value is also what keeps the green/blue pair legible for
  * tritan viewers, who cannot rely on the hue.
  */
-export function Meter({ value, color = "var(--chart-1)", className }: MeterProps) {
+export function Meter({ value, color = 'var(--chart-1)', className }: MeterProps) {
   const clamped = Math.min(100, Math.max(0, value));
   const filled = Math.round((clamped / 100) * SEGMENTS);
 
   return (
-    <div aria-hidden className={cn("flex items-end gap-[2px]", className)}>
+    <div aria-hidden className={cn('flex items-end gap-[2px]', className)}>
       {Array.from({ length: SEGMENTS }, (_, index) => {
         const isFilled = index < filled;
         const isCap = index === filled - 1;
@@ -39,7 +39,7 @@ export function Meter({ value, color = "var(--chart-1)", className }: MeterProps
         return (
           <span
             key={index}
-            className={cn("h-3.5 w-[3px] rounded-[1px]", isCap && "h-4")}
+            className={cn('h-3.5 w-[3px] rounded-[1px]', isCap && 'h-4')}
             style={{
               backgroundColor: isFilled
                 ? isCap

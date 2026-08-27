@@ -1,20 +1,20 @@
-import { useAtomValue, useSetAtom } from "jotai";
-import { Eraser, MousePointer2, PenTool, Trash2, X } from "lucide-react";
+import { useAtomValue, useSetAtom } from 'jotai';
+import { Eraser, MousePointer2, PenTool, Trash2, X } from 'lucide-react';
 
-import { UploadControl } from "@/components/map/upload-control";
-import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import { canClear, canDelete, canEdit } from "@/lib/map/draw-state";
-import type { UploadResult } from "@/lib/upload/types";
-import { cn } from "@/lib/utils";
+import { UploadControl } from '@/components/map/upload-control';
+import { Button } from '@/components/ui/button';
+import { Toggle } from '@/components/ui/toggle';
+import { canClear, canDelete, canEdit } from '@/lib/map/draw-state';
+import type { UploadResult } from '@/lib/upload/types';
+import { cn } from '@/lib/utils';
 import {
   clearDrawAtom,
   deleteSelectedAtom,
   drawAtom,
   setDrawToolAtom,
   startDrawAtom,
-} from "@/store/draw";
-import { uploadResultAtom } from "@/store/upload";
+} from '@/store/draw';
+import { uploadResultAtom } from '@/store/upload';
 
 /** How many upload warnings are shown before collapsing into "and N more". */
 const MAX_VISIBLE_WARNINGS = 5;
@@ -40,14 +40,14 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
     <>
       <fieldset
         className={cn(
-          "absolute top-4 right-16 z-10 flex items-center gap-1 rounded-lg bg-background/95 p-1 shadow-lg backdrop-blur",
+          'absolute top-4 right-16 z-10 flex items-center gap-1 rounded-lg bg-background/95 p-1 shadow-lg backdrop-blur',
           className,
         )}
       >
         <legend className="sr-only">Herramientas de dibujo</legend>
 
         <Toggle
-          pressed={draw.tool === "draw"}
+          pressed={draw.tool === 'draw'}
           // Activation clears the map — a draw session always starts from scratch.
           onPressedChange={(pressed) => (pressed ? startDraw() : setTool(null))}
           disabled={!draw.bound}
@@ -58,8 +58,8 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
         </Toggle>
 
         <Toggle
-          pressed={draw.tool === "edit"}
-          onPressedChange={(pressed) => setTool(pressed ? "edit" : null)}
+          pressed={draw.tool === 'edit'}
+          onPressedChange={(pressed) => setTool(pressed ? 'edit' : null)}
           disabled={!canEdit(draw)}
           aria-label="Seleccionar y editar áreas"
           title="Seleccionar y editar áreas"
@@ -109,9 +109,9 @@ export function DrawControls({ className }: Readonly<{ className?: string }>) {
 }
 
 function drawnStatus(count: number): string {
-  if (count === 0) return "No hay áreas dibujadas.";
+  if (count === 0) return 'No hay áreas dibujadas.';
 
-  return count === 1 ? "1 área dibujada." : `${count} áreas dibujadas.`;
+  return count === 1 ? '1 área dibujada.' : `${count} áreas dibujadas.`;
 }
 
 function uploadStatus(result: UploadResult): string {
@@ -139,7 +139,7 @@ function UploadNotices() {
       className="absolute top-16 right-16 z-10 flex w-80 flex-col gap-1 rounded-lg bg-background/95 p-3 text-sm shadow-lg backdrop-blur"
     >
       <header className="flex items-start justify-between gap-2">
-        <p className={cn("font-medium", uploadResult.error !== null && "text-destructive")}>
+        <p className={cn('font-medium', uploadResult.error !== null && 'text-destructive')}>
           {uploadResult.error ?? `Se importó ${uploadResult.fileName} con advertencias:`}
         </p>
         <Button

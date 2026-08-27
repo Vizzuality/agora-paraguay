@@ -13,22 +13,22 @@
  *
  *   node tests/e2e/fixtures/uploads/generate.mjs
  */
-import { readFileSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { zipSync } from "fflate";
+import { zipSync } from 'fflate';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 // proj4 is shpjs's dependency, not the app's — resolve it through shpjs so this script
 // keeps working under pnpm's strict node_modules layout.
 const require = createRequire(import.meta.url);
-const requireFromShpjs = createRequire(require.resolve("shpjs"));
-const proj4 = requireFromShpjs("proj4");
+const requireFromShpjs = createRequire(require.resolve('shpjs'));
+const proj4 = requireFromShpjs('proj4');
 
-const UTM21S = "+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs";
+const UTM21S = '+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs';
 
 /** ESRI WKT for EPSG:32721, what a real .prj for UTM 21S contains. */
 const PRJ =
@@ -42,7 +42,7 @@ const PRJ =
 /** The farms, as lon/lat rings (clockwise, as the shapefile spec wants outer rings). */
 const FARMS = [
   {
-    name: "Estancia San Pedro",
+    name: 'Estancia San Pedro',
     ring: [
       [-59.4, -24.4],
       [-59.4, -22.4],
@@ -52,7 +52,7 @@ const FARMS = [
     ],
   },
   {
-    name: "Campo Verde",
+    name: 'Campo Verde',
     ring: [
       [-56.8, -24.8],
       [-56.8, -24.2],
@@ -144,15 +144,15 @@ function buildDbf(names) {
   header.writeUInt32LE(names.length, 4);
   header.writeUInt16LE(headerSize, 8);
   header.writeUInt16LE(recordSize, 10);
-  header.write("NOMBRE", 32, "ascii");
-  header[32 + 11] = "C".codePointAt(0);
+  header.write('NOMBRE', 32, 'ascii');
+  header[32 + 11] = 'C'.codePointAt(0);
   header[32 + 16] = fieldLength;
   header[headerSize - 1] = 0x0d;
 
   const records = names.map((name) => {
     const record = Buffer.alloc(recordSize, 0x20);
 
-    record.write(name.slice(0, fieldLength), 1, "latin1");
+    record.write(name.slice(0, fieldLength), 1, 'latin1');
 
     return record;
   });
@@ -165,16 +165,16 @@ function buildShapefileZip() {
   const { shp, records } = buildShp(rings);
 
   return zipSync({
-    "farms-utm21s.shp": new Uint8Array(shp),
-    "farms-utm21s.shx": new Uint8Array(buildShx(shp, records)),
-    "farms-utm21s.dbf": new Uint8Array(buildDbf(FARMS.map((farm) => farm.name))),
-    "farms-utm21s.prj": new TextEncoder().encode(PRJ),
-    "farms-utm21s.cpg": new TextEncoder().encode("UTF-8"),
+    'farms-utm21s.shp': new Uint8Array(shp),
+    'farms-utm21s.shx': new Uint8Array(buildShx(shp, records)),
+    'farms-utm21s.dbf': new Uint8Array(buildDbf(FARMS.map((farm) => farm.name))),
+    'farms-utm21s.prj': new TextEncoder().encode(PRJ),
+    'farms-utm21s.cpg': new TextEncoder().encode('UTF-8'),
   });
 }
 
 async function verifyShapefileZip(zipBytes) {
-  const { default: shp } = await import("shpjs");
+  const { default: shp } = await import('shpjs');
   const parsed = await shp(zipBytes.buffer);
   const collection = Array.isArray(parsed) ? parsed[0] : parsed;
 
@@ -202,19 +202,19 @@ async function verifyShapefileZip(zipBytes) {
   });
 }
 
-const kml = readFileSync(join(HERE, "farms.kml"));
+const kml = readFileSync(join(HERE, 'farms.kml'));
 
-writeFileSync(join(HERE, "farms.kmz"), zipSync({ "doc.kml": new Uint8Array(kml) }));
+writeFileSync(join(HERE, 'farms.kmz'), zipSync({ 'doc.kml': new Uint8Array(kml) }));
 
 const shapefileZip = buildShapefileZip();
 
 await verifyShapefileZip(shapefileZip);
-writeFileSync(join(HERE, "farms-utm21s.zip"), shapefileZip);
+writeFileSync(join(HERE, 'farms-utm21s.zip'), shapefileZip);
 
 // A believable-looking prefix followed by garbage: unzippable by fflate and shpjs alike.
 writeFileSync(
-  join(HERE, "corrupt.zip"),
-  Buffer.concat([Buffer.from("PK\x03\x04"), Buffer.alloc(64, 0xab)]),
+  join(HERE, 'corrupt.zip'),
+  Buffer.concat([Buffer.from('PK\x03\x04'), Buffer.alloc(64, 0xab)]),
 );
 
-console.log("fixtures written: farms.kmz, farms-utm21s.zip (verified via shpjs), corrupt.zip");
+console.log('fixtures written: farms.kmz, farms-utm21s.zip (verified via shpjs), corrupt.zip');

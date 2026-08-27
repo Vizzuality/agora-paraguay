@@ -1,12 +1,12 @@
-import { useAtomValue, useSetAtom } from "jotai";
-import { Upload } from "lucide-react";
-import { useRef, type ChangeEvent } from "react";
+import { useAtomValue, useSetAtom } from 'jotai';
+import { Upload } from 'lucide-react';
+import { useRef, type ChangeEvent } from 'react';
 
-import { Button } from "@/components/ui/button";
-import { parseUploadFile, UPLOAD_ACCEPT } from "@/lib/upload/parse-file";
-import { UploadError } from "@/lib/upload/types";
-import { drawAtom } from "@/store/draw";
-import { uploadFeaturesAtom, uploadResultAtom } from "@/store/upload";
+import { Button } from '@/components/ui/button';
+import { parseUploadFile, UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
+import { UploadError } from '@/lib/upload/types';
+import { drawAtom } from '@/store/draw';
+import { uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
 
 /**
  * Uploads a file of areas (zipped shapefile, KML/KMZ, GeoJSON) into the draw store.
@@ -26,7 +26,7 @@ export function UploadControl() {
     const file = event.currentTarget.files?.[0];
 
     // Reset so picking the same file again still fires a change event.
-    event.currentTarget.value = "";
+    event.currentTarget.value = '';
 
     if (!file) return;
 
@@ -35,7 +35,7 @@ export function UploadControl() {
 
       uploadFeatures({ fileName: file.name, outcome });
     } catch (error) {
-      const message = error instanceof UploadError ? error.message : "No se pudo leer el archivo.";
+      const message = error instanceof UploadError ? error.message : 'No se pudo leer el archivo.';
 
       setUploadResult({ fileName: file.name, accepted: 0, warnings: [], error: message });
     }

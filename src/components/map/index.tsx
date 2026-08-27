@@ -1,20 +1,20 @@
-import { setWorkerUrl } from "maplibre-gl";
-import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import { parseAsFloat, useQueryStates } from "nuqs";
-import { useCallback, type ReactNode } from "react";
+import { setWorkerUrl } from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+import { parseAsFloat, useQueryStates } from 'nuqs';
+import { useCallback, type ReactNode } from 'react';
 import Map, {
   NavigationControl,
   ScaleControl,
   type ViewStateChangeEvent,
-} from "react-map-gl/maplibre";
+} from 'react-map-gl/maplibre';
 
-import { DrawLayer } from "@/components/map/draw-layer";
-import { ParcelPattern } from "@/components/map/parcel-pattern";
-import { ParcelsLayer } from "@/components/map/parcels-layer";
-import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/basemap";
-import { normalizeViewState } from "@/lib/map/view-state";
+import { DrawLayer } from '@/components/map/draw-layer';
+import { ParcelPattern } from '@/components/map/parcel-pattern';
+import { ParcelsLayer } from '@/components/map/parcels-layer';
+import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
+import { normalizeViewState } from '@/lib/map/view-state';
 
-import "maplibre-gl/dist/maplibre-gl.css";
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 /**
  * MapLibre v6 locates its render worker with `new URL("maplibre-gl-worker.mjs",
@@ -41,7 +41,7 @@ function useMapViewState() {
     },
     // The URL is rewritten on every camera move, so keep it out of session history:
     // otherwise the back button replays each pan and zoom one frame at a time.
-    { history: "replace", throttleMs: 200 },
+    { history: 'replace', throttleMs: 200 },
   );
 }
 
@@ -75,7 +75,7 @@ export function MapView({ children }: { children?: ReactNode }) {
       mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
       onMoveEnd={handleMoveEnd}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: '100%', height: '100%' }}
       attributionControl={{ compact: true }}
     >
       <NavigationControl position="top-right" showCompass={false} />

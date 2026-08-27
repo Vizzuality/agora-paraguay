@@ -1,9 +1,9 @@
-import { atom } from "jotai";
+import { atom } from 'jotai';
 
-import type { ParcelFeature } from "@/lib/api/schemas";
-import { canSelectParcel } from "@/lib/map/draw-state";
-import { toggleParcel } from "@/lib/map/parcel-selection";
-import { drawStateAtom } from "@/store/draw-core";
+import type { ParcelFeature } from '@/lib/api/schemas';
+import { canSelectParcel } from '@/lib/map/draw-state';
+import { toggleParcel } from '@/lib/map/parcel-selection';
+import { drawStateAtom } from '@/store/draw-core';
 
 /**
  * The cadastral parcels picked for analysis by clicking them on the map. Multi-select:

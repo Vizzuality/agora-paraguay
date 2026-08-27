@@ -1,6 +1,6 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type { StyleSpecification } from 'maplibre-gl';
 
-import { env } from "@/env";
+import { env } from '@/env';
 
 /**
  * Built-in satellite basemap: Esri World Imagery — keyless, no account, sub-meter
@@ -16,9 +16,9 @@ const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
   sources: {
     satellite: {
-      type: "raster",
+      type: 'raster',
       tiles: [
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       ],
       tileSize: 256,
       maxzoom: 19,
@@ -28,18 +28,18 @@ const SATELLITE_STYLE: StyleSpecification = {
     // Esri's companion reference layer for World Imagery: administrative boundaries
     // and place labels on transparent tiles, same keyless {z}/{y}/{x} scheme.
     boundaries: {
-      type: "raster",
+      type: 'raster',
       tiles: [
-        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
       ],
       tileSize: 256,
       maxzoom: 19,
-      attribution: "Esri, HERE, Garmin, © OpenStreetMap contributors",
+      attribution: 'Esri, HERE, Garmin, © OpenStreetMap contributors',
     },
   },
   layers: [
-    { id: "satellite", type: "raster", source: "satellite" },
-    { id: "boundaries", type: "raster", source: "boundaries" },
+    { id: 'satellite', type: 'raster', source: 'satellite' },
+    { id: 'boundaries', type: 'raster', source: 'boundaries' },
   ],
 };
 

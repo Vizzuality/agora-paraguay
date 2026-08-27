@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { polygonName, type DrawnPolygon } from "@/lib/map/draw-features";
+import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /**
  * Placeholder model. It corresponds to nothing in the external API and exists only to
@@ -32,23 +32,23 @@ const positionSchema = z.tuple([z.number(), z.number()]);
 const ringSchema = z.array(positionSchema).min(4);
 
 const polygonGeometrySchema = z.object({
-  type: z.literal("Polygon"),
+  type: z.literal('Polygon'),
   coordinates: z.array(ringSchema).min(1),
 });
 
 const multiPolygonGeometrySchema = z.object({
-  type: z.literal("MultiPolygon"),
+  type: z.literal('MultiPolygon'),
   coordinates: z.array(z.array(ringSchema).min(1)).min(1),
 });
 
 const analysisFeatureSchema = z.object({
-  type: z.literal("Feature"),
+  type: z.literal('Feature'),
   properties: z.object({ name: z.string().min(1) }),
-  geometry: z.discriminatedUnion("type", [polygonGeometrySchema, multiPolygonGeometrySchema]),
+  geometry: z.discriminatedUnion('type', [polygonGeometrySchema, multiPolygonGeometrySchema]),
 });
 
 export const analysisRequestSchema = z.object({
-  type: z.literal("FeatureCollection"),
+  type: z.literal('FeatureCollection'),
   features: z.array(analysisFeatureSchema).min(1),
 });
 
@@ -62,7 +62,7 @@ export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
  * FeatureCollection of named Polygons.
  */
 export const parcelFeatureSchema = z.object({
-  type: z.literal("Feature"),
+  type: z.literal('Feature'),
   properties: z.object({ id: z.string().min(1), name: z.string().min(1) }),
   geometry: polygonGeometrySchema,
 });
@@ -70,7 +70,7 @@ export const parcelFeatureSchema = z.object({
 export type ParcelFeature = z.infer<typeof parcelFeatureSchema>;
 
 export const parcelCollectionSchema = z.object({
-  type: z.literal("FeatureCollection"),
+  type: z.literal('FeatureCollection'),
   features: z.array(parcelFeatureSchema),
 });
 
@@ -78,7 +78,7 @@ export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
 
 export const analysisResponseSchema = z.object({
   id: z.uuid(),
-  status: z.literal("accepted"),
+  status: z.literal('accepted'),
   receivedFeatures: z.number().int().positive(),
 });
 
@@ -99,9 +99,9 @@ export type AnalysisArea = DrawnPolygon | ParcelFeature;
  */
 export function toAnalysisRequest(polygons: AnalysisArea[]): AnalysisRequest {
   return analysisRequestSchema.parse({
-    type: "FeatureCollection",
+    type: 'FeatureCollection',
     features: polygons.map((polygon, index) => ({
-      type: "Feature",
+      type: 'Feature',
       properties: { name: polygonName(polygon, index) },
       geometry: polygon.geometry,
     })),

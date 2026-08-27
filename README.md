@@ -15,9 +15,13 @@ The API is **external and does not exist yet**, so the app currently serves mock
 ```sh
 nvm use
 pnpm install
-cp .env.example .env
+pnpm setup          # first production build (generates the route tree) + Playwright browser
 pnpm dev            # http://localhost:3000
 ```
+
+No `.env` file is needed — the app runs with sensible defaults (mock data, built-in satellite
+basemap). Copy `.env.example` to `.env` only to override them; note that setting
+`VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
 
 ## Scripts
 
@@ -26,6 +30,8 @@ pnpm dev            # http://localhost:3000
 | `pnpm dev`             | Dev server on port 3000                                 |
 | `pnpm build`           | Production build into `.output`                         |
 | `pnpm start`           | Runs the built server (`node .output/server/index.mjs`) |
+| `pnpm setup`           | One-time bootstrap: build + install Playwright chromium |
+| `pnpm check`           | Everything the CI `checks` job runs, in the same order  |
 | `pnpm test`            | Unit tests (Vitest), single run                         |
 | `pnpm test:unit`       | Same as `pnpm test`                                     |
 | `pnpm test:unit:watch` | Unit tests, watch mode                                  |
@@ -38,7 +44,8 @@ pnpm dev            # http://localhost:3000
 | `pnpm format:check`    | oxfmt, check only (what CI runs)                        |
 
 `pnpm build` generates `src/routeTree.gen.ts`, which `typecheck` and `lint` both need. On a fresh
-clone, build before either.
+clone, run `pnpm setup` (or at least `pnpm build`) before either — `pnpm check` handles the
+ordering for you.
 
 ## Tests
 
@@ -54,11 +61,11 @@ Unit tests cover pure logic (schemas, the mock client, map view and draw state);
 tests would need jsdom + testing-library, which is not set up. End-to-end specs drive the
 real UI and stub the basemap style, so they need no network.
 
-First run of `pnpm test:e2e` on a machine needs the browser once:
+First run of `pnpm test:e2e` on a machine needs the Chromium browser once — `pnpm setup` installs
+it (or run `pnpm exec playwright install chromium` directly).
 
-```bash
-pnpm exec playwright install chromium
-```
+New features and bug fixes come with tests: unit tests in `tests/unit/**` (mirroring the `src/`
+path) for logic, e2e specs for user-visible behaviour.
 
 ## Data layer
 
@@ -154,7 +161,13 @@ are kept in case it is ever committed.
 
 Linting and formatting follow [ADR 001](https://github.com/Vizzuality/vizzuality-engineering-handbook/blob/main/decisions/adr/001-standardise-js-ts-quality-toolchain-on-oxc.md)
 — **oxlint and oxfmt**, not ESLint or Prettier. `prek` installs the pre-commit hooks via
-`pnpm install`.
+`pnpm install` (config in `prek.toml`; the hook runs oxfmt and oxlint on staged files).
+
+Style is enforced by oxfmt, not by hand: single quotes (`singleQuote` in `.oxfmtrc.json`),
+2-space indentation and 80-character wrapping (oxfmt defaults). Unused code is an oxlint error.
+Two conventions the tools cannot check: give public functions, modules and variables meaningful
+names — with a comment where intent isn't obvious from the code — and remove dead code rather
+than commenting it out.
 
 CI runs typecheck, lint, format check, unit tests, end-to-end tests, the production build, and the
 Docker build on every pull request.

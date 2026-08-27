@@ -1,15 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom } from "jotai";
-import type { MapMouseEvent } from "maplibre-gl";
-import { useEffect } from "react";
-import { useMap } from "react-map-gl/maplibre";
+import { useQuery } from '@tanstack/react-query';
+import { useAtomValue, useSetAtom } from 'jotai';
+import type { MapMouseEvent } from 'maplibre-gl';
+import { useEffect } from 'react';
+import { useMap } from 'react-map-gl/maplibre';
 
-import { parcelQueries } from "@/lib/api/queries";
-import { parcelAtPoint } from "@/lib/map/parcel-selection";
-import { polygonAtPoint } from "@/lib/map/point-in-polygon";
-import { parcelClickEnabledAtom, selectParcelAtPointAtom } from "@/store/analysis";
-import { drawPolygonsAtom } from "@/store/draw";
-import { toggleParcelAtom } from "@/store/parcels";
+import { parcelQueries } from '@/lib/api/queries';
+import { parcelAtPoint } from '@/lib/map/parcel-selection';
+import { polygonAtPoint } from '@/lib/map/point-in-polygon';
+import { parcelClickEnabledAtom, selectParcelAtPointAtom } from '@/store/analysis';
+import { drawPolygonsAtom } from '@/store/draw';
+import { toggleParcelAtom } from '@/store/parcels';
 
 /**
  * Click-to-select on the map: while no tool is active and the session has not been
@@ -61,16 +61,16 @@ export function useParcelClick() {
         polygonAtPoint(polygons, event.lngLat) !== null ||
         parcelAtPoint(parcels, event.lngLat) !== null;
 
-      map.getCanvas().style.cursor = hit ? "pointer" : "";
+      map.getCanvas().style.cursor = hit ? 'pointer' : '';
     };
 
-    map.on("click", onClick);
-    map.on("mousemove", onMouseMove);
+    map.on('click', onClick);
+    map.on('mousemove', onMouseMove);
 
     return () => {
-      map.off("click", onClick);
-      map.off("mousemove", onMouseMove);
-      map.getCanvas().style.cursor = "";
+      map.off('click', onClick);
+      map.off('mousemove', onMouseMove);
+      map.getCanvas().style.cursor = '';
     };
   }, [mapRef, enabled, polygons, parcelData, selectParcelAtPoint, toggleParcel]);
 }

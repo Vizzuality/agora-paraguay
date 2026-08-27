@@ -1,6 +1,6 @@
-import { env } from "@/env";
+import { env } from '@/env';
 
-import { placeholderFixtures } from "./fixtures/placeholders";
+import { placeholderFixtures } from './fixtures/placeholders';
 import {
   analysisRequestSchema,
   analysisResponseSchema,
@@ -10,7 +10,7 @@ import {
   type AnalysisResponse,
   type ParcelCollection,
   type Placeholder,
-} from "./schemas";
+} from './schemas';
 
 /**
  * The only module in the app that knows the data is fake.
@@ -28,7 +28,7 @@ export async function fetchPlaceholders(): Promise<Placeholder[]> {
   }
 
   throw new Error(
-    "The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.",
+    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
   );
 }
 
@@ -42,13 +42,13 @@ export async function fetchPlaceholders(): Promise<Placeholder[]> {
  */
 export async function fetchParcels(): Promise<ParcelCollection> {
   if (env.VITE_USE_MOCK_API) {
-    const { parcelFixtures } = await import("./fixtures/parcels");
+    const { parcelFixtures } = await import('./fixtures/parcels');
 
     return parcelCollectionSchema.parse(parcelFixtures);
   }
 
   throw new Error(
-    "The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.",
+    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
   );
 }
 
@@ -65,16 +65,16 @@ export async function submitAnalysis(request: AnalysisRequest): Promise<Analysis
     await new Promise((resolve) => setTimeout(resolve, MOCK_ANALYSIS_LATENCY_MS));
 
     // Stand-in for the network call: shows what the real endpoint would receive.
-    console.info("submitAnalysis payload", parsed);
+    console.info('submitAnalysis payload', parsed);
 
     return analysisResponseSchema.parse({
       id: crypto.randomUUID(),
-      status: "accepted",
+      status: 'accepted',
       receivedFeatures: parsed.features.length,
     });
   }
 
   throw new Error(
-    "The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.",
+    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
   );
 }

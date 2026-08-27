@@ -1,8 +1,8 @@
-import { atom } from "jotai";
-import { atomWithReducer } from "jotai/utils";
-import type { TerraDraw } from "terra-draw";
+import { atom } from 'jotai';
+import { atomWithReducer } from 'jotai/utils';
+import type { TerraDraw } from 'terra-draw';
 
-import { drawReducer, INITIAL_DRAW_STATE } from "@/lib/map/draw-state";
+import { drawReducer, INITIAL_DRAW_STATE } from '@/lib/map/draw-state';
 
 /**
  * The shared core of the draw store. **Store-internal**: imported only by the feature

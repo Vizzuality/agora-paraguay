@@ -1,7 +1,7 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
+import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { fetchParcels, fetchPlaceholders, submitAnalysis } from "./client";
-import { toAnalysisRequest, type AnalysisArea } from "./schemas";
+import { fetchParcels, fetchPlaceholders, submitAnalysis } from './client';
+import { toAnalysisRequest, type AnalysisArea } from './schemas';
 
 /**
  * Query definitions. Components import from here and nowhere else in `lib/api`.
@@ -12,7 +12,7 @@ import { toAnalysisRequest, type AnalysisArea } from "./schemas";
 export const placeholderQueries = {
   all: () =>
     queryOptions({
-      queryKey: ["placeholders"] as const,
+      queryKey: ['placeholders'] as const,
       queryFn: fetchPlaceholders,
     }),
 };
@@ -20,7 +20,7 @@ export const placeholderQueries = {
 export const parcelQueries = {
   all: () =>
     queryOptions({
-      queryKey: ["parcels"] as const,
+      queryKey: ['parcels'] as const,
       queryFn: fetchParcels,
       // TODO(mock-parcels): staleTime pinned to Infinity only because the fixture is
       // static — revisit when the real parcel layer replaces the mock.
@@ -37,7 +37,7 @@ export const parcelQueries = {
 export const analysisMutations = {
   submit: () =>
     mutationOptions({
-      mutationKey: ["analysis", "submit"] as const,
+      mutationKey: ['analysis', 'submit'] as const,
       mutationFn: (areas: AnalysisArea[]) => submitAnalysis(toAnalysisRequest(areas)),
     }),
 };

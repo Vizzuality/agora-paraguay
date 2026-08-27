@@ -1,5 +1,5 @@
-import { normalizeUnknown } from "@/lib/upload/normalize";
-import { UploadError, type ParseOutcome, type UploadWarning } from "@/lib/upload/types";
+import { normalizeUnknown } from '@/lib/upload/normalize';
+import { UploadError, type ParseOutcome, type UploadWarning } from '@/lib/upload/types';
 
 /**
  * Zipped shapefiles, via `shpjs`: the one library where "a shapefile in EPSG:32721
@@ -15,36 +15,36 @@ import { UploadError, type ParseOutcome, type UploadWarning } from "@/lib/upload
  * bundle.
  */
 export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome> {
-  const [{ unzipSync }, { default: shp }] = await Promise.all([import("fflate"), import("shpjs")]);
+  const [{ unzipSync }, { default: shp }] = await Promise.all([import('fflate'), import('shpjs')]);
 
   let entryNames: string[];
 
   try {
     entryNames = Object.keys(unzipSync(new Uint8Array(buffer)));
   } catch {
-    throw new UploadError("unreadable", "No se pudo leer el archivo como archivo zip.");
+    throw new UploadError('unreadable', 'No se pudo leer el archivo como archivo zip.');
   }
 
   const has = (extension: string) =>
     entryNames.some((name) => name.toLowerCase().endsWith(extension));
 
-  if (!has(".shp")) {
+  if (!has('.shp')) {
     throw new UploadError(
-      "unreadable",
-      "El zip no contiene ningún archivo .shp — no es un shapefile comprimido.",
+      'unreadable',
+      'El zip no contiene ningún archivo .shp — no es un shapefile comprimido.',
     );
   }
 
   const warnings: UploadWarning[] = [];
 
-  if (!has(".dbf")) {
+  if (!has('.dbf')) {
     warnings.push({
       message:
-        "No se encontró la tabla de atributos (.dbf) — los polígonos se nombraron automáticamente.",
+        'No se encontró la tabla de atributos (.dbf) — los polígonos se nombraron automáticamente.',
     });
   }
 
-  const missingPrj = !has(".prj");
+  const missingPrj = !has('.prj');
 
   let result: Awaited<ReturnType<typeof shp>>;
 
@@ -52,8 +52,8 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
     result = await shp(buffer);
   } catch {
     throw new UploadError(
-      "unreadable",
-      "No se pudo leer el shapefile — su contenido o sistema de coordenadas puede no ser compatible.",
+      'unreadable',
+      'No se pudo leer el shapefile — su contenido o sistema de coordenadas puede no ser compatible.',
     );
   }
 
@@ -68,19 +68,19 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
   }
 
   const merged = {
-    type: "FeatureCollection",
+    type: 'FeatureCollection',
     features: collections.flatMap((collection) => collection.features),
   };
 
   let outcome: ParseOutcome;
 
   try {
-    outcome = normalizeUnknown(merged, "un shapefile");
+    outcome = normalizeUnknown(merged, 'un shapefile');
   } catch (error) {
-    if (error instanceof UploadError && error.code === "bad-crs" && missingPrj) {
+    if (error instanceof UploadError && error.code === 'bad-crs' && missingPrj) {
       throw new UploadError(
-        "bad-crs",
-        "Las coordenadas no son longitud/latitud — al shapefile le falta su archivo de proyección .prj.",
+        'bad-crs',
+        'Las coordenadas no son longitud/latitud — al shapefile le falta su archivo de proyección .prj.',
       );
     }
 
@@ -89,7 +89,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
 
   if (missingPrj) {
     warnings.push({
-      message: "El shapefile no tiene archivo .prj — se asumieron coordenadas WGS84.",
+      message: 'El shapefile no tiene archivo .prj — se asumieron coordenadas WGS84.',
     });
   }
 

@@ -1,5 +1,5 @@
-import { useParcelClick } from "@/lib/map/use-parcel-click";
-import { useTerraDraw } from "@/lib/map/use-terra-draw";
+import { useParcelClick } from '@/lib/map/use-parcel-click';
+import { useTerraDraw } from '@/lib/map/use-terra-draw';
 
 /**
  * Binds Terra Draw to the enclosing `<Map>`, plus the idle-mode click-to-select on the

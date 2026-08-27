@@ -14,7 +14,7 @@ export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export type LngLat = [number, number];
 
 export type UploadPolygonGeometry = {
-  type: "Polygon";
+  type: 'Polygon';
   coordinates: LngLat[][];
 };
 
@@ -25,11 +25,11 @@ export type UploadPolygonGeometry = {
  */
 export type UploadFeature = {
   id: string;
-  type: "Feature";
+  type: 'Feature';
   geometry: UploadPolygonGeometry;
   properties: {
-    mode: "polygon";
-    origin: "upload";
+    mode: 'polygon';
+    origin: 'upload';
     name: string;
   };
 };
@@ -47,13 +47,13 @@ export type ParseOutcome = {
 };
 
 export type UploadErrorCode =
-  | "unsupported-type"
-  | "too-large"
-  | "unreadable"
-  | "bad-crs"
-  | "out-of-paraguay"
-  | "no-polygons"
-  | "empty";
+  | 'unsupported-type'
+  | 'too-large'
+  | 'unreadable'
+  | 'bad-crs'
+  | 'out-of-paraguay'
+  | 'no-polygons'
+  | 'empty';
 
 /** A failed upload. The message is user-facing; the code is for tests and branching. */
 export class UploadError extends Error {
@@ -61,7 +61,7 @@ export class UploadError extends Error {
 
   constructor(code: UploadErrorCode, message: string) {
     super(message);
-    this.name = "UploadError";
+    this.name = 'UploadError';
     this.code = code;
   }
 }

@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
-import type { FilterSpecification } from "maplibre-gl";
-import { Layer, Source } from "react-map-gl/maplibre";
+import { useQuery } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
+import type { FilterSpecification } from 'maplibre-gl';
+import { Layer, Source } from 'react-map-gl/maplibre';
 
-import { parcelQueries } from "@/lib/api/queries";
-import { selectedParcelsAtom } from "@/store/parcels";
+import { parcelQueries } from '@/lib/api/queries';
+import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
  * TODO(mock-parcels): this layer renders invented data. When the real parcel layer is
@@ -35,19 +35,19 @@ export function ParcelsLayer() {
   if (!data || data.features.length === 0) return null;
 
   const selectedIds = selectedParcels.map((parcel) => parcel.properties.id);
-  const selectedFilter: FilterSpecification = ["in", ["get", "id"], ["literal", selectedIds]];
+  const selectedFilter: FilterSpecification = ['in', ['get', 'id'], ['literal', selectedIds]];
 
   return (
     <Source id="parcels" type="geojson" data={data}>
       <Layer
         id="parcels-fill"
         type="fill"
-        paint={{ "fill-color": "#FFFFFF", "fill-opacity": 0.05 }}
+        paint={{ 'fill-color': '#FFFFFF', 'fill-opacity': 0.05 }}
       />
       <Layer
         id="parcels-outline"
         type="line"
-        paint={{ "line-color": "#FFFFFF", "line-width": 1, "line-opacity": 0.8 }}
+        paint={{ 'line-color': '#FFFFFF', 'line-width': 1, 'line-opacity': 0.8 }}
       />
       {/* Explicit `source` and no fragment: <Source> injects the source id by cloning
           its DIRECT children, so a conditional fragment neither inherits it nor
@@ -58,7 +58,7 @@ export function ParcelsLayer() {
           source="parcels"
           type="fill"
           filter={selectedFilter}
-          paint={{ "fill-color": "#F1FF28", "fill-opacity": 0.5 }}
+          paint={{ 'fill-color': '#F1FF28', 'fill-opacity': 0.5 }}
         />
       )}
       {selectedIds.length > 0 && (
@@ -67,7 +67,7 @@ export function ParcelsLayer() {
           source="parcels"
           type="line"
           filter={selectedFilter}
-          paint={{ "line-color": "#F1FF28", "line-width": 2 }}
+          paint={{ 'line-color': '#F1FF28', 'line-width': 2 }}
         />
       )}
     </Source>
