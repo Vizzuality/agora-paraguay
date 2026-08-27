@@ -1,6 +1,6 @@
 import type { TerraDraw } from 'terra-draw';
 
-import { drawnPolygons, type DrawnPolygon, type FeatureId } from '@/lib/map/draw-features';
+import { drawnPolygons, type DrawnPolygon } from '@/lib/map/draw-features';
 import type { UploadFeature, UploadWarning } from '@/lib/upload/types';
 
 export type ImportOutcome = {
@@ -8,8 +8,6 @@ export type ImportOutcome = {
   accepted: UploadFeature[];
   /** One user-facing warning per feature Terra Draw rejected. */
   rejectionWarnings: UploadWarning[];
-  /** The selected id, when the import removed the feature it pointed at. */
-  deselectedId: FeatureId | null;
   /** The finished polygons in the store after the import. */
   polygons: DrawnPolygon[];
 };
@@ -21,11 +19,7 @@ export type ImportOutcome = {
  * (`uploadFeaturesAtom`) only coordinates state, and so this logic is testable in node
  * against a real Terra Draw instance.
  */
-export function importReplacingFeatures(
-  draw: TerraDraw,
-  features: UploadFeature[],
-  selectedId: FeatureId | null,
-): ImportOutcome {
+export function importReplacingFeatures(draw: TerraDraw, features: UploadFeature[]): ImportOutcome {
   const previousIds = drawnPolygons(draw.getSnapshot()).map((polygon) => polygon.id);
 
   // The store validates each feature on its own: valid ones land, invalid ones come
@@ -52,31 +46,26 @@ export function importReplacingFeatures(
   const accepted = features.filter((feature) => !rejectedIds.has(feature.id));
 
   // Nothing landed: the map is untouched and the previous polygons stay.
-  if (accepted.length === 0) {
-    return {
-      accepted,
-      rejectionWarnings,
-      deselectedId: null,
-      polygons: drawnPolygons(draw.getSnapshot()),
-    };
-  }
-
-  // Deselect before removing, mirroring `deleteSelectedAtom`: selection points must
-  // not outlive the geometry they annotate.
-  const deselectedId = selectedId !== null && previousIds.includes(selectedId) ? selectedId : null;
-
-  if (deselectedId !== null) {
-    draw.deselectFeature(deselectedId);
-  }
-
-  if (previousIds.length > 0) {
+  if (accepted.length > 0 && previousIds.length > 0) {
     draw.removeFeatures(previousIds);
   }
 
   return {
     accepted,
     rejectionWarnings,
-    deselectedId,
     polygons: drawnPolygons(draw.getSnapshot()),
   };
+}
+
+/**
+ * Re-adds surviving polygons to a freshly-bound Terra Draw instance, after the map that
+ * owned the previous instance unmounted (navigating to /analisis and back). The features
+ * came out of the previous instance's snapshot, so they keep their ids — which is what
+ * keeps `analysisId` valid — and their `analysis` property, which is what repaints the
+ * highlight. Converges on the store: returns what Terra Draw actually accepted.
+ */
+export function restoreFeatures(draw: TerraDraw, polygons: DrawnPolygon[]): DrawnPolygon[] {
+  draw.addFeatures(polygons);
+
+  return drawnPolygons(draw.getSnapshot());
 }

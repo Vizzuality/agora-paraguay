@@ -3,26 +3,6 @@ import { z } from 'zod';
 import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /**
- * Placeholder model. It corresponds to nothing in the external API and exists only to
- * prove the data path end to end:
- *
- *   fixtures -> client.ts -> queries.ts -> route component
- *
- * Replace it with schemas derived from the agreed API contract rather than extending
- * it — invented schemas get mistaken for decisions.
- */
-export const placeholderSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  value: z.number(),
-  description: z.string().min(1),
-});
-
-export type Placeholder = z.infer<typeof placeholderSchema>;
-
-export const placeholderListSchema = z.array(placeholderSchema);
-
-/**
  * Analysis contract. The endpoint is fake (see `client.ts`), but the request shape is
  * the platform contract: a GeoJSON FeatureCollection whose geometries may be Polygon or
  * MultiPolygon. The draw store only ever holds Polygons today — uploads explode

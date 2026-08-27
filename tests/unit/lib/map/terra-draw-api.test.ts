@@ -15,12 +15,7 @@ import { startedDraw } from './headless-draw';
  * are the real assertions and they run under `typecheck`, so a Terra Draw upgrade that
  * renames an event or a method fails the build instead of failing silently on the map.
  */
-const SUBSCRIBED_EVENTS = [
-  'finish',
-  'change',
-  'select',
-  'deselect',
-] as const satisfies readonly TerraDrawEvents[];
+const SUBSCRIBED_EVENTS = ['finish', 'change'] as const satisfies readonly TerraDrawEvents[];
 
 const USED_METHODS = [
   'start',
@@ -31,8 +26,6 @@ const USED_METHODS = [
   'getSnapshot',
   'addFeatures',
   'removeFeatures',
-  'selectFeature',
-  'deselectFeature',
   'clear',
   'enabled',
 ] as const satisfies readonly (keyof TerraDraw)[];

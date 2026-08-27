@@ -4,6 +4,7 @@ import { importReplacingFeatures } from '@/lib/map/import-features';
 import type { ParseOutcome, UploadResult } from '@/lib/upload/types';
 import { selectAnalysisPolygonAtom } from '@/store/analysis';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
+import { backToSelectionAtom } from '@/store/mode';
 import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
@@ -18,6 +19,19 @@ import { selectedParcelsAtom } from '@/store/parcels';
  * Deliberately outside the reducer: it is ephemeral view state, not draw-domain state.
  */
 export const uploadResultAtom = atom<UploadResult | null>(null);
+
+/**
+ * The shared start of a new selection session: drops the clicked cadastral parcels,
+ * dismisses the previous upload notice, and returns the app to selection mode — an
+ * upload or a fresh drawing after Analizar makes the map clickable again.
+ * `startDrawAtom` and `uploadFeaturesAtom` both route through here. Lives in this file
+ * because it owns `uploadResultAtom` (any other home would create an import cycle).
+ */
+export const resetSelectionSessionAtom = atom(null, (_get, set) => {
+  set(uploadResultAtom, null);
+  set(selectedParcelsAtom, []);
+  set(backToSelectionAtom);
+});
 
 /**
  * Injects a parsed upload into the store. Replace semantics: everything on the map goes
@@ -36,10 +50,9 @@ export const uploadFeaturesAtom = atom(
     // Disarm whatever tool is active before touching the store: stopping polygon mode
     // sweeps an in-progress ring, which the import's replace step cannot see — it only
     // holds finished polygons — and which must not stay armed over an import.
-    const { selectedId } = get(drawStateAtom);
     set(drawStateAtom, { type: 'tool', tool: null });
 
-    const outcome = importReplacingFeatures(draw, features, selectedId);
+    const outcome = importReplacingFeatures(draw, features);
     const allWarnings = [...warnings, ...outcome.rejectionWarnings];
 
     // Nothing landed: the map is untouched, so the previous polygons stay and the
@@ -55,17 +68,13 @@ export const uploadFeaturesAtom = atom(
       return;
     }
 
-    if (outcome.deselectedId !== null) {
-      set(drawStateAtom, { type: 'deselected', id: outcome.deselectedId });
-    }
-
     // Like `clear()`, adding and removing features is not trusted to surface as a
     // `change` event — report the new geometry by hand. Idempotent if the event fires.
     set(drawStateAtom, { type: 'geometry', polygons: outcome.polygons });
 
     // Replace semantics extend to the clicked cadastral parcels: an upload starts the
-    // selection over.
-    set(selectedParcelsAtom, []);
+    // selection over (and, after Analizar, returns the app to selection mode).
+    set(resetSelectionSessionAtom);
 
     set(uploadResultAtom, {
       fileName: upload.fileName,

@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
-// Same canvas-relative coordinates as draw-controls.spec.ts (the canvas is the right
-// half of the viewport, ~640px wide).
+// Canvas-relative coordinates (the canvas is the right half of the viewport,
+// ~640px wide).
 const FIRST_POLYGON = [
   { x: 300, y: 250 },
   { x: 360, y: 250 },
@@ -18,9 +18,11 @@ const SECOND_POLYGON = [
 
 function controls(page: Page) {
   return {
-    draw: page.getByRole('button', { name: 'Dibujar polígono' }),
+    // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
+    draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
     analyze: page.getByRole('button', { name: 'Analizar' }),
-    status: page.getByRole('group', { name: 'Herramientas de dibujo' }).locator('p'),
+    firstEntry: page.getByRole('button', { name: 'Área dibujada 1' }),
+    secondEntry: page.getByRole('button', { name: 'Área dibujada 2' }),
   };
 }
 
@@ -32,8 +34,8 @@ test.beforeEach(async ({ page }) => {
   await expect(mapCanvas(page)).toBeVisible();
 });
 
-test('analyzes every polygon on the map and ends the drawing session', async ({ page }) => {
-  const { draw, analyze, status } = controls(page);
+test('analyzes every polygon on the map and moves to the analysis page', async ({ page }) => {
+  const { draw, analyze, firstEntry, secondEntry } = controls(page);
 
   // Nothing on the map yet: analysis has nothing to send.
   await expect(analyze).toBeDisabled();
@@ -41,20 +43,22 @@ test('analyzes every polygon on the map and ends the drawing session', async ({ 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(status).toHaveText('2 áreas dibujadas.');
+  await expect(secondEntry).toBeVisible();
   await expect(analyze).toBeEnabled();
 
+  // A successful submission navigates to the analysis page.
   await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+  await expect(page.getByRole('heading', { name: 'Análisis' })).toBeVisible();
 
-  // The fake endpoint accepts all polygons — no selection involved.
-  await expect(page.getByText('Análisis aceptado: se enviaron 2 áreas.')).toBeVisible();
+  // The submitted areas are listed, read-only, with the same names as the panel list.
+  const areas = page.getByRole('list').getByRole('listitem');
+  await expect(areas).toHaveText(['Área dibujada 1', 'Área dibujada 2']);
 
-  // Analyze exits drawing mode; the polygons stay on the map.
-  await expect(draw).toHaveAttribute('aria-pressed', 'false');
-  await expect(status).toHaveText('2 áreas dibujadas.');
-
-  // Drawing again starts the next session from scratch.
-  await draw.click();
-  await expect(status).toHaveText('No hay áreas dibujadas.');
-  await expect(analyze).toBeDisabled();
+  // Going back remounts the map; the selection survives and is editable again.
+  await page.goBack();
+  await expect(controls(page).draw).toBeEnabled();
+  await expect(firstEntry).toBeVisible();
+  await expect(secondEntry).toBeVisible();
+  await expect(analyze).toBeEnabled();
 });

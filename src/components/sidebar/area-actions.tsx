@@ -7,6 +7,7 @@ import { parseUploadFile, UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { UploadError, type UploadResult } from '@/lib/upload/types';
 import { cn } from '@/lib/utils';
 import { drawAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
+import { modeAtom } from '@/store/mode';
 import { uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
 
 /** How many upload warnings are shown before collapsing into "and N more". */
@@ -22,6 +23,7 @@ const MAX_VISIBLE_WARNINGS = 5;
  */
 export function AreaActions() {
   const draw = useAtomValue(drawAtom);
+  const mode = useAtomValue(modeAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
   const setTool = useSetAtom(setDrawToolAtom);
   const startDraw = useSetAtom(startDrawAtom);
@@ -29,7 +31,9 @@ export function AreaActions() {
   const setUploadResult = useSetAtom(uploadResultAtom);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const drawing = draw.tool === 'draw';
+  // `startAnalysisAtom` parks the tool, so the tool check alone would do — the
+  // explicit conjunction documents the rule: drawing is a selection-mode activity.
+  const drawing = mode === 'selection' && draw.tool === 'draw';
 
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];
@@ -52,24 +56,24 @@ export function AreaActions() {
 
   return (
     <section className="flex flex-col gap-3">
-      <fieldset className="grid grid-cols-2 gap-3">
+      <fieldset className="grid grid-cols-2 gap-1.5">
         <legend className="sr-only">Crear áreas de interés</legend>
 
         <Button
           variant="secondary"
-          className="h-auto cursor-pointer flex-col gap-2.5 rounded-3xl border-[3px] border-secondary p-8 font-normal text-accent-foreground aria-pressed:border-primary"
+          className="h-auto flex-col gap-2.5 rounded-3xl border-[3px] border-secondary p-8 font-normal text-accent-foreground aria-pressed:border-primary"
           // Activation clears the map — a draw session always starts from scratch.
           onClick={() => (drawing ? setTool(null) : startDraw())}
           aria-pressed={drawing}
           disabled={!draw.bound}
         >
           <SquarePen aria-hidden className="size-10" strokeWidth={1.5} />
-          Dibujar polígono
+          {drawButtonLabel(drawing)}
         </Button>
 
         <Button
           variant="secondary"
-          className="h-auto cursor-pointer flex-col gap-2.5 rounded-3xl border-[3px] border-secondary p-8 font-normal text-accent-foreground"
+          className="h-auto flex-col gap-2.5 rounded-3xl border-[3px] border-secondary p-8 font-normal text-accent-foreground"
           onClick={() => inputRef.current?.click()}
           disabled={!draw.bound}
         >
@@ -101,6 +105,13 @@ export function AreaActions() {
       <UploadNotices />
     </section>
   );
+}
+
+function drawButtonLabel(drawing: boolean): string {
+  if (drawing) {
+    return 'Cancelar';
+  }
+  return 'Dibujar polígono';
 }
 
 function uploadStatus(result: UploadResult): string {

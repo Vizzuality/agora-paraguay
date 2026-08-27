@@ -1,0 +1,12 @@
+{
+  // This repo formats with oxfmt (single quotes, see .oxfmtrc.json), not Prettier —
+  // Prettier would rewrite everything to double quotes on save. The oxc extension
+  // formats on save through oxfmt, so saves match what the prek pre-commit hook does.
+  "prettier.enable": false,
+  "editor.formatOnSave": true,
+  "oxc.enable.oxfmt": true,
+  "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[javascriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" }
+}
