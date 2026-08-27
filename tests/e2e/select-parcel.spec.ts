@@ -26,7 +26,7 @@ const OUTSIDE_BOTH = { x: 100, y: 620 };
 
 function locators(page: Page) {
   return {
-    draw: page.getByRole('button', { name: 'Dibujar un área' }),
+    draw: page.getByRole('button', { name: 'Dibujar polígono' }),
     analyze: page.getByRole('button', { name: 'Analizar' }),
     firstEntry: page.getByRole('button', { name: 'Área dibujada 1' }),
     secondEntry: page.getByRole('button', { name: 'Área dibujada 2' }),

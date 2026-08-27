@@ -18,7 +18,7 @@ const SECOND_POLYGON = [
 
 function controls(page: Page) {
   return {
-    draw: page.getByRole('button', { name: 'Dibujar un área' }),
+    draw: page.getByRole('button', { name: 'Dibujar polígono' }),
     analyze: page.getByRole('button', { name: 'Analizar' }),
     status: page.getByRole('group', { name: 'Herramientas de dibujo' }).locator('p'),
   };

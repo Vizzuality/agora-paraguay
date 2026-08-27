@@ -24,11 +24,13 @@ const DRAWN_POLYGON = [
 
 function controls(page: Page) {
   return {
-    upload: page.getByRole('button', { name: 'Subir áreas' }),
+    upload: page.getByRole('button', { name: 'Subir archivo' }),
     input: page.locator('input[type="file"]'),
     edit: page.getByRole('button', { name: 'Seleccionar y editar áreas' }),
     remove: page.getByRole('button', { name: 'Eliminar el área seleccionada' }),
     status: page.getByRole('group', { name: 'Herramientas de dibujo' }).locator('p'),
+    // The upload outcome announces from the panel, next to the button that caused it.
+    uploadStatus: page.getByRole('group', { name: 'Crear áreas de interés' }).locator('p'),
     notices: page.getByRole('region', { name: 'Avisos de subida' }),
   };
 }
@@ -52,11 +54,12 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('imports a GeoJSON upload, exploding its MultiPolygon', async ({ page }) => {
-  const { status, notices } = controls(page);
+  const { status, uploadStatus, notices } = controls(page);
 
   await upload(page, 'farms.geojson');
 
-  await expect(status).toHaveText('3 áreas dibujadas. Se importaron 3 áreas de farms.geojson.');
+  await expect(status).toHaveText('3 áreas dibujadas.');
+  await expect(uploadStatus).toHaveText('Se importaron 3 áreas de farms.geojson.');
 
   // The MultiPolygon became two named parts; the lone point became a warning.
   await expect(areaButton(page, 'Estancia Norte (1/2)')).toBeVisible();
@@ -80,21 +83,23 @@ test('switches the analysis selection from the list', async ({ page }) => {
 // Both replacements at once: an upload clears the drawn polygons, and the next upload
 // clears the previous one.
 test('an upload replaces everything already on the map', async ({ page }) => {
-  const { status } = controls(page);
+  const { status, uploadStatus } = controls(page);
 
-  await page.getByRole('button', { name: 'Dibujar un área' }).click();
+  await page.getByRole('button', { name: 'Dibujar polígono' }).click();
   await drawPolygon(page, DRAWN_POLYGON);
   await expect(status).toContainText('1 área dibujada.');
 
   await upload(page, 'farms.geojson');
 
-  await expect(status).toHaveText('3 áreas dibujadas. Se importaron 3 áreas de farms.geojson.');
+  await expect(status).toHaveText('3 áreas dibujadas.');
+  await expect(uploadStatus).toHaveText('Se importaron 3 áreas de farms.geojson.');
   await expect(areaButton(page, 'Área dibujada 1')).toBeHidden();
   await expect(areaButton(page, 'Campo Sur')).toBeVisible();
 
   await upload(page, 'farms.kml');
 
-  await expect(status).toHaveText('2 áreas dibujadas. Se importaron 2 áreas de farms.kml.');
+  await expect(status).toHaveText('2 áreas dibujadas.');
+  await expect(uploadStatus).toHaveText('Se importaron 2 áreas de farms.kml.');
   await expect(areaButton(page, 'Estancia KML')).toBeVisible();
   await expect(areaButton(page, 'Campo KML')).toBeVisible();
   await expect(areaButton(page, 'Campo Sur')).toBeHidden();
@@ -116,31 +121,34 @@ test('uploaded polygons are editable: select and delete one', async ({ page }) =
 });
 
 test('imports a KMZ with names from the KML inside', async ({ page }) => {
-  const { status } = controls(page);
+  const { status, uploadStatus } = controls(page);
 
   await upload(page, 'farms.kmz');
 
-  await expect(status).toHaveText('2 áreas dibujadas. Se importaron 2 áreas de farms.kmz.');
+  await expect(status).toHaveText('2 áreas dibujadas.');
+  await expect(uploadStatus).toHaveText('Se importaron 2 áreas de farms.kmz.');
   await expect(areaButton(page, 'Estancia KML')).toBeVisible();
   await expect(areaButton(page, 'Campo KML')).toBeVisible();
 });
 
 test('imports a UTM 21S shapefile, reprojected via its .prj', async ({ page }) => {
-  const { status } = controls(page);
+  const { status, uploadStatus } = controls(page);
 
   await upload(page, 'farms-utm21s.zip');
 
-  await expect(status).toHaveText('2 áreas dibujadas. Se importaron 2 áreas de farms-utm21s.zip.');
+  await expect(status).toHaveText('2 áreas dibujadas.');
+  await expect(uploadStatus).toHaveText('Se importaron 2 áreas de farms-utm21s.zip.');
   await expect(areaButton(page, 'Estancia San Pedro')).toBeVisible();
   await expect(areaButton(page, 'Campo Verde')).toBeVisible();
 });
 
 test('skips holed polygons with a warning naming them', async ({ page }) => {
-  const { status, notices } = controls(page);
+  const { status, uploadStatus, notices } = controls(page);
 
   await upload(page, 'farms-holes.geojson');
 
-  await expect(status).toHaveText('1 área dibujada. Se importó 1 área de farms-holes.geojson.');
+  await expect(status).toHaveText('1 área dibujada.');
+  await expect(uploadStatus).toHaveText('Se importó 1 área de farms-holes.geojson.');
   await expect(notices).toContainText('"Laguna Grande" tiene anillos interiores (huecos)');
   await expect(areaButton(page, 'Potrero')).toBeVisible();
 

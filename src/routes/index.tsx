@@ -3,9 +3,10 @@ import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { MapView } from '@/components/map';
-import { AnalyzeButton } from '@/components/map/analyze-button';
 import { DrawControls } from '@/components/map/draw-controls';
-import { PolygonList } from '@/components/map/polygon-list';
+import { AnalyzeButton } from '@/components/sidebar/analyze-button';
+import { AreaActions } from '@/components/sidebar/area-actions';
+import { PolygonList } from '@/components/sidebar/polygon-list';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -55,6 +56,7 @@ function Panel() {
 
       {/* Client-only for the same reason as the controls: it reads the draw atoms. */}
       <ClientOnly>
+        <AreaActions />
         <PolygonList />
         <AnalyzeButton />
       </ClientOnly>

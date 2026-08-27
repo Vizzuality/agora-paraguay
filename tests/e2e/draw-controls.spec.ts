@@ -22,7 +22,7 @@ const SECOND_POLYGON = [
 
 function controls(page: Page) {
   return {
-    draw: page.getByRole('button', { name: 'Dibujar un área' }),
+    draw: page.getByRole('button', { name: 'Dibujar polígono' }),
     edit: page.getByRole('button', { name: 'Seleccionar y editar áreas' }),
     remove: page.getByRole('button', { name: 'Eliminar el área seleccionada' }),
     clear: page.getByRole('button', { name: 'Eliminar todas las áreas' }),
