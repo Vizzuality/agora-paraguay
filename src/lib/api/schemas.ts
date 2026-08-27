@@ -54,6 +54,28 @@ export const analysisRequestSchema = z.object({
 
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
 
+/**
+ * TODO(mock-parcels): invented contract, not agreed with the API. Replace with the
+ * real parcel schema when the real layer is available (grep `mock-parcels`).
+ *
+ * The shape mirrors what a cadastral endpoint would plausibly return: a
+ * FeatureCollection of named Polygons.
+ */
+export const parcelFeatureSchema = z.object({
+  type: z.literal("Feature"),
+  properties: z.object({ id: z.string().min(1), name: z.string().min(1) }),
+  geometry: polygonGeometrySchema,
+});
+
+export type ParcelFeature = z.infer<typeof parcelFeatureSchema>;
+
+export const parcelCollectionSchema = z.object({
+  type: z.literal("FeatureCollection"),
+  features: z.array(parcelFeatureSchema),
+});
+
+export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
+
 export const analysisResponseSchema = z.object({
   id: z.uuid(),
   status: z.literal("accepted"),
@@ -63,13 +85,19 @@ export const analysisResponseSchema = z.object({
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
 
 /**
+ * An area the analysis can be asked about: a drawn or uploaded Terra Draw polygon, or
+ * a cadastral parcel selected by clicking it on the map.
+ */
+export type AnalysisArea = DrawnPolygon | ParcelFeature;
+
+/**
  * Request payload: every polygon on the map becomes a named Feature. The parse both
  * validates and strips Terra Draw's internal properties (`mode`, `currentlyDrawing`,
  * `origin`) — the feature schema only declares `name`, and Zod rebuilds objects and
  * arrays, so the payload never aliases the draw store. Throws on an empty list: the
  * contract requires at least one feature, callers guard before mapping.
  */
-export function toAnalysisRequest(polygons: DrawnPolygon[]): AnalysisRequest {
+export function toAnalysisRequest(polygons: AnalysisArea[]): AnalysisRequest {
   return analysisRequestSchema.parse({
     type: "FeatureCollection",
     features: polygons.map((polygon, index) => ({

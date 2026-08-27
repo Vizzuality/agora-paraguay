@@ -10,6 +10,7 @@ import Map, {
 
 import { DrawLayer } from "@/components/map/draw-layer";
 import { ParcelPattern } from "@/components/map/parcel-pattern";
+import { ParcelsLayer } from "@/components/map/parcels-layer";
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from "@/lib/map/basemap";
 import { normalizeViewState } from "@/lib/map/view-state";
 
@@ -55,7 +56,11 @@ export function MapView({ children }: { children?: ReactNode }) {
         zoom: event.viewState.zoom,
       });
 
-      void setViewState({ lng: next.longitude, lat: next.latitude, zoom: next.zoom });
+      void setViewState({
+        lng: next.longitude,
+        lat: next.latitude,
+        zoom: next.zoom,
+      });
     },
     [setViewState],
   );
@@ -75,6 +80,8 @@ export function MapView({ children }: { children?: ReactNode }) {
     >
       <NavigationControl position="top-right" showCompass={false} />
       <ScaleControl position="bottom-right" />
+      {/* TODO(mock-parcels): mock layer — swap for the real parcels source when available. */}
+      <ParcelsLayer />
       <DrawLayer />
       <ParcelPattern />
       {children}

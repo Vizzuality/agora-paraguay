@@ -4,9 +4,11 @@ import { placeholderFixtures } from "./fixtures/placeholders";
 import {
   analysisRequestSchema,
   analysisResponseSchema,
+  parcelCollectionSchema,
   placeholderListSchema,
   type AnalysisRequest,
   type AnalysisResponse,
+  type ParcelCollection,
   type Placeholder,
 } from "./schemas";
 
@@ -23,6 +25,26 @@ import {
 export async function fetchPlaceholders(): Promise<Placeholder[]> {
   if (env.VITE_USE_MOCK_API) {
     return placeholderListSchema.parse(placeholderFixtures);
+  }
+
+  throw new Error(
+    "The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.",
+  );
+}
+
+/**
+ * TODO(mock-parcels): the mock branch serves generated fixtures. Replace with the
+ * real endpoint fetch when the real layer is available and delete
+ * `fixtures/parcels.ts` (grep `mock-parcels`).
+ *
+ * The fixture module is lazy-imported so generation cost stays off the critical
+ * path — the same rule the upload parsers follow with their libraries.
+ */
+export async function fetchParcels(): Promise<ParcelCollection> {
+  if (env.VITE_USE_MOCK_API) {
+    const { parcelFixtures } = await import("./fixtures/parcels");
+
+    return parcelCollectionSchema.parse(parcelFixtures);
   }
 
   throw new Error(

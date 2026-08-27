@@ -1,6 +1,8 @@
 import { atom } from "jotai";
 
 import type { FeatureId } from "@/lib/map/draw-features";
+import { canSelectParcel } from "@/lib/map/draw-state";
+import { polygonAtPoint, type MapPoint } from "@/lib/map/point-in-polygon";
 import { drawInstanceAtom, drawStateAtom } from "@/store/draw-core";
 
 /**
@@ -39,4 +41,32 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
   }
 
   draw.updateFeatureProperties(id, { analysis: true });
+});
+
+/** Whether a map click currently picks a parcel. Drives the click handler and cursor. */
+export const parcelClickEnabledAtom = atom((get) => canSelectParcel(get(drawStateAtom)));
+
+/**
+ * Map-click entry into the analysis selection: hit-tests the click against the store's
+ * polygons and routes through `selectAnalysisPolygonAtom`, so a click on the map and a
+ * click in the panel list are the same selection. A miss keeps the selection — the
+ * panel offers no deselect either.
+ */
+export const selectParcelAtPointAtom = atom(null, (get, set, point: MapPoint) => {
+  const state = get(drawStateAtom);
+
+  if (!canSelectParcel(state)) return;
+
+  const id = polygonAtPoint(state.polygons, point);
+
+  if (id !== null) set(selectAnalysisPolygonAtom, id);
+});
+
+/**
+ * Ends the session after a submitted analysis: parks the tool and stops the map-click
+ * selection. The polygons stay on the map until a new session replaces them.
+ */
+export const endAnalysisSessionAtom = atom(null, (_get, set) => {
+  set(drawStateAtom, { type: "tool", tool: null });
+  set(drawStateAtom, { type: "analysisSubmitted" });
 });
