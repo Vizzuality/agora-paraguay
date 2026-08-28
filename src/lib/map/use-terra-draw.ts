@@ -12,7 +12,7 @@ import { bindDrawAtom, drawModeAtom, reportGeometryAtom } from '@/store/draw';
  *
  * Terra Draw, its MapLibre adapter and react-map-gl all touch the DOM at import time,
  * so nothing here may be pulled into a server render — the map renders inside
- * `<ClientOnly>` (see `src/routes/seleccion.tsx`).
+ * `<ClientOnly>` (see `src/routes/index.tsx`).
  *
  * Terra Draw is imperative and framework-agnostic, so the lifecycle is ours to own:
  * it must start after the style has loaded, because the adapter installs its own

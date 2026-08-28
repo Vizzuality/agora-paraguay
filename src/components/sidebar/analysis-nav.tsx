@@ -7,14 +7,6 @@ import type { RiesgoTab } from '@/routes/analisis';
 
 const analisisRoute = getRouteApi('/analisis');
 
-/**
- * Right-hand navbar content for the analysis page (Figma node 5180:12072): a link
- * back to the parcel selection, the risk tabs, and the login entry point.
- *
- * The tabs switch the page content through the `riesgo` search param — URL state on
- * purpose, so a shared or reloaded link lands on the same tab. Login is scaffolding:
- * it goes nowhere until the auth flow lands.
- */
 export function AnalysisNav() {
   const { riesgo } = analisisRoute.useSearch();
 
@@ -25,7 +17,7 @@ export function AnalysisNav() {
         variant="secondary"
         className="h-11 rounded-2xl px-8 font-normal text-accent-foreground"
       >
-        <Link to="/seleccion">
+        <Link to="/">
           <SquarePen aria-hidden />
           Selección de parcelas
         </Link>
@@ -51,7 +43,6 @@ export function AnalysisNav() {
   );
 }
 
-/** One tab in the pill: the current one carries the design's primary underline. */
 function RiskTab({
   riesgo,
   active,

@@ -70,7 +70,7 @@ function EmptySelectionRedirect() {
   const empty = polygons.length === 0 && selectedParcels.length === 0;
 
   useEffect(() => {
-    if (empty) void navigate({ to: '/seleccion', replace: true });
+    if (empty) void navigate({ to: '/', replace: true });
   }, [empty, navigate]);
 
   return null;
