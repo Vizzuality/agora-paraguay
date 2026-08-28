@@ -56,17 +56,29 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await expect(areas).toHaveText(['Área dibujada 1', 'Área dibujada 2']);
 
   // The navbar offers the way back and the login entry point (Figma node 5180:12072).
-  await expect(page.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
+  // Locators are scoped to the header because the footer repeats the same link names.
+  const navbar = page.getByRole('banner');
+  await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
 
-  // The risk tabs live in the URL, not the store: switching updates ?riesgo and the
-  // content below. Sanitario is the default.
-  await expect(page.getByText('Sanitario', { exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Riesgo productivo' }).click();
+  // The risk tabs live in the URL, not the store: switching updates ?riesgo.
+  await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/riesgo=productivo/);
-  await expect(page.getByText('Productivo', { exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Riesgo sanitario' }).click();
-  await expect(page.getByText('Sanitario', { exact: true })).toBeVisible();
+  await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await expect(page).toHaveURL(/riesgo=sanitario/);
+
+  // The private indicators are gated behind the login card (Figma node 5180:11125).
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+  await expect(page.getByLabel('Email')).toBeVisible();
+  await expect(page.getByLabel('Contraseña')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Acceder' })).toBeVisible();
+
+  // The footer repeats the brand and the three destinations (Figma node 5180:11421).
+  const footer = page.getByRole('contentinfo');
+  await expect(footer.getByRole('link', { name: 'Ágora — inicio' })).toBeVisible();
+  await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
+  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
 
   // Going back remounts the map; the selection survives and is editable again.
   await page.goBack();
