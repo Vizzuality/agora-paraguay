@@ -1,6 +1,6 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { fetchParcels, fetchPlaceholders, submitAnalysis } from './client';
+import { fetchParcels, submitAnalysis } from './client';
 import { toAnalysisRequest, type AnalysisArea } from './schemas';
 
 /**
@@ -9,14 +9,6 @@ import { toAnalysisRequest, type AnalysisArea } from './schemas';
  * Uses TanStack Query's native `queryOptions` — `query-key-factory` is Hold tier on
  * the Vizzuality Tech Radar and unmaintained.
  */
-export const placeholderQueries = {
-  all: () =>
-    queryOptions({
-      queryKey: ['placeholders'] as const,
-      queryFn: fetchPlaceholders,
-    }),
-};
-
 export const parcelQueries = {
   all: () =>
     queryOptions({

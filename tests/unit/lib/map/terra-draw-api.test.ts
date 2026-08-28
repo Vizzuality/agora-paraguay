@@ -1,12 +1,12 @@
 import {
-  TerraDraw,
-  TerraDrawExtend,
-  TerraDrawPolygonMode,
   ValidationReasons,
   type GeoJSONStoreFeatures,
+  type TerraDraw,
   type TerraDrawEvents,
 } from 'terra-draw';
 import { describe, expect, it } from 'vitest';
+
+import { startedDraw } from './headless-draw';
 
 /**
  * The Terra Draw surface `use-terra-draw.ts` and the `src/store` atoms depend on.
@@ -15,12 +15,7 @@ import { describe, expect, it } from 'vitest';
  * are the real assertions and they run under `typecheck`, so a Terra Draw upgrade that
  * renames an event or a method fails the build instead of failing silently on the map.
  */
-const SUBSCRIBED_EVENTS = [
-  'finish',
-  'change',
-  'select',
-  'deselect',
-] as const satisfies readonly TerraDrawEvents[];
+const SUBSCRIBED_EVENTS = ['finish', 'change'] as const satisfies readonly TerraDrawEvents[];
 
 const USED_METHODS = [
   'start',
@@ -31,8 +26,6 @@ const USED_METHODS = [
   'getSnapshot',
   'addFeatures',
   'removeFeatures',
-  'selectFeature',
-  'deselectFeature',
   'clear',
   'enabled',
 ] as const satisfies readonly (keyof TerraDraw)[];
@@ -47,58 +40,6 @@ describe('terra-draw API', () => {
     expect(new Set(USED_METHODS).size).toBe(USED_METHODS.length);
   });
 });
-
-/**
- * An adapter that satisfies Terra Draw without a map or a DOM, so the store's
- * behaviour can be pinned in node. `register`/`unregister` are overridden because the
- * base implementations attach real DOM listeners.
- */
-class HeadlessAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
-  constructor() {
-    super({ coordinatePrecision: 9 });
-  }
-
-  getMapEventElement(): HTMLElement {
-    return undefined as unknown as HTMLElement;
-  }
-
-  override register(): void {}
-
-  override unregister(): void {}
-
-  clear(): void {}
-
-  project(): { x: number; y: number } {
-    return { x: 0, y: 0 };
-  }
-
-  unproject(): { lng: number; lat: number } {
-    return { lng: 0, lat: 0 };
-  }
-
-  setCursor(): void {}
-
-  getLngLatFromEvent(): { lng: number; lat: number } | null {
-    return null;
-  }
-
-  setDraggability(): void {}
-
-  setDoubleClickToZoom(): void {}
-
-  render(): void {}
-}
-
-function startedDraw(): TerraDraw {
-  const draw = new TerraDraw({
-    adapter: new HeadlessAdapter(),
-    modes: [new TerraDrawPolygonMode()],
-  });
-
-  draw.start();
-
-  return draw;
-}
 
 const RING = [
   [-57.6, -25.3],

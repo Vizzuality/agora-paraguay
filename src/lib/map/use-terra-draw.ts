@@ -1,22 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
-import {
-  TerraDraw,
-  TerraDrawPolygonMode,
-  TerraDrawSelectMode,
-  type TerraDrawEventListeners,
-} from 'terra-draw';
+import { TerraDraw, TerraDrawPolygonMode, type TerraDrawEventListeners } from 'terra-draw';
 import { TerraDrawMapLibreGLAdapter } from 'terra-draw-maplibre-gl-adapter';
 
 import { PARCEL_STYLES } from '@/lib/map/draw-styles';
-import {
-  bindDrawAtom,
-  drawModeAtom,
-  reportDeselectedAtom,
-  reportGeometryAtom,
-  reportSelectedAtom,
-} from '@/store/draw';
+import { bindDrawAtom, drawModeAtom, reportGeometryAtom } from '@/store/draw';
 
 /**
  * Binds Terra Draw to the MapLibre instance rendered by react-map-gl.
@@ -42,8 +31,6 @@ export function useTerraDraw() {
   const mode = useAtomValue(drawModeAtom);
   const bind = useSetAtom(bindDrawAtom);
   const reportGeometry = useSetAtom(reportGeometryAtom);
-  const reportSelected = useSetAtom(reportSelectedAtom);
-  const reportDeselected = useSetAtom(reportDeselectedAtom);
 
   // Every dependency here is a stable setter, so this effect only re-runs when the map
   // itself changes. Anything geometry-shaped in this list would tear down and rebuild
@@ -59,22 +46,7 @@ export function useTerraDraw() {
     const start = () => {
       started = new TerraDraw({
         adapter: new TerraDrawMapLibreGLAdapter({ map }),
-        modes: [
-          new TerraDrawPolygonMode({ styles: PARCEL_STYLES }),
-          new TerraDrawSelectMode({
-            // Without a flags entry for `polygon`, select mode refuses to select
-            // anything: no select or deselect event ever fires and editing is a silent
-            // no-op.
-            flags: {
-              polygon: {
-                feature: {
-                  draggable: true,
-                  coordinates: { draggable: true, midpoints: true, deletable: true },
-                },
-              },
-            },
-          }),
-        ],
+        modes: [new TerraDrawPolygonMode({ styles: PARCEL_STYLES })],
       });
 
       const instance = started;
@@ -96,14 +68,10 @@ export function useTerraDraw() {
       // same answer.
       instance.on('finish', onFinish);
       instance.on('change', onChange);
-      instance.on('select', reportSelected);
-      instance.on('deselect', reportDeselected);
 
       detach = () => {
         instance.off('finish', onFinish);
         instance.off('change', onChange);
-        instance.off('select', reportSelected);
-        instance.off('deselect', reportDeselected);
       };
 
       // Listeners are attached before `start()` because `ready` fires inside it.
@@ -124,11 +92,21 @@ export function useTerraDraw() {
     return () => {
       map.off('load', start);
       bind(null);
-      started?.stop();
       detach?.();
+      // Clearing before stopping cancels the adapter's pending animation-frame render,
+      // which `stop()` leaves queued against sources it has just removed. Both calls
+      // mutate the map's style unguarded, and when a route change unmounts the tree
+      // React runs this cleanup after react-map-gl has already removed the map — on a
+      // dead map the teardown can only throw, and there is nothing left to release.
+      try {
+        if (started?.enabled) started.clear();
+        started?.stop();
+      } catch {
+        // The map was already removed; its listeners died with it.
+      }
       setDraw(null);
     };
-  }, [mapRef, bind, reportGeometry, reportSelected, reportDeselected]);
+  }, [mapRef, bind, reportGeometry]);
 
   // `draw` is a dependency so the mode is applied when the instance appears, not
   // only when the mode changes: without it, a toggle pressed during style load is
