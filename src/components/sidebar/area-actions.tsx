@@ -57,7 +57,7 @@ export function AreaActions() {
   return (
     <section className="flex flex-col gap-3">
       <fieldset className="grid grid-cols-2 gap-1.5">
-        <legend className="sr-only">Crear áreas de interés</legend>
+        <legend className="sr-only">Seleccionar parcelas para análisis</legend>
 
         <Button
           variant="secondary"
@@ -68,7 +68,7 @@ export function AreaActions() {
           disabled={!draw.bound}
         >
           <SquarePen aria-hidden className="size-10" strokeWidth={1.5} />
-          {drawButtonLabel(drawing)}
+          {drawing ? 'Cancelar' : 'Dibujar polígono'}
         </Button>
 
         <Button
@@ -107,13 +107,7 @@ export function AreaActions() {
   );
 }
 
-function drawButtonLabel(drawing: boolean): string {
-  if (drawing) {
-    return 'Cancelar';
-  }
-  return 'Dibujar polígono';
-}
-
+// TO - DO - remove (+tests)
 function uploadStatus(result: UploadResult): string {
   if (result.error !== null) return `Error al subir: ${result.error}`;
 

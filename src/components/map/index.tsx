@@ -2,15 +2,12 @@ import { setWorkerUrl } from 'maplibre-gl';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { parseAsFloat, useQueryStates } from 'nuqs';
 import { useCallback, type ReactNode } from 'react';
-import Map, {
-  NavigationControl,
-  ScaleControl,
-  type ViewStateChangeEvent,
-} from 'react-map-gl/maplibre';
+import Map, { ScaleControl, type ViewStateChangeEvent } from 'react-map-gl/maplibre';
 
 import { DrawLayer } from '@/components/map/draw-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
 import { ParcelsLayer } from '@/components/map/parcels-layer';
+import { ZoomControl } from '@/components/map/zoom-control';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
 import { normalizeViewState } from '@/lib/map/view-state';
 
@@ -78,7 +75,7 @@ export function MapView({ children }: { children?: ReactNode }) {
       style={{ width: '100%', height: '100%' }}
       attributionControl={{ compact: true }}
     >
-      <NavigationControl position="top-right" showCompass={false} />
+      <ZoomControl />
       <ScaleControl position="bottom-right" />
       {/* TODO(mock-parcels): mock layer — swap for the real parcels source when available. */}
       <ParcelsLayer />

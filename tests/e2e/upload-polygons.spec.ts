@@ -19,7 +19,9 @@ function controls(page: Page) {
     upload: page.getByRole('button', { name: 'Subir archivo' }),
     input: page.locator('input[type="file"]'),
     // The upload outcome announces from the panel, next to the button that caused it.
-    uploadStatus: page.getByRole('group', { name: 'Crear áreas de interés' }).locator('p'),
+    uploadStatus: page
+      .getByRole('group', { name: 'Seleccionar parcelas para análisis' })
+      .locator('p'),
     notices: page.getByRole('region', { name: 'Avisos de subida' }),
   };
 }
