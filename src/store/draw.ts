@@ -1,11 +1,11 @@
 import { atom } from 'jotai';
 import type { GeoJSONStoreFeatures, TerraDraw } from 'terra-draw';
 
-import { drawnPolygons, type FeatureId } from '@/lib/map/draw-features';
+import { drawnPolygons } from '@/lib/map/draw-features';
 import { terraDrawMode, type DrawTool } from '@/lib/map/draw-state';
+import { restoreFeatures } from '@/lib/map/import-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
-import { selectedParcelsAtom } from '@/store/parcels';
-import { uploadResultAtom } from '@/store/upload';
+import { resetSelectionSessionAtom } from '@/store/upload';
 
 /**
  * Drawing and editing the areas of interest, as global state.
@@ -54,48 +54,31 @@ export const startDrawAtom = atom(null, (get, set) => {
 
   // A stale "Imported N areas" notice must not outlive the areas it counted, and a
   // from-scratch session drops the clicked cadastral parcels with everything else.
-  set(uploadResultAtom, null);
-  set(selectedParcelsAtom, []);
+  set(resetSelectionSessionAtom);
   set(drawStateAtom, { type: 'tool', tool: 'draw' });
 });
 
 /** Called with the started instance, and with `null` when it is torn down. */
-export const bindDrawAtom = atom(null, (_get, set, draw: TerraDraw | null) => {
+export const bindDrawAtom = atom(null, (get, set, draw: TerraDraw | null) => {
   set(drawInstanceAtom, draw);
-  set(drawStateAtom, { type: draw ? 'bound' : 'unbound' });
+
+  if (draw === null) {
+    set(drawStateAtom, { type: 'unbound' });
+    return;
+  }
+
+  set(drawStateAtom, { type: 'bound' });
+
+  // Polygons that survived the previous unbind (navigating to /analisis and back) go
+  // into the fresh instance. Like an upload, `addFeatures` is not trusted to surface
+  // as a `change` event — report the geometry by hand (idempotent if the event fires).
+  const { polygons } = get(drawStateAtom);
+
+  if (polygons.length > 0) {
+    set(drawStateAtom, { type: 'geometry', polygons: restoreFeatures(draw, polygons) });
+  }
 });
 
 export const reportGeometryAtom = atom(null, (_get, set, snapshot: GeoJSONStoreFeatures[]) => {
   set(drawStateAtom, { type: 'geometry', polygons: drawnPolygons(snapshot) });
-});
-
-export const reportSelectedAtom = atom(null, (_get, set, id: FeatureId) => {
-  set(drawStateAtom, { type: 'selected', id });
-});
-
-export const reportDeselectedAtom = atom(null, (_get, set, id: FeatureId) => {
-  set(drawStateAtom, { type: 'deselected', id });
-});
-
-export const deleteSelectedAtom = atom(null, (get, set) => {
-  const draw = get(drawInstanceAtom);
-  const { selectedId } = get(drawStateAtom);
-
-  if (!draw?.enabled || selectedId === null) return;
-
-  // Deselect first, or the selection points outlive the geometry they annotate.
-  draw.deselectFeature(selectedId);
-  draw.removeFeatures([selectedId]);
-
-  set(drawStateAtom, { type: 'deselected', id: selectedId });
-});
-
-export const clearDrawAtom = atom(null, (get, set) => {
-  const draw = get(drawInstanceAtom);
-
-  if (!draw?.enabled) return;
-
-  draw.clear();
-  // `clear()` does not surface as a `change` event, so report it by hand.
-  set(drawStateAtom, { type: 'geometry', polygons: [] });
 });

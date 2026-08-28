@@ -1,18 +1,15 @@
 import { env } from '@/env';
 
-import { placeholderFixtures } from './fixtures/placeholders';
 import {
   analysisRequestSchema,
   analysisResponseSchema,
   parcelCollectionSchema,
-  placeholderListSchema,
   type AnalysisRequest,
   type AnalysisResponse,
   type ParcelCollection,
-  type Placeholder,
 } from './schemas';
 
-/**
+/*
  * The only module in the app that knows the data is fake.
  *
  * Everything else imports from `queries.ts`, so replacing the mock branch with a real
@@ -22,15 +19,6 @@ import {
  * the fixtures honest, and it makes contract drift surface as a parse error at the
  * boundary instead of an `undefined` deep in a component.
  */
-export async function fetchPlaceholders(): Promise<Placeholder[]> {
-  if (env.VITE_USE_MOCK_API) {
-    return placeholderListSchema.parse(placeholderFixtures);
-  }
-
-  throw new Error(
-    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
-  );
-}
 
 /**
  * TODO(mock-parcels): the mock branch serves generated fixtures. Replace with the

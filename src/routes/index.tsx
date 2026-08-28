@@ -1,125 +1,88 @@
-import { useQuery } from '@tanstack/react-query';
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { useEffect } from 'react';
 
 import { MapView } from '@/components/map';
-import { AnalyzeButton } from '@/components/map/analyze-button';
-import { DrawControls } from '@/components/map/draw-controls';
-import { PolygonList } from '@/components/map/polygon-list';
-import { StatCard } from '@/components/stat-card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { placeholderQueries } from '@/lib/api/queries';
+import { AnalyzeButton } from '@/components/sidebar/analyze-button';
+import { AreaActions } from '@/components/sidebar/area-actions';
+import { NavBar } from '@/components/sidebar/nav-bar';
+import { PolygonList } from '@/components/sidebar/polygon-list';
+import { backToSelectionAtom } from '@/store/mode';
 
 export const Route = createFileRoute('/')({
-  component: Home,
+  component: SelectionPage,
 });
 
-function Home() {
+function SelectionPage() {
   return (
     <main className="flex h-screen w-full">
+      {/* Client-only like every other atom consumer (see draw-core.ts). */}
+      <ClientOnly>
+        <ResumeSelectionMode />
+      </ClientOnly>
+
       <Panel />
 
-      {/* The map's positioning context: the draw controls anchor to it, not the page. */}
       <div className="relative h-full w-1/2">
         {/* MapLibre touches window and document at import time, so it must never run
             during SSR. The fallback keeps the layout stable while it loads. */}
         <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
           <MapView />
         </ClientOnly>
-
-        {/* Outside the map — the drawn geometry is global state, not map-scoped — but
-            still client-only: the controls are inert until Terra Draw has started, and
-            keeping them off the server keeps the atom store out of a shared module-level
-            store that every SSR request would see. */}
-        <ClientOnly>
-          <DrawControls />
-        </ClientOnly>
       </div>
     </main>
   );
 }
 
-/** Placeholder panel exercising the mock data path end to end. */
-function Panel() {
-  const { data, isPending, isError, error, refetch } = useQuery(placeholderQueries.all());
+/** Returning to `/` resumes selection: the surviving areas are editable again. */
+function ResumeSelectionMode() {
+  const backToSelection = useSetAtom(backToSelectionAtom);
 
-  return (
-    <aside className="flex h-full w-1/2 flex-col gap-4 overflow-y-auto bg-background p-6">
-      <header>
-        <h1 className="text-lg font-semibold">Ágora Paraguay</h1>
-        <p className="text-xs text-muted-foreground">
-          Mapa base provisional. Las teselas vectoriales del cliente no están conectadas.
-        </p>
-      </header>
+  useEffect(() => backToSelection(), [backToSelection]);
 
-      {/* Client-only for the same reason as the controls: it reads the draw atoms. */}
-      <ClientOnly>
-        <PolygonList />
-        <AnalyzeButton />
-      </ClientOnly>
-
-      <section aria-live="polite" className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Capas provisionales
-        </h2>
-
-        {isPending && <p className="text-sm text-muted-foreground">Cargando…</p>}
-
-        {isError && (
-          <div className="flex flex-col items-start gap-2">
-            <p className="text-sm text-destructive">Error al cargar: {(error as Error).message}</p>
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Reintentar
-            </Button>
-          </div>
-        )}
-
-        {data && data.length === 0 && <p className="text-sm text-muted-foreground">Sin datos.</p>}
-
-        {/* Two columns: the sidebar is half the viewport now, wide enough to pair the
-            widget cards. */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          {data?.map((item) => (
-            <LayerCard
-              key={item.id}
-              title={item.title}
-              value={item.value}
-              description={item.description}
-            />
-          ))}
-        </div>
-      </section>
-    </aside>
-  );
+  return null;
 }
 
-function LayerCard({
-  title,
-  value,
-  description,
-}: Readonly<{
-  title: string;
-  value: number;
-  description: string;
-}>) {
-  const [visible, setVisible] = useState(true);
-
+/** The parcel-selection panel (Figma node 5145:4020). */
+function Panel() {
   return (
-    <StatCard
-      label={title}
-      // Locale is pinned rather than left to the runtime: this panel is server
-      // rendered, and a server whose locale differs from the browser's would format
-      // the number differently and break hydration.
-      value={value.toLocaleString('es-PY')}
-      caption={description}
-      action={
-        <Switch
-          checked={visible}
-          onCheckedChange={setVisible}
-          aria-label={`Mostrar ${title} en el mapa`}
-        />
-      }
-    />
+    <aside className="flex h-full w-1/2 flex-col overflow-y-auto bg-background">
+      <NavBar />
+
+      <header className="flex flex-col gap-1.5 px-10 pt-10 pb-6">
+        <h1 className="text-4xl font-semibold tracking-[-0.015em]">Selección de parcela</h1>
+        <div className="text-sm text-muted-foreground">
+          <p>Seleccione las parcelas que desee y pulse en Analizar.</p>
+          <p>
+            Puede seleccionar y deseleccionar áreas directamente en el mapa, dibujar un polígono
+            para seleccionar las áreas que toque o subir un archivo.
+          </p>
+        </div>
+      </header>
+
+      <div className="flex flex-col gap-6 px-10">
+        {/* Client-only for the same reason as the controls: they read the draw atoms. */}
+        <ClientOnly>
+          <AreaActions />
+        </ClientOnly>
+
+        <p className="text-sm text-muted-foreground">
+          Haga clic para comenzar el polígono, luego haga clic para añadir cada vértice.
+          <br />
+          Termine haciendo clic en el punto de inicio, haciendo doble clic o pulsando Enter.
+        </p>
+
+        <ClientOnly>
+          <PolygonList />
+        </ClientOnly>
+      </div>
+
+      {/* Pinned to the bottom of the panel, per the design. */}
+      <div className="mt-auto px-10 pt-6 pb-10">
+        <ClientOnly>
+          <AnalyzeButton />
+        </ClientOnly>
+      </div>
+    </aside>
   );
 }

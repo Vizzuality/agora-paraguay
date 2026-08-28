@@ -8,7 +8,7 @@ import { drawAtom } from '@/store/draw';
 /**
  * One entry per polygon on the map — drawn and uploaded alike — each selectable as
  * the area the (future) analysis will run on. The selection model is uniform on
- * purpose: whatever consumes `analysisPolygonAtom` never has to care where the
+ * purpose: whatever consumes the analysis selection never has to care where the
  * polygon came from.
  *
  * Rendered in the panel, inside `<ClientOnly>`: it reads the draw atoms.
