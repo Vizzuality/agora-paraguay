@@ -7,6 +7,8 @@ import {
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 
+import { Footer } from '@/components/footer';
+import { LoginCard } from '@/components/login-card';
 import { AnalysisNav } from '@/components/sidebar/analysis-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectedAreasList } from '@/components/sidebar/selected-areas-list';
@@ -28,10 +30,11 @@ export const Route = createFileRoute('/analisis')({
 
 /** Placeholder for the analysis results page — content arrives with the real API. */
 function AnalysisPage() {
-  const { riesgo } = Route.useSearch();
-
   return (
-    <main className="flex h-screen w-full flex-col">
+    // The nav and footer live outside <main> on purpose: header/footer only get
+    // their banner/contentinfo landmark roles when they are not descendants of
+    // <main> — the e2e locators rely on those roles.
+    <div className="flex min-h-screen w-full flex-col">
       {/* Client-only like every other atom consumer (see draw-core.ts); a router
           `beforeLoad` guard is not an option — it runs on the server, where the
           shared module store must stay untouched. */}
@@ -43,20 +46,37 @@ function AnalysisPage() {
         <AnalysisNav />
       </NavBar>
 
-      <div className="flex flex-1 flex-col gap-6 px-10 pt-10">
+      <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
         <h1 className="text-4xl font-semibold tracking-[-0.015em]">Análisis</h1>
 
-        {/* Placeholder tab content — the real per-risk results arrive with the API. */}
-        <p className="text-sm text-muted-foreground">
-          {riesgo === 'sanitario' ? 'Sanitario' : 'Productivo'}
-        </p>
+        {/* The indicators are private: until a session exists the tab content is the
+            designed login gate (Figma node 5180:11125) — empty widget frames around
+            the login card. Real widgets arrive with the API. */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-stretch gap-4">
+            <WidgetPlaceholder />
+            <LoginCard />
+            <WidgetPlaceholder />
+          </div>
+          <div className="flex h-28 gap-4">
+            <WidgetPlaceholder />
+            <WidgetPlaceholder />
+          </div>
+        </div>
 
         <ClientOnly>
           <SelectedAreasList />
         </ClientOnly>
-      </div>
-    </main>
+      </main>
+
+      <Footer />
+    </div>
   );
+}
+
+/** Empty widget frame (Figma "Widget03") — a real widget takes the slot with the API. */
+function WidgetPlaceholder() {
+  return <div aria-hidden className="min-w-[200px] flex-1 rounded-3xl border-3 border-border" />;
 }
 
 /**

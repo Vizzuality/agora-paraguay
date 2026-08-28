@@ -2,6 +2,7 @@ import { getRouteApi, Link } from '@tanstack/react-router';
 import { SquarePen, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
 import type { RiesgoTab } from '@/routes/analisis';
 
@@ -17,19 +18,18 @@ export function AnalysisNav() {
         variant="secondary"
         className="h-11 rounded-2xl px-8 font-normal text-accent-foreground"
       >
-        <Link to="/">
+        <Link to={SELECTION_LINK.to}>
           <SquarePen aria-hidden />
-          Selección de parcelas
+          {SELECTION_LINK.label}
         </Link>
       </Button>
 
       <div className="flex items-center gap-5 rounded-2xl bg-secondary px-6 py-1 text-sm">
-        <RiskTab riesgo="sanitario" active={riesgo === 'sanitario'}>
-          Riesgo sanitario
-        </RiskTab>
-        <RiskTab riesgo="productivo" active={riesgo === 'productivo'}>
-          Riesgo productivo
-        </RiskTab>
+        {RISK_TABS.map(({ label, riesgo: tab }) => (
+          <RiskTab key={tab} riesgo={tab} active={riesgo === tab}>
+            {label}
+          </RiskTab>
+        ))}
       </div>
 
       <Button
