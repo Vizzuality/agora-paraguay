@@ -55,6 +55,19 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   const areas = page.getByRole('list').getByRole('listitem');
   await expect(areas).toHaveText(['Área dibujada 1', 'Área dibujada 2']);
 
+  // The navbar offers the way back and the login entry point (Figma node 5180:12072).
+  await expect(page.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
+
+  // The risk tabs live in the URL, not the store: switching updates ?riesgo and the
+  // content below. Sanitario is the default.
+  await expect(page.getByText('Sanitario', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Riesgo productivo' }).click();
+  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page.getByText('Productivo', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await expect(page.getByText('Sanitario', { exact: true })).toBeVisible();
+
   // Going back remounts the map; the selection survives and is editable again.
   await page.goBack();
   await expect(controls(page).draw).toBeEnabled();

@@ -20,6 +20,10 @@ test('panning twice keeps the camera URL well-formed', async ({ page }) => {
 
   const url = page.url();
 
+  // `/` only forwards: the named selection route owns the page (and the camera params
+  // survive the redirect).
+  expect(new URL(url).pathname).toBe('/seleccion');
+
   // The doubling bug nested query strings, so a single "?" is the check that fails
   // on the old behaviour.
   expect(url.match(/\?/g)).toHaveLength(1);

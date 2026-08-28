@@ -10,7 +10,7 @@ import { Logo } from '@/components/logo';
 export function NavBar({ children }: Readonly<{ children?: React.ReactNode }>) {
   return (
     <header className="flex w-full items-center justify-between p-10">
-      <Link to="/" aria-label="Ágora — inicio">
+      <Link to="/seleccion" aria-label="Ágora — inicio">
         <Logo className="h-[30px] w-auto text-primary" />
       </Link>
       {children && <nav className="flex items-center gap-2">{children}</nav>}
