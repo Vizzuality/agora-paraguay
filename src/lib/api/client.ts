@@ -3,10 +3,14 @@ import { env } from '@/env';
 import {
   analysisRequestSchema,
   analysisResponseSchema,
+  credentialsSchema,
   parcelCollectionSchema,
+  sessionSchema,
   type AnalysisRequest,
   type AnalysisResponse,
+  type Credentials,
   type ParcelCollection,
+  type Session,
 } from './schemas';
 
 /*
@@ -42,6 +46,25 @@ export async function fetchParcels(): Promise<ParcelCollection> {
 
 /** Keeps the pending state visible; goes when the real endpoint replaces the mock. */
 const MOCK_ANALYSIS_LATENCY_MS = 400;
+
+/**
+ * Authenticates against the GMV backend. Fake: the mock branch accepts any well-formed
+ * credentials — there is no user database to check against, and inventing one would
+ * only have to be deleted when the real auth contract lands (AGP-22).
+ */
+export async function login(credentials: Credentials): Promise<Session> {
+  const parsed = credentialsSchema.parse(credentials);
+
+  if (env.VITE_USE_MOCK_API) {
+    await new Promise((resolve) => setTimeout(resolve, MOCK_ANALYSIS_LATENCY_MS));
+
+    return sessionSchema.parse({ email: parsed.email });
+  }
+
+  throw new Error(
+    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
+  );
+}
 
 /** POSTs the areas of interest for analysis. Fake: the mock branch mints the 200. */
 export async function submitAnalysis(request: AnalysisRequest): Promise<AnalysisResponse> {

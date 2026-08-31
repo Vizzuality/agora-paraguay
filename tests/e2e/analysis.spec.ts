@@ -61,17 +61,21 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
 
+  // Analizar lands on riesgo sanitario, which is public: no login gate.
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
+
   // The risk tabs live in the URL, not the store: switching updates ?riesgo.
+  // Riesgo productivo is private, gated behind the login card (Figma node 5180:11125).
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/riesgo=productivo/);
-  await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
-  await expect(page).toHaveURL(/riesgo=sanitario/);
-
-  // The private indicators are gated behind the login card (Figma node 5180:11125).
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByLabel('Email')).toBeVisible();
   await expect(page.getByLabel('Contraseña')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Acceder' })).toBeVisible();
+
+  // Back on the public tab the gate goes away again.
+  await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await expect(page).toHaveURL(/riesgo=sanitario/);
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
   // The footer repeats the brand and the three destinations (Figma node 5180:11421).
   const footer = page.getByRole('contentinfo');
@@ -79,6 +83,14 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/riesgo=productivo/);
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
+
+  // Mock login: any well-formed credentials open the private indicators in place
+  // (the real user/password check arrives with the GMV backend).
+  await page.getByLabel('Email').fill('analista@example.com');
+  await page.getByLabel('Contraseña').fill('cualquiera');
+  await page.getByRole('button', { name: 'Acceder' }).click();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
+  await expect(page).toHaveURL(/riesgo=productivo/);
 
   // Going back remounts the map; the selection survives and is editable again.
   await page.goBack();

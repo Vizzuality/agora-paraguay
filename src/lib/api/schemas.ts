@@ -56,6 +56,24 @@ export const parcelCollectionSchema = z.object({
 
 export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
 
+/**
+ * Auth contract. The GMV auth backend does not exist yet (AGP-22), so this shape is a
+ * placeholder pending the agreed contract — same status as the parcel schema above.
+ * The session carries only what the UI needs to show an identified state.
+ */
+export const credentialsSchema = z.object({
+  email: z.email(),
+  password: z.string().min(1),
+});
+
+export type Credentials = z.infer<typeof credentialsSchema>;
+
+export const sessionSchema = z.object({
+  email: z.email(),
+});
+
+export type Session = z.infer<typeof sessionSchema>;
+
 export const analysisResponseSchema = z.object({
   id: z.uuid(),
   status: z.literal('accepted'),
