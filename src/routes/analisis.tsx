@@ -12,6 +12,7 @@ import { LoginCard } from '@/components/login-card';
 import { AnalysisNav } from '@/components/sidebar/analysis-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectedAreasList } from '@/components/sidebar/selected-areas-list';
+import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
 import { selectedParcelsAtom } from '@/store/parcels';
 
@@ -30,6 +31,8 @@ export const Route = createFileRoute('/analisis')({
 
 /** Placeholder for the analysis results page — content arrives with the real API. */
 function AnalysisPage() {
+  const { riesgo } = Route.useSearch();
+
   return (
     // The nav and footer live outside <main> on purpose: header/footer only get
     // their banner/contentinfo landmark roles when they are not descendants of
@@ -49,20 +52,18 @@ function AnalysisPage() {
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
         <h1 className="text-4xl font-semibold tracking-[-0.015em]">Análisis</h1>
 
-        {/* The indicators are private: until a session exists the tab content is the
-            designed login gate (Figma node 5180:11125) — empty widget frames around
-            the login card. Real widgets arrive with the API. */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-stretch gap-4">
-            <WidgetPlaceholder />
-            <LoginCard />
-            <WidgetPlaceholder />
-          </div>
-          <div className="flex h-28 gap-4">
-            <WidgetPlaceholder />
-            <WidgetPlaceholder />
-          </div>
-        </div>
+        {/* Riesgo sanitario is public; riesgo productivo is private and shows the
+            designed login gate (Figma node 5180:11125) until a session exists. The
+            gate reads the session atom, so it is client-only like every other atom
+            consumer — the server fallback is the gate itself, which is also what an
+            anonymous visitor sees, so there is no hydration flash for them. */}
+        {riesgo === 'sanitario' ? (
+          <WidgetGrid />
+        ) : (
+          <ClientOnly fallback={<LoginGate />}>
+            <ProductivoGate />
+          </ClientOnly>
+        )}
 
         <ClientOnly>
           <SelectedAreasList />
@@ -70,6 +71,47 @@ function AnalysisPage() {
       </main>
 
       <Footer />
+    </div>
+  );
+}
+
+/** Riesgo productivo needs an account: login gate until a session exists. */
+function ProductivoGate() {
+  const session = useAtomValue(sessionAtom);
+
+  return session ? <WidgetGrid /> : <LoginGate />;
+}
+
+/** The private-content gate: empty widget frames around the login card. */
+function LoginGate() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-stretch gap-4">
+        <WidgetPlaceholder />
+        <LoginCard />
+        <WidgetPlaceholder />
+      </div>
+      <div className="flex h-28 gap-4">
+        <WidgetPlaceholder />
+        <WidgetPlaceholder />
+      </div>
+    </div>
+  );
+}
+
+/** The indicators layout, minus the gate — real widgets take the slots with the API. */
+function WidgetGrid() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex h-64 items-stretch gap-4">
+        <WidgetPlaceholder />
+        <WidgetPlaceholder />
+        <WidgetPlaceholder />
+      </div>
+      <div className="flex h-28 gap-4">
+        <WidgetPlaceholder />
+        <WidgetPlaceholder />
+      </div>
     </div>
   );
 }

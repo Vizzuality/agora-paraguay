@@ -1,7 +1,7 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { fetchParcels, submitAnalysis } from './client';
-import { toAnalysisRequest, type AnalysisArea } from './schemas';
+import { fetchParcels, login, submitAnalysis } from './client';
+import { toAnalysisRequest, type AnalysisArea, type Credentials } from './schemas';
 
 /**
  * Query definitions. Components import from here and nowhere else in `lib/api`.
@@ -31,5 +31,14 @@ export const analysisMutations = {
     mutationOptions({
       mutationKey: ['analysis', 'submit'] as const,
       mutationFn: (areas: AnalysisArea[]) => submitAnalysis(toAnalysisRequest(areas)),
+    }),
+};
+
+/** Login mutation. The resulting session is client state (`src/store/auth.ts`). */
+export const authMutations = {
+  login: () =>
+    mutationOptions({
+      mutationKey: ['auth', 'login'] as const,
+      mutationFn: (credentials: Credentials) => login(credentials),
     }),
 };

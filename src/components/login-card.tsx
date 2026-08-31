@@ -1,3 +1,6 @@
+import { useMutation } from '@tanstack/react-query';
+import { useSetAtom } from 'jotai';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -9,15 +12,39 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { authMutations } from '@/lib/api/queries';
+import { sessionAtom } from '@/store/auth';
 
 /**
- * Login card (Figma node 5180:12026). Layout only for now: the GMV auth backend
- * does not exist yet (AGP-22), so submitting is a no-op until the API contract lands.
+ * Login card (Figma node 5180:12026). Submits against the mock auth endpoint (the GMV
+ * backend does not exist yet, AGP-22) and stores the resulting session in
+ * `sessionAtom`, which flips the riesgo productivo tab from the login gate to the
+ * indicators.
  */
 export function LoginCard() {
+  const setSession = useSetAtom(sessionAtom);
+  const mutation = useMutation({
+    ...authMutations.login(),
+    onSuccess: (session) => setSession(session),
+  });
+
   return (
     <Card className="w-[411px] shrink-0 gap-0 rounded-3xl border-0 py-0 shadow-none">
-      <form className="flex flex-col gap-6 py-10" onSubmit={(event) => event.preventDefault()}>
+      <form
+        className="flex flex-col gap-6 py-10"
+        onSubmit={(event) => {
+          event.preventDefault();
+
+          const data = new FormData(event.currentTarget);
+
+          // The mock endpoint accepts any well-formed credentials; the real user /
+          // password check arrives with the GMV backend, inside `client.ts`.
+          mutation.mutate({
+            email: String(data.get('email') ?? ''),
+            password: String(data.get('password') ?? ''),
+          });
+        }}
+      >
         <CardHeader className="gap-1.5 px-10">
           {/* Real heading: CardTitle renders a <div>, which screen readers skip. */}
           <CardTitle className="text-4xl font-semibold tracking-[-0.015em]">
@@ -35,6 +62,7 @@ export function LoginCard() {
               id="login-email"
               name="email"
               type="email"
+              required
               autoComplete="email"
               placeholder="example@vizzuality.com"
               className="h-10"
@@ -46,6 +74,7 @@ export function LoginCard() {
               id="login-password"
               name="password"
               type="password"
+              required
               autoComplete="current-password"
               placeholder="********"
               className="h-10"
@@ -54,9 +83,20 @@ export function LoginCard() {
         </CardContent>
 
         <CardFooter className="flex-col gap-6 px-10">
-          <Button type="submit" className="h-11 w-full rounded-2xl font-normal">
-            Acceder
+          <Button
+            type="submit"
+            disabled={mutation.isPending}
+            className="h-11 w-full rounded-2xl font-normal"
+          >
+            {mutation.isPending ? 'Accediendo…' : 'Acceder'}
           </Button>
+
+          {mutation.isError && (
+            <p role="alert" className="text-sm text-destructive">
+              No se pudo iniciar sesión. Revisa el email y la contraseña.
+            </p>
+          )}
+
           <p className="text-sm text-muted-foreground">
             El acceso identificado sirve únicamente para mostrar los indicadores privados, no crea
             un historial. Ni las geometrías subidas ni los resultados del análisis se guardan en el
