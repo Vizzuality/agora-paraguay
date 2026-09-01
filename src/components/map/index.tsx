@@ -1,29 +1,22 @@
-import { setWorkerUrl } from 'maplibre-gl';
-import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { parseAsFloat, useQueryStates } from 'nuqs';
 import { useCallback, type ReactNode } from 'react';
-import Map, { ScaleControl, type ViewStateChangeEvent } from 'react-map-gl/maplibre';
+import Map, {
+  AttributionControl,
+  ScaleControl,
+  type ViewStateChangeEvent,
+} from 'react-map-gl/maplibre';
 
 import { DrawLayer } from '@/components/map/draw-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
 import { ParcelsLayer } from '@/components/map/parcels-layer';
 import { ZoomControl } from '@/components/map/zoom-control';
+import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
 import { normalizeViewState } from '@/lib/map/view-state';
+// Worker setup (see worker.ts) — without it the style never loads and the map is blank.
+import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
-
-/**
- * MapLibre v6 locates its render worker with `new URL("maplibre-gl-worker.mjs",
- * import.meta.url)` at runtime — a URL no bundler can rewrite: Vite's dev pre-bundle
- * and the production build both leave it pointing at a file that is never served, the
- * worker request 404s, the style never finishes loading and the map renders blank
- * (the v6 upgrade was reverted once over exactly this, in 875e865).
- *
- * `?worker&url` makes Vite compile the worker and its imports into a chunk of its own
- * and hand back its URL, in dev and build alike; `setWorkerUrl` points MapLibre at it.
- */
-setWorkerUrl(maplibreWorkerUrl);
 
 /**
  * The camera lives in the URL, so a view is shareable and survives a reload.
@@ -71,12 +64,15 @@ export function MapView({ children }: { children?: ReactNode }) {
       }}
       mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
+      onLoad={(event) => collapseAttribution(event.target)}
       onMoveEnd={handleMoveEnd}
       style={{ width: '100%', height: '100%' }}
-      attributionControl={{ compact: true }}
+      attributionControl={false}
     >
+      {/* Same corner, JSX order = add order: the scale sits before the attribution. */}
+      <ScaleControl position="bottom-left" />
+      <AttributionControl compact position="bottom-left" />
       <ZoomControl />
-      <ScaleControl position="bottom-right" />
       {/* TODO(mock-parcels): mock layer — swap for the real parcels source when available. */}
       <ParcelsLayer />
       <DrawLayer />
