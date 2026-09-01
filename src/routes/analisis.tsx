@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 import { AnalysisHero } from '@/components/analysis-hero';
 import { Footer } from '@/components/footer';
 import { LoginCard } from '@/components/login-card';
-import { AnalysisNav } from '@/components/sidebar/analysis-nav';
+import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectedAreasList } from '@/components/sidebar/selected-areas-list';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ function AnalysisPage() {
       </ClientOnly>
 
       <NavBar>
-        <AnalysisNav />
+        <HeaderNav />
       </NavBar>
 
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
