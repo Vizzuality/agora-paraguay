@@ -1,5 +1,5 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { MapView } from '@/components/map';
@@ -8,6 +8,7 @@ import { AreaActions } from '@/components/sidebar/area-actions';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { PolygonList } from '@/components/sidebar/polygon-list';
 import { backToSelectionAtom } from '@/store/mode';
+import { uploadResultAtom } from '@/store/upload';
 
 export const Route = createFileRoute('/')({
   component: SelectionPage,
@@ -43,6 +44,25 @@ function ResumeSelectionMode() {
   return null;
 }
 
+/** The drawing how-to yields its spot to the error toast while one is showing. */
+function DrawInstructions() {
+  const uploadResult = useAtomValue(uploadResultAtom);
+
+  if (uploadResult?.error != null) return null;
+
+  return <DrawInstructionsText />;
+}
+
+function DrawInstructionsText() {
+  return (
+    <p className="text-sm text-muted-foreground">
+      Haga clic para comenzar el polígono, luego haga clic para añadir cada vértice.
+      <br />
+      Termine haciendo clic en el punto de inicio, haciendo doble clic o pulsando Enter.
+    </p>
+  );
+}
+
 /** The parcel-selection panel (Figma node 5145:4020). */
 function Panel() {
   return (
@@ -66,11 +86,9 @@ function Panel() {
           <AreaActions />
         </ClientOnly>
 
-        <p className="text-sm text-muted-foreground">
-          Haga clic para comenzar el polígono, luego haga clic para añadir cada vértice.
-          <br />
-          Termine haciendo clic en el punto de inicio, haciendo doble clic o pulsando Enter.
-        </p>
+        <ClientOnly fallback={<DrawInstructionsText />}>
+          <DrawInstructions />
+        </ClientOnly>
 
         <ClientOnly>
           <PolygonList />

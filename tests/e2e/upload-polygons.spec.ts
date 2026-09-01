@@ -126,7 +126,9 @@ test('skips holed polygons with a warning naming them', async ({ page }) => {
   await expect(notices).toBeHidden();
 });
 
-test('a failed upload keeps the polygons already on the map', async ({ page }) => {
+// An upload starts the selection over even when it fails: the previous polygons go
+// regardless of whether anything from the new file lands.
+test('a failed upload clears the polygons already on the map', async ({ page }) => {
   const { notices } = controls(page);
 
   await upload(page, 'farms.geojson');
@@ -137,7 +139,8 @@ test('a failed upload keeps the polygons already on the map', async ({ page }) =
   await expect(notices).toContainText(
     'El archivo no contiene polígonos importables — se encontraron 2 puntos.',
   );
-  await expect(areaButton(page, 'Campo Sur')).toBeVisible();
+  await expect(areaButton(page, 'Campo Sur')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Analizar' })).toBeDisabled();
 });
 
 // Acceptance: once uploaded polygons are on the map, Analizar arms and submits them.
@@ -160,18 +163,25 @@ test('accepted upload polygons can be analysed', async ({ page }) => {
 });
 
 // Acceptance: geometry outside Paraguay is wrong data — the file is rejected whole,
-// with a warning the user can read, and nothing new to analyse.
+// with a warning the user can read, and nothing new to analyse. The copy borrows the
+// no-intersection toast (Figma node 5229:13620) until the real intersection check.
 test('rejects an upload outside Paraguay with a warning', async ({ page }) => {
-  const { notices } = controls(page);
+  const { upload: uploadButton, notices } = controls(page);
   const analyze = page.getByRole('button', { name: 'Analizar' });
 
   await upload(page, 'farms-outside-paraguay.geojson');
 
   await expect(notices).toContainText(
-    'El archivo contiene geometría fuera de Paraguay — esta plataforma solo analiza áreas dentro del país.',
+    'El polígono que ha dibujado no toca el área de ninguna parcela.',
   );
   await expect(areaButton(page, 'Estancia Bonaerense')).toBeHidden();
   await expect(analyze).toBeDisabled();
+
+  // The entry point that caused the error is outlined until the toast is dismissed.
+  // Token-anchored: the base variant carries `aria-invalid:border-destructive`.
+  await expect(uploadButton).toHaveClass(/(^| )border-destructive( |$)/);
+  await notices.getByRole('button', { name: 'Descartar los avisos de subida' }).click();
+  await expect(uploadButton).not.toHaveClass(/(^| )border-destructive( |$)/);
 });
 
 // Format and size failures show the generic help toast (Figma node 5166:5055) — what
@@ -202,8 +212,13 @@ test('an unsupported extension shows the format and size help toast', async ({ p
   await expect(notices).toContainText('Ha habido un error.');
   await expect(notices).toContainText('Formatos compatibles:');
 
+  // The drawing how-to yields its spot to the toast, and returns on dismiss.
+  const instructions = page.getByText('Haga clic para comenzar el polígono');
+  await expect(instructions).toBeHidden();
+
   await notices.getByRole('button', { name: 'Descartar los avisos de subida' }).click();
   await expect(notices).toBeHidden();
+  await expect(instructions).toBeVisible();
 });
 
 test('rejects a corrupt zip with a readable error', async ({ page }) => {

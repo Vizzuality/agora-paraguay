@@ -2,13 +2,14 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { SquarePen, Upload, X } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
-import { ErrorToast } from '@/components/error-toast';
+import { ErrorToast, NO_PARCEL_INTERSECTION_MESSAGE } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import { parseUploadFile, UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { UploadError, type UploadResult } from '@/lib/upload/types';
+import { cn } from '@/lib/utils';
 import { drawAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
 import { modeAtom } from '@/store/mode';
-import { uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
+import { failUploadAtom, uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
 
 /** How many upload warnings are shown before collapsing into "and N more". */
 const MAX_VISIBLE_WARNINGS = 5;
@@ -28,7 +29,7 @@ export function AreaActions() {
   const setTool = useSetAtom(setDrawToolAtom);
   const startDraw = useSetAtom(startDrawAtom);
   const uploadFeatures = useSetAtom(uploadFeaturesAtom);
-  const setUploadResult = useSetAtom(uploadResultAtom);
+  const failUpload = useSetAtom(failUploadAtom);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // `startAnalysisAtom` parks the tool, so the tool check alone would do — the
@@ -50,10 +51,8 @@ export function AreaActions() {
     } catch (error) {
       const upload = error instanceof UploadError ? error : null;
 
-      setUploadResult({
+      failUpload({
         fileName: file.name,
-        accepted: 0,
-        warnings: [],
         error: upload?.message ?? 'No se pudo leer el archivo.',
         errorCode: upload?.code ?? null,
       });
@@ -79,7 +78,13 @@ export function AreaActions() {
 
         <Button
           variant="secondary"
-          className="h-auto flex-col gap-2.5 rounded-3xl border-[3px] border-secondary p-8 font-normal text-accent-foreground"
+          // The entry point that caused the showing error carries a destructive border.
+          // Draw gets the same treatment once a draw-triggered error exists (the
+          // no-parcel-intersection check waits on the API).
+          className={cn(
+            'h-auto flex-col gap-2.5 rounded-3xl border-[3px] border-secondary p-8 font-normal text-accent-foreground',
+            uploadResult?.error != null && 'border-destructive',
+          )}
           onClick={() => inputRef.current?.click()}
           disabled={!draw.bound}
         >
@@ -130,8 +135,6 @@ function UploadNotices() {
   if (uploadResult === null) return null;
   if (uploadResult.error === null && uploadResult.warnings.length === 0) return null;
 
-  // Errors get the destructive toast (Figma node 5166:5055). Format and size problems
-  // show the generic help — what to fix — instead of restating the parser's complaint.
   if (uploadResult.error !== null) {
     const formatOrSize =
       uploadResult.errorCode === 'too-large' || uploadResult.errorCode === 'unsupported-type';
@@ -142,7 +145,15 @@ function UploadNotices() {
         dismissLabel="Descartar los avisos de subida"
         onDismiss={() => setUploadResult(null)}
       >
-        {formatOrSize ? <FormatSizeHelp /> : <p>{uploadResult.error}</p>}
+        {formatOrSize ? (
+          <FormatSizeHelp />
+        ) : (
+          <p>
+            {uploadResult.errorCode === 'out-of-paraguay'
+              ? NO_PARCEL_INTERSECTION_MESSAGE
+              : uploadResult.error}
+          </p>
+        )}
       </ErrorToast>
     );
   }

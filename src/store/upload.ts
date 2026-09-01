@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 
 import { importReplacingFeatures } from '@/lib/map/import-features';
-import type { ParseOutcome, UploadResult } from '@/lib/upload/types';
+import type { ParseOutcome, UploadErrorCode, UploadResult } from '@/lib/upload/types';
 import { selectAnalysisPolygonAtom } from '@/store/analysis';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { backToSelectionAtom } from '@/store/mode';
@@ -34,9 +34,9 @@ export const resetSelectionSessionAtom = atom(null, (_get, set) => {
 });
 
 /**
- * Injects a parsed upload into the store. Replace semantics: everything on the map goes
- * — the previous upload AND the hand-drawn polygons — and only once the new parse has
- * succeeded, so a failed upload never costs the polygons already on the map.
+ * Injects a parsed upload into the store. Replace semantics: an upload starts the
+ * selection over, so everything on the map goes — the previous upload AND the
+ * hand-drawn polygons — whether or not anything from the new file lands.
  */
 export const uploadFeaturesAtom = atom(
   null,
@@ -55,8 +55,15 @@ export const uploadFeaturesAtom = atom(
     const outcome = importReplacingFeatures(draw, features);
     const allWarnings = [...warnings, ...outcome.rejectionWarnings];
 
-    // Nothing landed: the map is untouched, so the previous polygons stay and the
-    // outcome is an error, not a "with warnings" import of zero areas.
+    // Like `clear()`, adding and removing features is not trusted to surface as a
+    // `change` event — report the new geometry by hand. Idempotent if the event fires.
+    set(drawStateAtom, { type: 'geometry', polygons: outcome.polygons });
+
+    // Replace semantics extend to the clicked cadastral parcels: an upload starts the
+    // selection over (and, after Analizar, returns the app to selection mode).
+    set(resetSelectionSessionAtom);
+
+    // Nothing landed: the outcome is an error, not a "with warnings" import of zero.
     if (outcome.accepted.length === 0) {
       set(uploadResultAtom, {
         fileName: upload.fileName,
@@ -68,14 +75,6 @@ export const uploadFeaturesAtom = atom(
 
       return;
     }
-
-    // Like `clear()`, adding and removing features is not trusted to surface as a
-    // `change` event — report the new geometry by hand. Idempotent if the event fires.
-    set(drawStateAtom, { type: 'geometry', polygons: outcome.polygons });
-
-    // Replace semantics extend to the clicked cadastral parcels: an upload starts the
-    // selection over (and, after Analizar, returns the app to selection mode).
-    set(resetSelectionSessionAtom);
 
     set(uploadResultAtom, {
       fileName: upload.fileName,
@@ -89,5 +88,32 @@ export const uploadFeaturesAtom = atom(
     // Via the command atom, not a bare dispatch: it also mirrors the selection onto
     // the feature so Terra Draw paints it.
     set(selectAnalysisPolygonAtom, outcome.accepted[0].id);
+  },
+);
+
+/**
+ * A file that never parsed still starts the selection over: everything on the map is
+ * cleared even though nothing replaces it, and the error is reported.
+ */
+export const failUploadAtom = atom(
+  null,
+  (get, set, failure: { fileName: string; error: string; errorCode: UploadErrorCode | null }) => {
+    const draw = get(drawInstanceAtom);
+
+    if (draw?.enabled) {
+      // Same disarm-first rule as a successful import (see `uploadFeaturesAtom`).
+      set(drawStateAtom, { type: 'tool', tool: null });
+      draw.clear();
+      set(drawStateAtom, { type: 'geometry', polygons: [] });
+    }
+
+    set(resetSelectionSessionAtom);
+    set(uploadResultAtom, {
+      fileName: failure.fileName,
+      accepted: 0,
+      warnings: [],
+      error: failure.error,
+      errorCode: failure.errorCode,
+    });
   },
 );

@@ -37,6 +37,10 @@ export function ErrorToast({
   );
 }
 
+/** Figma node 5229:13620. Doubles as the out-of-Paraguay body until that is redefined. */
+export const NO_PARCEL_INTERSECTION_MESSAGE =
+  'El polígono que ha dibujado no toca el área de ninguna parcela.';
+
 /**
  * TODO: mount this once the parcels API can test intersection — a drawn polygon that
  * touches no cadastral parcel should surface this toast (Figma node 5229:13620).
@@ -49,7 +53,7 @@ export function NoParcelIntersectionToast({ onDismiss }: { onDismiss: () => void
       dismissLabel="Descartar el aviso de dibujo"
       onDismiss={onDismiss}
     >
-      <p>El polígono que ha dibujado no toca el área de ninguna parcela.</p>
+      <p>{NO_PARCEL_INTERSECTION_MESSAGE}</p>
     </ErrorToast>
   );
 }
