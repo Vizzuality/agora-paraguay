@@ -1,13 +1,13 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { MapView } from '@/components/map';
 import { AnalyzeButton } from '@/components/sidebar/analyze-button';
 import { AreaActions } from '@/components/sidebar/area-actions';
 import { NavBar } from '@/components/sidebar/nav-bar';
-import { PolygonList } from '@/components/sidebar/polygon-list';
 import { backToSelectionAtom } from '@/store/mode';
+import { uploadResultAtom } from '@/store/upload';
 
 export const Route = createFileRoute('/')({
   component: SelectionPage,
@@ -43,6 +43,25 @@ function ResumeSelectionMode() {
   return null;
 }
 
+/** The drawing how-to yields its spot to the error toast while one is showing. */
+function DrawInstructions() {
+  const uploadResult = useAtomValue(uploadResultAtom);
+
+  if (uploadResult?.error != null) return null;
+
+  return <DrawInstructionsText />;
+}
+
+function DrawInstructionsText() {
+  return (
+    <p className="text-sm text-muted-foreground">
+      Haga clic para comenzar el polígono, luego haga clic para añadir cada vértice.
+      <br />
+      Termine haciendo clic en el punto de inicio, haciendo doble clic o pulsando Enter.
+    </p>
+  );
+}
+
 /** The parcel-selection panel (Figma node 5145:4020). */
 function Panel() {
   return (
@@ -61,23 +80,15 @@ function Panel() {
       </header>
 
       <div className="flex flex-col gap-6 px-10">
-        {/* Client-only for the same reason as the controls: they read the draw atoms. */}
         <ClientOnly>
           <AreaActions />
         </ClientOnly>
 
-        <p className="text-sm text-muted-foreground">
-          Haga clic para comenzar el polígono, luego haga clic para añadir cada vértice.
-          <br />
-          Termine haciendo clic en el punto de inicio, haciendo doble clic o pulsando Enter.
-        </p>
-
-        <ClientOnly>
-          <PolygonList />
+        <ClientOnly fallback={<DrawInstructionsText />}>
+          <DrawInstructions />
         </ClientOnly>
       </div>
 
-      {/* Pinned to the bottom of the panel, per the design. */}
       <div className="mt-auto px-10 pt-6 pb-10">
         <ClientOnly>
           <AnalyzeButton />

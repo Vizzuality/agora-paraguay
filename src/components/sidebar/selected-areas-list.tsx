@@ -6,9 +6,8 @@ import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
  * The areas submitted for analysis — drawn, uploaded, and clicked cadastral parcels —
- * as a read-only list. Same entries and names as `PolygonList` on the selection page
- * (and the same order `AnalyzeButton` submits them in), but nothing to select: in
- * analysis mode the selection is frozen.
+ * as a read-only list, in the same order `AnalyzeButton` submits them in. Nothing to
+ * select: in analysis mode the selection is frozen.
  *
  * Rendered inside `<ClientOnly>`: it reads the draw atoms.
  */

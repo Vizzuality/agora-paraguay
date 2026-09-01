@@ -73,4 +73,6 @@ export type UploadResult = {
   accepted: number;
   warnings: UploadWarning[];
   error: string | null;
+  /** Set with `error` when it came from an `UploadError`; picks the toast body. */
+  errorCode: UploadErrorCode | null;
 };

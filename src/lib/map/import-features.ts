@@ -13,19 +13,17 @@ export type ImportOutcome = {
 };
 
 /**
- * Adds uploaded features to Terra Draw with replace semantics: once at least one new
- * feature is accepted, everything that was on the map — hand-drawn and previously
- * uploaded alike — is removed. The Terra Draw mechanics live here so the store atom
- * (`uploadFeaturesAtom`) only coordinates state, and so this logic is testable in node
- * against a real Terra Draw instance.
+ * Adds uploaded features to Terra Draw with replace semantics: an upload starts the
+ * selection over, so everything that was on the map — hand-drawn and previously
+ * uploaded alike — is removed even when every new feature is rejected. The Terra Draw
+ * mechanics live here so the store atom (`uploadFeaturesAtom`) only coordinates state,
+ * and so this logic is testable in node against a real Terra Draw instance.
  */
 export function importReplacingFeatures(draw: TerraDraw, features: UploadFeature[]): ImportOutcome {
   const previousIds = drawnPolygons(draw.getSnapshot()).map((polygon) => polygon.id);
 
   // The store validates each feature on its own: valid ones land, invalid ones come
-  // back with a reason and become warnings rather than failing the upload. Adding
-  // happens BEFORE removing, so a fully-rejected upload never costs the polygons
-  // already on the map.
+  // back with a reason and become warnings rather than failing the upload.
   const validations = draw.addFeatures(features);
   const rejectedIds = new Set(
     validations.filter((validation) => !validation.valid).map((validation) => validation.id),
@@ -45,8 +43,7 @@ export function importReplacingFeatures(draw: TerraDraw, features: UploadFeature
 
   const accepted = features.filter((feature) => !rejectedIds.has(feature.id));
 
-  // Nothing landed: the map is untouched and the previous polygons stay.
-  if (accepted.length > 0 && previousIds.length > 0) {
+  if (previousIds.length > 0) {
     draw.removeFeatures(previousIds);
   }
 

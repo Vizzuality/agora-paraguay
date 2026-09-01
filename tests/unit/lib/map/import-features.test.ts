@@ -58,7 +58,7 @@ describe('importReplacingFeatures', () => {
     expect(outcome.polygons.map((polygon) => polygon.properties.name)).toEqual(['Nueva']);
   });
 
-  it('leaves the store untouched when every feature is rejected', () => {
+  it('clears the store even when every feature is rejected', () => {
     const draw = startedDraw();
     importReplacingFeatures(draw, [feature('Anterior')]);
 
@@ -68,7 +68,7 @@ describe('importReplacingFeatures', () => {
     expect(outcome.rejectionWarnings).toHaveLength(1);
     expect(outcome.rejectionWarnings[0].featureName).toBe('Con hueco');
     expect(outcome.rejectionWarnings[0].message).toContain('"Con hueco" fue rechazado');
-    expect(outcome.polygons.map((polygon) => polygon.properties.name)).toEqual(['Anterior']);
+    expect(outcome.polygons).toEqual([]);
   });
 
   it('lands the valid features of a mixed import and warns per rejected one', () => {

@@ -5,13 +5,17 @@ import {
   type SearchSchemaInput,
 } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
+import { SquarePen, Upload } from 'lucide-react';
 import { useEffect } from 'react';
 
+import { AnalysisHero } from '@/components/analysis-hero';
 import { Footer } from '@/components/footer';
 import { LoginCard } from '@/components/login-card';
 import { AnalysisNav } from '@/components/sidebar/analysis-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectedAreasList } from '@/components/sidebar/selected-areas-list';
+import { Button } from '@/components/ui/button';
+import { polygonName } from '@/lib/map/draw-features';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
 import { selectedParcelsAtom } from '@/store/parcels';
@@ -50,13 +54,19 @@ function AnalysisPage() {
       </NavBar>
 
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
-        <h1 className="text-4xl font-semibold tracking-[-0.015em]">Análisis</h1>
+        {/* Sanitario is public; productivo shows the hero and title only with a
+            session (the login screen design has neither above the gate). */}
+        <ClientOnly>
+          {riesgo === 'sanitario' ? (
+            <>
+              <SelectionHero riesgo="sanitario" />
+              <TitleRow riesgo="sanitario" />
+            </>
+          ) : (
+            <ProductivoHero />
+          )}
+        </ClientOnly>
 
-        {/* Riesgo sanitario is public; riesgo productivo is private and shows the
-            designed login gate (Figma node 5180:11125) until a session exists. The
-            gate reads the session atom, so it is client-only like every other atom
-            consumer — the server fallback is the gate itself, which is also what an
-            anonymous visitor sees, so there is no hydration flash for them. */}
         {riesgo === 'sanitario' ? (
           <WidgetGrid />
         ) : (
@@ -72,6 +82,51 @@ function AnalysisPage() {
 
       <Footer />
     </div>
+  );
+}
+
+/** The hero with the parcel tabs filled from the submitted selection. */
+function SelectionHero({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
+  const polygons = useAtomValue(drawPolygonsAtom);
+  const selectedParcels = useAtomValue(selectedParcelsAtom);
+
+  const parcels = [...polygons, ...selectedParcels].map((area, index) => polygonName(area, index));
+
+  return <AnalysisHero riesgo={riesgo} parcels={parcels} />;
+}
+
+function TitleRow({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <h1 className="text-[66px] font-thin tracking-[0.408px]">
+        {riesgo === 'sanitario' ? 'Riesgo sanitario' : 'Riesgo productivo'}
+      </h1>
+
+      <div className="flex items-center gap-4">
+        <Button variant="secondary" className="h-11 rounded-2xl px-8 font-normal">
+          <SquarePen aria-hidden />
+          Personalizar indicadores
+        </Button>
+        <Button className="h-11 rounded-2xl px-8 font-normal">
+          <Upload aria-hidden />
+          Exportar informe
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Hero for the private tab: only a logged-in analyst sees the parameters. */
+function ProductivoHero() {
+  const session = useAtomValue(sessionAtom);
+
+  if (!session) return null;
+
+  return (
+    <>
+      <SelectionHero riesgo="productivo" />
+      <TitleRow riesgo="productivo" />
+    </>
   );
 }
 
