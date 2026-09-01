@@ -49,7 +49,6 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   // A successful submission navigates to the analysis page.
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
-  // Analizar lands on the public tab, whose hero titles the page (AGP-21).
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
 
   // The submitted areas are listed, read-only, with the same names as the panel list.

@@ -1,22 +1,17 @@
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-/**
- * Destructive toast (Figma node 5166:5055): a "Ha habido un error." headline over the
- * body, dismissable from the corner. `label` names the landmark for screen readers and
- * the e2e locators.
- */
 export function ErrorToast({
   label,
   dismissLabel,
   onDismiss,
   children,
-}: {
+}: Readonly<{
   label: string;
   dismissLabel: string;
   onDismiss: () => void;
   children: ReactNode;
-}) {
+}>) {
   return (
     <section
       aria-label={label}
@@ -37,16 +32,13 @@ export function ErrorToast({
   );
 }
 
-/** Figma node 5229:13620. Doubles as the out-of-Paraguay body until that is redefined. */
+/** Doubles as the out-of-Paraguay body until that is redefined. */
 export const NO_PARCEL_INTERSECTION_MESSAGE =
   'El polígono que ha dibujado no toca el área de ninguna parcela.';
 
-/**
- * TODO: mount this once the parcels API can test intersection — a drawn polygon that
- * touches no cadastral parcel should surface this toast (Figma node 5229:13620).
- * Currently unreferenced on purpose: the mock data has no intersection answer.
- */
-export function NoParcelIntersectionToast({ onDismiss }: { onDismiss: () => void }) {
+// TODO: mount once the parcels API can test intersection — a drawn polygon that
+// touches no cadastral parcel should surface this toast.
+export function NoParcelIntersectionToast({ onDismiss }: Readonly<{ onDismiss: () => void }>) {
   return (
     <ErrorToast
       label="Aviso de dibujo"

@@ -6,7 +6,10 @@ import { cn } from '@/lib/utils';
 import type { RiesgoTab } from '@/routes/analisis';
 import { activeParcelTabAtom } from '@/store/analysis';
 
-export function AnalysisHero({ riesgo, parcels }: { riesgo: RiesgoTab; parcels: string[] }) {
+export function AnalysisHero({
+  riesgo,
+  parcels,
+}: Readonly<{ riesgo: RiesgoTab; parcels: string[] }>) {
   const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
 
   return (
@@ -59,7 +62,7 @@ function ThumbnailPlaceholder() {
 }
 
 /** Not Radix Tabs on purpose: `role="tab"` requires tab panels this page does not have. */
-function ParcelTabs({ parcels }: { parcels: string[] }) {
+function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   const [storedIndex, setActiveIndex] = useAtom(activeParcelTabAtom);
   // Re-analysing a smaller selection can leave a stale index behind: clamp to the first.
   const activeIndex = storedIndex < parcels.length ? storedIndex : 0;
@@ -124,7 +127,7 @@ function ParcelTabs({ parcels }: { parcels: string[] }) {
 }
 
 /** A styled div, not a `readOnly` input: a focusable field that ignores typing reads as broken. */
-function HeroField({ label, value, icon }: HeroFieldProps) {
+function HeroField({ label, value, icon }: Readonly<HeroFieldProps>) {
   const Icon = icon === 'calendar' ? Calendar : ChevronDown;
 
   return (

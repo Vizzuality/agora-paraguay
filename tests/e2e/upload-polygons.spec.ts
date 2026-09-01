@@ -143,7 +143,6 @@ test('a failed upload clears the polygons already on the map', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Analizar' })).toBeDisabled();
 });
 
-// Acceptance: once uploaded polygons are on the map, Analizar arms and submits them.
 test('accepted upload polygons can be analysed', async ({ page }) => {
   const analyze = page.getByRole('button', { name: 'Analizar' });
 
@@ -162,9 +161,7 @@ test('accepted upload polygons can be analysed', async ({ page }) => {
   await expect(areas).toHaveText(['Estancia Norte (1/2)', 'Estancia Norte (2/2)', 'Campo Sur']);
 });
 
-// Acceptance: geometry outside Paraguay is wrong data — the file is rejected whole,
-// with a warning the user can read, and nothing new to analyse. The copy borrows the
-// no-intersection toast (Figma node 5229:13620) until the real intersection check.
+// The copy borrows the no-intersection toast until the real intersection check.
 test('rejects an upload outside Paraguay with a warning', async ({ page }) => {
   const { upload: uploadButton, notices } = controls(page);
   const analyze = page.getByRole('button', { name: 'Analizar' });
@@ -184,8 +181,8 @@ test('rejects an upload outside Paraguay with a warning', async ({ page }) => {
   await expect(uploadButton).not.toHaveClass(/(^| )border-destructive( |$)/);
 });
 
-// Format and size failures show the generic help toast (Figma node 5166:5055) — what
-// to fix — instead of the parser's message.
+// Format and size failures show the generic help toast — what to fix — instead of the
+// parser's message.
 test('a file over 10 MB shows the format and size help toast', async ({ page }) => {
   const { input, notices } = controls(page);
 

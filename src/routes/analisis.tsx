@@ -67,11 +67,6 @@ function AnalysisPage() {
           )}
         </ClientOnly>
 
-        {/* Riesgo sanitario is public; riesgo productivo is private and shows the
-            designed login gate (Figma node 5180:11125) until a session exists. The
-            gate reads the session atom, so it is client-only like every other atom
-            consumer — the server fallback is the gate itself, which is also what an
-            anonymous visitor sees, so there is no hydration flash for them. */}
         {riesgo === 'sanitario' ? (
           <WidgetGrid />
         ) : (
@@ -91,7 +86,7 @@ function AnalysisPage() {
 }
 
 /** The hero with the parcel tabs filled from the submitted selection. */
-function SelectionHero({ riesgo }: { riesgo: RiesgoTab }) {
+function SelectionHero({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const selectedParcels = useAtomValue(selectedParcelsAtom);
 
@@ -100,7 +95,7 @@ function SelectionHero({ riesgo }: { riesgo: RiesgoTab }) {
   return <AnalysisHero riesgo={riesgo} parcels={parcels} />;
 }
 
-function TitleRow({ riesgo }: { riesgo: RiesgoTab }) {
+function TitleRow({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <h1 className="text-[66px] font-thin tracking-[0.408px]">
