@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
+import { useId } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,23 +14,34 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authMutations } from '@/lib/api/queries';
+import { cn } from '@/lib/utils';
 import { sessionAtom } from '@/store/auth';
 
 /**
- * Login card (Figma node 5180:12026). Submits against the mock auth endpoint (the GMV
+ * Submits against the mock auth endpoint (the GMV
  * backend does not exist yet, AGP-22) and stores the resulting session in
  * `sessionAtom`, which flips the riesgo productivo tab from the login gate to the
  * indicators.
  */
-export function LoginCard() {
+export function LoginCard({
+  className,
+  onSuccess,
+}: Readonly<{ className?: string; onSuccess?: () => void }>) {
   const setSession = useSetAtom(sessionAtom);
+
+  const fieldId = useId();
   const mutation = useMutation({
     ...authMutations.login(),
-    onSuccess: (session) => setSession(session),
+    onSuccess: (session) => {
+      setSession(session);
+      onSuccess?.();
+    },
   });
 
   return (
-    <Card className="w-[411px] shrink-0 gap-0 rounded-3xl border-0 py-0 shadow-none">
+    <Card
+      className={cn('w-[411px] shrink-0 gap-0 rounded-3xl border-0 py-0 shadow-none', className)}
+    >
       <form
         className="flex flex-col gap-6 py-10"
         onSubmit={(event) => {
@@ -57,9 +69,9 @@ export function LoginCard() {
 
         <CardContent className="flex flex-col gap-4 px-10">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="login-email">Email</Label>
+            <Label htmlFor={`${fieldId}-email`}>Email</Label>
             <Input
-              id="login-email"
+              id={`${fieldId}-email`}
               name="email"
               type="email"
               required
@@ -69,9 +81,9 @@ export function LoginCard() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="login-password">Contraseña</Label>
+            <Label htmlFor={`${fieldId}-password`}>Contraseña</Label>
             <Input
-              id="login-password"
+              id={`${fieldId}-password`}
               name="password"
               type="password"
               required

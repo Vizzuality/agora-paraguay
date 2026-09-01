@@ -95,3 +95,40 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await expect(controls(page).draw).toBeEnabled();
   await expect(analyze).toBeEnabled();
 });
+
+test('logs in from the header dialog', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  // The header's user button opens the login dialog (Figma node 5351:11729); its
+  // accessible name comes from the dialog's screen-reader-only title.
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  await expect(dialog).toBeVisible();
+
+  // Escape dismisses it without logging in.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+
+  // Logging in through the dialog closes it…
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await dialog.getByLabel('Email').fill('analista@example.com');
+  await dialog.getByLabel('Contraseña').fill('cualquiera');
+  await dialog.getByRole('button', { name: 'Acceder' }).click();
+  await expect(dialog).toBeHidden();
+
+  // …and unlocks riesgo productivo: no in-page gate, the private title shows.
+  const navbar = page.getByRole('banner');
+  await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
+  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+
+  // While the session is active the user button is a no-op.
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(dialog).toBeHidden();
+});

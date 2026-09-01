@@ -1,6 +1,7 @@
-import { getRouteApi, Link } from '@tanstack/react-router';
-import { SquarePen, User } from 'lucide-react';
+import { ClientOnly, getRouteApi, Link } from '@tanstack/react-router';
+import { SquarePen } from 'lucide-react';
 
+import { LoginDialog, UserButton } from '@/components/login-dialog';
 import { Button } from '@/components/ui/button';
 import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
@@ -8,7 +9,7 @@ import type { RiesgoTab } from '@/routes/analisis';
 
 const analisisRoute = getRouteApi('/analisis');
 
-export function AnalysisNav() {
+export function HeaderNav() {
   const { riesgo } = analisisRoute.useSearch();
 
   return (
@@ -32,13 +33,9 @@ export function AnalysisNav() {
         ))}
       </div>
 
-      <Button
-        variant="secondary"
-        className="size-12 rounded-full text-accent-foreground [&_svg:not([class*='size-'])]:size-6"
-        aria-label="Iniciar sesión"
-      >
-        <User aria-hidden />
-      </Button>
+      <ClientOnly fallback={<UserButton />}>
+        <LoginDialog />
+      </ClientOnly>
     </>
   );
 }
