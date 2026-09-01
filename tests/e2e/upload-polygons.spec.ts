@@ -140,6 +140,40 @@ test('a failed upload keeps the polygons already on the map', async ({ page }) =
   await expect(areaButton(page, 'Campo Sur')).toBeVisible();
 });
 
+// Acceptance: once uploaded polygons are on the map, Analizar arms and submits them.
+test('accepted upload polygons can be analysed', async ({ page }) => {
+  const analyze = page.getByRole('button', { name: 'Analizar' });
+
+  // Nothing on the map yet: analysis has nothing to send.
+  await expect(analyze).toBeDisabled();
+
+  await upload(page, 'farms.geojson');
+  await expect(areaButton(page, 'Campo Sur')).toBeVisible();
+  await expect(analyze).toBeEnabled();
+
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  // The submitted areas are listed on the analysis page under their upload names.
+  const areas = page.getByRole('list').getByRole('listitem');
+  await expect(areas).toHaveText(['Estancia Norte (1/2)', 'Estancia Norte (2/2)', 'Campo Sur']);
+});
+
+// Acceptance: geometry outside Paraguay is wrong data — the file is rejected whole,
+// with a warning the user can read, and nothing new to analyse.
+test('rejects an upload outside Paraguay with a warning', async ({ page }) => {
+  const { notices } = controls(page);
+  const analyze = page.getByRole('button', { name: 'Analizar' });
+
+  await upload(page, 'farms-outside-paraguay.geojson');
+
+  await expect(notices).toContainText(
+    'El archivo contiene geometría fuera de Paraguay — esta plataforma solo analiza áreas dentro del país.',
+  );
+  await expect(areaButton(page, 'Estancia Bonaerense')).toBeHidden();
+  await expect(analyze).toBeDisabled();
+});
+
 test('rejects a corrupt zip with a readable error', async ({ page }) => {
   const { notices } = controls(page);
 
