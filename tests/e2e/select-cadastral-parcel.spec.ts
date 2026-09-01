@@ -88,23 +88,27 @@ test('clicking cadastral parcels selects until Analizar submits them', async ({ 
 // Clicking a parcel focuses the selection on cadastral parcels: replace semantics,
 // like drawing and uploading, so whatever was drawn or uploaded goes.
 test('clicking a parcel clears the drawn polygons', async ({ page }) => {
-  const { draw } = locators(page);
-  const drawnEntry = page.getByRole('button', { name: 'Área dibujada 1' });
+  const { draw, analyze } = locators(page);
 
   await draw.click();
   await drawPolygon(page, DRAWN_POLYGON);
-  await expect(drawnEntry).toBeVisible();
+  await expect(analyze).toBeEnabled();
 
   // Park the tool: parcel clicks only land while the map is idle.
   await draw.click();
 
-  // Analizar is already armed by the drawn polygon, so `clickAParcel`'s signal is
-  // useless here — probe until the hit shows as the drawn entry disappearing.
+  // Analizar is already armed by the drawn polygon, so a single hit changes nothing
+  // observable — probe with click pairs instead. A hit selects the parcel (clearing
+  // the drawing) and the second click toggles it back off, so Analizar disarms only
+  // if the drawn polygon went too. The pause keeps the pair outside the browser's
+  // double-click threshold so MapLibre's double-click zoom never fires.
   for (const position of PROBE_POSITIONS) {
+    await mapCanvas(page).click({ position });
+    await page.waitForTimeout(600);
     await mapCanvas(page).click({ position });
 
     try {
-      await expect(drawnEntry).toBeHidden({ timeout: 700 });
+      await expect(analyze).toBeDisabled({ timeout: 700 });
 
       return;
     } catch {

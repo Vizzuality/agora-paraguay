@@ -20,8 +20,9 @@ function controls(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
-    firstEntry: page.getByRole('button', { name: 'Área dibujada 1' }),
-    secondEntry: page.getByRole('button', { name: 'Área dibujada 2' }),
+    // The panel no longer lists the drawn areas, so Analizar arming/disarming is the
+    // observable signal that polygons landed on or left the map.
+    analyze: page.getByRole('button', { name: 'Analizar' }),
   };
 }
 
@@ -36,48 +37,48 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('draws several polygons without leaving draw mode', async ({ page }) => {
-  const { draw, firstEntry, secondEntry } = controls(page);
+  const { draw, analyze } = controls(page);
 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await expect(firstEntry).toBeVisible();
+  await expect(analyze).toBeEnabled();
 
   // Still armed: the second polygon needs no trip back to the panel. While armed the
   // button reads "Cancelar" (Figma node 5145:4038).
   await expect(draw).toHaveAttribute('aria-pressed', 'true');
   await expect(draw).toHaveAccessibleName('Cancelar');
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(secondEntry).toBeVisible();
+  await expect(draw).toHaveAccessibleName('Cancelar');
 });
 
 // Activating the draw tool starts a session from scratch: whatever was on the map goes.
 test('reactivating draw clears the previous session', async ({ page }) => {
-  const { draw, firstEntry } = controls(page);
+  const { draw, analyze } = controls(page);
 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await expect(firstEntry).toBeVisible();
+  await expect(analyze).toBeEnabled();
 
   // Toggling off keeps the polygon; toggling back on clears it.
   await draw.click();
-  await expect(firstEntry).toBeVisible();
+  await expect(analyze).toBeEnabled();
 
   await draw.click();
   await expect(draw).toHaveAttribute('aria-pressed', 'true');
-  await expect(firstEntry).toBeHidden();
+  await expect(analyze).toBeDisabled();
 });
 
 // The geometry is in-memory global state by design: only the camera is persisted, and it
 // lives in the URL.
 test('loses the drawing on reload', async ({ page }) => {
-  const { draw, firstEntry } = controls(page);
+  const { draw, analyze } = controls(page);
 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await expect(firstEntry).toBeVisible();
+  await expect(analyze).toBeEnabled();
 
   await page.reload();
 
   await expect(controls(page).draw).toBeEnabled();
-  await expect(controls(page).firstEntry).toBeHidden();
+  await expect(controls(page).analyze).toBeDisabled();
 });

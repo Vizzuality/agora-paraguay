@@ -6,7 +6,6 @@ import { MapView } from '@/components/map';
 import { AnalyzeButton } from '@/components/sidebar/analyze-button';
 import { AreaActions } from '@/components/sidebar/area-actions';
 import { NavBar } from '@/components/sidebar/nav-bar';
-import { PolygonList } from '@/components/sidebar/polygon-list';
 import { backToSelectionAtom } from '@/store/mode';
 import { uploadResultAtom } from '@/store/upload';
 
@@ -81,7 +80,6 @@ function Panel() {
       </header>
 
       <div className="flex flex-col gap-6 px-10">
-        {/* Client-only for the same reason as the controls: they read the draw atoms. */}
         <ClientOnly>
           <AreaActions />
         </ClientOnly>
@@ -89,13 +87,8 @@ function Panel() {
         <ClientOnly fallback={<DrawInstructionsText />}>
           <DrawInstructions />
         </ClientOnly>
-
-        <ClientOnly>
-          <PolygonList />
-        </ClientOnly>
       </div>
 
-      {/* Pinned to the bottom of the panel, per the design. */}
       <div className="mt-auto px-10 pt-6 pb-10">
         <ClientOnly>
           <AnalyzeButton />

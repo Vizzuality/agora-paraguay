@@ -21,8 +21,6 @@ function controls(page: Page) {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
     analyze: page.getByRole('button', { name: 'Analizar' }),
-    firstEntry: page.getByRole('button', { name: 'Área dibujada 1' }),
-    secondEntry: page.getByRole('button', { name: 'Área dibujada 2' }),
   };
 }
 
@@ -35,7 +33,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('analyzes every polygon on the map and moves to the analysis page', async ({ page }) => {
-  const { draw, analyze, firstEntry, secondEntry } = controls(page);
+  const { draw, analyze } = controls(page);
 
   // Nothing on the map yet: analysis has nothing to send.
   await expect(analyze).toBeDisabled();
@@ -43,7 +41,6 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await drawPolygon(page, SECOND_POLYGON);
-  await expect(secondEntry).toBeVisible();
   await expect(analyze).toBeEnabled();
 
   // A successful submission navigates to the analysis page.
@@ -51,7 +48,8 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await expect(page).toHaveURL(/\/analisis/);
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
 
-  // The submitted areas are listed, read-only, with the same names as the panel list.
+  // The submitted areas are listed, read-only, under their generated names — and both
+  // polygons made it, which the selection page no longer shows.
   const areas = page.getByRole('list').getByRole('listitem');
   await expect(areas).toHaveText(['Área dibujada 1', 'Área dibujada 2']);
 
@@ -95,7 +93,5 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   // Going back remounts the map; the selection survives and is editable again.
   await page.goBack();
   await expect(controls(page).draw).toBeEnabled();
-  await expect(firstEntry).toBeVisible();
-  await expect(secondEntry).toBeVisible();
   await expect(analyze).toBeEnabled();
 });
