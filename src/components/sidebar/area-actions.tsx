@@ -2,10 +2,10 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { SquarePen, Upload, X } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
+import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import { parseUploadFile, UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { UploadError, type UploadResult } from '@/lib/upload/types';
-import { cn } from '@/lib/utils';
 import { drawAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
 import { modeAtom } from '@/store/mode';
 import { uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
@@ -48,9 +48,15 @@ export function AreaActions() {
 
       uploadFeatures({ fileName: file.name, outcome });
     } catch (error) {
-      const message = error instanceof UploadError ? error.message : 'No se pudo leer el archivo.';
+      const upload = error instanceof UploadError ? error : null;
 
-      setUploadResult({ fileName: file.name, accepted: 0, warnings: [], error: message });
+      setUploadResult({
+        fileName: file.name,
+        accepted: 0,
+        warnings: [],
+        error: upload?.message ?? 'No se pudo leer el archivo.',
+        errorCode: upload?.code ?? null,
+      });
     }
   };
 
@@ -124,6 +130,23 @@ function UploadNotices() {
   if (uploadResult === null) return null;
   if (uploadResult.error === null && uploadResult.warnings.length === 0) return null;
 
+  // Errors get the destructive toast (Figma node 5166:5055). Format and size problems
+  // show the generic help — what to fix — instead of restating the parser's complaint.
+  if (uploadResult.error !== null) {
+    const formatOrSize =
+      uploadResult.errorCode === 'too-large' || uploadResult.errorCode === 'unsupported-type';
+
+    return (
+      <ErrorToast
+        label="Avisos de subida"
+        dismissLabel="Descartar los avisos de subida"
+        onDismiss={() => setUploadResult(null)}
+      >
+        {formatOrSize ? <FormatSizeHelp /> : <p>{uploadResult.error}</p>}
+      </ErrorToast>
+    );
+  }
+
   const visible = uploadResult.warnings.slice(0, MAX_VISIBLE_WARNINGS);
   const hidden = uploadResult.warnings.length - visible.length;
 
@@ -133,9 +156,7 @@ function UploadNotices() {
       className="flex flex-col gap-1 rounded-lg border bg-muted/50 p-3 text-sm"
     >
       <header className="flex items-start justify-between gap-2">
-        <p className={cn('font-medium', uploadResult.error !== null && 'text-destructive')}>
-          {uploadResult.error ?? `Se importó ${uploadResult.fileName} con advertencias:`}
-        </p>
+        <p className="font-medium">{`Se importó ${uploadResult.fileName} con advertencias:`}</p>
         <Button
           variant="ghost"
           size="icon"
@@ -156,5 +177,20 @@ function UploadNotices() {
         </ul>
       )}
     </section>
+  );
+}
+
+function FormatSizeHelp() {
+  return (
+    <>
+      <p>
+        Tamaño máximo recomendado: 10 MB. Los archivos más grandes pueden no funcionar
+        correctamente.
+      </p>
+      <p>
+        Formatos compatibles: .csv (debe contener una columna "geom" con información geográfica),
+        .geojson, .kml, .kmz, .wkt, .shp (deben incluirse los archivos .shp, .shx, .dbf y .prj)
+      </p>
+    </>
   );
 }

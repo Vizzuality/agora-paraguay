@@ -63,6 +63,7 @@ export const uploadFeaturesAtom = atom(
         accepted: 0,
         warnings: allWarnings,
         error: `Ninguna área de "${upload.fileName}" pudo importarse.`,
+        errorCode: null,
       });
 
       return;
@@ -81,6 +82,7 @@ export const uploadFeaturesAtom = atom(
       accepted: outcome.accepted.length,
       warnings: allWarnings,
       error: null,
+      errorCode: null,
     });
 
     // Auto-select the first polygon for analysis, so an upload is immediately usable.

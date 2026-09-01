@@ -174,6 +174,38 @@ test('rejects an upload outside Paraguay with a warning', async ({ page }) => {
   await expect(analyze).toBeDisabled();
 });
 
+// Format and size failures show the generic help toast (Figma node 5166:5055) — what
+// to fix — instead of the parser's message.
+test('a file over 10 MB shows the format and size help toast', async ({ page }) => {
+  const { input, notices } = controls(page);
+
+  await input.setInputFiles({
+    name: 'demasiado-grande.geojson',
+    mimeType: 'application/geo+json',
+    buffer: Buffer.alloc(10 * 1024 * 1024 + 1, 0x20),
+  });
+
+  await expect(notices).toContainText('Ha habido un error.');
+  await expect(notices).toContainText('Tamaño máximo recomendado: 10 MB.');
+  await expect(notices).toContainText('Formatos compatibles:');
+});
+
+test('an unsupported extension shows the format and size help toast', async ({ page }) => {
+  const { input, notices } = controls(page);
+
+  await input.setInputFiles({
+    name: 'notas.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('no soy un polígono'),
+  });
+
+  await expect(notices).toContainText('Ha habido un error.');
+  await expect(notices).toContainText('Formatos compatibles:');
+
+  await notices.getByRole('button', { name: 'Descartar los avisos de subida' }).click();
+  await expect(notices).toBeHidden();
+});
+
 test('rejects a corrupt zip with a readable error', async ({ page }) => {
   const { notices } = controls(page);
 
