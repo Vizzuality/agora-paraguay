@@ -37,6 +37,9 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
   draw.updateFeatureProperties(id, { analysis: true });
 });
 
+/** The parcel tab open on the analysis page — an index into the submitted area list. */
+export const activeParcelTabAtom = atom(0);
+
 /**
  * Whether a map click currently picks a parcel. Drives the click handler and cursor.
  * Selection mode only — Analizar freezes it — and only while the map is idle
