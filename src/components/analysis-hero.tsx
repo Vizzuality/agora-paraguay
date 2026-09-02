@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { ArrowLeft, ArrowRight, Calendar, ChevronDown, List } from 'lucide-react';
 
+import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { RiesgoTab } from '@/routes/analisis';
@@ -14,7 +15,7 @@ export function AnalysisHero({
 
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
-      <ThumbnailPlaceholder />
+      <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <div className="flex flex-col gap-1.5">
@@ -50,11 +51,12 @@ const PRODUCTIVO_FIELDS: HeroFieldProps[] = [
   { label: 'Fecha fin', value: '01/07/2026', icon: 'calendar' },
 ];
 
-/** Stand-in for the selection thumbnail — the real satellite image arrives with the API. */
-function ThumbnailPlaceholder() {
+/** Satellite mini map in the thumbnail slot. The area figure arrives with the API. */
+function MiniMapThumbnail() {
   return (
-    <div className="relative h-64 min-w-0 flex-1 rounded-md bg-muted lg:h-[335px]">
-      <div className="absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
+    <div className="relative h-64 min-w-0 flex-1 overflow-hidden rounded-md bg-muted lg:h-[335px]">
+      <MiniMap />
+      <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
         <span className="text-[36px] font-light tracking-[0.408px] text-white">17.5 ha</span>
       </div>
     </div>
@@ -78,7 +80,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
               aria-current={index === activeIndex || undefined}
               onClick={() => setActiveIndex(index)}
               className={cn(
-                'shrink-0 py-2 text-sm whitespace-nowrap',
+                'shrink-0 cursor-pointer py-2 text-sm whitespace-nowrap',
                 index === activeIndex
                   ? 'border-b-[3px] border-primary text-primary'
                   : 'text-accent-foreground',

@@ -48,6 +48,9 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await expect(page).toHaveURL(/\/analisis/);
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
 
+  // The hero mini map renders the analysed parcel over the (stubbed) satellite basemap.
+  await expect(mapCanvas(page)).toBeVisible();
+
   // The submitted areas are listed, read-only, under their generated names — and both
   // polygons made it, which the selection page no longer shows.
   const areas = page.getByRole('list').getByRole('listitem');
