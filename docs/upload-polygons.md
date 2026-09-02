@@ -44,10 +44,6 @@ workaround can be revisited.
 | Closed rings                     | Unclosed rings closed.                                                                                                                                                                      |
 | Requires `properties.mode`       | Stamped `mode: "polygon"`, plus `origin: "upload"` (drives replace semantics) and `name` (display). Custom properties survive `addFeatures → getSnapshot`, so no id→name side table exists. |
 
-Out-of-range coordinates (|lon| > 180 or |lat| > 90) reject the whole file as
-`bad-crs` before anything reaches the store — the usual culprit is a shapefile
-without its `.prj`.
-
 ## Known caveats
 
 - **Holes are refused, not stripped.** Farms with excluded inner areas (lagoons,
@@ -64,10 +60,10 @@ without its `.prj`.
   sit far below the cap; Web Worker parsing is the future fix if the cap ever rises.
 - **Shapefile realities**: multi-`.shp` zips are flattened with a warning; non-UTF8
   DBF names may mojibake; `.prj` dialects proj4 cannot read fail as unreadable.
-- **Geometry must lie within Paraguay**: `normalize.ts` rejects files with coordinates
-  outside the country's bounds (`out-of-paraguay`). This also closes the old
-  missing-`.prj` heuristic gap where small projected coordinates slipped the
-  world-range check and rendered in the Gulf of Guinea.
+- **Geometry must lie within Paraguay**: `normalize.ts` rejects files with any coordinate
+  outside the country's bounds (`out-of-paraguay`) — the only product validation. It also
+  covers projected coordinates read as lng/lat (a shapefile without its `.prj`), whether
+  they fall outside ±180/±90 or land near (0,0) in the Gulf of Guinea.
 - **KMZ**: only `doc.kml` (or the first `.kml`) is read; `<NetworkLink>` is not
   fetched.
 - **Extension-based dispatch**: a mislabelled file fails with its claimed format's

@@ -1,10 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
-import { TerraDraw, TerraDrawPolygonMode, type TerraDrawEventListeners } from 'terra-draw';
+import { TerraDraw, type TerraDrawEventListeners } from 'terra-draw';
 import { TerraDrawMapLibreGLAdapter } from 'terra-draw-maplibre-gl-adapter';
 
 import { PARCEL_STYLES } from '@/lib/map/draw-styles';
+import { HoleTolerantPolygonMode } from '@/lib/map/polygon-mode';
 import { bindDrawAtom, drawModeAtom, reportGeometryAtom } from '@/store/draw';
 
 /**
@@ -51,7 +52,7 @@ export function useTerraDraw() {
     const start = () => {
       started = new TerraDraw({
         adapter: new TerraDrawMapLibreGLAdapter({ map }),
-        modes: [new TerraDrawPolygonMode({ styles: PARCEL_STYLES })],
+        modes: [new HoleTolerantPolygonMode({ styles: PARCEL_STYLES })],
       });
 
       const instance = started;

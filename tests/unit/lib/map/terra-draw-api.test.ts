@@ -48,13 +48,6 @@ const RING = [
   [-57.6, -25.3],
 ];
 
-const HOLE = [
-  [-57.58, -25.28],
-  [-57.58, -25.26],
-  [-57.56, -25.26],
-  [-57.58, -25.28],
-];
-
 function uploadFeature(geometry: unknown): GeoJSONStoreFeatures {
   return {
     id: crypto.randomUUID(),
@@ -66,8 +59,9 @@ function uploadFeature(geometry: unknown): GeoJSONStoreFeatures {
 
 /**
  * The store constraints `src/lib/upload/normalize.ts` exists to satisfy, pinned at
- * runtime: if a Terra Draw upgrade starts accepting MultiPolygons or holes, these fail
- * and the explode/skip logic can be revisited (documented in `docs/upload-polygons.md`).
+ * runtime against the app's polygon mode: if a Terra Draw upgrade starts accepting
+ * MultiPolygons, these fail and the explode logic can be revisited (documented in
+ * `docs/upload-polygons.md`).
  */
 describe('terra-draw addFeatures contract', () => {
   it('accepts a Polygon and keeps custom properties through getSnapshot', () => {
@@ -102,16 +96,6 @@ describe('terra-draw addFeatures contract', () => {
     ]);
 
     expect(validation.valid).toBe(false);
-  });
-
-  it('rejects polygons with holes, which is why uploads skip them', () => {
-    const draw = startedDraw();
-    const [validation] = draw.addFeatures([
-      uploadFeature({ type: 'Polygon', coordinates: [RING, HOLE] }),
-    ]);
-
-    expect(validation.valid).toBe(false);
-    expect(validation.reason).toBe(ValidationReasons.ValidationReasonFeatureHasHoles);
   });
 
   it('rejects coordinates with more than 9 decimals, which is why uploads round them', () => {
