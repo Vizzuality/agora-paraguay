@@ -1,11 +1,13 @@
 import { env } from '@/env';
 
 import {
+  analysisOptionsSchema,
   analysisRequestSchema,
   analysisResponseSchema,
   credentialsSchema,
   parcelCollectionSchema,
   sessionSchema,
+  type AnalysisOptions,
   type AnalysisRequest,
   type AnalysisResponse,
   type Credentials,
@@ -37,6 +39,23 @@ export async function fetchParcels(): Promise<ParcelCollection> {
     const { parcelFixtures } = await import('./fixtures/parcels');
 
     return parcelCollectionSchema.parse(parcelFixtures);
+  }
+
+  throw new Error(
+    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
+  );
+}
+
+/**
+ * TODO(mock-analysis-options): serves the option lists for the analysis hero dropdowns
+ * from a fixture. Replace with the real endpoint and delete
+ * `fixtures/analysis-options.ts` (grep `mock-analysis-options`).
+ */
+export async function fetchAnalysisOptions(): Promise<AnalysisOptions> {
+  if (env.VITE_USE_MOCK_API) {
+    const { analysisOptionsFixture } = await import('./fixtures/analysis-options');
+
+    return analysisOptionsSchema.parse(analysisOptionsFixture);
   }
 
   throw new Error(

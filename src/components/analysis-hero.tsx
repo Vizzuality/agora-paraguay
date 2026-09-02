@@ -1,25 +1,39 @@
-import { useAtom } from 'jotai';
-import { ArrowLeft, ArrowRight, Calendar, ChevronDown, List } from 'lucide-react';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { ArrowLeft, ArrowRight, List } from 'lucide-react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { optionsFor, resolveAnalysisFilters, type AnalysisFilterKey } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
   scrollEdges,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
+import { analysisQueries } from '@/lib/api/queries';
+import type { AnalysisOption } from '@/lib/api/schemas';
 import { cn } from '@/lib/utils';
 import type { RiesgoTab } from '@/routes/analisis';
-import { activeParcelTabAtom } from '@/store/analysis';
+import { activeParcelTabAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
 
+/**
+ * `riesgo` doubles as the public/private switch: sanitario is the public hero with the
+ * four analysis dropdowns, productivo the logged-in one with only the period bounds.
+ */
 export function AnalysisHero({
   riesgo,
   parcels,
 }: Readonly<{ riesgo: RiesgoTab; parcels: string[] }>) {
-  const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
-
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
       <MiniMapThumbnail />
@@ -30,33 +44,52 @@ export function AnalysisHero({
           <ParcelTabs parcels={parcels} />
         </div>
 
-        <div className={cn('gap-6', riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col')}>
-          {fields.map((field) => (
-            <HeroField key={field.label} {...field} />
-          ))}
-        </div>
+        <HeroFilters riesgo={riesgo} />
       </div>
     </div>
   );
 }
 
-type HeroFieldProps = {
-  label: string;
-  value: string;
-  icon: 'calendar' | 'chevron';
-};
+type HeroSelectSpec = { key: AnalysisFilterKey; label: string };
 
-const SANITARIO_FIELDS: HeroFieldProps[] = [
-  { label: 'Fecha de siembra', value: '18/06/2026', icon: 'calendar' },
-  { label: 'Fecha del análisis', value: '18/08/2026', icon: 'calendar' },
-  { label: 'Cultivo', value: 'Soja', icon: 'chevron' },
-  { label: 'Ciclo', value: 'Lorem ipsum', icon: 'chevron' },
+const SANITARIO_FIELDS: HeroSelectSpec[] = [
+  { key: 'fechaSiembra', label: 'Fecha de siembra' },
+  { key: 'fechaAnalisis', label: 'Fecha del análisis' },
+  { key: 'cultivo', label: 'Cultivo' },
+  { key: 'ciclo', label: 'Ciclo' },
 ];
 
-const PRODUCTIVO_FIELDS: HeroFieldProps[] = [
-  { label: 'Fecha de inicio', value: '01/01/2015', icon: 'calendar' },
-  { label: 'Fecha fin', value: '01/07/2026', icon: 'calendar' },
+const PRODUCTIVO_FIELDS: HeroSelectSpec[] = [
+  { key: 'fechaInicio', label: 'Fecha de inicio' },
+  { key: 'fechaFin', label: 'Fecha fin' },
 ];
+
+/**
+ * The dropdowns. Options load client-side after hydration like every query here, so
+ * there is a first render without them: the selects show a loading placeholder,
+ * disabled, instead of a Suspense boundary the rest of the app does not use.
+ */
+function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
+  const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
+  const { data: options } = useQuery(analysisQueries.options());
+  const selected = useAtomValue(analysisFiltersAtom);
+  const setFilter = useSetAtom(setAnalysisFilterAtom);
+  const resolved = options ? resolveAnalysisFilters(selected, options) : null;
+
+  return (
+    <div className={cn('gap-6', riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col')}>
+      {fields.map((field) => (
+        <HeroSelect
+          key={field.key}
+          label={field.label}
+          options={options ? optionsFor(field.key, options) : []}
+          value={resolved?.[field.key] ?? ''}
+          onChange={(value) => setFilter({ key: field.key, value })}
+        />
+      ))}
+    </div>
+  );
+}
 
 /** Satellite mini map in the thumbnail slot. The area figure arrives with the API. */
 function MiniMapThumbnail() {
@@ -190,17 +223,39 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   );
 }
 
-/** A styled div, not a `readOnly` input: a focusable field that ignores typing reads as broken. */
-function HeroField({ label, value, icon }: Readonly<HeroFieldProps>) {
-  const Icon = icon === 'calendar' ? Calendar : ChevronDown;
+/**
+ * `<Label htmlFor>` gives the trigger its accessible name — the e2e suite locates by
+ * role and name, never by test id. Empty `options` means the query has not resolved.
+ */
+function HeroSelect({
+  label,
+  options,
+  value,
+  onChange,
+}: Readonly<{
+  label: string;
+  options: AnalysisOption[];
+  value: string;
+  onChange: (value: string) => void;
+}>) {
+  const id = useId();
+  const loading = options.length === 0;
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium">{label}</span>
-      <div className="flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-base">
-        <span>{value}</span>
-        <Icon aria-hidden className="size-4 text-muted-foreground" />
-      </div>
+      <Label htmlFor={id}>{label}</Label>
+      <Select value={value} onValueChange={onChange} disabled={loading}>
+        <SelectTrigger id={id} className="w-full bg-background text-base data-[size=default]:h-10">
+          <SelectValue placeholder={loading ? 'Cargando…' : `Seleccionar ${label.toLowerCase()}`} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
