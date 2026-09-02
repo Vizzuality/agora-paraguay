@@ -98,9 +98,8 @@ export function useTerraDraw() {
       map.off('load', start);
       bind(null);
       detach?.();
-      // Clearing before stopping cancels the adapter's pending animation-frame render,
-      // which `stop()` leaves queued against sources it has just removed.
-      if (started?.enabled) started.clear();
+      // `stop()` is idempotent and its `unregister()` already cancels the adapter's
+      // pending animation-frame render before removing the sources.
       started?.stop();
       setDraw(null);
     };
