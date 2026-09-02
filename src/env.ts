@@ -21,6 +21,14 @@ export const env = createEnv({
      * override.
      */
     VITE_BASEMAP_STYLE_URL: z.url().optional(),
+
+    /**
+     * Origin of the Django API for deployed builds, e.g. `https://api.example.com`.
+     * Unset, auth calls go to the same origin under `/api`, which the Vite dev server
+     * proxies to the backend (see `vite.config.ts`) so its session cookie stays
+     * first-party.
+     */
+    VITE_API_URL: z.url().optional(),
   },
   runtimeEnv: import.meta.env,
   emptyStringAsUndefined: true,

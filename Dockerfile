@@ -17,6 +17,9 @@ COPY . .
 # must be present here rather than at container start.
 ARG VITE_USE_MOCK_API=true
 ENV VITE_USE_MOCK_API=$VITE_USE_MOCK_API
+# Origin of the Django API. Leave unset when the backend serves this app under /api.
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 RUN corepack enable pnpm && pnpm run build
 

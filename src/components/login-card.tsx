@@ -13,15 +13,15 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoginError } from '@/lib/api/client';
 import { authMutations } from '@/lib/api/queries';
 import { cn } from '@/lib/utils';
 import { sessionAtom } from '@/store/auth';
 
 /**
- * Submits against the mock auth endpoint (the GMV
- * backend does not exist yet, AGP-22) and stores the resulting session in
- * `sessionAtom`, which flips the riesgo productivo tab from the login gate to the
- * indicators.
+ * Submits the credentials to the Django login (`authMutations.login`) and stores the
+ * resulting session in `sessionAtom`, which flips the riesgo productivo tab from the
+ * login gate to the indicators.
  */
 export function LoginCard({
   className,
@@ -49,10 +49,8 @@ export function LoginCard({
 
           const data = new FormData(event.currentTarget);
 
-          // The mock endpoint accepts any well-formed credentials; the real user /
-          // password check arrives with the GMV backend, inside `client.ts`.
           mutation.mutate({
-            email: String(data.get('email') ?? ''),
+            username: String(data.get('username') ?? ''),
             password: String(data.get('password') ?? ''),
           });
         }}
@@ -69,14 +67,14 @@ export function LoginCard({
 
         <CardContent className="flex flex-col gap-4 px-10">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${fieldId}-email`}>Email</Label>
+            <Label htmlFor={`${fieldId}-username`}>Usuario</Label>
             <Input
-              id={`${fieldId}-email`}
-              name="email"
-              type="email"
+              id={`${fieldId}-username`}
+              name="username"
+              type="text"
               required
-              autoComplete="email"
-              placeholder="example@vizzuality.com"
+              autoComplete="username"
+              placeholder="usuario"
               className="h-10"
             />
           </div>
@@ -105,7 +103,9 @@ export function LoginCard({
 
           {mutation.isError && (
             <p role="alert" className="text-sm text-destructive">
-              No se pudo iniciar sesión. Revisa el email y la contraseña.
+              {mutation.error instanceof LoginError && mutation.error.reason === 'credentials'
+                ? 'No se pudo iniciar sesión. Revisa el usuario y la contraseña.'
+                : 'No se pudo conectar con el servidor. Inténtalo de nuevo en unos minutos.'}
             </p>
           )}
 
