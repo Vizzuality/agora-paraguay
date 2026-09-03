@@ -20,9 +20,12 @@ function dateOption(iso: string): AnalysisOption {
   return { value: iso, label: DATE_LABEL.format(new Date(`${iso}T00:00:00Z`)) };
 }
 
+const DATE_OPTIONS = ['2026-05-18', '2026-06-18', '2026-07-18', '2026-08-18', '2026-09-01'].map(
+  dateOption,
+);
 export const analysisOptionsFixture: AnalysisOptions = {
-  fechasSiembra: ['2026-05-18', '2026-06-18', '2026-07-18'].map(dateOption),
-  fechasAnalisis: ['2026-07-18', '2026-08-18', '2026-09-01'].map(dateOption),
+  fechasSiembra: DATE_OPTIONS,
+  fechasAnalisis: DATE_OPTIONS,
   cultivos: [
     { value: 'soja', label: 'Soja' },
     { value: 'maiz', label: 'Maíz' },
