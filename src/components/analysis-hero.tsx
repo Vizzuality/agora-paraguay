@@ -85,6 +85,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
           options={options ? optionsFor(field.key, options) : []}
           value={resolved?.[field.key] ?? ''}
           onChange={(value) => setFilter({ key: field.key, value })}
+          riesgo={riesgo}
         />
       ))}
     </div>
@@ -232,20 +233,33 @@ function HeroSelect({
   options,
   value,
   onChange,
+  riesgo,
 }: Readonly<{
   label: string;
   options: AnalysisOption[];
   value: string;
   onChange: (value: string) => void;
+  riesgo: RiesgoTab;
 }>) {
   const id = useId();
   const loading = options.length === 0;
+  // Private hero (productivo) uses the Figma underline field and its uppercase caption.
+  const underline = riesgo === 'productivo';
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label
+        htmlFor={id}
+        className={cn(underline && 'text-xs leading-3 font-normal text-muted-foreground uppercase')}
+      >
+        {label}
+      </Label>
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        <SelectTrigger id={id} className="w-full bg-background text-base data-[size=default]:h-10">
+        <SelectTrigger
+          id={id}
+          className={cn('w-full text-base data-[size=default]:h-10', !underline && 'bg-background')}
+          variant={underline ? 'underline' : 'default'}
+        >
           <SelectValue placeholder={loading ? 'Cargando…' : `Seleccionar ${label.toLowerCase()}`} />
         </SelectTrigger>
         <SelectContent>
