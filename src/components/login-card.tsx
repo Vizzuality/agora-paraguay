@@ -70,10 +70,12 @@ export function LoginCard({
         <CardContent className="flex flex-col gap-4 px-10">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${fieldId}-email`}>Email</Label>
+
+            {/* TO - DO - IMPORTANT - change to type email when API gets fixed */}
             <Input
               id={`${fieldId}-email`}
               name="email"
-              type="email"
+              type="text"
               required
               autoComplete="email"
               placeholder="example@vizzuality.com"
