@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router';
 
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import { QueryProvider } from '@/providers/react-query';
 
 import appCss from '@/styles/globals.css?url';
@@ -21,6 +22,8 @@ export const Route = createRootRoute({
       { rel: 'icon', href: '/favicon.ico' },
       { rel: 'stylesheet', href: appCss },
     ],
+    // Applies the stored theme before first paint (see `src/lib/theme.ts`).
+    scripts: [{ children: THEME_INIT_SCRIPT }],
   }),
   component: RootComponent,
 });
@@ -39,7 +42,8 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    // The inline theme script may add `.dark` before React hydrates <html>.
+    <html lang="es" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

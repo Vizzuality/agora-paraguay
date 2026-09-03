@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import {
   ChevronDown,
   CircleAlert,
@@ -13,7 +13,7 @@ import {
 import type { ReactNode } from 'react';
 
 import { StatCard } from '@/components/stat-card';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -63,6 +63,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Meter } from '@/components/ui/meter';
@@ -125,7 +126,9 @@ function UiKitPage() {
         <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
           <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
             <h1 className="text-xl font-bold">Kit de interfaz</h1>
-            <ThemeToggle />
+            <ClientOnly fallback={<ThemeTogglePlaceholder />}>
+              <ThemeToggle />
+            </ClientOnly>
           </div>
         </header>
 
@@ -259,15 +262,15 @@ function UiKitPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Private-hero field: uppercase caption plus the `underline` trigger. */}
-              <div className="grid gap-1.5">
-                <Label className="text-xs leading-3 font-normal text-muted-foreground uppercase">
-                  Fecha de inicio
-                </Label>
-                <Select defaultValue={DEMO_DATES[0]}>
-                  <SelectTrigger variant="underline" className="w-64">
-                    <SelectValue placeholder="Seleccionar fecha" />
+              {/* Hero field: the label floats onto the border once a value is chosen. */}
+              <div className="relative w-64">
+                <Select>
+                  <SelectTrigger id="demo-floating" className={FLOATING_FIELD_CLASS}>
+                    <SelectValue placeholder=" " />
                   </SelectTrigger>
+                  <FloatingLabel htmlFor="demo-floating" className="bg-background">
+                    Fecha de inicio
+                  </FloatingLabel>
                   <SelectContent>
                     {DEMO_DATES.map((date) => (
                       <SelectItem key={date} value={date}>
