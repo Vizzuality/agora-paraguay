@@ -20,12 +20,11 @@ const OTHER_RING: LngLat[] = [
   [-58.1, -24.9],
 ];
 
-/** Inside RING: Terra Draw rejects holed polygons, which is what makes it invalid. */
-const HOLE: LngLat[] = [
+/** Three positions, unclosed: Terra Draw wants at least four, which makes it invalid. */
+const OPEN_RING: LngLat[] = [
   [-57.58, -25.28],
   [-57.58, -25.26],
   [-57.56, -25.26],
-  [-57.58, -25.28],
 ];
 
 function feature(name: string, rings: LngLat[][] = [RING]): UploadFeature {
@@ -62,12 +61,12 @@ describe('importReplacingFeatures', () => {
     const draw = startedDraw();
     importReplacingFeatures(draw, [feature('Anterior')]);
 
-    const outcome = importReplacingFeatures(draw, [feature('Con hueco', [RING, HOLE])]);
+    const outcome = importReplacingFeatures(draw, [feature('Abierta', [OPEN_RING])]);
 
     expect(outcome.accepted).toEqual([]);
     expect(outcome.rejectionWarnings).toHaveLength(1);
-    expect(outcome.rejectionWarnings[0].featureName).toBe('Con hueco');
-    expect(outcome.rejectionWarnings[0].message).toContain('"Con hueco" fue rechazado');
+    expect(outcome.rejectionWarnings[0].featureName).toBe('Abierta');
+    expect(outcome.rejectionWarnings[0].message).toContain('"Abierta" fue rechazado');
     expect(outcome.polygons).toEqual([]);
   });
 
@@ -76,11 +75,11 @@ describe('importReplacingFeatures', () => {
 
     const outcome = importReplacingFeatures(draw, [
       feature('Válida', [OTHER_RING]),
-      feature('Con hueco', [RING, HOLE]),
+      feature('Abierta', [OPEN_RING]),
     ]);
 
     expect(outcome.accepted.map((accepted) => accepted.properties.name)).toEqual(['Válida']);
-    expect(outcome.rejectionWarnings.map((warning) => warning.featureName)).toEqual(['Con hueco']);
+    expect(outcome.rejectionWarnings.map((warning) => warning.featureName)).toEqual(['Abierta']);
     expect(outcome.polygons.map((polygon) => polygon.properties.name)).toEqual(['Válida']);
   });
 });
@@ -120,14 +119,14 @@ describe('restoreFeatures', () => {
 
   it('returns only what Terra Draw accepted', () => {
     const [polygon] = survivors();
-    const holed = {
+    const open = {
       ...polygon,
       id: crypto.randomUUID(),
-      geometry: { ...polygon.geometry, coordinates: [RING, HOLE] },
+      geometry: { ...polygon.geometry, coordinates: [OPEN_RING] },
     } as DrawnPolygon;
     const draw = startedDraw();
 
-    const restored = restoreFeatures(draw, [polygon, holed]);
+    const restored = restoreFeatures(draw, [polygon, open]);
 
     expect(restored.map((item) => item.id)).toEqual([polygon.id]);
   });

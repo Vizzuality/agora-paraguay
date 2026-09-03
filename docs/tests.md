@@ -152,7 +152,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - handles a concave ring: inside the L, outside its notch
 - rejects a point aligned with an edge but beyond the ring
 
-### `tests/unit/lib/map/terra-draw-api.test.ts` (7)
+### `tests/unit/lib/map/terra-draw-api.test.ts` (6)
 
 **terra-draw API**
 
@@ -164,7 +164,6 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - accepts a Polygon and keeps custom properties through getSnapshot
 - returns per-feature validations and still adds the valid features
 - rejects MultiPolygons, which is why uploads explode them
-- rejects polygons with holes, which is why uploads skip them
 - rejects coordinates with more than 9 decimals, which is why uploads round them
 
 ### `tests/unit/lib/map/terra-draw-compatibility.test.ts` (1)
@@ -194,31 +193,25 @@ logic modules are unit-tested, behaviour is e2e-tested.
 
 - repairs a hand-edited URL instead of passing invalid values to MapLibre
 
-### `tests/unit/lib/upload/normalize.test.ts` (24)
+### `tests/unit/lib/upload/normalize.test.ts` (21)
 
 **MultiPolygon explosion**
 
 - explodes a MultiPolygon into independent polygons with (i/n) names
 - keeps the plain name for a single-part MultiPolygon
-- keeps the hole-free parts when one part of a MultiPolygon has holes
-
-**holes**
-
-- skips a holed polygon with a warning naming it, keeping its siblings
-- errors when every polygon is holed, mentioning the holes
 
 **coordinate repair**
 
 - caps precision at 9 decimals, which the store enforces
 - drops z and m values
 - closes an unclosed ring
-- rejects the whole file when any coordinate is outside lon/lat range
 
 **Paraguay bounds**
 
 - rejects valid lng/lat geometry outside Paraguay
 - rejects small projected coordinates that slip the world-range check
 - rejects the whole file when one polygon of several strays outside
+- rejects the whole file when only an interior ring strays outside
 
 **naming**
 
@@ -228,7 +221,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 **non-polygon input**
 
 - counts skipped points and lines into one warning
-- recurses one level into a GeometryCollection and skips deeper nesting
+- recurses into nested GeometryCollections
 - errors naming what was found when nothing is importable
 - errors on an empty FeatureCollection
 
@@ -286,7 +279,6 @@ network access. Binary upload fixtures are regenerated with
 - an upload replaces everything already on the map
 - imports a KMZ with names from the KML inside
 - imports a UTM 21S shapefile, reprojected via its .prj
-- skips holed polygons with a warning naming them
 - a failed upload keeps the polygons already on the map
 - rejects a corrupt zip with a readable error
 - loses the upload on reload
