@@ -51,9 +51,9 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   // The hero mini map renders the analysed parcel over the (stubbed) satellite basemap.
   await expect(mapCanvas(page)).toBeVisible();
 
-  // The submitted areas are listed, read-only, under their generated names — and both
-  // polygons made it, which the selection page no longer shows.
-  const areas = page.getByRole('list').getByRole('listitem');
+  // The submitted areas appear as the hero's parcel tabs under their generated names —
+  // and both polygons made it, which the selection page no longer shows.
+  const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await expect(areas).toHaveText(['Área dibujada 1', 'Área dibujada 2']);
 
   // The navbar offers the way back and the login entry point (Figma node 5180:12072).

@@ -178,24 +178,26 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
       <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
       <div className="relative min-w-0 flex-1">
         <ScrollArea viewportRef={stripRef}>
-          <div className="flex gap-5 px-4">
+          {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
+          <ul className="flex gap-5 px-4">
             {parcels.map((parcel, index) => (
-              <button
-                key={parcel}
-                type="button"
-                aria-current={index === activeIndex || undefined}
-                onClick={() => setActiveIndex(index)}
-                className={cn(
-                  'shrink-0 cursor-pointer py-2 text-sm whitespace-nowrap',
-                  index === activeIndex
-                    ? 'border-b-[3px] border-primary text-primary'
-                    : 'text-accent-foreground',
-                )}
-              >
-                {parcel}
-              </button>
+              <li key={parcel} className="shrink-0">
+                <button
+                  type="button"
+                  aria-current={index === activeIndex || undefined}
+                  onClick={() => setActiveIndex(index)}
+                  className={cn(
+                    'cursor-pointer py-2 text-sm whitespace-nowrap',
+                    index === activeIndex
+                      ? 'border-b-[3px] border-primary text-primary'
+                      : 'text-accent-foreground',
+                  )}
+                >
+                  {parcel}
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
           {/* Mounting the horizontal bar is what enables x-overflow in Radix; the arrows
               and trackpad do the scrolling, so it stays invisible. */}
           <ScrollBar orientation="horizontal" className="hidden" />
