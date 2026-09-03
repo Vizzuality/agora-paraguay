@@ -60,11 +60,10 @@ export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
  * TODO(mock-analysis-options): invented contract, not agreed with the API. Replace when
  * the analysis endpoint exposes its parameters (grep `mock-analysis-options`).
  *
- * The option lists behind the analysis hero dropdowns (AGP-29). Every list has the same
- * shape — `{ value, label }` — so the hero renders them all the same way. `value` is the
- * stable id a selection is stored under; `label` is what the user sees. Date lists keep
- * ISO `YYYY-MM-DD` values so they sort lexically, with the display form in `label`.
- * `periodo` feeds both bounds of the productivo date range.
+ * Every list has the same shape — `{ value, label }` — so the hero renders them all the
+ * same way. `value` is the stable id a selection is stored under; `label` is what the
+ * user sees. Date lists keep ISO `YYYY-MM-DD` values so they sort lexically, with the
+ * display form in `label`. `periodo` feeds both bounds of the productivo date range.
  */
 const analysisOptionSchema = z.object({ value: z.string().min(1), label: z.string().min(1) });
 

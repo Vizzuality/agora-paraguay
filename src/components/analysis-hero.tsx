@@ -14,7 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { optionsFor, resolveAnalysisFilters, type AnalysisFilterKey } from '@/lib/analysis/filters';
+import {
+  isPeriodOptionDisabled,
+  optionsFor,
+  resolveAnalysisFilters,
+  type AnalysisFilterKey,
+} from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
   scrollEdges,
@@ -85,6 +90,10 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
           options={options ? optionsFor(field.key, options) : []}
           value={resolved?.[field.key] ?? ''}
           onChange={(value) => setFilter({ key: field.key, value })}
+          // The period bounds constrain each other: the start never passes the end.
+          isDisabled={(value) =>
+            resolved !== null && isPeriodOptionDisabled(field.key, value, resolved)
+          }
           riesgo={riesgo}
         />
       ))}
@@ -233,12 +242,14 @@ function HeroSelect({
   options,
   value,
   onChange,
+  isDisabled,
   riesgo,
 }: Readonly<{
   label: string;
   options: AnalysisOption[];
   value: string;
   onChange: (value: string) => void;
+  isDisabled: (value: string) => boolean;
   riesgo: RiesgoTab;
 }>) {
   const id = useId();
@@ -264,7 +275,7 @@ function HeroSelect({
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value} disabled={isDisabled(option.value)}>
               {option.label}
             </SelectItem>
           ))}

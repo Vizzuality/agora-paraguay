@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   EMPTY_ANALYSIS_FILTERS,
+  isPeriodOptionDisabled,
   optionsFor,
   optionValues,
   resolveAnalysisFilters,
@@ -89,5 +90,32 @@ describe('resolveAnalysisFilters', () => {
     );
 
     expect(resolved).toMatchObject({ fechaInicio: '2026-07-01', fechaFin: '2026-07-01' });
+  });
+});
+
+describe('isPeriodOptionDisabled', () => {
+  const resolved = resolveAnalysisFilters(
+    { ...EMPTY_ANALYSIS_FILTERS, fechaInicio: '2020-01-01', fechaFin: '2020-01-01' },
+    OPTIONS,
+  );
+
+  it('disables a start later than the chosen end', () => {
+    expect(isPeriodOptionDisabled('fechaInicio', '2026-07-01', resolved)).toBe(true);
+    expect(isPeriodOptionDisabled('fechaInicio', '2015-01-01', resolved)).toBe(false);
+  });
+
+  it('disables an end earlier than the chosen start', () => {
+    expect(isPeriodOptionDisabled('fechaFin', '2015-01-01', resolved)).toBe(true);
+    expect(isPeriodOptionDisabled('fechaFin', '2026-07-01', resolved)).toBe(false);
+  });
+
+  it('never disables the currently resolved value, so the select can still show it', () => {
+    expect(isPeriodOptionDisabled('fechaInicio', '2020-01-01', resolved)).toBe(false);
+    expect(isPeriodOptionDisabled('fechaFin', '2020-01-01', resolved)).toBe(false);
+  });
+
+  it('leaves every other filter alone', () => {
+    expect(isPeriodOptionDisabled('cultivo', 'maiz', resolved)).toBe(false);
+    expect(isPeriodOptionDisabled('fechaSiembra', '2026-06-18', resolved)).toBe(false);
   });
 });

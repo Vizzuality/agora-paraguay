@@ -55,6 +55,26 @@ function defaultValue(key: AnalysisFilterKey, values: string[]): string {
 }
 
 /**
+ * Whether a period option must be greyed out given the other bound: the start can never
+ * be later than the end. Only `fechaInicio` and `fechaFin` are constrained; every other
+ * filter returns `false`. ISO `YYYY-MM-DD` values compare lexically.
+ */
+export function isPeriodOptionDisabled(
+  key: AnalysisFilterKey,
+  value: string,
+  resolved: ResolvedAnalysisFilters,
+): boolean {
+  switch (key) {
+    case 'fechaInicio':
+      return value > resolved.fechaFin;
+    case 'fechaFin':
+      return value < resolved.fechaInicio;
+    default:
+      return false;
+  }
+}
+
+/**
  * Turns the stored selection into what the dropdowns show. Runs on every render of the
  * hero, against whatever the options query returned: a pick that is no longer offered
  * falls back to the default rather than leaving the select blank.
