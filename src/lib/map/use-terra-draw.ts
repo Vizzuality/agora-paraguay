@@ -1,10 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
-import { TerraDraw, TerraDrawPolygonMode, type TerraDrawEventListeners } from 'terra-draw';
+import { TerraDraw, type TerraDrawEventListeners } from 'terra-draw';
 import { TerraDrawMapLibreGLAdapter } from 'terra-draw-maplibre-gl-adapter';
 
 import { PARCEL_STYLES } from '@/lib/map/draw-styles';
+import { HoleTolerantPolygonMode } from '@/lib/map/polygon-mode';
 import { bindDrawAtom, drawModeAtom, reportGeometryAtom } from '@/store/draw';
 
 /**
@@ -35,7 +36,12 @@ export function useTerraDraw() {
   // Every dependency here is a stable setter, so this effect only re-runs when the map
   // itself changes. Anything geometry-shaped in this list would tear down and rebuild
   // Terra Draw on every vertex drag.
-  useEffect(() => {
+  //
+  // Layout, not passive: react-map-gl removes the map from a passive cleanup, and on
+  // unmount every layout cleanup (mutation phase) runs before any passive one — so
+  // this teardown reaches `stop()` while the map is still alive instead of throwing
+  // against a removed one.
+  useLayoutEffect(() => {
     const map = mapRef?.getMap();
 
     if (!map) return;
@@ -46,7 +52,7 @@ export function useTerraDraw() {
     const start = () => {
       started = new TerraDraw({
         adapter: new TerraDrawMapLibreGLAdapter({ map }),
-        modes: [new TerraDrawPolygonMode({ styles: PARCEL_STYLES })],
+        modes: [new HoleTolerantPolygonMode({ styles: PARCEL_STYLES })],
       });
 
       const instance = started;
@@ -93,17 +99,9 @@ export function useTerraDraw() {
       map.off('load', start);
       bind(null);
       detach?.();
-      // Clearing before stopping cancels the adapter's pending animation-frame render,
-      // which `stop()` leaves queued against sources it has just removed. Both calls
-      // mutate the map's style unguarded, and when a route change unmounts the tree
-      // React runs this cleanup after react-map-gl has already removed the map — on a
-      // dead map the teardown can only throw, and there is nothing left to release.
-      try {
-        if (started?.enabled) started.clear();
-        started?.stop();
-      } catch {
-        // The map was already removed; its listeners died with it.
-      }
+      // `stop()` is idempotent and its `unregister()` already cancels the adapter's
+      // pending animation-frame render before removing the sources.
+      started?.stop();
       setDraw(null);
     };
   }, [mapRef, bind, reportGeometry]);

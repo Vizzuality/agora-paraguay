@@ -92,18 +92,6 @@ test('imports a UTM 21S shapefile, reprojected via its .prj', async ({ page }) =
   await expect(uploadStatus).toHaveText('Se importaron 2 áreas de farms-utm21s.zip.');
 });
 
-test('skips holed polygons with a warning naming them', async ({ page }) => {
-  const { uploadStatus, notices } = controls(page);
-
-  await upload(page, 'farms-holes.geojson');
-
-  await expect(uploadStatus).toHaveText('Se importó 1 área de farms-holes.geojson.');
-  await expect(notices).toContainText('"Laguna Grande" tiene anillos interiores (huecos)');
-
-  await notices.getByRole('button', { name: 'Descartar los avisos de subida' }).click();
-  await expect(notices).toBeHidden();
-});
-
 // An upload starts the selection over even when it fails: the previous polygons go
 // regardless of whether anything from the new file lands.
 test('a failed upload clears the polygons already on the map', async ({ page }) => {

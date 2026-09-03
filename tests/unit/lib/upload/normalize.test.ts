@@ -75,62 +75,6 @@ describe('MultiPolygon explosion', () => {
 
     expect(features.map((item) => item.properties.name)).toEqual(['Campo']);
   });
-
-  it('keeps the hole-free parts when one part of a MultiPolygon has holes', () => {
-    const inner = [
-      [0.2, 0.2],
-      [0.2, 0.4],
-      [0.4, 0.4],
-      [0.2, 0.2],
-    ];
-    const { features, warnings } = normalizeFeatures(
-      collection(
-        feature(
-          { type: 'MultiPolygon', coordinates: [[square(0)], [square(10), inner], [square(20)]] },
-          { name: 'Estancia' },
-        ),
-      ),
-    );
-
-    // The suffix is computed over all parts, so the skipped one keeps its slot.
-    expect(features.map((item) => item.properties.name)).toEqual([
-      'Estancia (1/3)',
-      'Estancia (3/3)',
-    ]);
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0].featureName).toBe('Estancia (2/3)');
-    expect(warnings[0].message).toContain('huecos');
-  });
-});
-
-describe('holes', () => {
-  it('skips a holed polygon with a warning naming it, keeping its siblings', () => {
-    const inner = [
-      [0.2, 0.2],
-      [0.2, 0.4],
-      [0.4, 0.4],
-      [0.2, 0.2],
-    ];
-    const { features, warnings } = normalizeFeatures(
-      collection(polygon({ name: 'Holed' }, square(), inner), polygon({ name: 'Clean' })),
-    );
-
-    expect(features.map((item) => item.properties.name)).toEqual(['Clean']);
-    expect(warnings[0].featureName).toBe('Holed');
-  });
-
-  it('errors when every polygon is holed, mentioning the holes', () => {
-    const inner = [
-      [0.2, 0.2],
-      [0.2, 0.4],
-      [0.4, 0.4],
-      [0.2, 0.2],
-    ];
-
-    expect(code(() => normalizeFeatures(collection(polygon({}, square(), inner))))).toBe(
-      'no-polygons',
-    );
-  });
 });
 
 describe('coordinate repair', () => {
@@ -160,14 +104,6 @@ describe('coordinate repair', () => {
     expect(ring[0]).toEqual(ring[ring.length - 1]);
     expect(ring).toHaveLength(open.length + 1);
   });
-
-  it('rejects the whole file when any coordinate is outside lon/lat range', () => {
-    const projected = square().map(([lng, lat]) => [lng + 435000, lat + 7200000]);
-
-    expect(code(() => normalizeFeatures(collection(polygon({}), polygon({}, projected))))).toBe(
-      'bad-crs',
-    );
-  });
 });
 
 describe('Paraguay bounds', () => {
@@ -193,6 +129,14 @@ describe('Paraguay bounds', () => {
     const outside = square().map(([lng, lat]) => [lng + 30, lat]);
 
     expect(code(() => normalizeFeatures(collection(polygon({}), polygon({}, outside))))).toBe(
+      'out-of-paraguay',
+    );
+  });
+
+  it('rejects the whole file when only an interior ring strays outside', () => {
+    const strayHole = square().map(([lng, lat]) => [lng + 30, lat]);
+
+    expect(code(() => normalizeFeatures(collection(polygon({}, square(), strayHole))))).toBe(
       'out-of-paraguay',
     );
   });
@@ -248,7 +192,7 @@ describe('non-polygon input', () => {
     expect(warnings).toEqual([{ message: 'Se omitieron 2 entidades que no son polígonos.' }]);
   });
 
-  it('recurses one level into a GeometryCollection and skips deeper nesting', () => {
+  it('recurses into nested GeometryCollections', () => {
     const { features, warnings } = normalizeFeatures(
       collection(
         feature(
@@ -256,7 +200,10 @@ describe('non-polygon input', () => {
             type: 'GeometryCollection',
             geometries: [
               { type: 'Polygon', coordinates: [square()] },
-              { type: 'GeometryCollection', geometries: [] },
+              {
+                type: 'GeometryCollection',
+                geometries: [{ type: 'Polygon', coordinates: [square(10)] }],
+              },
             ],
           },
           { name: 'Mixed' },
@@ -264,8 +211,8 @@ describe('non-polygon input', () => {
       ),
     );
 
-    expect(features).toHaveLength(1);
-    expect(warnings).toEqual([{ message: 'Se omitió 1 entidad que no es un polígono.' }]);
+    expect(features.map((item) => item.properties.name)).toEqual(['Mixed (1/2)', 'Mixed (2/2)']);
+    expect(warnings).toEqual([]);
   });
 
   it('errors naming what was found when nothing is importable', () => {
