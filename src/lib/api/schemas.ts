@@ -57,6 +57,31 @@ export const parcelCollectionSchema = z.object({
 export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
 
 /**
+ * TODO(mock-analysis-options): invented contract, not agreed with the API. Replace when
+ * the analysis endpoint exposes its parameters (grep `mock-analysis-options`).
+ *
+ * Every list has the same shape — `{ value, label }` — so the hero renders them all the
+ * same way. `value` is the stable id a selection is stored under; `label` is what the
+ * user sees. Date lists keep ISO `YYYY-MM-DD` values so they sort lexically, with the
+ * display form in `label`. `periodo` feeds both bounds of the productivo date range.
+ */
+const analysisOptionSchema = z.object({ value: z.string().min(1), label: z.string().min(1) });
+
+const dateOptionSchema = analysisOptionSchema.extend({ value: z.iso.date() });
+
+export type AnalysisOption = z.infer<typeof analysisOptionSchema>;
+
+export const analysisOptionsSchema = z.object({
+  fechasSiembra: z.array(dateOptionSchema).min(1),
+  fechasAnalisis: z.array(dateOptionSchema).min(1),
+  cultivos: z.array(analysisOptionSchema).min(1),
+  ciclos: z.array(analysisOptionSchema).min(1),
+  periodo: z.array(dateOptionSchema).min(2),
+});
+
+export type AnalysisOptions = z.infer<typeof analysisOptionsSchema>;
+
+/**
  * Auth contract. The GMV auth backend does not exist yet (AGP-22), so this shape is a
  * placeholder pending the agreed contract — same status as the parcel schema above.
  * The session carries only what the UI needs to show an identified state.

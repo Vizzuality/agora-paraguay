@@ -1,62 +1,110 @@
-import { useAtom } from 'jotai';
-import { ArrowLeft, ArrowRight, Calendar, ChevronDown, List } from 'lucide-react';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { ArrowLeft, ArrowRight, List } from 'lucide-react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
+import {
+  FLOATING_CHIP_CLASS,
+  FLOATING_FIELD_CLASS,
+  FloatingLabel,
+} from '@/components/ui/floating-label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  isPeriodOptionDisabled,
+  optionsFor,
+  resolveAnalysisFilters,
+  type AnalysisFilterKey,
+} from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
   scrollEdges,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
+import { analysisQueries } from '@/lib/api/queries';
+import type { AnalysisOption } from '@/lib/api/schemas';
 import { cn } from '@/lib/utils';
 import type { RiesgoTab } from '@/routes/analisis';
-import { activeParcelTabAtom } from '@/store/analysis';
+import { activeParcelTabAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
 
+/**
+ * `riesgo` doubles as the public/private switch: sanitario is the public hero with the
+ * four analysis dropdowns, productivo the logged-in one with only the period bounds.
+ */
 export function AnalysisHero({
   riesgo,
   parcels,
 }: Readonly<{ riesgo: RiesgoTab; parcels: string[] }>) {
-  const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
-
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
       <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">Parcela</span>
-          <ParcelTabs parcels={parcels} />
-        </div>
+        <ParcelTabs parcels={parcels} />
 
-        <div className={cn('gap-6', riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col')}>
-          {fields.map((field) => (
-            <HeroField key={field.label} {...field} />
-          ))}
-        </div>
+        <HeroFilters riesgo={riesgo} />
       </div>
     </div>
   );
 }
 
-type HeroFieldProps = {
-  label: string;
-  value: string;
-  icon: 'calendar' | 'chevron';
-};
+type HeroSelectSpec = { key: AnalysisFilterKey; label: string };
 
-const SANITARIO_FIELDS: HeroFieldProps[] = [
-  { label: 'Fecha de siembra', value: '18/06/2026', icon: 'calendar' },
-  { label: 'Fecha del análisis', value: '18/08/2026', icon: 'calendar' },
-  { label: 'Cultivo', value: 'Soja', icon: 'chevron' },
-  { label: 'Ciclo', value: 'Lorem ipsum', icon: 'chevron' },
+const SANITARIO_FIELDS: HeroSelectSpec[] = [
+  { key: 'fechaSiembra', label: 'Fecha de siembra' },
+  { key: 'fechaAnalisis', label: 'Fecha del análisis' },
+  { key: 'cultivo', label: 'Cultivo' },
+  { key: 'ciclo', label: 'Ciclo' },
 ];
 
-const PRODUCTIVO_FIELDS: HeroFieldProps[] = [
-  { label: 'Fecha de inicio', value: '01/01/2015', icon: 'calendar' },
-  { label: 'Fecha fin', value: '01/07/2026', icon: 'calendar' },
+const PRODUCTIVO_FIELDS: HeroSelectSpec[] = [
+  { key: 'fechaInicio', label: 'Fecha de inicio' },
+  { key: 'fechaFin', label: 'Fecha fin' },
 ];
+
+/**
+ * The dropdowns. Options load client-side after hydration like every query here, so
+ * there is a first render without them: the selects show a loading placeholder,
+ * disabled, instead of a Suspense boundary the rest of the app does not use.
+ */
+function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
+  const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
+  const { data: options } = useQuery(analysisQueries.options());
+  const selected = useAtomValue(analysisFiltersAtom);
+  const setFilter = useSetAtom(setAnalysisFilterAtom);
+  const resolved = options ? resolveAnalysisFilters(selected, options) : null;
+
+  return (
+    <div
+      className={cn(
+        'gap-x-3 gap-y-6',
+        riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col',
+      )}
+    >
+      {fields.map((field) => (
+        <HeroSelect
+          key={field.key}
+          label={field.label}
+          options={options ? optionsFor(field.key, options) : []}
+          value={resolved?.[field.key] ?? ''}
+          onChange={(value) => setFilter({ key: field.key, value })}
+          // The period bounds constrain each other: the start never passes the end.
+          isDisabled={(value) =>
+            resolved !== null && isPeriodOptionDisabled(field.key, value, resolved)
+          }
+        />
+      ))}
+    </div>
+  );
+}
 
 /** Satellite mini map in the thumbnail slot. The area figure arrives with the API. */
 function MiniMapThumbnail() {
@@ -70,7 +118,11 @@ function MiniMapThumbnail() {
   );
 }
 
-/** Not Radix Tabs on purpose: `role="tab"` requires tab panels this page does not have. */
+/**
+ * Not Radix Tabs on purpose: `role="tab"` requires tab panels this page does not have.
+ * A fieldset names the group; its legend, absolutely positioned, stops being a "rendered
+ * legend" and becomes the same border chip the floating labels use.
+ */
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   const [storedIndex, setActiveIndex] = useAtom(activeParcelTabAtom);
   // Re-analysing a smaller selection can leave a stale index behind: clamp to the first.
@@ -122,27 +174,30 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   };
 
   return (
-    <div className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-background py-1 pr-1">
+    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1">
+      <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
       <div className="relative min-w-0 flex-1">
         <ScrollArea viewportRef={stripRef}>
-          <div className="flex gap-5 px-4">
+          {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
+          <ul className="flex gap-5 px-4">
             {parcels.map((parcel, index) => (
-              <button
-                key={parcel}
-                type="button"
-                aria-current={index === activeIndex || undefined}
-                onClick={() => setActiveIndex(index)}
-                className={cn(
-                  'shrink-0 cursor-pointer py-2 text-sm whitespace-nowrap',
-                  index === activeIndex
-                    ? 'border-b-[3px] border-primary text-primary'
-                    : 'text-accent-foreground',
-                )}
-              >
-                {parcel}
-              </button>
+              <li key={parcel} className="shrink-0">
+                <button
+                  type="button"
+                  aria-current={index === activeIndex || undefined}
+                  onClick={() => setActiveIndex(index)}
+                  className={cn(
+                    'cursor-pointer py-2 text-sm whitespace-nowrap',
+                    index === activeIndex
+                      ? 'border-b-[3px] border-primary text-primary'
+                      : 'text-accent-foreground',
+                  )}
+                >
+                  {parcel}
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
           {/* Mounting the horizontal bar is what enables x-overflow in Radix; the arrows
               and trackpad do the scrolling, so it stays invisible. */}
           <ScrollBar orientation="horizontal" className="hidden" />
@@ -150,7 +205,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         {!atEnd && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-background to-transparent"
+            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-card to-transparent"
           />
         )}
       </div>
@@ -162,7 +217,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atStart}
         onClick={() => scroll('left')}
         aria-label="Parcelas anteriores"
-        className="size-8 rounded-full bg-background"
+        className="size-8 rounded-full"
       >
         <ArrowLeft />
       </Button>
@@ -171,7 +226,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         variant="ghost"
         size="icon"
         aria-label="Ver lista de parcelas"
-        className="size-8 rounded-full bg-background"
+        className="size-8 rounded-full"
       >
         <List />
       </Button>
@@ -182,25 +237,51 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atEnd}
         onClick={() => scroll('right')}
         aria-label="Parcelas siguientes"
-        className="size-8 rounded-full bg-background"
+        className="size-8 rounded-full"
       >
         <ArrowRight />
       </Button>
-    </div>
+    </fieldset>
   );
 }
 
-/** A styled div, not a `readOnly` input: a focusable field that ignores typing reads as broken. */
-function HeroField({ label, value, icon }: Readonly<HeroFieldProps>) {
-  const Icon = icon === 'calendar' ? Calendar : ChevronDown;
+/**
+ * `<FloatingLabel htmlFor>` gives the trigger its accessible name — the e2e suite locates
+ * by role and name, never by test id. The label rests inside the field while empty
+ * (options not loaded yet) and floats onto the border once a value resolves.
+ */
+function HeroSelect({
+  label,
+  options,
+  value,
+  onChange,
+  isDisabled,
+}: Readonly<{
+  label: string;
+  options: AnalysisOption[];
+  value: string;
+  onChange: (value: string) => void;
+  isDisabled: (value: string) => boolean;
+}>) {
+  const id = useId();
+  const loading = options.length === 0;
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium">{label}</span>
-      <div className="flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-base">
-        <span>{value}</span>
-        <Icon aria-hidden className="size-4 text-muted-foreground" />
-      </div>
+    <div className="relative">
+      <Select value={value} onValueChange={onChange} disabled={loading}>
+        {/* The label is the placeholder, so the value slot stays blank while empty. */}
+        <SelectTrigger id={id} className={FLOATING_FIELD_CLASS}>
+          <SelectValue placeholder=" " />
+        </SelectTrigger>
+        <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value} disabled={isDisabled(option.value)}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

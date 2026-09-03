@@ -6,13 +6,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* A floating label's resting state: its `.peer` field is empty, closed and unfocused.
+   Radix Select flags empty with `data-placeholder`; native inputs with `:placeholder-shown`. */
+@custom-variant field-empty (&:is(
+  :where(.peer)[data-placeholder]:not([data-state=open]):not(:focus-visible) ~ *,
+  :where(.peer):placeholder-shown:not(:focus-visible) ~ *
+));
+
 /*
-  Tokens from the Ágora design system (Figma "shadcn" variable collection, slate-based):
-  https://www.figma.com/design/Q3naD5iGjP9PO9zY5qbat1/Agora — brand deviations from the
-  stock slate theme are --primary (navy), --muted-foreground and --card. The kit's
-  hover:primary / hover:secondary variables are not tokens here on purpose: the kit
-  itself marks them as placeholders, and hover shades come from Tailwind modifiers
-  (hover:bg-primary/90) instead.
+  Tokens from the Ágora design system: the Figma "1.0 Theme" variable collection, which
+  carries a light and a dark mode (https://www.figma.com/design/Q3naD5iGjP9PO9zY5qbat1/Agora,
+  variable set 137:1573). Both modes are mirrored below, hover shades included — they are
+  real tokens in the collection (hover:primary etc.), so components use `*-hover`
+  utilities rather than opacity modifiers.
 */
 @theme inline {
   --color-background: var(--background);
@@ -23,14 +29,17 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-hover: var(--destructive-hover);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -54,23 +63,26 @@
   --radius: 0.5rem; /* Figma: var(--radius) = 8 */
   --background: #ffffff;
   --foreground: #020617; /* slate-950 */
-  --card: #edf1f7; /* brand tint — not stock white */
+  --card: #f1f5f9; /* slate-100 — aliases secondary in the Figma theme */
   --card-foreground: #020617;
   --popover: #ffffff;
   --popover-foreground: #020617;
   --primary: #13386e; /* brand navy — overrides the kit's slate-900 alias */
   --primary-foreground: #f8fafc; /* slate-50 */
+  --primary-hover: #1e293b; /* slate-800 */
   --secondary: #f1f5f9; /* slate-100 */
   --secondary-foreground: #0f172a; /* slate-900 */
+  --secondary-hover: #e2e8f0; /* slate-200 */
   --muted: #f1f5f9;
   --muted-foreground: #5e6e86; /* brand blue-grey — not stock slate-500 */
   --accent: #f1f5f9;
   --accent-foreground: #0f172a;
   --destructive: #dc1313;
   --destructive-foreground: #f8fafc;
+  --destructive-hover: #dc2626; /* red-600 */
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
-  --ring: #94a3b8; /* slate-400 */
+  --ring: #64748b; /* slate-500 */
   /*
     Categorical pair taken from the mockups. Validated: green vs blue separates at
     deltaE 14.0 under deuteranopia and 15.3 for normal vision.
@@ -94,30 +106,33 @@
 }
 
 /*
-  Dark values follow the kit's slate aliases (background slate-950, surfaces slate-800,
-  destructive red-900). The design only overrode --primary for light mode; the dark
-  --primary below keeps the kit's slate-50 alias until the design says otherwise.
+  Dark values come from the Figma "1.0 Theme" variable collection (dark mode): the page
+  goes brand navy rather than slate, surfaces are a deeper navy, and borders are white
+  at 30% so they read on any navy.
 */
 .dark {
-  --background: #020617; /* slate-950 */
-  --foreground: #f8fafc; /* slate-50 */
-  --card: #0f172a; /* slate-900 */
-  --card-foreground: #f8fafc;
-  --popover: #0f172a;
+  --background: #13386e; /* brand navy */
+  --foreground: #ffffff;
+  --card: #0f2d58;
+  --card-foreground: #f8fafc; /* slate-50 */
+  --popover: #020617; /* slate-950 */
   --popover-foreground: #f8fafc;
   --primary: #f8fafc;
-  --primary-foreground: #0f172a;
-  --secondary: #1e293b; /* slate-800 */
+  --primary-foreground: #0f172a; /* slate-900 */
+  --primary-hover: #f1f5f9; /* slate-100 */
+  --secondary: #0f2d58;
   --secondary-foreground: #f8fafc;
-  --muted: #1e293b;
+  --secondary-hover: #334155; /* slate-700 */
+  --muted: #1e293b; /* slate-800 */
   --muted-foreground: #94a3b8; /* slate-400 */
   --accent: #1e293b;
   --accent-foreground: #f8fafc;
-  --destructive: #7f1d1d; /* red-900 */
+  --destructive: #dc1313;
   --destructive-foreground: #f8fafc;
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #cbd5e1; /* slate-300 */
+  --destructive-hover: #991b1b; /* red-800 */
+  --border: rgb(255 255 255 / 30%);
+  --input: rgb(255 255 255 / 30%);
+  --ring: #94a3b8; /* slate-400 */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);

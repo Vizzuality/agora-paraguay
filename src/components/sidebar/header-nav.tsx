@@ -2,6 +2,7 @@ import { ClientOnly, getRouteApi, Link } from '@tanstack/react-router';
 import { SquarePen } from 'lucide-react';
 
 import { LoginDialog, UserButton } from '@/components/login-dialog';
+import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,10 @@ export function HeaderNav() {
           </RiskTab>
         ))}
       </div>
+
+      <ClientOnly fallback={<ThemeTogglePlaceholder />}>
+        <ThemeToggle />
+      </ClientOnly>
 
       <ClientOnly fallback={<UserButton />}>
         <LoginDialog />
