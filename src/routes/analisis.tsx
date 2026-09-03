@@ -13,7 +13,6 @@ import { Footer } from '@/components/footer';
 import { LoginCard } from '@/components/login-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
-import { SelectedAreasList } from '@/components/sidebar/selected-areas-list';
 import { Button } from '@/components/ui/button';
 import { polygonName } from '@/lib/map/draw-features';
 import { sessionAtom } from '@/store/auth';
@@ -74,10 +73,6 @@ function AnalysisPage() {
             <ProductivoGate />
           </ClientOnly>
         )}
-
-        <ClientOnly>
-          <SelectedAreasList />
-        </ClientOnly>
       </main>
 
       <Footer />
