@@ -5,7 +5,11 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import {
+  FLOATING_CHIP_CLASS,
+  FLOATING_FIELD_CLASS,
+  FloatingLabel,
+} from '@/components/ui/floating-label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -44,10 +48,7 @@ export function AnalysisHero({
       <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">Parcela</span>
-          <ParcelTabs parcels={parcels} />
-        </div>
+        <ParcelTabs parcels={parcels} />
 
         <HeroFilters riesgo={riesgo} />
       </div>
@@ -82,7 +83,12 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
   const resolved = options ? resolveAnalysisFilters(selected, options) : null;
 
   return (
-    <div className={cn('gap-6', riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col')}>
+    <div
+      className={cn(
+        'gap-x-3 gap-y-6',
+        riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col',
+      )}
+    >
       {fields.map((field) => (
         <HeroSelect
           key={field.key}
@@ -94,7 +100,6 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
           isDisabled={(value) =>
             resolved !== null && isPeriodOptionDisabled(field.key, value, resolved)
           }
-          riesgo={riesgo}
         />
       ))}
     </div>
@@ -113,7 +118,11 @@ function MiniMapThumbnail() {
   );
 }
 
-/** Not Radix Tabs on purpose: `role="tab"` requires tab panels this page does not have. */
+/**
+ * Not Radix Tabs on purpose: `role="tab"` requires tab panels this page does not have.
+ * A fieldset names the group; its legend, absolutely positioned, stops being a "rendered
+ * legend" and becomes the same border chip the floating labels use.
+ */
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   const [storedIndex, setActiveIndex] = useAtom(activeParcelTabAtom);
   // Re-analysing a smaller selection can leave a stale index behind: clamp to the first.
@@ -165,7 +174,8 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   };
 
   return (
-    <div className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-background py-1 pr-1">
+    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1">
+      <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
       <div className="relative min-w-0 flex-1">
         <ScrollArea viewportRef={stripRef}>
           <div className="flex gap-5 px-4">
@@ -193,7 +203,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         {!atEnd && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-background to-transparent"
+            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-card to-transparent"
           />
         )}
       </div>
@@ -205,7 +215,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atStart}
         onClick={() => scroll('left')}
         aria-label="Parcelas anteriores"
-        className="size-8 rounded-full bg-background"
+        className="size-8 rounded-full"
       >
         <ArrowLeft />
       </Button>
@@ -214,7 +224,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         variant="ghost"
         size="icon"
         aria-label="Ver lista de parcelas"
-        className="size-8 rounded-full bg-background"
+        className="size-8 rounded-full"
       >
         <List />
       </Button>
@@ -225,17 +235,18 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atEnd}
         onClick={() => scroll('right')}
         aria-label="Parcelas siguientes"
-        className="size-8 rounded-full bg-background"
+        className="size-8 rounded-full"
       >
         <ArrowRight />
       </Button>
-    </div>
+    </fieldset>
   );
 }
 
 /**
- * `<Label htmlFor>` gives the trigger its accessible name — the e2e suite locates by
- * role and name, never by test id. Empty `options` means the query has not resolved.
+ * `<FloatingLabel htmlFor>` gives the trigger its accessible name — the e2e suite locates
+ * by role and name, never by test id. The label rests inside the field while empty
+ * (options not loaded yet) and floats onto the border once a value resolves.
  */
 function HeroSelect({
   label,
@@ -243,36 +254,24 @@ function HeroSelect({
   value,
   onChange,
   isDisabled,
-  riesgo,
 }: Readonly<{
   label: string;
   options: AnalysisOption[];
   value: string;
   onChange: (value: string) => void;
   isDisabled: (value: string) => boolean;
-  riesgo: RiesgoTab;
 }>) {
   const id = useId();
   const loading = options.length === 0;
-  // Private hero (productivo) uses the Figma underline field and its uppercase caption.
-  const underline = riesgo === 'productivo';
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label
-        htmlFor={id}
-        className={cn(underline && 'text-xs leading-3 font-normal text-muted-foreground uppercase')}
-      >
-        {label}
-      </Label>
+    <div className="relative">
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        <SelectTrigger
-          id={id}
-          className={cn('w-full text-base data-[size=default]:h-10', !underline && 'bg-background')}
-          variant={underline ? 'underline' : 'default'}
-        >
-          <SelectValue placeholder={loading ? 'Cargando…' : `Seleccionar ${label.toLowerCase()}`} />
+        {/* The label is the placeholder, so the value slot stays blank while empty. */}
+        <SelectTrigger id={id} className={FLOATING_FIELD_CLASS}>
+          <SelectValue placeholder=" " />
         </SelectTrigger>
+        <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value} disabled={isDisabled(option.value)}>

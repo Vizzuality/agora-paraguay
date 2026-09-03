@@ -6,6 +6,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* A floating label's resting state: its `.peer` field is empty, closed and unfocused.
+   Radix Select flags empty with `data-placeholder`; native inputs with `:placeholder-shown`. */
+@custom-variant field-empty (&:is(
+  :where(.peer)[data-placeholder]:not([data-state=open]):not(:focus-visible) ~ *,
+  :where(.peer):placeholder-shown:not(:focus-visible) ~ *
+));
+
 /*
   Tokens from the Ágora design system (Figma "shadcn" variable collection, slate-based):
   https://www.figma.com/design/Q3naD5iGjP9PO9zY5qbat1/Agora — brand deviations from the

@@ -1,32 +1,10 @@
 'use client';
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Select as SelectPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils';
-
-/**
- * `default` is stock shadcn. `underline` is the Figma "input / field" used by the
- * private (riesgo productivo) hero: bottom border only, no radius, 16px text, 40px tall.
- */
-const selectTriggerVariants = cva(
-  "flex w-fit items-center justify-between gap-2 whitespace-nowrap transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[placeholder]:text-muted-foreground *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
-  {
-    variants: {
-      variant: {
-        default:
-          'rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/40',
-        underline:
-          'rounded-none border-b border-muted-foreground bg-transparent py-2 pr-3 pl-0 text-base leading-6 text-foreground focus-visible:border-primary data-[size=default]:h-10 data-[size=sm]:h-9',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-    },
-  },
-);
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
@@ -42,20 +20,20 @@ function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.V
 
 function SelectTrigger({
   className,
-  variant = 'default',
   size = 'default',
   children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> &
-  VariantProps<typeof selectTriggerVariants> & {
-    size?: 'sm' | 'default';
-  }) {
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
+  size?: 'sm' | 'default';
+}) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
-      data-variant={variant}
       data-size={size}
-      className={cn(selectTriggerVariants({ variant, className }))}
+      className={cn(
+        "flex w-fit items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
+        className,
+      )}
       {...props}
     >
       {children}
@@ -193,6 +171,5 @@ export {
   SelectScrollUpButton,
   SelectSeparator,
   SelectTrigger,
-  selectTriggerVariants,
   SelectValue,
 };
