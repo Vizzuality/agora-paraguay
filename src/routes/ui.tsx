@@ -103,6 +103,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 export const Route = createFileRoute('/ui')({ component: UiKitPage });
 
+const DEMO_DATES = ['01/01/2015', '01/01/2020', '01/07/2026'];
+
 function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <section className="flex flex-col gap-4">
@@ -254,6 +256,24 @@ function UiKitPage() {
                       <SelectItem value="boqueron">Boquerón</SelectItem>
                       <SelectItem value="alto-paraguay">Alto Paraguay</SelectItem>
                     </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Private-hero field: uppercase caption plus the `underline` trigger. */}
+              <div className="grid gap-1.5">
+                <Label className="text-xs leading-3 font-normal text-muted-foreground uppercase">
+                  Fecha de inicio
+                </Label>
+                <Select defaultValue={DEMO_DATES[0]}>
+                  <SelectTrigger variant="underline" className="w-64">
+                    <SelectValue placeholder="Seleccionar fecha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEMO_DATES.map((date) => (
+                      <SelectItem key={date} value={date}>
+                        {date}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
