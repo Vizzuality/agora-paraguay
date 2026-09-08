@@ -17,10 +17,13 @@ import {
 /**
  * Where every parser converges: validated GeoJSON in, store-ready polygons out.
  *
- * Terra Draw's store only takes `Polygon` features with 9-decimal coordinates and no
- * interior rings (pinned by `tests/unit/lib/map/terra-draw-api.test.ts`), while real
- * uploads carry MultiPolygons, z values, unclosed rings and holes. This module closes
- * that gap — pure and node-testable, which is why the browser-only parsers stay thin.
+ * Terra Draw's store only takes `Polygon` features with 9-decimal coordinates (pinned by
+ * `tests/unit/lib/map/terra-draw-api.test.ts`), while real uploads carry MultiPolygons,
+ * z values and unclosed rings. This module closes that gap — pure and node-testable,
+ * which is why the browser-only parsers stay thin. Interior rings pass through: the
+ * app's polygon mode (`src/lib/map/polygon-mode.ts`) accepts them.
+ *
+ * The one product rule enforced here is that every coordinate lies inside Paraguay.
  */
 
 /** Terra Draw rejects coordinates with more than 9 decimals (≈ 0.1 mm). */
@@ -38,7 +41,6 @@ type Ring = number[][];
 type SkipCounts = {
   points: number;
   lines: number;
-  nested: number;
 };
 
 /** Validates a parsed-but-untrusted GeoJSON value, then normalises it. */
@@ -87,8 +89,7 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
 
   const features: UploadFeature[] = [];
   const warnings: UploadWarning[] = [];
-  const skipped: SkipCounts = { points: 0, lines: 0, nested: 0 };
-  let holed = 0;
+  const skipped: SkipCounts = { points: 0, lines: 0 };
   let unnamed = 0;
 
   for (const input of inputs) {
@@ -99,51 +100,27 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
     const name = featureName(input.properties) ?? `Polígono ${++unnamed}`;
 
     parts.forEach((rings, index) => {
-      // MultiPolygon parts become independent polygons (user-confirmed): the suffix is
-      // computed over all parts, so a skipped holed part still has a nameable slot.
+      // MultiPolygon parts become independent polygons (user-confirmed).
       const partName = parts.length > 1 ? `${name} (${index + 1}/${parts.length})` : name;
-
-      if (rings.length > 1) {
-        holed += 1;
-        warnings.push({
-          featureName: partName,
-          // Skipped rather than stripped: silently deleting interior rings would
-          // inflate the farm's area for any future analysis.
-          message: `"${partName}" tiene anillos interiores (huecos) y se omitió — hay que eliminarlos en los datos de origen.`,
-        });
-        return;
-      }
 
       features.push({
         id: crypto.randomUUID(),
         type: 'Feature',
         geometry: {
           type: 'Polygon',
-          coordinates: [closeRing(cleanRing(rings[0]))],
+          // Outer ring first, then holes — all kept.
+          coordinates: rings.map((ring) => closeRing(cleanRing(ring))),
         },
         properties: { mode: 'polygon', origin: 'upload', name: partName },
       });
     });
   }
 
-  // One projected coordinate means the whole file's CRS is suspect, so nothing from it
-  // may reach the store — a shapefile without its .prj is the usual culprit.
-  const outOfRange = features.some((feature) =>
-    feature.geometry.coordinates[0].some(([lng, lat]) => Math.abs(lng) > 180 || Math.abs(lat) > 90),
-  );
-
-  if (outOfRange) {
-    throw new UploadError(
-      'bad-crs',
-      'Las coordenadas no son longitud/latitud — no se pudo leer el sistema de coordenadas del archivo.',
-    );
-  }
-
-  // The platform is Paraguay-only, so anything outside the country is wrong data, not a
-  // wrong CRS: valid lng/lat in the wrong place (a file for another country, or projected
-  // coordinates small enough to pass the world-range check and land in the Gulf of Guinea).
+  // The platform is Paraguay-only, so anything outside the country is wrong data: a file
+  // for another country, or projected coordinates read as lng/lat (a shapefile without
+  // its .prj is the usual culprit). One stray coordinate rejects the whole file.
   const outsideParaguay = features.some((feature) =>
-    feature.geometry.coordinates[0].some((position) => !withinParaguay(position)),
+    feature.geometry.coordinates.some((ring) => ring.some((position) => !withinParaguay(position))),
   );
 
   if (outsideParaguay) {
@@ -154,10 +131,10 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
   }
 
   if (features.length === 0) {
-    throw new UploadError('no-polygons', noPolygonsMessage(skipped, holed));
+    throw new UploadError('no-polygons', noPolygonsMessage(skipped));
   }
 
-  const nonPolygons = skipped.points + skipped.lines + skipped.nested;
+  const nonPolygons = skipped.points + skipped.lines;
 
   if (nonPolygons > 0) {
     warnings.push({
@@ -189,10 +166,10 @@ function toFeatureInputs(root: UploadGeoJson): UploadFeatureInput[] {
 }
 
 /**
- * The polygons a geometry contains, each as its raw ring list. Recurses one level into
- * GeometryCollections; deeper nesting and non-areal types are only counted.
+ * The polygons a geometry contains, each as its raw ring list. Recurses through
+ * GeometryCollections at any depth; non-areal types are only counted.
  */
-function polygonParts(geometry: UploadGeometry, skipped: SkipCounts, depth = 0): Ring[][] {
+function polygonParts(geometry: UploadGeometry, skipped: SkipCounts): Ring[][] {
   switch (geometry.type) {
     case 'Polygon':
       return [geometry.coordinates];
@@ -201,13 +178,7 @@ function polygonParts(geometry: UploadGeometry, skipped: SkipCounts, depth = 0):
       return geometry.coordinates;
 
     case 'GeometryCollection':
-      if (depth >= 1) {
-        skipped.nested += 1;
-
-        return [];
-      }
-
-      return geometry.geometries.flatMap((member) => polygonParts(member, skipped, depth + 1));
+      return geometry.geometries.flatMap((member) => polygonParts(member, skipped));
 
     case 'Point':
     case 'MultiPoint':
@@ -251,14 +222,14 @@ function roundCoordinate(value: number): number {
 }
 
 /**
- * The platform is Paraguay-only: every uploaded coordinate must fall inside the
- * country's bounding box, or `normalizeFeatures` rejects the whole file with
+ * The platform is Paraguay-only: every uploaded coordinate, holes included, must fall
+ * inside the country's bounding box, or `normalizeFeatures` rejects the whole file with
  * `out-of-paraguay`. Positions arrive already cleaned as [lng, lat].
  */
 function withinParaguay([lng, lat]: LngLat): boolean {
   // Paraguay's bounding box (lng −62.65…−54.26, lat −27.61…−19.29) plus most of a
   // degree of slack, so border-hugging farms survive rounding while wrong-country
-  // files and near-(0,0) projected coordinates are still rejected.
+  // files and projected coordinates (near (0,0) or far outside ±180/±90) are rejected.
   return lng >= -63.5 && lng <= -53.5 && lat >= -28.5 && lat <= -18.5;
 }
 
@@ -272,16 +243,11 @@ function closeRing(ring: LngLat[]): LngLat[] {
   return [...ring, [first[0], first[1]]];
 }
 
-function noPolygonsMessage(skipped: SkipCounts, holed: number): string {
+function noPolygonsMessage(skipped: SkipCounts): string {
   const found: string[] = [];
 
-  if (holed > 0) found.push(`${holed} polígono${holed === 1 ? '' : 's'} con huecos`);
   if (skipped.points > 0) found.push(`${skipped.points} punto${skipped.points === 1 ? '' : 's'}`);
   if (skipped.lines > 0) found.push(`${skipped.lines} línea${skipped.lines === 1 ? '' : 's'}`);
-  if (skipped.nested > 0)
-    found.push(
-      `${skipped.nested} colección${skipped.nested === 1 ? '' : 'es'} anidada${skipped.nested === 1 ? '' : 's'}`,
-    );
 
   return found.length > 0
     ? `El archivo no contiene polígonos importables — se encontraron ${found.join(', ')}.`

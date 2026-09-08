@@ -15,6 +15,7 @@ export type LngLat = [number, number];
 
 export type UploadPolygonGeometry = {
   type: 'Polygon';
+  /** Outer ring first, then any interior rings (holes); every ring closed. */
   coordinates: LngLat[][];
 };
 
@@ -50,7 +51,6 @@ export type UploadErrorCode =
   | 'unsupported-type'
   | 'too-large'
   | 'unreadable'
-  | 'bad-crs'
   | 'out-of-paraguay'
   | 'no-polygons'
   | 'empty';

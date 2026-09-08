@@ -1,4 +1,6 @@
-import { TerraDraw, TerraDrawExtend, TerraDrawPolygonMode } from 'terra-draw';
+import { TerraDraw, TerraDrawExtend } from 'terra-draw';
+
+import { HoleTolerantPolygonMode } from '@/lib/map/polygon-mode';
 
 /**
  * An adapter that satisfies Terra Draw without a map or a DOM, so store and import
@@ -45,7 +47,7 @@ export class HeadlessAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
 export function startedDraw(): TerraDraw {
   const draw = new TerraDraw({
     adapter: new HeadlessAdapter(),
-    modes: [new TerraDrawPolygonMode()],
+    modes: [new HoleTolerantPolygonMode()],
   });
 
   draw.start();

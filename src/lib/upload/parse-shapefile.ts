@@ -9,7 +9,7 @@ import { UploadError, type ParseOutcome, type UploadWarning } from '@/lib/upload
  * The zip's file listing is inspected with fflate first, because shpjs's result cannot
  * say what was missing: no `.shp` is a hard error, while missing `.dbf` (names) and
  * missing `.prj` (projection) degrade with a warning. Without a `.prj` shpjs assumes
- * WGS84 and the range check in `normalize.ts` is what catches projected coordinates.
+ * WGS84 and the Paraguay check in `normalize.ts` is what catches projected coordinates.
  *
  * Both libraries load lazily so the ~80 kB of shpjs+proj4 never reaches the main
  * bundle.
@@ -72,20 +72,7 @@ export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome>
     features: collections.flatMap((collection) => collection.features),
   };
 
-  let outcome: ParseOutcome;
-
-  try {
-    outcome = normalizeUnknown(merged, 'un shapefile');
-  } catch (error) {
-    if (error instanceof UploadError && error.code === 'bad-crs' && missingPrj) {
-      throw new UploadError(
-        'bad-crs',
-        'Las coordenadas no son longitud/latitud — al shapefile le falta su archivo de proyección .prj.',
-      );
-    }
-
-    throw error;
-  }
+  const outcome = normalizeUnknown(merged, 'un shapefile');
 
   if (missingPrj) {
     warnings.push({
