@@ -20,8 +20,10 @@ import { sessionAtom } from '@/store/auth';
 
 /**
  * Submits the credentials to the Django login (`authMutations.login`) and stores the
- * resulting session in `sessionAtom`, which flips the riesgo productivo tab from the
- * login gate to the indicators.
+ * resulting session in `sessionAtom`. The real session is Django's HttpOnly cookie,
+ * which the browser sends on its own but scripts cannot read, so the atom is the UI's
+ * only record of who is signed in: the header dialog and the riesgo productivo tab
+ * read it to swap the login gate for the identified state.
  */
 export function LoginCard({
   className,
@@ -48,11 +50,14 @@ export function LoginCard({
           event.preventDefault();
 
           const data = new FormData(event.currentTarget);
+          // `FormData.get` may hand back a `File`; only text inputs live in this form.
+          const text = (name: string) => {
+            const value = data.get(name);
 
-          mutation.mutate({
-            username: String(data.get('username') ?? ''),
-            password: String(data.get('password') ?? ''),
-          });
+            return typeof value === 'string' ? value : '';
+          };
+
+          mutation.mutate({ username: text('username'), password: text('password') });
         }}
       >
         <CardHeader className="gap-1.5 px-10">
