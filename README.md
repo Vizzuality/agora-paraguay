@@ -23,6 +23,13 @@ No `.env` file is needed — the app runs with sensible defaults (mock data, bui
 basemap). Copy `.env.example` to `.env` only to override them; note that setting
 `VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
 
+Login is the one real call: the dev server proxies `/api` to the Django backend, so its session
+cookie stays first-party. The default target is a local Django on port 8000; set
+`API_PROXY_TARGET` in `.env` to reach the shared backend instead. Deployed builds that are
+not served by the backend set `VITE_API_URL` instead. The e2e specs stub the auth routes
+(`tests/e2e/fixtures/auth.ts`); signing in against the real backend is a manual check with a
+personal account.
+
 ## Scripts
 
 | Script                 | What it does                                            |
