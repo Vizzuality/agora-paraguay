@@ -82,7 +82,7 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
 
   // The footer repeats the brand and the three destinations (Figma node 5180:11421).
   const footer = page.getByRole('contentinfo');
-  await expect(footer.getByRole('link', { name: 'Ágora — inicio' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'Inicio' })).toBeVisible();
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/riesgo=productivo/);
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
