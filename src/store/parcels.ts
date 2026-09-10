@@ -3,7 +3,6 @@ import { atom } from 'jotai';
 import type { ParcelFeature } from '@/lib/api/schemas';
 import { toggleParcel } from '@/lib/map/parcel-selection';
 import { parcelClickEnabledAtom } from '@/store/analysis';
-import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 
 /**
  * The cadastral parcels picked for analysis by clicking them on the map. Multi-select:
@@ -20,19 +19,12 @@ export const selectedParcelsAtom = atom<ParcelFeature[]>([]);
  * Toggles a parcel in the selection. Gated by `parcelClickEnabledAtom`: clicks select
  * only while no tool is active and the app is in selection mode.
  *
- * Replace semantics, like the other entry points: clicking a parcel focuses the
- * selection on cadastral parcels, so whatever drawing or upload was on the map goes.
+ * Parcels coexist with the drawn or uploaded polygon: step 2 of the selection flow
+ * ("Confirmación de parcelas") is where the user refines the parcels around their área
+ * de interés, so a click must not wipe it. Everything selected is analysed together.
  */
 export const toggleParcelAtom = atom(null, (get, set, parcel: ParcelFeature) => {
   if (!get(parcelClickEnabledAtom)) return;
-
-  const draw = get(drawInstanceAtom);
-
-  if (draw?.enabled && get(drawStateAtom).polygons.length > 0) {
-    draw.clear();
-    // `clear()` does not surface as a `change` event, so report it by hand.
-    set(drawStateAtom, { type: 'geometry', polygons: [] });
-  }
 
   set(selectedParcelsAtom, toggleParcel(get(selectedParcelsAtom), parcel));
 });

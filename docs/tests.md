@@ -212,6 +212,18 @@ logic modules are unit-tested, behaviour is e2e-tested.
 
 - repairs a hand-edited URL instead of passing invalid values to MapLibre
 
+### `tests/unit/lib/selection-steps.test.ts` (4)
+
+**selectionStep**
+
+- starts on step 1 with nothing on the map
+- stays on step 1 while a polygon is being drawn
+- moves to step 2 once an area exists and the tool is parked
+
+**SELECTION_STEPS**
+
+- numbers the three steps in order
+
 ### `tests/unit/lib/upload/normalize.test.ts` (21)
 
 **MultiPolygon explosion**

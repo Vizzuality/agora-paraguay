@@ -37,25 +37,42 @@ export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => 
 });
 
 /**
- * Activates the draw tool. A drawing session starts from scratch: every polygon on the
- * map — hand-drawn and uploaded — is cleared first. (The reducer's `geometry` action
- * prunes `selectedId` and `analysisId` with the polygons, so the highlight goes too.)
+ * Starts the selection over: every polygon on the map — hand-drawn and uploaded — goes,
+ * the tool is parked, and the session state (clicked parcels, upload notice, app mode)
+ * resets. The Reiniciar button and every entry point that replaces route through here.
  */
-export const startDrawAtom = atom(null, (get, set) => {
+export const restartSelectionAtom = atom(null, (get, set) => {
   const draw = get(drawInstanceAtom);
 
-  if (!draw?.enabled) return;
+  if (draw?.enabled) {
+    // Disarm before clearing: stopping polygon mode sweeps an in-progress ring.
+    set(drawStateAtom, { type: 'tool', tool: null });
 
-  if (get(drawStateAtom).polygons.length > 0) {
-    draw.clear();
-    // `clear()` does not surface as a `change` event, so report it by hand.
-    set(drawStateAtom, { type: 'geometry', polygons: [] });
+    if (get(drawStateAtom).polygons.length > 0) {
+      draw.clear();
+      // `clear()` does not surface as a `change` event, so report it by hand.
+      set(drawStateAtom, { type: 'geometry', polygons: [] });
+    }
   }
 
-  // A stale "Imported N areas" notice must not outlive the areas it counted, and a
-  // from-scratch session drops the clicked cadastral parcels with everything else.
   set(resetSelectionSessionAtom);
+});
+
+/** Activates the draw tool. A drawing session always starts from scratch. */
+export const startDrawAtom = atom(null, (get, set) => {
+  if (!get(drawInstanceAtom)?.enabled) return;
+
+  set(restartSelectionAtom);
   set(drawStateAtom, { type: 'tool', tool: 'draw' });
+});
+
+/**
+ * A finished polygon ends the draw session (one área de interés per session, AGP-36):
+ * the geometry is reported and the tool parked, which moves the panel to step 2.
+ */
+export const finishDrawAtom = atom(null, (_get, set, snapshot: GeoJSONStoreFeatures[]) => {
+  set(drawStateAtom, { type: 'geometry', polygons: drawnPolygons(snapshot) });
+  set(drawStateAtom, { type: 'tool', tool: null });
 });
 
 /** Called with the started instance, and with `null` when it is torn down. */
