@@ -50,7 +50,7 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@j178/prek": "0.5.0",
+    "@j178/prek": "0.5.2",
     "@playwright/test": "1.63.0",
     "@tailwindcss/vite": "4.3.3",
     "@tanstack/nitro-v2-vite-plugin": "1.155.0",
