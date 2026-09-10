@@ -13,7 +13,7 @@ const FOOTER_LINKS = [SELECTION_LINK, ...RISK_LINKS];
 export function Footer() {
   return (
     <footer className="flex w-full items-center justify-between bg-primary p-10">
-      <Link to="/" aria-label="Ágora — inicio">
+      <Link to="/" aria-label="Inicio">
         <Logo className="h-[30px] w-auto text-primary-foreground" />
       </Link>
 
