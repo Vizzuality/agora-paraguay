@@ -78,11 +78,11 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       terra-draw:
-        specifier: 1.32.3
-        version: 1.32.3
+        specifier: 1.33.0
+        version: 1.33.0
       terra-draw-maplibre-gl-adapter:
         specifier: 1.4.1
-        version: 1.4.1(maplibre-gl@6.6.0)(terra-draw@1.32.3)
+        version: 1.4.1(maplibre-gl@6.6.0)(terra-draw@1.33.0)
       zod:
         specifier: 4.5.4
         version: 4.5.4
@@ -3966,8 +3966,8 @@ packages:
       maplibre-gl: '>=4'
       terra-draw: ^1.0.0
 
-  terra-draw@1.32.3:
-    resolution: {integrity: sha512-pQpwL8winsDW6/DbBgsaZKeMc83D+HqokxR+t1AbrN4U7C4mGgEfCtmRix1/5L4GfkLh1FE7pq44SWt76vK2Bw==}
+  terra-draw@1.33.0:
+    resolution: {integrity: sha512-EOJpu0RaKfvFI2Mx48l/OsBpIGdNOpHbvMGzegDQzCepxnxrovxVHFbm85RQljJ6RV3EbLCuvMjZ0HWkJswphA==}
 
   terser@5.49.2:
     resolution: {integrity: sha512-rGbJiKeQ4WDe3EXlDAIaQcwftVfv2Q8o1awFNfvXolJYKkb1AuZY1RTOmqx4LJXZENbWZA7eIsYGHuEzHsi1nQ==}
@@ -8050,12 +8050,12 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
-  terra-draw-maplibre-gl-adapter@1.4.1(maplibre-gl@6.6.0)(terra-draw@1.32.3):
+  terra-draw-maplibre-gl-adapter@1.4.1(maplibre-gl@6.6.0)(terra-draw@1.33.0):
     dependencies:
       maplibre-gl: 6.6.0
-      terra-draw: 1.32.3
+      terra-draw: 1.33.0
 
-  terra-draw@1.32.3: {}
+  terra-draw@1.33.0: {}
 
   terser@5.49.2:
     dependencies:
