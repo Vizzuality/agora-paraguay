@@ -41,18 +41,30 @@ describe('PARCEL_STYLES', () => {
     expect(PARCEL_STYLES.outlineWidth(uploaded)).toBe(2);
   });
 
-  it('leaves hand-drawn parcels on Terra Draw defaults', () => {
+  it('paints hand-drawn parcels yellow like the selection, never Terra Draw blue', () => {
     const drawn = parcel('d');
 
-    expect(PARCEL_STYLES.fillColor(drawn)).toBeUndefined();
-    expect(PARCEL_STYLES.fillOpacity(drawn)).toBeUndefined();
-    expect(PARCEL_STYLES.outlineColor(drawn)).toBeUndefined();
-    expect(PARCEL_STYLES.outlineWidth(drawn)).toBeUndefined();
+    expect(PARCEL_STYLES.fillColor(drawn)).toBe('#F1FF28');
+    expect(PARCEL_STYLES.fillOpacity(drawn)).toBe(0.5);
+    expect(PARCEL_STYLES.outlineColor(drawn)).toBe('#F1FF28');
+    expect(PARCEL_STYLES.outlineWidth(drawn)).toBe(2);
   });
 
-  it('requires the analysis flag to be literally true, not merely set', () => {
-    expect(PARCEL_STYLES.fillColor(parcel('a', { analysis: false }))).toBeUndefined();
-    expect(PARCEL_STYLES.fillColor(parcel('a', { analysis: 'yes' }))).toBeUndefined();
+  it('paints the drawing handles yellow with a white outline', () => {
+    expect(PARCEL_STYLES.closingPointColor).toBe('#F1FF28');
+    expect(PARCEL_STYLES.coordinatePointColor).toBe('#F1FF28');
+    expect(PARCEL_STYLES.editedPointColor).toBe('#F1FF28');
+    expect(PARCEL_STYLES.snappingPointColor).toBe('#F1FF28');
+    expect(PARCEL_STYLES.closingPointOutlineColor).toBe('#FFFFFF');
+  });
+
+  it('requires the analysis flag to be literally true to lift an upload out of white', () => {
+    expect(PARCEL_STYLES.fillColor(parcel('a', { origin: 'upload', analysis: false }))).toBe(
+      '#FFFFFF',
+    );
+    expect(PARCEL_STYLES.fillColor(parcel('a', { origin: 'upload', analysis: 'yes' }))).toBe(
+      '#FFFFFF',
+    );
   });
 });
 
