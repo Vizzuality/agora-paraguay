@@ -1,6 +1,6 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { fetchParcels, login, submitAnalysis } from './client';
+import { fetchAnalysisOptions, fetchParcels, login, submitAnalysis } from './client';
 import { toAnalysisRequest, type AnalysisArea, type Credentials } from './schemas';
 
 /**
@@ -16,6 +16,18 @@ export const parcelQueries = {
       queryFn: fetchParcels,
       // TODO(mock-parcels): staleTime pinned to Infinity only because the fixture is
       // static — revisit when the real parcel layer replaces the mock.
+      staleTime: Infinity,
+    }),
+};
+
+/** Option lists behind the analysis hero dropdowns (AGP-29). */
+export const analysisQueries = {
+  options: () =>
+    queryOptions({
+      queryKey: ['analysis', 'options'] as const,
+      queryFn: fetchAnalysisOptions,
+      // TODO(mock-analysis-options): static fixture, so never stale — revisit with the
+      // real endpoint.
       staleTime: Infinity,
     }),
 };

@@ -72,7 +72,7 @@ test('an upload replaces everything already on the map', async ({ page }) => {
   await expect(page).toHaveURL(/\/analisis/);
 
   // Only the last upload made it: the drawn polygon and the GeoJSON areas are gone.
-  const areas = page.getByRole('list').getByRole('listitem');
+  const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await expect(areas).toHaveText(['Estancia KML', 'Campo KML']);
 });
 
@@ -121,8 +121,8 @@ test('accepted upload polygons can be analysed', async ({ page }) => {
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
 
-  // The submitted areas are listed on the analysis page under their upload names.
-  const areas = page.getByRole('list').getByRole('listitem');
+  // The submitted areas are the hero's parcel tabs, under their upload names.
+  const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await expect(areas).toHaveText(['Estancia Norte (1/2)', 'Estancia Norte (2/2)', 'Campo Sur']);
 });
 
