@@ -13,15 +13,17 @@ import {
 } from '@/components/ui/card';
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
+import { LoginError } from '@/lib/api/client';
 import { authMutations } from '@/lib/api/queries';
 import { cn } from '@/lib/utils';
 import { sessionAtom } from '@/store/auth';
 
 /**
- * Submits against the mock auth endpoint (the GMV
- * backend does not exist yet, AGP-22) and stores the resulting session in
- * `sessionAtom`, which flips the riesgo productivo tab from the login gate to the
- * indicators.
+ * Submits the credentials to the Django login (`authMutations.login`) and stores the
+ * resulting session in `sessionAtom`. The real session is Django's HttpOnly cookie,
+ * which the browser sends on its own but scripts cannot read, so the atom is the UI's
+ * only record of who is signed in: the header dialog and the riesgo productivo tab
+ * read it to swap the login gate for the identified state.
  */
 export function LoginCard({
   className,
@@ -50,13 +52,14 @@ export function LoginCard({
           event.preventDefault();
 
           const data = new FormData(event.currentTarget);
+          // `FormData.get` may hand back a `File`; only text inputs live in this form.
+          const text = (name: string) => {
+            const value = data.get(name);
 
-          // The mock endpoint accepts any well-formed credentials; the real user /
-          // password check arrives with the GMV backend, inside `client.ts`.
-          mutation.mutate({
-            email: String(data.get('email') ?? ''),
-            password: String(data.get('password') ?? ''),
-          });
+            return typeof value === 'string' ? value : '';
+          };
+
+          mutation.mutate({ username: text('username'), password: text('password') });
         }}
       >
         <CardHeader className="gap-1.5 px-10">
@@ -72,19 +75,20 @@ export function LoginCard({
         <CardContent className="flex flex-col gap-4 px-10">
           {/* Floating labels: the label is the placeholder, hence `placeholder=" "`. */}
           <div className="relative">
-            {/* TO - DO - IMPORTANT - change to type email when API gets fixed */}
+            {/* Django identifies users by username (see `credentialsSchema`); the design's
+                email field waits on the login-by-email decision with the API team. */}
             <Input
-              id={`${fieldId}-email`}
-              name="email"
+              id={`${fieldId}-username`}
+              name="username"
               type="text"
               required
-              autoComplete="email"
+              autoComplete="username"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
             />
-            <FloatingLabel htmlFor={`${fieldId}-email`}>Email</FloatingLabel>
+            <FloatingLabel htmlFor={`${fieldId}-username`}>Usuario</FloatingLabel>
           </div>
           <div className="relative">
             <Input
@@ -113,7 +117,9 @@ export function LoginCard({
 
           {mutation.isError && (
             <p id={errorId} role="alert" className="text-sm text-destructive">
-              No se pudo iniciar sesión. Revisa el email y la contraseña.
+              {mutation.error instanceof LoginError && mutation.error.reason === 'credentials'
+                ? 'No se pudo iniciar sesión. Revisa el usuario y la contraseña.'
+                : 'No se pudo conectar con el servidor. Inténtalo de nuevo en unos minutos.'}
             </p>
           )}
 

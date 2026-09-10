@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { stubAuth } from './fixtures/auth';
 import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
@@ -26,6 +27,7 @@ function controls(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
+  await stubAuth(page);
   await page.goto('/');
 
   await expect(controls(page).draw).toBeEnabled();
@@ -70,7 +72,7 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/riesgo=productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
-  await expect(page.getByLabel('Email')).toBeVisible();
+  await expect(page.getByLabel('Usuario')).toBeVisible();
   await expect(page.getByLabel('Contraseña')).toBeVisible();
 
   // Back on the public tab the gate goes away again.
@@ -80,14 +82,13 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
 
   // The footer repeats the brand and the three destinations (Figma node 5180:11421).
   const footer = page.getByRole('contentinfo');
-  await expect(footer.getByRole('link', { name: 'Ágora — inicio' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'Inicio' })).toBeVisible();
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/riesgo=productivo/);
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
 
-  // Mock login: any well-formed credentials open the private indicators in place
-  // (the real user/password check arrives with the GMV backend).
-  await page.getByLabel('Email').fill('analista@example.com');
+  // Stubbed login (`stubAuth`): any credentials open the private indicators in place.
+  await page.getByLabel('Usuario').fill('analista');
   await page.getByLabel('Contraseña').fill('cualquiera');
   await page.getByRole('button', { name: 'Acceder' }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
@@ -119,7 +120,7 @@ test('logs in from the header dialog', async ({ page }) => {
 
   // Logging in through the dialog closes it…
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await dialog.getByLabel('Email').fill('analista@example.com');
+  await dialog.getByLabel('Usuario').fill('analista');
   await dialog.getByLabel('Contraseña').fill('cualquiera');
   await dialog.getByRole('button', { name: 'Acceder' }).click();
   await expect(dialog).toBeHidden();

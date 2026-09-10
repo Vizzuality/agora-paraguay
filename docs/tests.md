@@ -15,13 +15,31 @@ logic modules are unit-tested, behaviour is e2e-tested.
 
 ## Unit tests (108)
 
-### `tests/unit/lib/api/client.test.ts` (3)
+### `tests/unit/lib/api/client.test.ts` (15)
 
 **submitAnalysis**
 
 - accepts the request, echoing how many features it received
 - mints a distinct id per submission
 - rejects a malformed request at the boundary
+
+**login**
+
+- fetches a CSRF token, then posts the credentials with it
+- falls back to the csrftoken cookie when the CSRF body only says "cookie set"
+- reports the backend as unavailable when no CSRF token is obtainable
+- names the session after the form when the login body carries no username
+- reports wrong credentials on a 401
+- reports wrong credentials on a 400 too, the other status Django login views use
+- reports the backend as unavailable on a server error
+- reports the backend as unavailable when the CSRF step fails
+- reports the backend as unavailable when fetch itself rejects
+- rejects malformed credentials before touching the network
+
+**cookieValue**
+
+- reads one cookie out of a document.cookie string
+- returns null when the cookie is missing or empty
 
 ### `tests/unit/lib/api/parcels-fixtures.test.ts` (7)
 

@@ -82,19 +82,32 @@ export const analysisOptionsSchema = z.object({
 export type AnalysisOptions = z.infer<typeof analysisOptionsSchema>;
 
 /**
- * Auth contract. The GMV auth backend does not exist yet (AGP-22), so this shape is a
- * placeholder pending the agreed contract — same status as the parcel schema above.
- * The session carries only what the UI needs to show an identified state.
+ * Auth contract, against the Django session endpoints (`/api/auth/csrf/` then
+ * `/api/auth/login/`). Django identifies users by `username`, not email.
  */
 export const credentialsSchema = z.object({
-  email: z.email(),
+  username: z.string().trim().min(1),
   password: z.string().min(1),
 });
 
 export type Credentials = z.infer<typeof credentialsSchema>;
 
+/**
+ * What the CSRF endpoint returns. Django's `ensure_csrf_cookie` views answer with a
+ * bare `detail` and put the token in the `csrftoken` cookie only; some hand it back as
+ * `csrfToken` too, so both are accepted and the cookie is the fallback (`client.ts`).
+ */
+export const csrfResponseSchema = z.looseObject({ csrfToken: z.string().min(1).optional() });
+
+/**
+ * The login body is not contractually fixed yet, so only the one field the UI can use
+ * is declared and anything else passes through. Session state itself is the cookie.
+ */
+export const loginResponseSchema = z.looseObject({ username: z.string().min(1).optional() });
+
+/** The session carries only what the UI needs to show an identified state. */
 export const sessionSchema = z.object({
-  email: z.email(),
+  username: z.string().min(1),
 });
 
 export type Session = z.infer<typeof sessionSchema>;
