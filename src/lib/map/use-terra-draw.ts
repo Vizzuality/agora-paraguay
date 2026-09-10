@@ -6,7 +6,7 @@ import { TerraDrawMapLibreGLAdapter } from 'terra-draw-maplibre-gl-adapter';
 
 import { PARCEL_STYLES } from '@/lib/map/draw-styles';
 import { HoleTolerantPolygonMode } from '@/lib/map/polygon-mode';
-import { bindDrawAtom, drawModeAtom, reportGeometryAtom } from '@/store/draw';
+import { bindDrawAtom, drawModeAtom, finishDrawAtom, reportGeometryAtom } from '@/store/draw';
 
 /**
  * Binds Terra Draw to the MapLibre instance rendered by react-map-gl.
@@ -32,6 +32,7 @@ export function useTerraDraw() {
   const mode = useAtomValue(drawModeAtom);
   const bind = useSetAtom(bindDrawAtom);
   const reportGeometry = useSetAtom(reportGeometryAtom);
+  const finishDraw = useSetAtom(finishDrawAtom);
 
   // Every dependency here is a stable setter, so this effect only re-runs when the map
   // itself changes. Anything geometry-shaped in this list would tear down and rebuild
@@ -57,10 +58,9 @@ export function useTerraDraw() {
 
       const instance = started;
 
-      // Drawing stays armed after a polygon is finished, so several can be drawn in a
-      // row without going back to the toolbar.
+      // One polygon per session: finishing it parks the tool (see `finishDrawAtom`).
       const onFinish: TerraDrawEventListeners['finish'] = () => {
-        reportGeometry(instance.getSnapshot());
+        finishDraw(instance.getSnapshot());
       };
 
       const onChange: TerraDrawEventListeners['change'] = (_ids, type) => {
@@ -104,7 +104,7 @@ export function useTerraDraw() {
       started?.stop();
       setDraw(null);
     };
-  }, [mapRef, bind, reportGeometry]);
+  }, [mapRef, bind, reportGeometry, finishDraw]);
 
   // `draw` is a dependency so the mode is applied when the instance appears, not
   // only when the mode changes: without it, a toggle pressed during style load is

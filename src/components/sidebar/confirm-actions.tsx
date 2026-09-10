@@ -1,23 +1,23 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { CircleArrowRight, Undo2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { ActionCardButton } from '@/components/sidebar/action-card-button';
 import { analysisMutations } from '@/lib/api/queries';
-import { drawPolygonsAtom } from '@/store/draw';
+import { drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
 import { startAnalysisAtom } from '@/store/mode';
 import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
- * Submits every area on the map — drawn, uploaded, and the cadastral parcels selected
- * by clicking them — for analysis. The per-polygon selection in the list is a
- * highlight, not a filter: analysis sends everything.
- *
- * Renders inside `<ClientOnly>` (it reads the draw atoms).
+ * Step 2 of the selection (Figma 7172:1800): start over, or submit every area on the
+ * map — drawn, uploaded, and the cadastral parcels selected by clicking them — for
+ * analysis. Renders inside `<ClientOnly>` (it reads the draw atoms).
  */
-export function AnalyzeButton() {
+export function ConfirmActions() {
   const polygons = useAtomValue(drawPolygonsAtom);
   const selectedParcels = useAtomValue(selectedParcelsAtom);
+  const restart = useSetAtom(restartSelectionAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
   const navigate = useNavigate();
   const mutation = useMutation({
@@ -34,14 +34,21 @@ export function AnalyzeButton() {
   const areas = [...polygons, ...selectedParcels];
 
   return (
-    <section aria-live="polite" className="flex w-full flex-col items-start gap-2">
-      <Button
-        className="h-11 w-full rounded-2xl"
-        disabled={areas.length === 0 || mutation.isPending}
-        onClick={() => mutation.mutate(areas)}
-      >
-        {mutation.isPending ? 'Analizando…' : 'Analizar'}
-      </Button>
+    <section aria-live="polite" className="flex w-full flex-col gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
+        <ActionCardButton icon={Undo2} onClick={() => restart()} disabled={mutation.isPending}>
+          Reiniciar
+        </ActionCardButton>
+
+        <ActionCardButton
+          variant="default"
+          icon={CircleArrowRight}
+          disabled={areas.length === 0 || mutation.isPending}
+          onClick={() => mutation.mutate(areas)}
+        >
+          {mutation.isPending ? 'Analizando…' : 'Analizar'}
+        </ActionCardButton>
+      </div>
 
       {mutation.isError && (
         <p className="text-sm text-destructive">El análisis falló: {mutation.error.message}</p>

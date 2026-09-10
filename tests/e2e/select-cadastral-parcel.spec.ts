@@ -20,6 +20,7 @@ function locators(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
+    // Step 2 only: it appears once anything is selected.
     analyze: page.getByRole('button', { name: 'Analizar' }),
   };
 }
@@ -31,7 +32,7 @@ const DRAWN_POLYGON = [
   { x: 500, y: 550 },
 ];
 
-/** Clicks probe positions until one selects a parcel (Analizar arms), returns it. */
+/** Clicks probe positions until one selects a parcel (Analizar appears), returns it. */
 async function clickAParcel(page: Page) {
   const { analyze } = locators(page);
 
@@ -50,6 +51,25 @@ async function clickAParcel(page: Page) {
   throw new Error('No probe position hit a cadastral parcel');
 }
 
+/**
+ * Hovers probe positions until the map offers a pointer, which is how the click
+ * handler signals a parcel under the cursor (`use-parcel-click.ts`). Lets a spec find
+ * a parcel without changing the selection.
+ */
+async function findAParcel(page: Page) {
+  const canvas = mapCanvas(page);
+
+  for (const position of PROBE_POSITIONS) {
+    await canvas.hover({ position });
+
+    const cursor = await canvas.evaluate((element) => element.style.cursor);
+
+    if (cursor === 'pointer') return position;
+  }
+
+  throw new Error('No probe position hovered a cadastral parcel');
+}
+
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await page.goto('/');
@@ -63,14 +83,14 @@ test.beforeEach(async ({ page }) => {
 test('clicking cadastral parcels selects until Analizar submits them', async ({ page }) => {
   const { analyze } = locators(page);
 
-  // Nothing drawn and nothing selected: analysis has nothing to send.
-  await expect(analyze).toBeDisabled();
+  // Nothing drawn and nothing selected: step 1, no Analizar yet.
+  await expect(analyze).toBeHidden();
 
   const position = await clickAParcel(page);
 
-  // A second click on the same parcel toggles it back off…
+  // A second click on the same parcel toggles it back off (and the panel back to step 1)…
   await mapCanvas(page).click({ position });
-  await expect(analyze).toBeDisabled();
+  await expect(analyze).toBeHidden();
 
   // …and a third selects it again.
   await mapCanvas(page).click({ position });
@@ -85,36 +105,26 @@ test('clicking cadastral parcels selects until Analizar submits them', async ({ 
   await expect(analyze).toBeEnabled();
 });
 
-// Clicking a parcel focuses the selection on cadastral parcels: replace semantics,
-// like drawing and uploading, so whatever was drawn or uploaded goes.
-test('clicking a parcel clears the drawn polygons', async ({ page }) => {
+// Step 2 is where the user refines the parcels around their área de interés (Figma
+// 7172:1799: "use el mapa para seleccionar y deseleccionar parcelas"), so a parcel
+// click adds to the drawn polygon instead of replacing it.
+test('clicking a parcel in step 2 keeps the drawn polygon', async ({ page }) => {
   const { draw, analyze } = locators(page);
 
   await draw.click();
   await drawPolygon(page, DRAWN_POLYGON);
+  // Finishing the polygon parks the tool, so parcel clicks land straight away.
   await expect(analyze).toBeEnabled();
 
-  // Park the tool: parcel clicks only land while the map is idle.
-  await draw.click();
+  const position = await findAParcel(page);
+  await mapCanvas(page).click({ position });
+  await expect(analyze).toBeEnabled();
 
-  // Analizar is already armed by the drawn polygon, so a single hit changes nothing
-  // observable — probe with click pairs instead. A hit selects the parcel (clearing
-  // the drawing) and the second click toggles it back off, so Analizar disarms only
-  // if the drawn polygon went too. The pause keeps the pair outside the browser's
-  // double-click threshold so MapLibre's double-click zoom never fires.
-  for (const position of PROBE_POSITIONS) {
-    await mapCanvas(page).click({ position });
-    await page.waitForTimeout(600);
-    await mapCanvas(page).click({ position });
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
 
-    try {
-      await expect(analyze).toBeDisabled({ timeout: 700 });
-
-      return;
-    } catch {
-      // Missed the cluster — try the next position.
-    }
-  }
-
-  throw new Error('No probe position hit a cadastral parcel');
+  // Both made it: the drawn area and the clicked parcel.
+  const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await expect(areas).toHaveCount(2);
+  await expect(areas.first()).toHaveText('Área dibujada 1');
 });

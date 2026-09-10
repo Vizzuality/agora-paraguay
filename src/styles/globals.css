@@ -53,6 +53,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --color-widget: var(--widget);
   --color-widget-foreground: var(--widget-foreground);
+  --color-highlight: var(--highlight);
   --font-sans:
     'Geologica Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
@@ -97,6 +98,7 @@
   */
   --widget: #13294f;
   --widget-foreground: #ffffff;
+  --highlight: #ec6e00; /* step progress, Figma hardcodes it */
   --chart-1: #3d8f5f;
   --chart-2: #4a90c2;
   --chart-3: oklch(0.398 0.07 227.392);

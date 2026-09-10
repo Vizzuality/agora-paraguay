@@ -11,17 +11,13 @@ const FIRST_POLYGON = [
   { x: 360, y: 350 },
 ];
 
-const SECOND_POLYGON = [
-  { x: 440, y: 450 },
-  { x: 500, y: 450 },
-  { x: 500, y: 550 },
-];
-
 function controls(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
+    // Step 2 only: it appears once an area is on the map.
     analyze: page.getByRole('button', { name: 'Analizar' }),
+    restart: page.getByRole('button', { name: 'Reiniciar' }),
   };
 }
 
@@ -34,15 +30,14 @@ test.beforeEach(async ({ page }) => {
   await expect(mapCanvas(page)).toBeVisible();
 });
 
-test('analyzes every polygon on the map and moves to the analysis page', async ({ page }) => {
+test('analyzes the drawn area and moves to the analysis page', async ({ page }) => {
   const { draw, analyze } = controls(page);
 
-  // Nothing on the map yet: analysis has nothing to send.
-  await expect(analyze).toBeDisabled();
+  // Nothing on the map yet: step 1, no Analizar.
+  await expect(analyze).toBeHidden();
 
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await drawPolygon(page, SECOND_POLYGON);
   await expect(analyze).toBeEnabled();
 
   // A successful submission navigates to the analysis page.
@@ -53,10 +48,9 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   // The hero mini map renders the analysed parcel over the (stubbed) satellite basemap.
   await expect(mapCanvas(page)).toBeVisible();
 
-  // The submitted areas appear as the hero's parcel tabs under their generated names —
-  // and both polygons made it, which the selection page no longer shows.
+  // The submitted area appears as the hero's parcel tab under its generated name.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['Área dibujada 1', 'Área dibujada 2']);
+  await expect(areas).toHaveText(['Área dibujada 1']);
 
   // The navbar offers the way back and the login entry point (Figma node 5180:12072).
   // Locators are scoped to the header because the footer repeats the same link names.
@@ -94,9 +88,9 @@ test('analyzes every polygon on the map and moves to the analysis page', async (
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page).toHaveURL(/riesgo=productivo/);
 
-  // Going back remounts the map; the selection survives and is editable again.
+  // Going back remounts the map; the selection survives, so the panel resumes on step 2.
   await page.goBack();
-  await expect(controls(page).draw).toBeEnabled();
+  await expect(controls(page).restart).toBeVisible();
   await expect(analyze).toBeEnabled();
 });
 
