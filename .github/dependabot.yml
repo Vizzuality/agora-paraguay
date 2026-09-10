@@ -21,6 +21,9 @@ updates:
           - 'oxfmt'
           - 'vite'
           - 'vitest'
+          # Coverage provider must move with vitest: a major bump of one alone breaks
+          # `vitest run --coverage` (payload format mismatch, seen on the 4→5 bump).
+          - '@vitest/*'
           - 'typescript'
           - '@types/*'
 
