@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { LoginError } from '@/lib/api/client';
 import { authMutations } from '@/lib/api/queries';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,8 @@ export function LoginCard({
   const setSession = useSetAtom(sessionAtom);
 
   const fieldId = useId();
+  // Ties the failure message to both inputs (aria-describedby) so it is read in context.
+  const errorId = `${fieldId}-error`;
   const mutation = useMutation({
     ...authMutations.login(),
     onSuccess: (session) => {
@@ -71,29 +73,36 @@ export function LoginCard({
         </CardHeader>
 
         <CardContent className="flex flex-col gap-4 px-10">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${fieldId}-username`}>Usuario</Label>
+          {/* Floating labels: the label is the placeholder, hence `placeholder=" "`. */}
+          <div className="relative">
+            {/* Django identifies users by username (see `credentialsSchema`); the design's
+                email field waits on the login-by-email decision with the API team. */}
             <Input
               id={`${fieldId}-username`}
               name="username"
               type="text"
               required
               autoComplete="username"
-              placeholder="usuario"
-              className="h-10"
+              placeholder=" "
+              aria-invalid={mutation.isError || undefined}
+              aria-describedby={mutation.isError ? errorId : undefined}
+              className={FLOATING_FIELD_CLASS}
             />
+            <FloatingLabel htmlFor={`${fieldId}-username`}>Usuario</FloatingLabel>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${fieldId}-password`}>Contraseña</Label>
+          <div className="relative">
             <Input
               id={`${fieldId}-password`}
               name="password"
               type="password"
               required
               autoComplete="current-password"
-              placeholder="********"
-              className="h-10"
+              placeholder=" "
+              aria-invalid={mutation.isError || undefined}
+              aria-describedby={mutation.isError ? errorId : undefined}
+              className={FLOATING_FIELD_CLASS}
             />
+            <FloatingLabel htmlFor={`${fieldId}-password`}>Contraseña</FloatingLabel>
           </div>
         </CardContent>
 
@@ -107,7 +116,7 @@ export function LoginCard({
           </Button>
 
           {mutation.isError && (
-            <p role="alert" className="text-sm text-destructive">
+            <p id={errorId} role="alert" className="text-sm text-destructive">
               {mutation.error instanceof LoginError && mutation.error.reason === 'credentials'
                 ? 'No se pudo iniciar sesión. Revisa el usuario y la contraseña.'
                 : 'No se pudo conectar con el servidor. Inténtalo de nuevo en unos minutos.'}
