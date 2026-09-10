@@ -17,15 +17,22 @@ type ParcelVariant = {
   outlineWidth: number;
 };
 
-/** Selected for analysis: the design's highlight yellow at 50%. */
-const ANALYSIS: ParcelVariant = {
-  fill: '#F1FF28',
+/** The design's highlight yellow — the same one `parcels-layer.tsx` paints selected parcels. */
+const HIGHLIGHT: HexColor = '#F1FF28';
+
+/**
+ * Hand-drawn parcels and the analysis selection: highlight yellow at 50%. Drawn
+ * polygons get it from the first vertex on, so nothing on the map is ever Terra
+ * Draw's default blue.
+ */
+const YELLOW: ParcelVariant = {
+  fill: HIGHLIGHT,
   fillOpacity: 0.5,
-  outline: '#F1FF28',
+  outline: HIGHLIGHT,
   outlineWidth: 2,
 };
 
-/** Uploaded parcels: white at 10% with a white outline. */
+/** Uploaded parcels: white at 10% with a white outline, until selected for analysis. */
 const UPLOAD: ParcelVariant = {
   fill: '#FFFFFF',
   fillOpacity: 0.1,
@@ -33,11 +40,11 @@ const UPLOAD: ParcelVariant = {
   outlineWidth: 2,
 };
 
-function variant(feature: GeoJSONStoreFeatures): ParcelVariant | undefined {
-  if (feature.properties.analysis === true) return ANALYSIS;
+function variant(feature: GeoJSONStoreFeatures): ParcelVariant {
+  if (feature.properties.analysis === true) return YELLOW;
   if (feature.properties.origin === 'upload') return UPLOAD;
 
-  return undefined;
+  return YELLOW;
 }
 
 /**
@@ -46,13 +53,22 @@ function variant(feature: GeoJSONStoreFeatures): ParcelVariant | undefined {
  * pipeline): a property change is a feature change, which busts Terra Draw's style
  * cache and repaints on its own — no imperative repaint call anywhere.
  *
- * Returning `undefined` keeps Terra Draw's default (blue) for hand-drawn parcels.
+ * The point styles cover the closing point, the vertices and the snapping/edit
+ * handles shown while drawing — all blue by default.
  */
 export const PARCEL_STYLES = {
-  fillColor: (feature: GeoJSONStoreFeatures) => variant(feature)?.fill,
-  fillOpacity: (feature: GeoJSONStoreFeatures) => variant(feature)?.fillOpacity,
-  outlineColor: (feature: GeoJSONStoreFeatures) => variant(feature)?.outline,
-  outlineWidth: (feature: GeoJSONStoreFeatures) => variant(feature)?.outlineWidth,
+  fillColor: (feature: GeoJSONStoreFeatures) => variant(feature).fill,
+  fillOpacity: (feature: GeoJSONStoreFeatures) => variant(feature).fillOpacity,
+  outlineColor: (feature: GeoJSONStoreFeatures) => variant(feature).outline,
+  outlineWidth: (feature: GeoJSONStoreFeatures) => variant(feature).outlineWidth,
+  closingPointColor: HIGHLIGHT,
+  closingPointOutlineColor: '#FFFFFF' as HexColor,
+  snappingPointColor: HIGHLIGHT,
+  snappingPointOutlineColor: '#FFFFFF' as HexColor,
+  editedPointColor: HIGHLIGHT,
+  editedPointOutlineColor: '#FFFFFF' as HexColor,
+  coordinatePointColor: HIGHLIGHT,
+  coordinatePointOutlineColor: '#FFFFFF' as HexColor,
 };
 
 /**

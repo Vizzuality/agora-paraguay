@@ -116,14 +116,15 @@ logic modules are unit-tested, behaviour is e2e-tested.
 
 - allows parcel clicks only while the map is idle
 
-### `tests/unit/lib/map/draw-styles.test.ts` (7)
+### `tests/unit/lib/map/draw-styles.test.ts` (8)
 
 **PARCEL_STYLES**
 
 - paints the analysis selection yellow, whatever its origin
 - paints uploaded parcels white
-- leaves hand-drawn parcels on Terra Draw defaults
-- requires the analysis flag to be literally true, not merely set
+- paints hand-drawn parcels yellow like the selection, never Terra Draw blue
+- paints the drawing handles yellow with a white outline
+- requires the analysis flag to be literally true to lift an upload out of white
 
 **dotPatternImage**
 
