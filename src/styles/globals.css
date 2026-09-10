@@ -14,11 +14,10 @@
 ));
 
 /*
-  Tokens from the Ágora design system: the Figma "1.0 Theme" variable collection, which
-  carries a light and a dark mode (https://www.figma.com/design/Q3naD5iGjP9PO9zY5qbat1/Agora,
-  variable set 137:1573). Both modes are mirrored below, hover shades included — they are
-  real tokens in the collection (hover:primary etc.), so components use `*-hover`
-  utilities rather than opacity modifiers.
+  Design tokens from the Figma "1.0 Theme" variable collection, which carries a light and
+  a dark mode. Both modes are mirrored below, hover shades included — they are real tokens
+  in the collection (hover:primary etc.), so components use `*-hover` utilities rather
+  than opacity modifiers.
 */
 @theme inline {
   --color-background: var(--background);
