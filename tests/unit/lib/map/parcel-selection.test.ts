@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ParcelFeature } from '@/lib/api/schemas';
+import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 import { parcelAtPoint, toggleParcel } from '@/lib/map/parcel-selection';
 
 function parcel(id: string, west: number, south: number, east: number, north: number) {

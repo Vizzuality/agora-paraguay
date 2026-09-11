@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { stubAnalysisApi } from './fixtures/api';
 import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
 /**
@@ -72,6 +73,7 @@ async function findAParcel(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
+  await stubAnalysisApi(page);
   await page.goto('/');
 
   // The draw button arming is the signal that Terra Draw is bound, which also gates

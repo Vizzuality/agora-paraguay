@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { analysisOptionsFixture } from '@/lib/api/fixtures/analysis-options';
-import { analysisOptionsSchema } from '@/lib/api/schemas';
+import { analysisOptionsFixture } from '@/lib/api/metadata/fixtures/analysis-options';
+import { analysisOptionsSchema } from '@/lib/api/metadata/schemas';
 
 const DATE_LISTS = [
   analysisOptionsFixture.fechasSiembra,

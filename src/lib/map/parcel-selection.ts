@@ -1,4 +1,4 @@
-import type { ParcelFeature } from '@/lib/api/schemas';
+import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 import { ringContains, type MapPoint } from '@/lib/map/point-in-polygon';
 
 /**

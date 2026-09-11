@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { generateParcelFixtures } from '@/lib/api/fixtures/parcels';
-import { parcelCollectionSchema, type ParcelFeature } from '@/lib/api/schemas';
+import { generateParcelFixtures } from '@/lib/api/parcels/fixtures/parcels';
+import { parcelCollectionSchema, type ParcelFeature } from '@/lib/api/parcels/schemas';
 
 // TODO(mock-parcels): tests for the mock generator — delete this file with it when
 // the real parcel layer replaces the mock (grep `mock-parcels`).

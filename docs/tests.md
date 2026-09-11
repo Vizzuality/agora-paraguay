@@ -1,7 +1,7 @@
 # Test inventory
 
-Snapshot of every test in the platform as of 2026-08-27 (branch `feat/app-workflow`): **124
-tests — 108 unit (Vitest) + 16 end-to-end (Playwright)**.
+Snapshot of every test in the platform as of 2026-09-10 (branch `feat/parcel-selection-request`): **220
+tests — 200 unit (Vitest) + 20 end-to-end (Playwright)**.
 
 ## How to run
 
@@ -13,15 +13,30 @@ Ground rules (see `CLAUDE.md`): tests live in `tests/unit/**` mirroring the `src
 colocated in `src/`. No jsdom / testing-library is installed, so there are no component tests —
 logic modules are unit-tested, behaviour is e2e-tested.
 
-## Unit tests (108)
+## Unit tests (200)
 
-### `tests/unit/lib/api/client.test.ts` (15)
+### `tests/unit/lib/api/http.test.ts` (10)
 
-**submitAnalysis**
+**cookieValue**
 
-- accepts the request, echoing how many features it received
-- mints a distinct id per submission
-- rejects a malformed request at the boundary
+- reads one cookie out of a document.cookie string
+- returns null when the cookie is missing or empty
+
+**csrfToken**
+
+- reads the csrftoken cookie, and is null without a document (SSR)
+
+**getJson / postJson**
+
+- GETs with the session cookie and appends defined query parameters only
+- leaves the path untouched when there are no parameters
+- POSTs JSON with the CSRF header taken from the cookie
+- omits the CSRF header when no csrftoken cookie is readable
+- returns null for an empty body
+- throws an ApiError carrying the status on a non-2xx response
+- throws an ApiError with a null status when fetch itself rejects
+
+### `tests/unit/lib/api/auth/client.test.ts` (19)
 
 **login**
 
@@ -36,12 +51,54 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - reports the backend as unavailable when fetch itself rejects
 - rejects malformed credentials before touching the network
 
-**cookieValue**
+**fetchMe**
 
-- reads one cookie out of a document.cookie string
-- returns null when the cookie is missing or empty
+- GETs /api/auth/me/ and returns the session
+- is anonymous on a 401 or 403, without throwing
+- is anonymous when the body says so, or names nobody
+- propagates a server error so the caller can tell "anonymous" from "unknown"
 
-### `tests/unit/lib/api/parcels-fixtures.test.ts` (7)
+**setPassword**
+
+- posts the one-time link parameters with the new password
+- posts the password alone for a logged-in change
+- rejects a weak password client-side, before touching the network
+- rejects a uid without its token
+- surfaces the server's own validators (the common-password list) as an ApiError 400
+
+### `tests/unit/lib/api/parcels/schemas.test.ts` (12)
+
+**filterParcelsRequestSchema**
+
+- accepts the documented body
+- rejects a threshold outside 0–100 and a negative buffer
+- rejects a feature whose id is not a UUID
+- rejects an empty filtering collection and a non-Polygon geometry
+- rejects a ring with fewer than 4 positions
+
+**toFilterParcelsRequest**
+
+- maps the store id and name onto properties, with the default tunables
+- names unnamed drawings by position and strips Terra Draw internals
+- takes the tunables from the options and copies the geometry
+- throws on an empty polygon list
+
+**filterParcelsResponseSchema**
+
+- accepts the documented response, including empty geometry collections
+- accepts a MultiPolygon parcel geometry and extra feature fields
+- rejects a parcel without the selected flag or with a string id
+
+### `tests/unit/lib/api/parcels/client.test.ts` (4)
+
+**filterParcels**
+
+- POSTs the body to filter_parcels with the CSRF token and parses the results
+- surfaces an HTTP failure as an ApiError
+- rejects a response that does not match the contract
+- rejects a malformed request before touching the network
+
+### `tests/unit/lib/api/parcels/fixtures.test.ts` (7)
 
 **generateParcelFixtures**
 
@@ -53,29 +110,54 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - places parcels flush against neighbours (shared corner vertices)
 - is deterministic for a given seed
 
-### `tests/unit/lib/api/schemas.test.ts` (13)
+### `tests/unit/lib/api/metadata/client.test.ts` (5)
+
+**fetchFilters**
+
+- GETs /api/filters/ and accepts both list and single-value filters
+- rejects a filter that is neither
+
+**fetchIndicators**
+
+- GETs /api/indicators/ with the riesgo and cultivo filters as query parameters
+- accepts both indicator types, and extra attributes the spec has not fixed yet
+- rejects an indicator type it does not know
+
+### `tests/unit/lib/api/metadata/analysis-options-fixtures.test.ts` (4)
+
+**analysisOptionsFixture**
+
+- satisfies the analysis options schema
+- lists every date list in ascending order
+- labels dates as dd/mm/yyyy without a time-zone day shift
+- gives every option list unique values
+
+### `tests/unit/lib/api/analysis/client.test.ts` (6)
 
 **analysisRequestSchema**
 
-- accepts a FeatureCollection with a Polygon feature
-- accepts a MultiPolygon geometry — the contract allows both
-- rejects a non-areal geometry
-- rejects an empty features array
-- rejects a feature with an empty name
-- rejects a ring with fewer than 4 positions
+- accepts the documented body, with crop and cycle optional (productivo)
+- rejects an empty parcel or indicator list, and a non-ISO date
 
 **analysisResponseSchema**
 
-- accepts an accepted response
-- rejects any status other than accepted
+- accepts every value shape the spec shows
+- rejects an indicator without an id
 
-**toAnalysisRequest**
+**runAnalysis**
 
-- names features from properties.name, falling back to the list position
-- strips Terra Draw's internal properties from the payload
-- returns fresh geometry, never aliasing the draw store
-- throws on an empty polygon list — the contract wants at least one feature
-- accepts cadastral parcel features alongside drawn polygons, named and id-stripped
+- POSTs to the visibility path and parses the indicators
+- rejects a malformed request before touching the network
+
+### `tests/unit/lib/auth/password.test.ts` (5)
+
+**passwordErrors**
+
+- accepts a password that passes every client-side validator
+- rejects fewer than 8 characters (MinimumLengthValidator)
+- rejects an entirely numeric password (NumericPasswordValidator)
+- reports every broken rule, in Django order
+- phrases messages in Spanish with the configured minimum
 
 ### `tests/unit/lib/map/draw-features.test.ts` (6)
 
@@ -277,7 +359,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - parses a FeatureCollection with a MultiPolygon, exploding it
 - stamps the store properties on every feature
 
-## End-to-end tests (16)
+## End-to-end tests (20)
 
 All e2e specs stub the Esri basemap tiles (`tests/e2e/fixtures/map.ts`) so they run without
 network access. Binary upload fixtures are regenerated with

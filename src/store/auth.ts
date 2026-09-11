@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import type { Session } from '@/lib/api/schemas';
+import type { Session } from '@/lib/api/auth/schemas';
 
 /**
  * The identified session. `null` means anonymous: `/analisis` shows the login gate

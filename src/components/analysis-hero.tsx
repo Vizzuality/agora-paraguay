@@ -29,8 +29,8 @@ import {
   scrollEdges,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
-import { analysisQueries } from '@/lib/api/queries';
-import type { AnalysisOption } from '@/lib/api/schemas';
+import { metadataQueries } from '@/lib/api/metadata/queries';
+import type { AnalysisOption } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import type { RiesgoTab } from '@/routes/analisis';
 import { activeParcelTabAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
@@ -77,7 +77,7 @@ const PRODUCTIVO_FIELDS: HeroSelectSpec[] = [
  */
 function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
   const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
-  const { data: options } = useQuery(analysisQueries.options());
+  const { data: options } = useQuery(metadataQueries.analysisOptions());
   const selected = useAtomValue(analysisFiltersAtom);
   const setFilter = useSetAtom(setAnalysisFilterAtom);
   const resolved = options ? resolveAnalysisFilters(selected, options) : null;

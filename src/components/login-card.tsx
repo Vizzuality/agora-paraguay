@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/card';
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
-import { LoginError } from '@/lib/api/client';
-import { authMutations } from '@/lib/api/queries';
+import { LoginError } from '@/lib/api/auth/client';
+import { authMutations } from '@/lib/api/auth/queries';
 import { cn } from '@/lib/utils';
 import { sessionAtom } from '@/store/auth';
 

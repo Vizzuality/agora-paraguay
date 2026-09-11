@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import type { FilterSpecification } from 'maplibre-gl';
 import { Layer, Source } from 'react-map-gl/maplibre';
 
-import { parcelQueries } from '@/lib/api/queries';
+import { parcelQueries } from '@/lib/api/parcels/queries';
 import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
