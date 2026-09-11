@@ -23,8 +23,9 @@ No `.env` file is needed — the app runs with sensible defaults (mock data, bui
 basemap). Copy `.env.example` to `.env` only to override them; note that setting
 `VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
 
-Login is the one real call: the dev server proxies `/api` to the Django backend, so its session
-cookie stays first-party. The default target is a local Django on port 8000; set
+Auth, parcel filtering, metadata and analysis call the real Django API (see
+[Data layer](#data-layer)): the dev server proxies `/api` to the backend, so its session cookie
+stays first-party. The default target is a local Django on port 8000; set
 `API_PROXY_TARGET` in `.env` to reach the shared backend instead. Deployed builds that are
 not served by the backend set `VITE_API_URL` instead. The e2e specs stub the auth routes
 (`tests/e2e/fixtures/auth.ts`); signing in against the real backend is a manual check with a
@@ -76,25 +77,32 @@ path) for logic, e2e specs for user-visible behaviour.
 
 ## Data layer
 
-Mock data lives behind a single seam so swapping in the real API is a one-file change:
+The API layer is organised by the domains of the API spec (auth, parcels, metadata, analysis).
+Every domain has the same three files, and mock data lives behind a single seam per domain:
 
 ```
 src/lib/api/
-├── schemas.ts              Zod schemas — the source of truth for types
-├── fixtures/               Mock data. Nothing outside src/lib/api may import this
-├── client.ts               The ONLY module that knows the data is fake
-└── queries.ts              queryOptions factories — what components import
+├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
+├── auth/                   POST /api/auth/login/ (+csrf), GET /api/auth/me/
+├── parcels/                POST /api/parcels/filter_parcels; the cadastral layer (mock)
+├── metadata/               GET /api/filters/, GET /api/indicators/; analysis options (mock)
+└── analysis/               POST /api/analysis/{public|private}
+    ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
+    ├── client.ts           The ONLY module in the domain that knows which data is fake
+    ├── queries.ts          queryOptions / mutationOptions factories — what components import
+    └── fixtures/           Mock data, where a domain still has any. Nothing outside the domain imports it
 ```
 
 Rules that keep the swap cheap:
 
-- Components import from `queries.ts` only, never from `client.ts` or `fixtures/`.
-- Both the mock and the future real branch parse responses through the Zod schemas, so contract
-  drift surfaces at the boundary instead of as `undefined` deep in a component.
-- `VITE_USE_MOCK_API` (see `.env.example`) lets both paths coexist during the transition.
-
-The current `Placeholder` model is **throwaway** — it exists to prove the path renders end to end.
-The real schemas wait for the API contract.
+- Components import from a domain's `queries.ts` only, never from `client.ts` or `fixtures/`.
+- Every response is parsed through the Zod schemas, mock or real, so contract drift surfaces at
+  the boundary instead of as `undefined` deep in a component.
+- Real endpoints ignore `VITE_USE_MOCK_API`; it only gates the endpoints the spec does not cover
+  yet (the cadastral parcel layer, the analysis hero options). Each of those carries a
+  `TODO(mock-…)` marker — grep it to find every trace when the real endpoint lands.
+- Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
+  add fields without breaking the parse; tighten them as the contract settles.
 
 Query state is fetched on the client after hydration; SSR sends the shell and a loading state.
 Wiring server-side prefetch (`@tanstack/react-router-ssr-query`) was deliberately deferred until

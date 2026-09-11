@@ -1,4 +1,4 @@
-import type { AnalysisOption, AnalysisOptions } from '../schemas';
+import type { AnalysisOption, AnalysisOptions } from '@/lib/api/metadata/schemas';
 
 /**
  * TODO(mock-analysis-options): stand-in for the analysis parameters endpoint. Delete

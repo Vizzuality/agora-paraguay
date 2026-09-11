@@ -17,6 +17,9 @@ export default defineConfig({
     // Component tests require jsdom + testing-library.
     environment: 'node',
     include: ['tests/unit/**/*.test.ts'],
+    // Vite loads the developer's `.env` into `import.meta.env`; the API tests assert on
+    // paths and on the mock branch, so both flags are pinned regardless of it.
+    env: { VITE_API_URL: '', VITE_USE_MOCK_API: 'true' },
     coverage: {
       provider: 'v8',
       // text-summary keeps the number visible in CI logs; lcov is the interchange
@@ -29,7 +32,7 @@ export default defineConfig({
         'src/routeTree.gen.ts',
         // Fixtures are data, and the route tree is generated — neither is behaviour
         // worth measuring, and both would skew the number.
-        'src/lib/api/fixtures/**',
+        'src/lib/api/**/fixtures/**',
       ],
     },
   },

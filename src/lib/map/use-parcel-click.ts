@@ -4,7 +4,7 @@ import type { MapMouseEvent } from 'maplibre-gl';
 import { useEffect } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 
-import { parcelQueries } from '@/lib/api/queries';
+import { parcelQueries } from '@/lib/api/parcels/queries';
 import { parcelAtPoint } from '@/lib/map/parcel-selection';
 import { parcelClickEnabledAtom } from '@/store/analysis';
 import { toggleParcelAtom } from '@/store/parcels';

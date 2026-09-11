@@ -7,7 +7,7 @@ import {
   optionValues,
   resolveAnalysisFilters,
 } from '@/lib/analysis/filters';
-import type { AnalysisOptions } from '@/lib/api/schemas';
+import type { AnalysisOptions } from '@/lib/api/metadata/schemas';
 
 export const OPTIONS: AnalysisOptions = {
   fechasSiembra: [

@@ -1,90 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { cookieValue, login, submitAnalysis } from '@/lib/api/client';
-import { analysisResponseSchema, type AnalysisRequest } from '@/lib/api/schemas';
+import { fetchMe, login, setPassword } from '@/lib/api/auth/client';
 
-const SQUARE: [number, number][] = [
-  [0, 0],
-  [0, 1],
-  [1, 1],
-  [1, 0],
-  [0, 0],
-];
+const fetchMock = vi.fn<typeof fetch>();
 
-function request(featureCount = 1): AnalysisRequest {
-  return {
-    type: 'FeatureCollection',
-    features: Array.from({ length: featureCount }, (_, index) => ({
-      type: 'Feature' as const,
-      properties: { name: `Área ${index + 1}` },
-      geometry: { type: 'Polygon' as const, coordinates: [SQUARE] },
-    })),
-  };
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
-describe('submitAnalysis', () => {
-  // The mock branch simulates latency and logs the payload; fake timers keep the suite
-  // fast and the console quiet.
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.spyOn(console, 'info').mockImplementation(() => undefined);
-  });
+beforeEach(() => {
+  vi.stubGlobal('fetch', fetchMock);
+  fetchMock.mockReset();
+});
 
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-  });
-
-  async function submit(input: AnalysisRequest) {
-    const pending = submitAnalysis(input);
-
-    await vi.runAllTimersAsync();
-
-    return pending;
-  }
-
-  it('accepts the request, echoing how many features it received', async () => {
-    const response = await submit(request(3));
-
-    expect(() => analysisResponseSchema.parse(response)).not.toThrow();
-    expect(response.status).toBe('accepted');
-    expect(response.receivedFeatures).toBe(3);
-  });
-
-  it('mints a distinct id per submission', async () => {
-    const first = await submit(request());
-    const second = await submit(request());
-
-    expect(first.id).not.toBe(second.id);
-  });
-
-  it('rejects a malformed request at the boundary', async () => {
-    const empty = { type: 'FeatureCollection', features: [] } as unknown as AnalysisRequest;
-
-    await expect(submitAnalysis(empty)).rejects.toThrow(ZodError);
-  });
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('login', () => {
-  const fetchMock = vi.fn<typeof fetch>();
-
-  function json(body: unknown, status = 200) {
-    return new Response(JSON.stringify(body), {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  beforeEach(() => {
-    vi.stubGlobal('fetch', fetchMock);
-    fetchMock.mockReset();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
   it('fetches a CSRF token, then posts the credentials with it', async () => {
     fetchMock
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
@@ -201,15 +138,82 @@ describe('login', () => {
   });
 });
 
-describe('cookieValue', () => {
-  it('reads one cookie out of a document.cookie string', () => {
-    expect(cookieValue('a=1; csrftoken=abc%3D; b=2', 'csrftoken')).toBe('abc=');
-    expect(cookieValue('csrftoken=abc', 'csrftoken')).toBe('abc');
+describe('fetchMe', () => {
+  it('GETs /api/auth/me/ and returns the session', async () => {
+    fetchMock.mockResolvedValueOnce(json({ username: 'analista' }));
+
+    await expect(fetchMe()).resolves.toEqual({ username: 'analista' });
+    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/auth/me/');
   });
 
-  it('returns null when the cookie is missing or empty', () => {
-    expect(cookieValue('a=1; b=2', 'csrftoken')).toBeNull();
-    expect(cookieValue('csrftoken=', 'csrftoken')).toBeNull();
-    expect(cookieValue('', 'csrftoken')).toBeNull();
+  it('is anonymous on a 401 or 403, without throwing', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 401 }));
+    await expect(fetchMe()).resolves.toBeNull();
+
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 403 }));
+    await expect(fetchMe()).resolves.toBeNull();
+  });
+
+  it('is anonymous when the body says so, or names nobody', async () => {
+    fetchMock.mockResolvedValueOnce(json({ authenticated: false, username: 'analista' }));
+    await expect(fetchMe()).resolves.toBeNull();
+
+    fetchMock.mockResolvedValueOnce(json({ authenticated: true }));
+    await expect(fetchMe()).resolves.toBeNull();
+  });
+
+  it('propagates a server error so the caller can tell "anonymous" from "unknown"', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('boom', { status: 503 }));
+
+    await expect(fetchMe()).rejects.toMatchObject({ name: 'ApiError', status: 503 });
+  });
+});
+
+describe('setPassword', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+  });
+
+  it('posts the one-time link parameters with the new password', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(
+      setPassword({ uid: 'MQ', token: 't0k3n', password: 'Chaco-2026!' }),
+    ).resolves.toBeUndefined();
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/auth/password/reset/');
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { 'X-CSRFToken': 'abc' },
+      body: JSON.stringify({ uid: 'MQ', token: 't0k3n', password: 'Chaco-2026!' }),
+    });
+  });
+
+  it('posts the password alone for a logged-in change', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await setPassword({ password: 'Chaco-2026!' });
+
+    expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({ password: 'Chaco-2026!' }));
+  });
+
+  it('rejects a weak password client-side, before touching the network', async () => {
+    await expect(setPassword({ password: '1234' })).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a uid without its token', async () => {
+    await expect(setPassword({ uid: 'MQ', password: 'Chaco-2026!' })).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("surfaces the server's own validators (the common-password list) as an ApiError 400", async () => {
+    fetchMock.mockResolvedValueOnce(json({ password: ['This password is too common.'] }, 400));
+
+    await expect(setPassword({ password: 'password123' })).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 400,
+    });
   });
 });

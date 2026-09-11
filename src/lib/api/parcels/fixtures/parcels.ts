@@ -1,4 +1,4 @@
-import type { ParcelCollection, ParcelFeature } from '@/lib/api/schemas';
+import type { ParcelCollection, ParcelFeature } from '@/lib/api/parcels/schemas';
 
 /**
  * TODO(mock-parcels): this whole module is a stand-in. When the real parcel layer is

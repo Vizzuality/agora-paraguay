@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import type { ParcelFeature } from '@/lib/api/schemas';
+import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 import { toggleParcel } from '@/lib/map/parcel-selection';
 import { parcelClickEnabledAtom } from '@/store/analysis';
 

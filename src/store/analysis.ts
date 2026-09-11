@@ -5,6 +5,7 @@ import {
   type AnalysisFilterKey,
   type AnalysisFilters,
 } from '@/lib/analysis/filters';
+import type { AnalysisResponse } from '@/lib/api/analysis/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
 import { canSelectParcel } from '@/lib/map/draw-state';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
@@ -44,6 +45,13 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
 
 /** The parcel tab open on the analysis page — an index into the submitted area list. */
 export const activeParcelTabAtom = atom(0);
+
+/**
+ * The last analysis the API answered (Analizar, `analysisMutations.analyzeSelection`).
+ * `null` until one succeeds. Lives here rather than in the mutation because /analisis
+ * renders it after the confirm panel has unmounted.
+ */
+export const analysisResultAtom = atom<AnalysisResponse | null>(null);
 
 /**
  * The hero dropdown selection (AGP-29). One selection for the whole analysis, not one

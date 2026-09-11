@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { stubAnalysisApi } from './fixtures/api';
 import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
 // Positions are relative to the canvas, which is the right half of the 1280×720
@@ -25,6 +26,7 @@ function controls(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
+  await stubAnalysisApi(page);
   await page.goto('/');
 
   // Terra Draw starts on the style's `load` event, and the Draw button is disabled until

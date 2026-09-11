@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
+import { stubAnalysisApi } from './fixtures/api';
 import { mapCanvas, stubBasemap } from './fixtures/map';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
@@ -26,6 +27,7 @@ async function upload(page: Page, fixture: string) {
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
+  await stubAnalysisApi(page);
   await page.goto('/');
 
   // Terra Draw starts on the style's `load` event; the Upload button is disabled until

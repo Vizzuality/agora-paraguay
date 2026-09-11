@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
@@ -23,6 +24,7 @@ function controls(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
+  await stubAnalysisApi(page);
   await stubAuth(page);
   await page.goto('/');
 

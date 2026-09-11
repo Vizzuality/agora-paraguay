@@ -1,4 +1,4 @@
-import type { AnalysisOption, AnalysisOptions } from '@/lib/api/schemas';
+import type { AnalysisOption, AnalysisOptions } from '@/lib/api/metadata/schemas';
 
 /**
  * The analysis hero dropdowns (AGP-29). The public hero (riesgo sanitario) shows the
