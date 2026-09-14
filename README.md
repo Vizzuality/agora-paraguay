@@ -75,6 +75,45 @@ it (or run `pnpm exec playwright install chromium` directly).
 New features and bug fixes come with tests: unit tests in `tests/unit/**` (mirroring the `src/`
 path) for logic, e2e specs for user-visible behaviour.
 
+## Architecture
+
+Dependencies point one way: routes render components, components read and write the store,
+the store and the components call pure logic in `src/lib`, and only the API layer talks to the
+network. Nothing in `src/lib` imports from `src/store` or `src/components`.
+
+```mermaid
+flowchart TD
+  routes["src/routes\nfile routes, ClientOnly boundaries"]
+  components["src/components\nmap, sidebar, ui (shadcn)"]
+  store["src/store\nJotai atoms, one file per feature"]
+  map["src/lib/map\ndraw reducer, Terra Draw adapter, styles"]
+  upload["src/lib/upload\nshapefile / KML / GeoJSON → polygons"]
+  analysis["src/lib/analysis\nfilters, request builder"]
+  queries["src/lib/api/*/queries.ts\nqueryOptions / mutationOptions"]
+  client["src/lib/api/*/client.ts\nthe only module that knows what is mock"]
+  http["src/lib/api/http.ts\nAPI_URL, CSRF, getJson / postJson"]
+  fixtures["src/lib/api/*/fixtures\nTODO(mock-…)"]
+  api[("External API\nAGORA Project API — not built yet")]
+  maplibre[("MapLibre GL + Terra Draw")]
+
+  routes --> components
+  components --> store
+  components --> queries
+  components --> map
+  components --> upload
+  store --> map
+  store --> analysis
+  store --> upload
+  queries --> client
+  client --> http
+  client -.-> fixtures
+  http --> api
+  map --> maplibre
+```
+
+Each layer's rules are spelled out in the sections below (data layer) and in the module
+comments (`src/store/draw-core.ts`, `src/components/map/index.tsx`).
+
 ## Data layer
 
 The API layer is organised by the domains of the API spec (auth, parcels, metadata, analysis).
@@ -152,9 +191,9 @@ on 2026-08-11.
 - **TanStack Charts is excluded.** Pre-alpha (`0.11.0`), APIs documented as unstable, docs describe
   an unreleased branch, no org usage. Use **Recharts** for charts, **visx** where custom marks are
   needed.
-- **Terra Draw** rather than `@mapbox/mapbox-gl-draw` when the map arrives, and pin
-  **MapLibre GL JS v5** — the Terra Draw adapter documents v4/v5 and `maplibre-gl` is already past
-  that.
+- **Terra Draw** rather than `@mapbox/mapbox-gl-draw`, on **MapLibre GL JS v6** (upgraded
+  2026-08-21; the earlier v5 pin is lifted). v6 resolves its render worker at runtime, so
+  `src/components/map/index.tsx` sets the worker URL explicitly — without it the map renders blank.
 - **oxlint + oxfmt**, not ESLint or Prettier (ADR 001). Correctness rules are set to `error`, and
   the full `jsx-a11y` rule set is enabled — stricter than oxlint's defaults, which only warn.
 - **prek for git hooks, not Husky.** Husky is the Adopt-tier default and prek is Trial, so this is a
