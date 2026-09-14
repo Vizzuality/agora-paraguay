@@ -28,6 +28,11 @@ jobs:
       # optionalDependency, and the `prepare` git-hook install is pointless in CI.
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
+      # Production dependencies only: dev tooling never ships, so its advisories are
+      # noise here. Dependabot security updates open the fix PR; this step keeps an
+      # unfixed high/critical advisory from merging in the meantime.
+      - run: pnpm audit --prod --audit-level high
+
       # Build first: the router plugin generates src/routeTree.gen.ts, which
       # typecheck and lint both need to exist.
       - run: pnpm build
