@@ -5,7 +5,9 @@ import {
   type AnalysisFilterKey,
   type AnalysisFilters,
 } from '@/lib/analysis/filters';
+import { selectableIndicators, toggleIndicatorId } from '@/lib/analysis/indicator-picker';
 import type { AnalysisResponse } from '@/lib/api/analysis/schemas';
+import type { Indicators } from '@/lib/api/metadata/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
 import { canSelectParcel } from '@/lib/map/draw-state';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
@@ -70,6 +72,28 @@ export const setAnalysisFilterAtom = atom(
   null,
   (get, set, update: { key: AnalysisFilterKey; value: string }) => {
     set(analysisFiltersBaseAtom, { ...get(analysisFiltersBaseAtom), [update.key]: update.value });
+  },
+);
+
+/**
+ * Personalizar indicadores: the indicator ids the analysis page shows, or `null` while the
+ * user has not touched the list (the API's `default` flags apply — `visibleIndicatorIds`).
+ * One list for the whole analysis, like the filters above. Reads the list; writes toggle
+ * one id, so the raw list is never set from a component.
+ */
+const selectedIndicatorIdsBaseAtom = atom<string[] | null>(null);
+
+export const selectedIndicatorIdsAtom = atom(
+  (get) => get(selectedIndicatorIdsBaseAtom),
+  (get, set, update: { indicators: Indicators; id: string }) => {
+    set(
+      selectedIndicatorIdsBaseAtom,
+      toggleIndicatorId(
+        selectableIndicators(update.indicators),
+        get(selectedIndicatorIdsBaseAtom),
+        update.id,
+      ),
+    );
   },
 );
 

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   ClientOnly,
   createFileRoute,
@@ -5,16 +6,29 @@ import {
   type SearchSchemaInput,
 } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
-import { SquarePen, Upload } from 'lucide-react';
-import { useEffect } from 'react';
+import { Upload } from 'lucide-react';
+import { useEffect, type ReactNode } from 'react';
 
 import { AnalysisHero } from '@/components/analysis-hero';
 import { Footer } from '@/components/footer';
+import { GeneralInfoCard } from '@/components/general-info-card';
+import { IndicatorPicker } from '@/components/indicator-picker';
 import { LoginCard } from '@/components/login-card';
+import { RiskClassCard } from '@/components/risk-class-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { Button } from '@/components/ui/button';
+import { resolveAnalysisFilters } from '@/lib/analysis/filters';
+import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
+import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
+import { metadataQueries } from '@/lib/api/metadata/queries';
 import { polygonName } from '@/lib/map/draw-features';
+import {
+  activeParcelTabAtom,
+  analysisFiltersAtom,
+  analysisResultAtom,
+  selectedIndicatorIdsAtom,
+} from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
 import { selectedParcelsAtom } from '@/store/parcels';
@@ -67,7 +81,9 @@ function AnalysisPage() {
         </ClientOnly>
 
         {riesgo === 'sanitario' ? (
-          <WidgetGrid />
+          <ClientOnly fallback={<WidgetGrid />}>
+            <SanitarioWidgets />
+          </ClientOnly>
         ) : (
           <ClientOnly fallback={<LoginGate />}>
             <ProductivoGate />
@@ -98,10 +114,7 @@ function TitleRow({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
       </h1>
 
       <div className="flex items-center gap-4">
-        <Button variant="secondary" className="h-11 rounded-2xl px-8 font-normal">
-          <SquarePen aria-hidden />
-          Personalizar indicadores
-        </Button>
+        <IndicatorPicker riesgo={riesgo} />
         <Button className="h-11 rounded-2xl px-8 font-normal">
           <Upload aria-hidden />
           Exportar informe
@@ -149,24 +162,59 @@ function LoginGate() {
   );
 }
 
-/** The indicators layout, minus the gate — real widgets take the slots with the API. */
-function WidgetGrid() {
+/**
+ * Riesgo sanitario: the active parcel tab's indicators (`analysisResultAtom`) — its text
+ * facts in the general-info card, then one risk card per selected measured indicator.
+ * Cards are per parcel, never a summary of the selection.
+ *
+ * TODO(mock-analysis): the tab index picks the response feature by position. The real
+ * mapping is by parcel id once the selection carries the ids `filter_parcels` returns.
+ */
+function SanitarioWidgets() {
+  const result = useAtomValue(analysisResultAtom);
+  const activeTab = useAtomValue(activeParcelTabAtom);
+  const selectedFilters = useAtomValue(analysisFiltersAtom);
+  const { data: options } = useQuery(metadataQueries.analysisOptions());
+  // Same params Analizar sent, so the names match the values the API scored.
+  const cultivo = options ? resolveAnalysisFilters(selectedFilters, options).cultivo : undefined;
+  const { data: indicators } = useQuery(
+    metadataQueries.indicators({ riesgo: 'sanitario', cultivo }),
+  );
+
+  const selected = useAtomValue(selectedIndicatorIdsAtom);
+
+  const parcel = result?.features[activeTab];
+  // General info is always on; the cards are the selected measured indicators (the API's
+  // defaults until the user touches Personalizar indicadores).
+  const info = generalInfo(parcel, indicators);
+  const shown = indicators
+    ? visibleIndicators(selectableIndicators(indicators), selected)
+    : undefined;
+  const cards = indicatorCards(parcel, shown);
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex h-64 items-stretch gap-4">
-        <WidgetPlaceholder />
-        <WidgetPlaceholder />
-        <WidgetPlaceholder />
-      </div>
-      <div className="flex h-28 gap-4">
-        <WidgetPlaceholder />
-        <WidgetPlaceholder />
-      </div>
+      {info.length > 0 && <GeneralInfoCard items={info} />}
+      <WidgetGrid>
+        {cards.map((card) => (
+          <RiskClassCard key={card.id} {...card} />
+        ))}
+      </WidgetGrid>
     </div>
   );
 }
 
-/** Empty widget frame (Figma "Widget03") — a real widget takes the slot with the API. */
+/**
+ * The indicator cards, as many as are selected — no empty frames. Auto-fill columns keep a
+ * card the same width whether it has company or not.
+ */
+function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">{children}</div>
+  );
+}
+
+/** Empty widget frame behind the login gate (Figma 5180:11125). */
 function WidgetPlaceholder() {
   return <div aria-hidden className="min-w-[200px] flex-1 rounded-3xl border-3 border-border" />;
 }

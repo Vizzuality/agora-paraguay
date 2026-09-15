@@ -24,14 +24,21 @@ export async function fetchFilters(): Promise<Filters> {
 /**
  * `GET /api/indicators/` — the indicators and their metadata, optionally by riesgo/cultivo.
  *
- * TODO(mock-indicators): the mock branch answers the spec's example for any params;
- * drop it when the endpoint is reachable (grep `mock-indicators`).
+ * TODO(mock-indicators): the mock branch answers the fixture for the riesgo asked (both
+ * without one); `cultivo` is ignored. Drop it when the endpoint is reachable (grep
+ * `mock-indicators`).
  */
 export async function fetchIndicators(params: IndicatorsParams = {}): Promise<Indicators> {
   if (env.VITE_USE_MOCK_API) {
-    const { indicatorsFixture } = await import('./fixtures/indicators');
+    const fixtures = await import('./fixtures/indicators');
+    const fixture =
+      params.riesgo === 'sanitario'
+        ? fixtures.sanitarioIndicatorsFixture
+        : params.riesgo === 'productivo'
+          ? fixtures.productivoIndicatorsFixture
+          : fixtures.indicatorsFixture;
 
-    return indicatorsSchema.parse(indicatorsFixture);
+    return indicatorsSchema.parse(fixture);
   }
 
   return indicatorsSchema.parse(await getJson('/api/indicators/', params));

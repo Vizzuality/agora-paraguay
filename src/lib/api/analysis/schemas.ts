@@ -24,37 +24,59 @@ export const analysisRequestSchema = z.object({
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
 
 /**
- * An indicator value takes several shapes in the spec: a number (`iep: 70`), a label
- * (`resiliencia: "Baja"`), or a set of named numbers (`rendimiento: {p10, p50, p90}`).
+ * One property value of an analysed parcel. The backend's sample exports numbers as
+ * strings (`"asian_rust": "2"`), so both are accepted; the reading side coerces.
  */
-const indicatorValueSchema = z.union([z.number(), z.string(), z.record(z.string(), z.number())]);
+const parcelValueSchema = z.union([z.string(), z.number(), z.null()]);
 
 /**
- * One indicator's result. Attributes are marked "to be defined" in the spec, so only
- * the fields the examples show are declared, all optional but `id`, and extras pass.
+ * The columns every analysed parcel carries (backend sample, Sept 2026). Anything else is
+ * an indicator column keyed by the indicator id from `GET /api/indicators/`, hence the
+ * catchall. Wire shape kept as delivered: numbers may arrive as strings.
  */
-const analysisIndicatorSchema = z.looseObject({
-  id: z.string().min(1),
-  category: z.enum(['sanitario', 'productivo']).optional(),
-  date: z.iso.date().optional(),
-  value: indicatorValueSchema.optional(),
-  values: z
-    .array(
-      z.looseObject({
-        label: z.string(),
-        value: indicatorValueSchema,
-        date: z.iso.date().optional(),
-      }),
-    )
-    .optional(),
-  display_value: z.string().optional(),
-  confidence: z.string().optional(),
+const analysisParcelPropertiesSchema = z
+  .object({
+    fid: z.number().optional(),
+    parcela_id: z.string().min(1),
+    area: parcelValueSchema.optional(),
+    weather_station: z.string().optional(),
+    data_quality: parcelValueSchema.optional(),
+    crop_type: z.string().optional(),
+    phenology_stage: z.string().optional(),
+  })
+  .catchall(parcelValueSchema);
+
+export type AnalysisParcelProperties = z.infer<typeof analysisParcelPropertiesSchema>;
+
+/**
+ * Geometry as the sample delivers it: MultiPolygon in EPSG:32721 (UTM 21S), declared by
+ * the collection's `crs`. Not painted yet, so the rings are not validated — reproject
+ * before putting it on the map.
+ */
+const analysisGeometrySchema = z.looseObject({
+  type: z.enum(['Polygon', 'MultiPolygon']),
+  coordinates: z.array(z.unknown()),
 });
 
-export type AnalysisIndicator = z.infer<typeof analysisIndicatorSchema>;
+/** One analysed parcel: the indicators as property columns over its geometry. */
+const analysisParcelSchema = z.object({
+  type: z.literal('Feature'),
+  properties: analysisParcelPropertiesSchema,
+  geometry: analysisGeometrySchema,
+});
 
-export const analysisResponseSchema = z.object({
-  indicators: z.array(analysisIndicatorSchema),
+export type AnalysisParcel = z.infer<typeof analysisParcelSchema>;
+
+/**
+ * `POST /api/analysis/public` answers a FeatureCollection of the analysed parcels
+ * (the shape the mocked data follows). The indicator
+ * cards aggregate over it; nothing arrives pre-aggregated.
+ */
+export const analysisResponseSchema = z.looseObject({
+  type: z.literal('FeatureCollection'),
+  name: z.string().optional(),
+  crs: z.looseObject({ type: z.string() }).optional(),
+  features: z.array(analysisParcelSchema),
 });
 
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
