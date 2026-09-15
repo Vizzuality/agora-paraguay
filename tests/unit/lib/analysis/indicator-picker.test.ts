@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   matchesIndicator,
-  pickableIndicators,
+  selectableIndicators,
   toggleIndicatorId,
   visibleIndicatorIds,
   visibleIndicators,
@@ -16,7 +16,7 @@ const indicators: Indicators = [
   { id: 'weather_station', name: 'Estación' },
 ];
 
-describe('pickableIndicators', () => {
+describe('selectableIndicators', () => {
   it('leaves out the general-info facts: text and untyped indicators', () => {
     const withTypes: Indicators = [
       { id: 'asian_rust', name: 'Roya', indicator_type: { type: 'range', min: 1, max: 3 } },
@@ -25,12 +25,12 @@ describe('pickableIndicators', () => {
       { id: 'ITR', name: 'ITR', indicator_type: { type: 'category', categories: ['a', 'b'] } },
     ];
 
-    expect(pickableIndicators(withTypes).map((i) => i.id)).toEqual(['asian_rust', 'ITR']);
+    expect(selectableIndicators(withTypes).map((i) => i.id)).toEqual(['asian_rust', 'ITR']);
   });
 });
 
 describe('visibleIndicatorIds', () => {
-  it("follows the API's default flags until the user picks", () => {
+  it("follows the API's default flags until the user selects", () => {
     expect(visibleIndicatorIds(indicators, null)).toEqual(['asian_rust', 'brown_spot']);
   });
 
@@ -45,14 +45,14 @@ describe('visibleIndicatorIds', () => {
     ]);
   });
 
-  it("is the user's picks once there are any, even an empty list", () => {
+  it("is the user's selection once there is one, even an empty list", () => {
     expect(visibleIndicatorIds(indicators, ['data_quality'])).toEqual(['data_quality']);
     expect(visibleIndicatorIds(indicators, [])).toEqual([]);
   });
 });
 
 describe('visibleIndicators', () => {
-  it('keeps metadata order regardless of pick order, and drops unknown ids', () => {
+  it('keeps metadata order regardless of selection order, and drops unknown ids', () => {
     expect(
       visibleIndicators(indicators, ['weather_station', 'gone', 'asian_rust']).map((i) => i.id),
     ).toEqual(['asian_rust', 'weather_station']);
@@ -60,7 +60,7 @@ describe('visibleIndicators', () => {
 });
 
 describe('toggleIndicatorId', () => {
-  it('materialises the defaults on the first pick, then removes or adds the id', () => {
+  it('materialises the defaults on the first toggle, then removes or adds the id', () => {
     expect(toggleIndicatorId(indicators, null, 'brown_spot')).toEqual(['asian_rust']);
     expect(toggleIndicatorId(indicators, null, 'data_quality')).toEqual([
       'asian_rust',

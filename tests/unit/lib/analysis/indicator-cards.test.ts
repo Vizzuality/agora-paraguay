@@ -85,7 +85,7 @@ describe('indicatorCards', () => {
     expect(indicatorCards(parcel({ asian_rust: 2 }), undefined)).toEqual([]);
   });
 
-  it('says "Sin datos" for a picked indicator without a reading: missing, blank, null or "NA"', () => {
+  it('says "Sin datos" for a selected indicator without a reading: missing, blank, null or "NA"', () => {
     const cards = indicatorCards(
       parcel({ data_quality: '', weather_station: null, Pro_soja: 'NA', asian_rust: 2 }),
       [station, dataQuality, production, asianRust, itr],

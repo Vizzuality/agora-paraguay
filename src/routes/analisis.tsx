@@ -20,14 +20,14 @@ import { NavBar } from '@/components/sidebar/nav-bar';
 import { Button } from '@/components/ui/button';
 import { resolveAnalysisFilters } from '@/lib/analysis/filters';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
-import { pickableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
+import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import { polygonName } from '@/lib/map/draw-features';
 import {
   activeParcelTabAtom,
   analysisFiltersAtom,
   analysisResultAtom,
-  pickedIndicatorIdsAtom,
+  selectedIndicatorIdsAtom,
 } from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
@@ -164,7 +164,7 @@ function LoginGate() {
 
 /**
  * Riesgo sanitario: the active parcel tab's indicators (`analysisResultAtom`) — its text
- * facts in the general-info card, then one risk card per picked measured indicator.
+ * facts in the general-info card, then one risk card per selected measured indicator.
  * Cards are per parcel, never a summary of the selection.
  *
  * TODO(mock-analysis): the tab index picks the response feature by position. The real
@@ -181,13 +181,15 @@ function SanitarioWidgets() {
     metadataQueries.indicators({ riesgo: 'sanitario', cultivo }),
   );
 
-  const picked = useAtomValue(pickedIndicatorIdsAtom);
+  const selected = useAtomValue(selectedIndicatorIdsAtom);
 
   const parcel = result?.features[activeTab];
-  // General info is always on; the cards are the picked measured indicators (the API's
+  // General info is always on; the cards are the selected measured indicators (the API's
   // defaults until the user touches Personalizar indicadores).
   const info = generalInfo(parcel, indicators);
-  const shown = indicators ? visibleIndicators(pickableIndicators(indicators), picked) : undefined;
+  const shown = indicators
+    ? visibleIndicators(selectableIndicators(indicators), selected)
+    : undefined;
   const cards = indicatorCards(parcel, shown);
 
   return (
@@ -195,13 +197,7 @@ function SanitarioWidgets() {
       {info.length > 0 && <GeneralInfoCard items={info} />}
       <WidgetGrid>
         {cards.map((card) => (
-          <RiskClassCard
-            key={card.id}
-            label={card.label}
-            level={card.level}
-            position={card.position}
-            caption={card.caption}
-          />
+          <RiskClassCard key={card.id} {...card} />
         ))}
       </WidgetGrid>
     </div>
@@ -209,7 +205,7 @@ function SanitarioWidgets() {
 }
 
 /**
- * The indicator cards, as many as are picked — no empty frames. Auto-fill columns keep a
+ * The indicator cards, as many as are selected — no empty frames. Auto-fill columns keep a
  * card the same width whether it has company or not.
  */
 function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {

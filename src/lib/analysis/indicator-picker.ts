@@ -3,7 +3,7 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /*
  * Personalizar indicadores: which indicators the analysis page shows. Pure, node-tested.
- * The user's picks live in `src/store/analysis.ts`; `null` there means "the API's
+ * The user's selection lives in `src/store/analysis.ts`; `null` there means "the API's
  * defaults", so a metadata change is followed until the user touches the list.
  */
 
@@ -11,13 +11,13 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
  * What the picker offers: the measured indicators only. The general-info facts (station,
  * crop, phenology) are always on the page and never in the list.
  */
-export function pickableIndicators(indicators: Indicators): Indicators {
+export function selectableIndicators(indicators: Indicators): Indicators {
   return indicators.filter((indicator) => !isGeneralInfo(indicator));
 }
 
-/** The ids shown: the user's picks, else the indicators the API flags `default`, else all. */
-export function visibleIndicatorIds(indicators: Indicators, picked: string[] | null): string[] {
-  if (picked !== null) return picked;
+/** The ids shown: the user's selection, else the indicators the API flags `default`, else all. */
+export function visibleIndicatorIds(indicators: Indicators, selected: string[] | null): string[] {
+  if (selected !== null) return selected;
 
   const defaults = indicators.filter((indicator) => indicator.default === true);
 
@@ -25,19 +25,19 @@ export function visibleIndicatorIds(indicators: Indicators, picked: string[] | n
 }
 
 /** The indicators to render, in metadata order, restricted to the visible ids. */
-export function visibleIndicators(indicators: Indicators, picked: string[] | null): Indicators {
-  const visible = new Set(visibleIndicatorIds(indicators, picked));
+export function visibleIndicators(indicators: Indicators, selected: string[] | null): Indicators {
+  const visible = new Set(visibleIndicatorIds(indicators, selected));
 
   return indicators.filter((indicator) => visible.has(indicator.id));
 }
 
-/** Adds or removes `id` from the visible set, materialising the defaults on the first pick. */
+/** Adds or removes `id` from the visible ids, materialising the defaults on the first toggle. */
 export function toggleIndicatorId(
   indicators: Indicators,
-  picked: string[] | null,
+  selected: string[] | null,
   id: string,
 ): string[] {
-  const current = visibleIndicatorIds(indicators, picked);
+  const current = visibleIndicatorIds(indicators, selected);
 
   return current.includes(id) ? current.filter((other) => other !== id) : [...current, id];
 }

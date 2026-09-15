@@ -17,7 +17,7 @@ describe('runAnalysis (mock)', () => {
     vi.unstubAllGlobals();
   });
 
-  it("answers the backend sample's shape without touching the network", async () => {
+  it('answers the mocked parcels without touching the network', async () => {
     const request = {
       parcel_ids: [8668],
       filters: { start_date: '2026-06-18', end_date: '2026-08-18', indicators: ['asian_rust'] },

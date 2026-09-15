@@ -69,7 +69,7 @@ export type AnalysisParcel = z.infer<typeof analysisParcelSchema>;
 
 /**
  * `POST /api/analysis/public` answers a FeatureCollection of the analysed parcels
- * (backend sample `AGORA_Public-part_Backend2Frontend-sample_20260909`). The indicator
+ * (the shape the mocked data follows). The indicator
  * cards aggregate over it; nothing arrives pre-aggregated.
  */
 export const analysisResponseSchema = z.looseObject({

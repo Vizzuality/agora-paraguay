@@ -4,15 +4,13 @@ import type { AnalysisResponse } from '@/lib/api/analysis/schemas';
  * TODO(mock-analysis): stand-in for `POST /api/analysis/public` while the endpoint is
  * not reachable. Delete with the mock branch in `client.ts`.
  *
- * Shape follows the backend's sample (`AGORA_Public-part_Backend2Frontend-sample_20260909`):
- * one Feature per analysed parcel, the `disease_indices` as property columns, geometry in
- * EPSG:32721 (UTM 21S) as delivered. Three parcels with different readings so switching
+ * Mocked data: one Feature per analysed parcel, the sanitario indicators as property
+ * columns, geometry in EPSG:32721 (UTM 21S) as the API delivers it. Three parcels with different readings so switching
  * the hero's parcel tab visibly changes the cards. Disease indices run 1–3 per the
  * indicators metadata.
  */
 export const analysisFixture: AnalysisResponse = {
   type: 'FeatureCollection',
-  name: 'AGORA_Database_Public_Draft_20260909',
   crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:EPSG::32721' } },
   features: [
     parcel({

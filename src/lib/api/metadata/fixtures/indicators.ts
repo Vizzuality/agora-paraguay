@@ -4,10 +4,9 @@ import type { Indicators } from '@/lib/api/metadata/schemas';
  * TODO(mock-indicators): served for every riesgo while `GET /api/indicators/` is not
  * reachable. Delete with the mock branch in `client.ts`.
  *
- * Sanitario is the backend's `disease_indices` (endpoint2front-end_20260909.py), verbatim
- * — ids are the property columns of the public analysis response. Productivo keeps the
- * spec's `resiliencia` example until its response shape lands. Split by riesgo so the mock
- * honours the `riesgo` query parameter the way the endpoint does.
+ * Mocked data. Sanitario ids are the property columns of the public analysis response;
+ * productivo keeps the spec's `resiliencia` example until its response shape lands. Split
+ * by riesgo so the mock honours the `riesgo` query parameter the way the endpoint does.
  */
 export const sanitarioIndicatorsFixture: Indicators = [
   {

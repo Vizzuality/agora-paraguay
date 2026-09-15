@@ -1,28 +1,20 @@
 import type { ReactNode } from 'react';
 
 import { Card } from '@/components/ui/card';
-import { toneOf, type RiskTone } from '@/lib/analysis/indicator-cards';
+import { toneOf, type IndicatorCard, type RiskTone } from '@/lib/analysis/indicator-cards';
 import { rulerSegments } from '@/lib/analysis/risk-ruler';
 import { cn } from '@/lib/utils';
 
-type RiskClassCardProps = {
-  /** Indicator name, sentence case: "Roya asiática". */
-  label: string;
-  /** The risk class the selection falls in: "Bajo", "Medio", "Alto". */
-  level: string;
-  /** 0–100, where the class sits on the ruler. Clamped; omit it to hide the ruler. */
-  position?: number;
-  /** Qualifies the class, e.g. the share of the set in it. */
-  caption?: string;
+/** What `indicatorCards()` produces, minus the id the list keys on. */
+type RiskClassCardProps = Omit<IndicatorCard, 'id'> & {
   /** Top-right slot. Hidden in the design for now, kept for parity with `StatCard`. */
   action?: ReactNode;
   className?: string;
 };
 
 /**
- * Widget tile for a classed indicator (Figma "Widget03", node 5155:8188): a label, the
- * class as the large figure, a ruler marking where the class falls on the scale, and a
- * caption qualifying it.
+ * Widget tile for a classed indicator: a label, the class as the large figure, a ruler
+ * marking where the class falls on the scale, and a caption qualifying it.
  *
  * Light surface (`bg-card`), unlike `StatCard`'s navy `bg-widget` — the two are
  * different tiles in the design, not variants of one.

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { Check, Search, SquarePen } from 'lucide-react';
 import { useId, useState } from 'react';
 
@@ -8,20 +8,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { resolveAnalysisFilters } from '@/lib/analysis/filters';
 import {
   matchesIndicator,
-  pickableIndicators,
+  selectableIndicators,
   visibleIndicatorIds,
 } from '@/lib/analysis/indicator-picker';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import { analysisFiltersAtom, pickedIndicatorIdsAtom, toggleIndicatorAtom } from '@/store/analysis';
+import { analysisFiltersAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
 
 type IndicatorPickerProps = {
   riesgo: 'sanitario' | 'productivo';
 };
 
 /**
- * Personalizar indicadores (Figma 5172:7800): the title-row button opens a popover with a
+ * Personalizar indicadores: the title-row button opens a popover with a
  * search box and the riesgo's measured indicators as a checklist; checked ones are the
  * cards on the page. General info is not listed: it is always shown. Renders inside
  * `<ClientOnly>` (it reads the analysis atoms).
@@ -48,19 +48,18 @@ export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
         sideOffset={8}
         className="w-auto min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
       >
-        {indicators && <IndicatorChecklist indicators={pickableIndicators(indicators)} />}
+        {indicators && <IndicatorChecklist indicators={selectableIndicators(indicators)} />}
       </PopoverContent>
     </Popover>
   );
 }
 
 function IndicatorChecklist({ indicators }: Readonly<{ indicators: Indicators }>) {
-  const picked = useAtomValue(pickedIndicatorIdsAtom);
-  const toggle = useSetAtom(toggleIndicatorAtom);
+  const [selected, toggle] = useAtom(selectedIndicatorIdsAtom);
   const [query, setQuery] = useState('');
   const listId = useId();
 
-  const visible = new Set(visibleIndicatorIds(indicators, picked));
+  const visibleIds = visibleIndicatorIds(indicators, selected);
   const matching = indicators.filter((indicator) => matchesIndicator(indicator, query));
 
   return (
@@ -84,7 +83,7 @@ function IndicatorChecklist({ indicators }: Readonly<{ indicators: Indicators }>
         className="max-h-[300px] overflow-y-auto border-t px-1 py-1.5"
       >
         {matching.map((indicator) => {
-          const checked = visible.has(indicator.id);
+          const checked = visibleIds.includes(indicator.id);
 
           return (
             <li key={indicator.id}>

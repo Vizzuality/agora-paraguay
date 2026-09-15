@@ -71,12 +71,12 @@ function readingOf(parcel: AnalysisParcel, indicator: Indicator): string | numbe
   return value;
 }
 
-/** The figure when the parcel has no usable reading for a picked indicator. */
+/** The figure when the parcel has no usable reading for a selected indicator. */
 export const NO_READING = 'Sin datos';
 
 /**
  * One risk card per measured indicator (range, category, numeric), in metadata order.
- * The list is the user's pick, so every indicator gets a card: one without a reading
+ * The list is the user's selection, so every indicator gets a card: one without a reading
  * (missing column, blank, "NA", or a value the metadata cannot place) says so instead
  * of vanishing.
  */

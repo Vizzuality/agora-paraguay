@@ -19,10 +19,9 @@ const request = {
   },
 };
 
-/** The backend sample's shape: one Feature per analysed parcel, indicators as columns. */
+/** The public analysis shape: one Feature per analysed parcel, indicators as columns. */
 const response = {
   type: 'FeatureCollection',
-  name: 'AGORA_Database_Public_Draft_20260909',
   crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:EPSG::32721' } },
   features: [
     {

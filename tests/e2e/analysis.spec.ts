@@ -69,7 +69,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(info).toContainText('Soja');
 
   // Personalizar indicadores: the title-row button opens a checklist of the measured
-  // indicators (Figma 5172:7800). General info is not in it — it is always shown.
+  // indicators. General info is not in it — it is always shown.
   await page.getByRole('button', { name: 'Personalizar indicadores' }).click();
   const list = page.getByRole('list', { name: 'Indicadores' });
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).toBeChecked();
