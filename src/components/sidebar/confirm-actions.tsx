@@ -36,8 +36,6 @@ export function ConfirmActions() {
     // Entering the mode before navigating keeps the store consistent even if navigation
     // fails. `useMutation`-level so an unmount cannot skip it.
     onSuccess: (result) => {
-      // TODO(mock-analysis): temporary, until /analisis renders the result.
-      console.info('analysis response', result);
       setResult(result);
       startAnalysis();
       void navigate({ to: '/analisis' });

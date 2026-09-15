@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   ClientOnly,
   createFileRoute,
@@ -6,15 +7,21 @@ import {
 } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 import { SquarePen, Upload } from 'lucide-react';
-import { useEffect } from 'react';
+import { Children, useEffect, type ReactNode } from 'react';
 
 import { AnalysisHero } from '@/components/analysis-hero';
 import { Footer } from '@/components/footer';
+import { GeneralInfoCard } from '@/components/general-info-card';
 import { LoginCard } from '@/components/login-card';
+import { RiskClassCard } from '@/components/risk-class-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { Button } from '@/components/ui/button';
+import { resolveAnalysisFilters } from '@/lib/analysis/filters';
+import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
+import { metadataQueries } from '@/lib/api/metadata/queries';
 import { polygonName } from '@/lib/map/draw-features';
+import { activeParcelTabAtom, analysisFiltersAtom, analysisResultAtom } from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
 import { selectedParcelsAtom } from '@/store/parcels';
@@ -67,7 +74,9 @@ function AnalysisPage() {
         </ClientOnly>
 
         {riesgo === 'sanitario' ? (
-          <WidgetGrid />
+          <ClientOnly fallback={<WidgetGrid />}>
+            <SanitarioWidgets />
+          </ClientOnly>
         ) : (
           <ClientOnly fallback={<LoginGate />}>
             <ProductivoGate />
@@ -149,14 +158,61 @@ function LoginGate() {
   );
 }
 
-/** The indicators layout, minus the gate — real widgets take the slots with the API. */
-function WidgetGrid() {
+/**
+ * Riesgo sanitario: the active parcel tab's indicators (`analysisResultAtom`) — its text
+ * facts together in one general-info card, then one risk card per measured indicator.
+ * Cards are per parcel, never a summary of the selection.
+ *
+ * TODO(mock-analysis): the tab index picks the response feature by position. The real
+ * mapping is by parcel id once the selection carries the ids `filter_parcels` returns.
+ */
+function SanitarioWidgets() {
+  const result = useAtomValue(analysisResultAtom);
+  const activeTab = useAtomValue(activeParcelTabAtom);
+  const selectedFilters = useAtomValue(analysisFiltersAtom);
+  const { data: options } = useQuery(metadataQueries.analysisOptions());
+  // Same params Analizar sent, so the names match the values the API scored.
+  const cultivo = options ? resolveAnalysisFilters(selectedFilters, options).cultivo : undefined;
+  const { data: indicators } = useQuery(
+    metadataQueries.indicators({ riesgo: 'sanitario', cultivo }),
+  );
+
+  const parcel = result?.features[activeTab];
+  const info = generalInfo(parcel, indicators);
+  const cards = indicatorCards(parcel, indicators);
+
+  return (
+    <WidgetGrid>
+      {info.length > 0 && <GeneralInfoCard items={info} className="min-w-[200px] flex-1" />}
+      {cards.map((card) => (
+        <RiskClassCard
+          key={card.id}
+          label={card.label}
+          level={card.level}
+          position={card.position}
+          caption={card.caption}
+          className="min-w-50 flex-1"
+        />
+      ))}
+    </WidgetGrid>
+  );
+}
+
+/** Top row of three widget slots, cards first and placeholders for the rest. */
+const TOP_ROW_SLOTS = 3;
+
+/** The indicators layout, minus the gate. Slots without a card stay as empty frames. */
+function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {
+  const cards = Children.toArray(children);
+  const placeholders = Math.max(0, TOP_ROW_SLOTS - cards.length);
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex h-64 items-stretch gap-4">
-        <WidgetPlaceholder />
-        <WidgetPlaceholder />
-        <WidgetPlaceholder />
+      <div className="flex min-h-64 flex-wrap items-stretch gap-4">
+        {cards}
+        {Array.from({ length: placeholders }, (_, index) => (
+          <WidgetPlaceholder key={index} />
+        ))}
       </div>
       <div className="flex h-28 gap-4">
         <WidgetPlaceholder />

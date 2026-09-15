@@ -17,11 +17,16 @@ export async function stubAnalysisApi(page: Page) {
         contentType: 'application/json',
         body: JSON.stringify([
           {
-            id: 'iep',
-            name: 'Índice de exposición a plagas',
-            unit: '%',
+            id: 'crop_type',
+            name: 'Tipo de cultivo',
             default: true,
-            indicator_type: { type: 'range', min: 0, max: 100, step: '1' },
+            indicator_type: { type: 'text' },
+          },
+          {
+            id: 'asian_rust',
+            name: 'Phakopsora pachyrhizi',
+            default: true,
+            indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
           },
         ]),
       }),
@@ -52,8 +57,23 @@ export async function stubAnalysisApi(page: Page) {
     (route) =>
       route.fulfill({
         contentType: 'application/json',
+        // One analysed parcel per submitted area, its disease index at the top of the 1–3
+        // range: the first tab's card reads "Alto" over the value "3" — the same reading
+        // the shipped fixture gives, so the spec passes with `VITE_USE_MOCK_API` on or off.
         body: JSON.stringify({
-          indicators: [{ id: 'iep', category: 'sanitario', value: 70, display_value: '70 %' }],
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: {
+                fid: 0,
+                parcela_id: 'D07D21P00000001',
+                crop_type: 'Soja',
+                asian_rust: 3,
+              },
+              geometry: { type: 'MultiPolygon', coordinates: [] },
+            },
+          ],
         }),
       }),
   );

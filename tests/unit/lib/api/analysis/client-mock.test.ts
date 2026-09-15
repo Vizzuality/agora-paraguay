@@ -17,10 +17,10 @@ describe('runAnalysis (mock)', () => {
     vi.unstubAllGlobals();
   });
 
-  it("answers the spec's example without touching the network", async () => {
+  it("answers the backend sample's shape without touching the network", async () => {
     const request = {
       parcel_ids: [8668],
-      filters: { start_date: '2026-06-18', end_date: '2026-08-18', indicators: ['iep'] },
+      filters: { start_date: '2026-06-18', end_date: '2026-08-18', indicators: ['asian_rust'] },
     };
 
     await expect(runAnalysis('public', request)).resolves.toEqual(analysisFixture);

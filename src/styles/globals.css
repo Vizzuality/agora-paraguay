@@ -54,6 +54,9 @@
   --color-widget: var(--widget);
   --color-widget-foreground: var(--widget-foreground);
   --color-highlight: var(--highlight);
+  --color-risk-low: var(--risk-low);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-high: var(--risk-high);
   --font-sans:
     'Geologica Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
@@ -99,6 +102,10 @@
   --widget: #13294f;
   --widget-foreground: #ffffff;
   --highlight: #ec6e00; /* step progress, Figma hardcodes it */
+  /* Risk ruler by class: bajo, medio, alto. Figma hardcodes the first two; alto reuses the alert red. */
+  --risk-low: #2a7bf1;
+  --risk-medium: #ec6e00;
+  --risk-high: var(--destructive);
   --chart-1: #3d8f5f;
   --chart-2: #4a90c2;
   --chart-3: oklch(0.398 0.07 227.392);

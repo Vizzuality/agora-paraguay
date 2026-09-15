@@ -53,6 +53,9 @@ const categoryIndicatorTypeSchema = z.looseObject({
   categories: z.array(z.string()),
 });
 
+/** Free text (`weather_station`, `phenology_stage`) and open numbers (`Pro_soja` t/ha). */
+const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric']) });
+
 export const indicatorSchema = z.looseObject({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -61,7 +64,11 @@ export const indicatorSchema = z.looseObject({
   /** Whether the indicator is selected before the user touches anything. */
   default: z.boolean().optional(),
   indicator_type: z
-    .discriminatedUnion('type', [rangeIndicatorTypeSchema, categoryIndicatorTypeSchema])
+    .discriminatedUnion('type', [
+      rangeIndicatorTypeSchema,
+      categoryIndicatorTypeSchema,
+      plainIndicatorTypeSchema,
+    ])
     .optional(),
 });
 

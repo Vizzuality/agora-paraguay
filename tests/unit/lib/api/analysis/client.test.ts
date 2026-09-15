@@ -19,20 +19,39 @@ const request = {
   },
 };
 
-/** The spec's three value shapes: a number, a set of named numbers, a label. */
+/** The backend sample's shape: one Feature per analysed parcel, indicators as columns. */
 const response = {
-  indicators: [
+  type: 'FeatureCollection',
+  name: 'AGORA_Database_Public_Draft_20260909',
+  crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:EPSG::32721' } },
+  features: [
     {
-      id: 'iep',
-      category: 'sanitario',
-      date: '2026-08-18',
-      value: 70,
-      values: [{ label: 'Jun', value: 60, date: '2026-06-18' }],
-      display_value: '70 %',
-      confidence: 'Alto',
+      type: 'Feature',
+      properties: {
+        fid: 2161,
+        area: '18025.552734375',
+        parcela_id: 'D07D21P00000001',
+        weather_station: 'Colonias Unidas - Capitán Meza',
+        data_quality: '92',
+        crop_type: 'Soja',
+        phenology_stage: 'R5 (Inicio de grano)',
+        asian_rust: '2',
+        brown_spot: '1',
+      },
+      geometry: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [676462.8, 7077914.9],
+              [676522.8, 7077914.9],
+              [676462.8, 7077854.9],
+              [676462.8, 7077914.9],
+            ],
+          ],
+        ],
+      },
     },
-    { id: 'rendimiento', value: { p10: 2.49, p50: 2.77, p90: 2.96 } },
-    { id: 'resiliencia', value: 'Baja' },
   ],
 };
 
@@ -62,12 +81,27 @@ describe('analysisRequestSchema', () => {
 });
 
 describe('analysisResponseSchema', () => {
-  it('accepts every value shape the spec shows', () => {
+  it("accepts the backend sample's FeatureCollection, numbers-as-strings included", () => {
     expect(analysisResponseSchema.safeParse(response).success).toBe(true);
   });
 
-  it('rejects an indicator without an id', () => {
-    expect(analysisResponseSchema.safeParse({ indicators: [{ value: 1 }] }).success).toBe(false);
+  it('keeps unknown property columns — they are the indicators', () => {
+    const parsed = analysisResponseSchema.parse(response);
+
+    expect(parsed.features[0].properties.asian_rust).toBe('2');
+  });
+
+  it('rejects a parcel without parcela_id, and the old pre-aggregated shape', () => {
+    const [feature] = response.features;
+    const { parcela_id: _id, ...properties } = feature.properties;
+
+    expect(
+      analysisResponseSchema.safeParse({ ...response, features: [{ ...feature, properties }] })
+        .success,
+    ).toBe(false);
+    expect(
+      analysisResponseSchema.safeParse({ indicators: [{ id: 'iep', value: 70 }] }).success,
+    ).toBe(false);
   });
 });
 
@@ -84,7 +118,7 @@ describe('runAnalysis', () => {
     vi.unstubAllGlobals();
   });
 
-  it('POSTs to the visibility path and parses the indicators', async () => {
+  it('POSTs to the visibility path and parses the analysed parcels', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(response));
 
     await expect(runAnalysis('private', request)).resolves.toEqual(response);

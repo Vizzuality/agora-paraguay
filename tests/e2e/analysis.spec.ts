@@ -54,6 +54,20 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await expect(areas).toHaveText(['Área dibujada 1']);
 
+  // The active parcel's disease index sits at the top of its 1–3 range: a risk class
+  // card with the class as its figure and the measured value as caption.
+  const card = page
+    .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
+    .locator('..')
+    .locator('..');
+  await expect(card).toContainText('Alto');
+  await expect(card).toContainText('3');
+
+  // Its text facts (crop, station, phenology) share one general-info card instead.
+  const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
+  await expect(info).toContainText('Tipo de cultivo');
+  await expect(info).toContainText('Soja');
+
   // The navbar offers the way back and the login entry point (Figma node 5180:12072).
   // Locators are scoped to the header because the footer repeats the same link names.
   const navbar = page.getByRole('banner');

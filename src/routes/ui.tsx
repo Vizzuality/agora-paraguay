@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { GeneralInfoCard } from '@/components/general-info-card';
+import { RiskClassCard } from '@/components/risk-class-card';
 import { StatCard } from '@/components/stat-card';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -402,6 +404,25 @@ function UiKitPage() {
                 value="48 %"
                 caption="Dentro del área dibujada"
                 action={<Switch defaultChecked aria-label="Mostrar capa" />}
+              />
+              <RiskClassCard
+                label="Roya asiática"
+                level="Bajo"
+                position={12}
+                caption="5 % del conjunto está en esta clase"
+              />
+              <RiskClassCard
+                label="Estrés hídrico"
+                level="Alto"
+                position={80}
+                caption="62 % del conjunto está en esta clase"
+              />
+              <GeneralInfoCard
+                items={[
+                  { id: 'station', label: 'Estación meteorológica', value: 'Hohenau' },
+                  { id: 'crop', label: 'Tipo de cultivo', value: 'Soja' },
+                  { id: 'phenology', label: 'Momento fenológico', value: 'R5 (Inicio de grano)' },
+                ]}
               />
             </div>
             <div className="grid max-w-md gap-3">
