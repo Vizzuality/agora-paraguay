@@ -54,7 +54,7 @@ export type GeneralInfoRow = {
 };
 
 /** Text indicators, and untyped ones: nothing to class, so they read as plain facts. */
-function isGeneralInfo(indicator: Indicator): boolean {
+export function isGeneralInfo(indicator: Indicator): boolean {
   const type = indicator.indicator_type?.type;
 
   return type === undefined || type === 'text';
@@ -71,9 +71,14 @@ function readingOf(parcel: AnalysisParcel, indicator: Indicator): string | numbe
   return value;
 }
 
+/** The figure when the parcel has no usable reading for a picked indicator. */
+export const NO_READING = 'Sin datos';
+
 /**
- * One risk card per measured indicator (range, category, numeric) the parcel carries a
- * value for, in metadata order. Missing columns, blanks and "NA" yield no card.
+ * One risk card per measured indicator (range, category, numeric), in metadata order.
+ * The list is the user's pick, so every indicator gets a card: one without a reading
+ * (missing column, blank, "NA", or a value the metadata cannot place) says so instead
+ * of vanishing.
  */
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
@@ -87,7 +92,7 @@ export function indicatorCards(
     const value = readingOf(parcel, indicator);
     const card = value === undefined ? null : toCard(indicator, value);
 
-    return card ? [card] : [];
+    return [card ?? { id: indicator.id, label: indicator.name, level: NO_READING }];
   });
 }
 

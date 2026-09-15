@@ -6,9 +6,10 @@ import type { Indicators } from '@/lib/api/metadata/schemas';
  *
  * Sanitario is the backend's `disease_indices` (endpoint2front-end_20260909.py), verbatim
  * — ids are the property columns of the public analysis response. Productivo keeps the
- * spec's `resiliencia` example until its response shape lands.
+ * spec's `resiliencia` example until its response shape lands. Split by riesgo so the mock
+ * honours the `riesgo` query parameter the way the endpoint does.
  */
-export const indicatorsFixture: Indicators = [
+export const sanitarioIndicatorsFixture: Indicators = [
   {
     id: 'weather_station',
     name: 'Nombre de la estación meteorológica más cercana',
@@ -55,6 +56,9 @@ export const indicatorsFixture: Indicators = [
     default: true,
     indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
   },
+];
+
+export const productivoIndicatorsFixture: Indicators = [
   {
     id: 'resiliencia',
     name: 'Resiliencia',
@@ -66,4 +70,10 @@ export const indicatorsFixture: Indicators = [
       categories: ['muy bajo', 'bajo', 'medio', 'alto'],
     },
   },
+];
+
+/** Every indicator, the answer to `GET /api/indicators/` without a `riesgo`. */
+export const indicatorsFixture: Indicators = [
+  ...sanitarioIndicatorsFixture,
+  ...productivoIndicatorsFixture,
 ];

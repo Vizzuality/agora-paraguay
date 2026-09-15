@@ -68,6 +68,28 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(info).toContainText('Tipo de cultivo');
   await expect(info).toContainText('Soja');
 
+  // Personalizar indicadores: the title-row button opens a checklist of the measured
+  // indicators (Figma 5172:7800). General info is not in it — it is always shown.
+  await page.getByRole('button', { name: 'Personalizar indicadores' }).click();
+  const list = page.getByRole('list', { name: 'Indicadores' });
+  await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).toBeChecked();
+  await expect(list.getByRole('checkbox', { name: 'Tipo de cultivo' })).toHaveCount(0);
+
+  // The search box filters the list, accent-insensitively.
+  await page.getByRole('searchbox', { name: 'Buscar indicador' }).fill('phakopsora');
+  await expect(list.getByRole('checkbox')).toHaveCount(1);
+  await page.getByRole('searchbox', { name: 'Buscar indicador' }).fill('zzz');
+  await expect(list).toContainText('Sin resultados');
+  await page.getByRole('searchbox', { name: 'Buscar indicador' }).fill('');
+
+  // Unchecking an indicator removes its card; the general-info card stays. The input is
+  // visually hidden (the check glyph is the cue), so the label row is what gets clicked.
+  await list.getByText('Phakopsora pachyrhizi').click();
+  await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).not.toBeChecked();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Información general' })).toBeVisible();
+
   // The navbar offers the way back and the login entry point (Figma node 5180:12072).
   // Locators are scoped to the header because the footer repeats the same link names.
   const navbar = page.getByRole('banner');

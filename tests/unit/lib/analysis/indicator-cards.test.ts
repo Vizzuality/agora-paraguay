@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { generalInfo, indicatorCards, levelOf, toneOf } from '@/lib/analysis/indicator-cards';
 import { analysisFixture } from '@/lib/api/analysis/fixtures/analysis';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import { indicatorsFixture } from '@/lib/api/metadata/fixtures/indicators';
+import { sanitarioIndicatorsFixture } from '@/lib/api/metadata/fixtures/indicators';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
 /** A bare analysed parcel carrying only the given columns. */
@@ -85,13 +85,19 @@ describe('indicatorCards', () => {
     expect(indicatorCards(parcel({ asian_rust: 2 }), undefined)).toEqual([]);
   });
 
-  it('skips indicators the parcel has no reading for: missing, blank, null or "NA"', () => {
+  it('says "Sin datos" for a picked indicator without a reading: missing, blank, null or "NA"', () => {
     const cards = indicatorCards(
       parcel({ data_quality: '', weather_station: null, Pro_soja: 'NA', asian_rust: 2 }),
-      [station, dataQuality, production, asianRust],
+      [station, dataQuality, production, asianRust, itr],
     );
 
-    expect(cards.map((card) => card.id)).toEqual(['asian_rust']);
+    expect(cards.map((card) => [card.id, card.level])).toEqual([
+      ['data_quality', 'Sin datos'],
+      ['Pro_soja', 'Sin datos'],
+      ['asian_rust', 'Medio'],
+      ['ITR_soja', 'Sin datos'],
+    ]);
+    expect(cards[0]).toEqual({ id: 'data_quality', label: 'Calidad del dato', level: 'Sin datos' });
   });
 
   it('keeps metadata order, not column order', () => {
@@ -132,8 +138,10 @@ describe('indicatorCards', () => {
       ]);
     });
 
-    it('drops a non-numeric reading of a range indicator', () => {
-      expect(indicatorCards(parcel({ data_quality: 'n/a' }), [dataQuality])).toEqual([]);
+    it('reads a non-numeric range value as no reading', () => {
+      expect(indicatorCards(parcel({ data_quality: 'n/a' }), [dataQuality])[0].level).toBe(
+        'Sin datos',
+      );
     });
 
     it('collapses a degenerate range to the left edge', () => {
@@ -159,9 +167,9 @@ describe('indicatorCards', () => {
       expect(indicatorCards(parcel({ ITR_soja: '1' }), [itr])[0].level).toBe('Estable');
     });
 
-    it('drops a value outside the categories', () => {
-      expect(indicatorCards(parcel({ ITR_soja: 'Negativa' }), [itr])).toEqual([]);
-      expect(indicatorCards(parcel({ ITR_soja: 9 }), [itr])).toEqual([]);
+    it('reads a value outside the categories as no reading', () => {
+      expect(indicatorCards(parcel({ ITR_soja: 'Negativa' }), [itr])[0].level).toBe('Sin datos');
+      expect(indicatorCards(parcel({ ITR_soja: 9 }), [itr])[0].level).toBe('Sin datos');
     });
 
     it('has no ruler position with a single category', () => {
@@ -187,7 +195,7 @@ describe('indicatorCards', () => {
   it('turns the shipped fixtures into one card per measured index, per parcel', () => {
     const [first, , third] = analysisFixture.features;
 
-    expect(indicatorCards(first, indicatorsFixture).map((card) => card.id)).toEqual([
+    expect(indicatorCards(first, sanitarioIndicatorsFixture).map((card) => card.id)).toEqual([
       'data_quality',
       'asian_rust',
       'brown_spot',
@@ -195,7 +203,7 @@ describe('indicatorCards', () => {
 
     // Different parcels, different readings — the tab switch has to show it.
     const rust = (parcel: AnalysisParcel) =>
-      indicatorCards(parcel, indicatorsFixture).find((card) => card.id === 'asian_rust');
+      indicatorCards(parcel, sanitarioIndicatorsFixture).find((card) => card.id === 'asian_rust');
 
     expect(rust(first)).toMatchObject({ position: 100, caption: '3' });
     expect(rust(third)).toMatchObject({ position: 50, caption: '2' });
@@ -232,7 +240,9 @@ describe('generalInfo', () => {
   it("groups the fixture parcel's station, crop and phenology", () => {
     const [first] = analysisFixture.features;
 
-    expect(generalInfo(first, indicatorsFixture).map((row) => [row.id, row.value])).toEqual([
+    expect(
+      generalInfo(first, sanitarioIndicatorsFixture).map((row) => [row.id, row.value]),
+    ).toEqual([
       ['weather_station', 'Colonias Unidas - Capitán Meza'],
       ['crop_type', 'Soja'],
       ['phenology_stage', 'R5 (Inicio de grano)'],
