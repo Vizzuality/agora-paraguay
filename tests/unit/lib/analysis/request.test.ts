@@ -6,6 +6,7 @@ import {
   parcelIdOf,
   riesgoOf,
   toAnalysisRequest,
+  visibilityOf,
 } from '@/lib/analysis/request';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 import type { ParcelFeature } from '@/lib/api/parcels/schemas';
@@ -35,6 +36,12 @@ describe('riesgoOf', () => {
   it('maps public to sanitario and private to productivo', () => {
     expect(riesgoOf('public')).toBe('sanitario');
     expect(riesgoOf('private')).toBe('productivo');
+  });
+
+  it('round-trips through visibilityOf', () => {
+    expect(visibilityOf('sanitario')).toBe('public');
+    expect(visibilityOf('productivo')).toBe('private');
+    expect(visibilityOf(riesgoOf('private'))).toBe('private');
   });
 });
 

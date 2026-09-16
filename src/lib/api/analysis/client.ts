@@ -13,17 +13,13 @@ import { toFilterParcelsRequest, type ParcelFeature } from '@/lib/api/parcels/sc
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 
 import {
+  analysisPath,
   analysisRequestSchema,
   analysisResponseSchema,
   type AnalysisRequest,
   type AnalysisResponse,
   type AnalysisVisibility,
 } from './schemas';
-
-/** `/api/analysis/[path_public_private]` in the spec; the segment is the visibility. */
-export function analysisPath(visibility: AnalysisVisibility): string {
-  return `/api/analysis/${visibility}`;
-}
 
 /**
  * POSTs the selected parcels and filters and gets back the indicator values. The

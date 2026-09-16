@@ -4,8 +4,12 @@ import { ZodError } from 'zod';
 // These assert on the real fetch; the mock branch is covered in `client-mock.test.ts`.
 vi.mock('@/env', () => ({ env: { VITE_USE_MOCK_API: false } }));
 
-import { analysisPath, analyzeSelection, runAnalysis } from '@/lib/api/analysis/client';
-import { analysisRequestSchema, analysisResponseSchema } from '@/lib/api/analysis/schemas';
+import { analyzeSelection, runAnalysis } from '@/lib/api/analysis/client';
+import {
+  analysisPath,
+  analysisRequestSchema,
+  analysisResponseSchema,
+} from '@/lib/api/analysis/schemas';
 import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 
 const request = {
@@ -171,12 +175,15 @@ describe('analyzeSelection', () => {
     geometry: { type: 'Polygon', coordinates: [SQUARE] },
   };
 
-  /** Answers by path, so the order of the parallel calls does not matter. */
+  /**
+   * Answers by verb and path, so the order of the parallel calls does not matter. The
+   * indicator list and the analysis share the path: GET lists, POST runs.
+   */
   function respondByPath() {
-    fetchMock.mockImplementation((input) => {
+    fetchMock.mockImplementation((input, init) => {
       const url = String(input);
 
-      if (url.startsWith('/api/indicators/')) {
+      if (init?.method === 'GET') {
         return Promise.resolve(Response.json([{ id: 'iep', name: 'IEP', default: true }]));
       }
 
@@ -206,11 +213,13 @@ describe('analyzeSelection', () => {
   }
 
   function calledPaths() {
-    return fetchMock.mock.calls.map(([input]) => String(input));
+    return fetchMock.mock.calls.map(([input, init]) => `${init?.method} ${input}`);
   }
 
   function bodyOf(path: string) {
-    const call = fetchMock.mock.calls.find(([input]) => String(input) === path);
+    const call = fetchMock.mock.calls.find(
+      ([input, init]) => init?.method === 'POST' && String(input) === path,
+    );
 
     return JSON.parse(String(call?.[1]?.body));
   }
@@ -236,9 +245,9 @@ describe('analyzeSelection', () => {
 
     expect(result).toEqual(response);
     expect(calledPaths()).toEqual([
-      '/api/indicators/?riesgo=sanitario&cultivo=soja',
-      '/api/parcels/filter_parcels',
-      '/api/analysis/public',
+      'GET /api/analysis/public?cultivo=soja',
+      'POST /api/parcels/filter_parcels',
+      'POST /api/analysis/public',
     ]);
     expect(bodyOf('/api/analysis/public')).toEqual({
       parcel_ids: [8668, 12],
@@ -255,7 +264,7 @@ describe('analyzeSelection', () => {
   it('skips filter_parcels when nothing was drawn, and asks productivo indicators without cultivo', async () => {
     await analyzeSelection({ visibility: 'private', polygons: [], parcels: [parcel], filters });
 
-    expect(calledPaths()).toEqual(['/api/indicators/?riesgo=productivo', '/api/analysis/private']);
+    expect(calledPaths()).toEqual(['GET /api/analysis/private', 'POST /api/analysis/private']);
     expect(bodyOf('/api/analysis/private').parcel_ids).toEqual([12]);
   });
 

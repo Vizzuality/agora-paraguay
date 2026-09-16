@@ -1,4 +1,6 @@
 import { env } from '@/env';
+import { visibilityOf } from '@/lib/analysis/request';
+import { analysisPath } from '@/lib/api/analysis/schemas';
 import { getJson } from '@/lib/api/http';
 
 import {
@@ -12,8 +14,8 @@ import {
 } from './schemas';
 
 /*
- * The only module in `metadata/` that knows which data is fake: filters are real;
- * indicators and the legacy analysis options run on the mock branch.
+ * The only module in `metadata/` that knows which data is fake: filters and indicators
+ * are real; only the legacy analysis options run on the mock branch.
  */
 
 /** `GET /api/filters/` — the filters and their values. */
@@ -22,26 +24,13 @@ export async function fetchFilters(): Promise<Filters> {
 }
 
 /**
- * `GET /api/indicators/` — the indicators and their metadata, optionally by riesgo/cultivo.
- *
- * TODO(mock-indicators): the mock branch answers the fixture for the riesgo asked (both
- * without one); `cultivo` is ignored. Drop it when the endpoint is reachable (grep
- * `mock-indicators`).
+ * `GET /api/analysis/{public|private}` — the indicators of a riesgo and their metadata.
+ * Same path the analysis is POSTed to; the verb tells them apart.
  */
-export async function fetchIndicators(params: IndicatorsParams = {}): Promise<Indicators> {
-  if (env.VITE_USE_MOCK_API) {
-    const fixtures = await import('./fixtures/indicators');
-    const fixture =
-      params.riesgo === 'sanitario'
-        ? fixtures.sanitarioIndicatorsFixture
-        : params.riesgo === 'productivo'
-          ? fixtures.productivoIndicatorsFixture
-          : fixtures.indicatorsFixture;
-
-    return indicatorsSchema.parse(fixture);
-  }
-
-  return indicatorsSchema.parse(await getJson('/api/indicators/', params));
+export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
+  return indicatorsSchema.parse(
+    await getJson(analysisPath(visibilityOf(params.riesgo)), { cultivo: params.cultivo }),
+  );
 }
 
 /**

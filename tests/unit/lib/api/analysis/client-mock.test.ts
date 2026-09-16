@@ -31,7 +31,11 @@ describe('runAnalysis (mock)', () => {
     expect(() => analysisResponseSchema.parse(analysisFixture)).not.toThrow();
   });
 
-  it('runs the whole Analizar chain offline — indicators, parcels, analysis all mocked', async () => {
+  it('runs the Analizar chain with the indicators from the API and the analysis mocked', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([{ id: 'asian_rust', name: 'Phakopsora pachyrhizi', default: true }]),
+    );
+
     const result = await analyzeSelection({
       visibility: 'public',
       polygons: [],
@@ -53,6 +57,10 @@ describe('runAnalysis (mock)', () => {
     });
 
     expect(result).toEqual(analysisFixture);
-    expect(fetchMock).not.toHaveBeenCalled();
+    // Only the indicators hit the network: nothing drawn skips filter_parcels, the
+    // analysis itself is still the fixture.
+    expect(fetchMock.mock.calls.map(([input, init]) => `${init?.method} ${input}`)).toEqual([
+      'GET /api/analysis/public?cultivo=soja',
+    ]);
   });
 });

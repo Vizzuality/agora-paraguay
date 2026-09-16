@@ -11,28 +11,6 @@ import type { Page } from '@playwright/test';
  */
 export async function stubAnalysisApi(page: Page) {
   await page.route(
-    (url) => url.pathname === '/api/indicators/',
-    (route) =>
-      route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify([
-          {
-            id: 'crop_type',
-            name: 'Tipo de cultivo',
-            default: true,
-            indicator_type: { type: 'text' },
-          },
-          {
-            id: 'asian_rust',
-            name: 'Phakopsora pachyrhizi',
-            default: true,
-            indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
-          },
-        ]),
-      }),
-  );
-
-  await page.route(
     (url) => url.pathname === '/api/parcels/filter_parcels',
     (route) =>
       route.fulfill({
@@ -52,10 +30,31 @@ export async function stubAnalysisApi(page: Page) {
       }),
   );
 
+  // One path, two verbs: GET lists the riesgo's indicators, POST runs the analysis.
   await page.route(
     (url) => url.pathname === '/api/analysis/public' || url.pathname === '/api/analysis/private',
-    (route) =>
-      route.fulfill({
+    (route) => {
+      if (route.request().method() === 'GET') {
+        return route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify([
+            {
+              id: 'crop_type',
+              name: 'Tipo de cultivo',
+              default: true,
+              indicator_type: { type: 'text' },
+            },
+            {
+              id: 'asian_rust',
+              name: 'Phakopsora pachyrhizi',
+              default: true,
+              indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
+            },
+          ]),
+        });
+      }
+
+      return route.fulfill({
         contentType: 'application/json',
         // One analysed parcel per submitted area, its disease index at the top of the 1–3
         // range: the first tab's card reads "Alto" over the value "3" — the same reading
@@ -75,6 +74,7 @@ export async function stubAnalysisApi(page: Page) {
             },
           ],
         }),
-      }),
+      });
+    },
   );
 }

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { generalInfo, indicatorCards, levelOf, toneOf } from '@/lib/analysis/indicator-cards';
 import { analysisFixture } from '@/lib/api/analysis/fixtures/analysis';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import { sanitarioIndicatorsFixture } from '@/lib/api/metadata/fixtures/indicators';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
 /** A bare analysed parcel carrying only the given columns. */
@@ -46,6 +45,23 @@ const production: Indicator = {
   unit: 't/ha',
   indicator_type: { type: 'numeric' },
 };
+
+const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
+
+const phenology: Indicator = {
+  id: 'phenology_stage',
+  name: 'Momento fenológico',
+  indicator_type: { type: 'text' },
+};
+
+const brownSpot: Indicator = {
+  id: 'brown_spot',
+  name: 'Septoria glycines',
+  indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
+};
+
+/** The sanitario metadata as `GET /api/analysis/public` lists it, in its order. */
+const sanitarioIndicators = [station, dataQuality, crop, phenology, asianRust, brownSpot];
 
 describe('levelOf', () => {
   it('splits the ruler in thirds, the cut points belonging to the higher class', () => {
@@ -192,10 +208,10 @@ describe('indicatorCards', () => {
     expect(card).toEqual({ id: 'Pro_soja', label: 'Producción base', level: '2,77 t/ha' });
   });
 
-  it('turns the shipped fixtures into one card per measured index, per parcel', () => {
+  it('turns the mocked analysis into one card per measured index, per parcel', () => {
     const [first, , third] = analysisFixture.features;
 
-    expect(indicatorCards(first, sanitarioIndicatorsFixture).map((card) => card.id)).toEqual([
+    expect(indicatorCards(first, sanitarioIndicators).map((card) => card.id)).toEqual([
       'data_quality',
       'asian_rust',
       'brown_spot',
@@ -203,7 +219,7 @@ describe('indicatorCards', () => {
 
     // Different parcels, different readings — the tab switch has to show it.
     const rust = (parcel: AnalysisParcel) =>
-      indicatorCards(parcel, sanitarioIndicatorsFixture).find((card) => card.id === 'asian_rust');
+      indicatorCards(parcel, sanitarioIndicators).find((card) => card.id === 'asian_rust');
 
     expect(rust(first)).toMatchObject({ position: 100, caption: '3' });
     expect(rust(third)).toMatchObject({ position: 50, caption: '2' });
@@ -217,8 +233,6 @@ describe('generalInfo', () => {
   });
 
   it('lists the text indicators the parcel carries, in metadata order, and nothing measured', () => {
-    const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
-
     expect(
       generalInfo(parcel({ crop_type: 'Soja', asian_rust: 3, weather_station: 'Hohenau' }), [
         station,
@@ -237,12 +251,10 @@ describe('generalInfo', () => {
     expect(generalInfo(parcel({}), [station])).toEqual([]);
   });
 
-  it("groups the fixture parcel's station, crop and phenology", () => {
+  it("groups the mocked parcel's station, crop and phenology", () => {
     const [first] = analysisFixture.features;
 
-    expect(
-      generalInfo(first, sanitarioIndicatorsFixture).map((row) => [row.id, row.value]),
-    ).toEqual([
+    expect(generalInfo(first, sanitarioIndicators).map((row) => [row.id, row.value])).toEqual([
       ['weather_station', 'Colonias Unidas - Capitán Meza'],
       ['crop_type', 'Soja'],
       ['phenology_stage', 'R5 (Inicio de grano)'],

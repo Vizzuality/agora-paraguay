@@ -1,12 +1,18 @@
 import { z } from 'zod';
 
 /*
- * Analysis contract: `POST /api/analysis/{public|private}`. Runs the enumerated
- * indicators over the selected parcels.
+ * Analysis contract, one path with two verbs: `GET /api/analysis/{public|private}` lists
+ * the indicators of that riesgo (`metadata/`), `POST` runs the enumerated ones over the
+ * selected parcels.
  */
 
 /** Which side of the analysis the request goes to: riesgo sanitario is public, productivo private. */
 export type AnalysisVisibility = 'public' | 'private';
+
+/** `/api/analysis/[path_public_private]` in the spec; the segment is the visibility. */
+export function analysisPath(visibility: AnalysisVisibility): string {
+  return `/api/analysis/${visibility}`;
+}
 
 export const analysisRequestSchema = z.object({
   parcel_ids: z.array(z.number().int()).min(1),
@@ -31,7 +37,7 @@ const parcelValueSchema = z.union([z.string(), z.number(), z.null()]);
 
 /**
  * The columns every analysed parcel carries (backend sample, Sept 2026). Anything else is
- * an indicator column keyed by the indicator id from `GET /api/indicators/`, hence the
+ * an indicator column keyed by the indicator id the GET on the same path lists, hence the
  * catchall. Wire shape kept as delivered: numbers may arrive as strings.
  */
 const analysisParcelPropertiesSchema = z

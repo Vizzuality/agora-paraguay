@@ -1,6 +1,6 @@
 import type { ResolvedAnalysisFilters } from '@/lib/analysis/filters';
 import type { AnalysisRequest, AnalysisVisibility } from '@/lib/api/analysis/schemas';
-import type { Indicator } from '@/lib/api/metadata/schemas';
+import type { Indicator, Riesgo } from '@/lib/api/metadata/schemas';
 import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 
 /*
@@ -10,8 +10,13 @@ import type { ParcelFeature } from '@/lib/api/parcels/schemas';
  */
 
 /** Which riesgo tab a visibility is: sanitario is public, productivo private. */
-export function riesgoOf(visibility: AnalysisVisibility): 'sanitario' | 'productivo' {
+export function riesgoOf(visibility: AnalysisVisibility): Riesgo {
   return visibility === 'public' ? 'sanitario' : 'productivo';
+}
+
+/** The inverse: which analysis path serves a riesgo tab. */
+export function visibilityOf(riesgo: Riesgo): AnalysisVisibility {
+  return riesgo === 'sanitario' ? 'public' : 'private';
 }
 
 /**

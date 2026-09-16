@@ -10,7 +10,7 @@ export const metadataQueries = {
       queryFn: fetchFilters,
     }),
 
-  indicators: (params: IndicatorsParams = {}) =>
+  indicators: (params: IndicatorsParams) =>
     queryOptions({
       queryKey: ['metadata', 'indicators', params] as const,
       queryFn: () => fetchIndicators(params),

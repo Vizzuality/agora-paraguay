@@ -4,7 +4,8 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 /*
  * From one analysed parcel to what its `RiskClassCard`s show. Pure, node-tested. The
  * response is one Feature per parcel with the indicators as property columns; the names,
- * scales and class labels come from `GET /api/indicators/`. Cards are per parcel — the
+ * scales and class labels come from the indicator list (`metadataQueries.indicators`).
+ * Cards are per parcel — the
  * hero's parcel tab picks which — never a summary over the set.
  *
  * Text indicators (station, crop, phenology) are not risks: they go together into the

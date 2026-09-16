@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-// These assert on the real fetch; the mock branch is covered in `client-mock.test.ts`.
+// Pinned off although filters and indicators ignore it: `analysis-options` still reads it.
 vi.mock('@/env', () => ({ env: { VITE_USE_MOCK_API: false } }));
 
 import { fetchFilters, fetchIndicators } from '@/lib/api/metadata/client';
@@ -54,24 +54,25 @@ describe('fetchIndicators', () => {
     },
   ];
 
-  it('GETs /api/indicators/ with the riesgo and cultivo filters as query parameters', async () => {
+  it('GETs the public analysis path for sanitario, with cultivo as a query parameter', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(indicators));
 
     await expect(fetchIndicators({ riesgo: 'sanitario', cultivo: 'soja' })).resolves.toEqual(
       indicators,
     );
-    expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/indicators/?riesgo=sanitario&cultivo=soja',
-    );
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/analysis/public?cultivo=soja');
+    expect(init).toMatchObject({ method: 'GET' });
   });
 
-  it('accepts both indicator types, and extra attributes the spec has not fixed yet', async () => {
+  it('GETs the private analysis path for productivo, and accepts extra attributes', async () => {
     fetchMock.mockResolvedValueOnce(Response.json([{ ...indicators[0], source: 'INBIO' }]));
 
-    const [indicator] = await fetchIndicators();
+    const [indicator] = await fetchIndicators({ riesgo: 'productivo' });
 
     expect(indicator).toMatchObject({ id: 'iep', source: 'INBIO' });
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/indicators/');
+    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/analysis/private');
   });
 
   it('rejects an indicator type it does not know', async () => {
@@ -79,6 +80,6 @@ describe('fetchIndicators', () => {
       Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'gauge' } }]),
     );
 
-    await expect(fetchIndicators()).rejects.toThrow(ZodError);
+    await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);
   });
 });

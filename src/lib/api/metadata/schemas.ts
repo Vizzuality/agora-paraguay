@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 /*
- * Metadata contract: `GET /api/filters/` and `GET /api/indicators/`. Both are marked
- * "attributes to be defined" in the spec, so the schemas declare what the examples
- * show and let extra fields through (`looseObject`) rather than rejecting them.
+ * Metadata contract: `GET /api/filters/` and the indicator list behind
+ * `GET /api/analysis/{public|private}`. Both are marked "attributes to be defined" in
+ * the spec, so the schemas declare what the examples show and let extra fields through
+ * (`looseObject`) rather than rejecting them.
  */
 
 /** Every list has the same shape — `{ value, label }` — so dropdowns render them all the same way. */
@@ -33,9 +34,15 @@ export const filtersSchema = z.array(filterSchema);
 
 export type Filters = z.infer<typeof filtersSchema>;
 
-/** Query parameters `GET /api/indicators/` accepts; `cultivo` only applies to sanitario. */
+/** The two analysis tabs; each is one side of `/api/analysis/{public|private}`. */
+export type Riesgo = 'sanitario' | 'productivo';
+
+/**
+ * What the indicator list is asked for: the riesgo picks the path, `cultivo` goes as a
+ * query parameter and only applies to sanitario.
+ */
 export type IndicatorsParams = {
-  riesgo?: 'sanitario' | 'productivo';
+  riesgo: Riesgo;
   cultivo?: string;
 };
 
