@@ -24,10 +24,13 @@ basemap). Copy `.env.example` to `.env` only to override them; note that setting
 `VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
 
 Auth, parcel filtering, metadata and analysis call the real Django API (see
-[Data layer](#data-layer)): the dev server proxies `/api` to the backend, so its session cookie
-stays first-party. The default target is a local Django on port 8000; set
-`API_PROXY_TARGET` in `.env` to reach the shared backend instead. Deployed builds that are
-not served by the backend set `VITE_API_URL` instead. The e2e specs stub the auth routes
+[Data layer](#data-layer)): the app proxies `/api` to the backend — Vite in dev, Nitro in the
+built server (`routeRules` in `vite.config.ts`) — so its session cookie stays first-party and
+an https page never calls the plain-http API directly. The default target is a local Django on
+port 8000; set `API_PROXY_TARGET` to reach the shared backend instead: in `.env` locally, in
+the project's build environment on Vercel. It is read at build time, so changing it means
+rebuilding. `VITE_API_URL` remains for a deployment where the browser can reach the API
+directly (https, CORS and cookies configured on the backend). The e2e specs stub the auth routes
 (`tests/e2e/fixtures/auth.ts`); signing in against the real backend is a manual check with a
 personal account.
 
@@ -122,7 +125,7 @@ Every domain has the same three files, and mock data lives behind a single seam 
 ```
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
-├── auth/                   POST /api/auth/login/ (+csrf), GET /api/auth/me/
+├── auth/                   POST /api/auth/login/ (+csrf); GET /api/auth/me/ parked (TODO(auth-me))
 ├── parcels/                POST /api/parcels/filter_parcels; the cadastral layer (mock)
 ├── metadata/               GET /api/filters/, GET /api/indicators/; analysis options (mock)
 └── analysis/               POST /api/analysis/{public|private}
@@ -156,7 +159,9 @@ One build, two targets, both driven by Nitro. The preset comes from `NITRO_PRESE
 
 Configuration lives in `vercel.json`, so it is versioned rather than set by hand in the dashboard:
 framework `null`, `pnpm install --frozen-lockfile`, `pnpm build`, and `NITRO_PRESET=vercel` for the
-build step.
+build step. The one value that is not versioned is the backend: set `API_PROXY_TARGET` (the
+Django origin, e.g. `http://46.60.18.203:8082`) as a build-time environment variable in the
+Vercel project, then redeploy; `/api/*` on the deployment is relayed there by the server function.
 
 With that preset Nitro emits the [Build Output API v3](https://vercel.com/docs/build-output-api/v3)
 layout at **`.vercel/output`** — _not_ `.output`. Vercel detects that directory automatically, so
