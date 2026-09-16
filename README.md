@@ -125,7 +125,7 @@ Every domain has the same three files, and mock data lives behind a single seam 
 ```
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
-├── auth/                   POST /api/auth/login/ (+csrf), GET /api/auth/me/
+├── auth/                   POST /api/auth/login/ (+csrf); GET /api/auth/me/ parked (TODO(auth-me))
 ├── parcels/                POST /api/parcels/filter_parcels; the cadastral layer (mock)
 ├── metadata/               GET /api/filters/, GET /api/indicators/; analysis options (mock)
 └── analysis/               POST /api/analysis/{public|private}

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { fetchMe, login, setPassword } from '@/lib/api/auth/client';
+import { login, setPassword } from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -138,36 +138,37 @@ describe('login', () => {
   });
 });
 
-describe('fetchMe', () => {
-  it('GETs /api/auth/me/ and returns the session', async () => {
-    fetchMock.mockResolvedValueOnce(json({ username: 'analista' }));
-
-    await expect(fetchMe()).resolves.toEqual({ username: 'analista' });
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/auth/me/');
-  });
-
-  it('is anonymous on a 401 or 403, without throwing', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('', { status: 401 }));
-    await expect(fetchMe()).resolves.toBeNull();
-
-    fetchMock.mockResolvedValueOnce(new Response('', { status: 403 }));
-    await expect(fetchMe()).resolves.toBeNull();
-  });
-
-  it('is anonymous when the body says so, or names nobody', async () => {
-    fetchMock.mockResolvedValueOnce(json({ authenticated: false, username: 'analista' }));
-    await expect(fetchMe()).resolves.toBeNull();
-
-    fetchMock.mockResolvedValueOnce(json({ authenticated: true }));
-    await expect(fetchMe()).resolves.toBeNull();
-  });
-
-  it('propagates a server error so the caller can tell "anonymous" from "unknown"', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('boom', { status: 503 }));
-
-    await expect(fetchMe()).rejects.toMatchObject({ name: 'ApiError', status: 503 });
-  });
-});
+// TODO(auth-me): parked with `fetchMe` (see `src/lib/api/auth/queries.ts`).
+// describe('fetchMe', () => {
+//   it('GETs /api/auth/me/ and returns the session', async () => {
+//     fetchMock.mockResolvedValueOnce(json({ username: 'analista' }));
+//
+//     await expect(fetchMe()).resolves.toEqual({ username: 'analista' });
+//     expect(String(fetchMock.mock.calls[0][0])).toBe('/api/auth/me/');
+//   });
+//
+//   it('is anonymous on a 401 or 403, without throwing', async () => {
+//     fetchMock.mockResolvedValueOnce(new Response('', { status: 401 }));
+//     await expect(fetchMe()).resolves.toBeNull();
+//
+//     fetchMock.mockResolvedValueOnce(new Response('', { status: 403 }));
+//     await expect(fetchMe()).resolves.toBeNull();
+//   });
+//
+//   it('is anonymous when the body says so, or names nobody', async () => {
+//     fetchMock.mockResolvedValueOnce(json({ authenticated: false, username: 'analista' }));
+//     await expect(fetchMe()).resolves.toBeNull();
+//
+//     fetchMock.mockResolvedValueOnce(json({ authenticated: true }));
+//     await expect(fetchMe()).resolves.toBeNull();
+//   });
+//
+//   it('propagates a server error so the caller can tell "anonymous" from "unknown"', async () => {
+//     fetchMock.mockResolvedValueOnce(new Response('boom', { status: 503 }));
+//
+//     await expect(fetchMe()).rejects.toMatchObject({ name: 'ApiError', status: 503 });
+//   });
+// });
 
 describe('setPassword', () => {
   beforeEach(() => {
