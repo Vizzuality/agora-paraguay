@@ -5,14 +5,19 @@ import {
   filterParcelsRequestSchema,
   filterParcelsResponseSchema,
   parcelCollectionSchema,
+  parcelDiseasesRequestSchema,
+  parcelDiseasesResponseSchema,
   type FilterParcelsRequest,
   type FilterParcelsResponse,
   type ParcelCollection,
+  type ParcelDiseasesRequest,
+  type ParcelDiseasesResponse,
 } from './schemas';
 
 /*
- * The only module in `parcels/` that knows which data is fake: both the cadastral layer
- * (`fetchParcels`) and `filterParcels` run on the mock branch until the API is live.
+ * The only module in `parcels/` that knows which data is fake: the cadastral layer
+ * (`fetchParcels`) and `filterParcels` run on the mock branch until the API is live;
+ * `fetchParcelDiseases` is real.
  *
  * Responses are parsed through the Zod schemas in both branches on purpose: it keeps
  * the fixtures honest, and it makes contract drift surface as a parse error at the
@@ -60,4 +65,20 @@ export async function filterParcels(request: FilterParcelsRequest): Promise<Filt
   }
 
   return filterParcelsResponseSchema.parse(await postJson(FILTER_PARCELS_PATH, parsed));
+}
+
+/** Trailing slash as Django routes it — without one the API answers 301. */
+export const PARCEL_DISEASES_PATH = '/api/parcels/get-parcel-diseases/';
+
+/**
+ * POSTs the parcels to score and gets back one Feature per parcel with its disease
+ * indices. Request and response both cross the Zod boundary, so a body the backend
+ * rejects fails here, not as a 4xx.
+ */
+export async function fetchParcelDiseases(
+  request: ParcelDiseasesRequest,
+): Promise<ParcelDiseasesResponse> {
+  const parsed = parcelDiseasesRequestSchema.parse(request);
+
+  return parcelDiseasesResponseSchema.parse(await postJson(PARCEL_DISEASES_PATH, parsed));
 }

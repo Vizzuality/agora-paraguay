@@ -126,8 +126,8 @@ Every domain has the same three files, and mock data lives behind a single seam 
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
 ├── auth/                   POST /api/auth/login/ (+csrf); GET /api/auth/me/ parked (TODO(auth-me))
-├── parcels/                POST /api/parcels/filter_parcels; the cadastral layer (mock)
-├── metadata/               GET /api/filters/, GET /api/indicators/; analysis options (mock)
+├── parcels/                POST /api/parcels/filter_parcels, POST /api/parcels/get-parcel-diseases/; the cadastral layer (mock)
+├── metadata/               GET /api/filters/, GET /api/analysis/{public|private} (indicator list); analysis options (mock)
 └── analysis/               POST /api/analysis/{public|private}
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
     ├── client.ts           The ONLY module in the domain that knows which data is fake

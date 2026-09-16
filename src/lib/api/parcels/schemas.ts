@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
+import { analysisResponseSchema } from '@/lib/api/analysis/schemas';
 import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /*
- * Parcels contract: `POST /api/parcels/filter_parcels` and the (still mock) cadastral
- * layer. GeoJSON geometries are declared here rather than via `@types/geojson`,
- * matching the stance in `draw-features.ts`: `geojson` is only a transitive dependency.
+ * Parcels contract: `POST /api/parcels/filter_parcels`, `POST /api/parcels/get-parcel-diseases/`
+ * and the (still mock) cadastral layer. GeoJSON geometries are declared here rather than
+ * via `@types/geojson`, matching the stance in `draw-features.ts`: `geojson` is only a
+ * transitive dependency.
  */
 
 const positionSchema = z.tuple([z.number(), z.number()]);
@@ -135,3 +137,26 @@ export const filterParcelsResponseSchema = z.object({
 });
 
 export type FilterParcelsResponse = z.infer<typeof filterParcelsResponseSchema>;
+
+/**
+ * `POST /api/parcels/get-parcel-diseases/` body: which parcels to score and for which
+ * crop and dates. Wire shape, snake_case. Not in the written spec yet, so unknown fields
+ * pass through (`looseObject`); tighten as the backend settles.
+ */
+export const parcelDiseasesRequestSchema = z.looseObject({
+  parcel_ids: z.array(z.number().int()).min(1),
+  /** Cultivo; the backend defaults it when absent. */
+  crop: z.string().min(1).optional(),
+  start_date: z.iso.date().optional(),
+  end_date: z.iso.date().optional(),
+});
+
+export type ParcelDiseasesRequest = z.infer<typeof parcelDiseasesRequestSchema>;
+
+/**
+ * The response is the public disease scoring: one Feature per parcel with the disease
+ * indices as property columns — the same GeoJSON the analysis page renders.
+ */
+export const parcelDiseasesResponseSchema = analysisResponseSchema;
+
+export type ParcelDiseasesResponse = z.infer<typeof parcelDiseasesResponseSchema>;

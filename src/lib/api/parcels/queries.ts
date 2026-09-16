@@ -2,8 +2,12 @@ import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 
-import { fetchParcels, filterParcels } from './client';
-import { toFilterParcelsRequest, type FilterParcelsOptions } from './schemas';
+import { fetchParcelDiseases, fetchParcels, filterParcels } from './client';
+import {
+  toFilterParcelsRequest,
+  type FilterParcelsOptions,
+  type ParcelDiseasesRequest,
+} from './schemas';
 
 export const parcelQueries = {
   all: () =>
@@ -23,5 +27,12 @@ export const parcelMutations = {
       mutationKey: ['parcels', 'filter'] as const,
       mutationFn: (variables: { polygons: DrawnPolygon[]; options?: FilterParcelsOptions }) =>
         filterParcels(toFilterParcelsRequest(variables.polygons, variables.options)),
+    }),
+
+  /** Disease indices for the given parcels; a POST the user triggers, never refetched on focus. */
+  diseases: () =>
+    mutationOptions({
+      mutationKey: ['parcels', 'diseases'] as const,
+      mutationFn: (request: ParcelDiseasesRequest) => fetchParcelDiseases(request),
     }),
 };
