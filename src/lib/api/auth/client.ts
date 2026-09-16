@@ -1,10 +1,9 @@
-import { API_URL, ApiError, csrfToken, getJson, postJson } from '@/lib/api/http';
+import { API_URL, csrfToken, postJson } from '@/lib/api/http';
 
 import {
   credentialsSchema,
   csrfResponseSchema,
   loginResponseSchema,
-  meResponseSchema,
   sessionSchema,
   setPasswordSchema,
   type Credentials,
@@ -98,34 +97,39 @@ export async function setPassword(request: SetPasswordRequest): Promise<void> {
   await postJson('/api/auth/password/reset/', setPasswordSchema.parse(request));
 }
 
-/** Statuses that mean "no session", not "the API is down". */
-const ANONYMOUS_STATUSES = new Set([401, 403]);
-
-/**
- * `GET /api/auth/me/`: the session behind the cookie, or `null` when there is none.
- * Anything else (5xx, offline) propagates as an `ApiError` so the caller can tell
- * "anonymous" from "unknown".
+/*
+ * TODO(auth-me): parked with `authQueries.me` (see `queries.ts`). The endpoint answers
+ * `400 {"isAuthenticated": false}` when anonymous; this reader expects 401/403 and
+ * `authenticated`. Uncomment and align once the backend contract is settled.
  */
-export async function fetchMe(): Promise<Session | null> {
-  let body: unknown;
-
-  try {
-    body = await getJson('/api/auth/me/');
-  } catch (error) {
-    if (
-      error instanceof ApiError &&
-      error.status !== null &&
-      ANONYMOUS_STATUSES.has(error.status)
-    ) {
-      return null;
-    }
-
-    throw error;
-  }
-
-  const { authenticated, username } = meResponseSchema.parse(body ?? {});
-
-  if (authenticated === false || username === undefined) return null;
-
-  return sessionSchema.parse({ username });
-}
+// /** Statuses that mean "no session", not "the API is down". */
+// const ANONYMOUS_STATUSES = new Set([401, 403]);
+//
+// /**
+//  * `GET /api/auth/me/`: the session behind the cookie, or `null` when there is none.
+//  * Anything else (5xx, offline) propagates as an `ApiError` so the caller can tell
+//  * "anonymous" from "unknown".
+//  */
+// export async function fetchMe(): Promise<Session | null> {
+//   let body: unknown;
+//
+//   try {
+//     body = await getJson('/api/auth/me/');
+//   } catch (error) {
+//     if (
+//       error instanceof ApiError &&
+//       error.status !== null &&
+//       ANONYMOUS_STATUSES.has(error.status)
+//     ) {
+//       return null;
+//     }
+//
+//     throw error;
+//   }
+//
+//   const { authenticated, username } = meResponseSchema.parse(body ?? {});
+//
+//   if (authenticated === false || username === undefined) return null;
+//
+//   return sessionSchema.parse({ username });
+// }
