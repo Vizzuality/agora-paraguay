@@ -9,19 +9,23 @@ import { resolveAnalysisFilters } from '@/lib/analysis/filters';
 import { analysisMutations } from '@/lib/api/analysis/queries';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import { parcelQueries } from '@/lib/api/parcels/queries';
+import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { analysisFiltersAtom, analysisResultAtom } from '@/store/analysis';
 import { drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
 import { startAnalysisAtom } from '@/store/mode';
+import { toggledParcelIdsAtom } from '@/store/parcels';
 
 /**
- * Step 2 of the selection: start over, or analyse the parcels the
- * drawn or uploaded areas selected. `filter_parcels` already ran when the areas landed
- * (`parcelQueries.filtered`, painted on the map); Analizar sends its flagged parcels to
- * the analysis (`analyzeSelection`) and lands on riesgo sanitario, the public side, so
- * the request goes to `public`. Renders inside `<ClientOnly>` (it reads the draw atoms).
+ * Step 2 of the selection: start over, or analyse the parcels the drawn or uploaded
+ * areas selected. `filter_parcels` already ran when the areas landed
+ * (`parcelQueries.filtered`, painted on the map), and the user may have flipped some by
+ * clicking them; Analizar sends the parcels selected after those flips to the analysis
+ * (`analyzeSelection`) and lands on riesgo sanitario, the public side, so the request
+ * goes to `public`. Renders inside `<ClientOnly>` (it reads the draw atoms).
  */
 export function ConfirmActions() {
   const polygons = useAtomValue(drawPolygonsAtom);
+  const toggled = useAtomValue(toggledParcelIdsAtom);
   const selectedFilters = useAtomValue(analysisFiltersAtom);
   const parcels = useQuery(parcelQueries.filtered(polygons));
   const restart = useSetAtom(restartSelectionAtom);
@@ -43,9 +47,9 @@ export function ConfirmActions() {
     },
   });
 
-  const parcelIds =
-    parcels.data?.results.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id) ??
-    [];
+  const parcelIds = parcels.data
+    ? selectedParcelIds(applyToggles(parcels.data.results, toggled))
+    : [];
   const noIntersection = parcels.isSuccess && parcelIds.length === 0;
 
   function analyze() {

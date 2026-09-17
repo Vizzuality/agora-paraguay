@@ -99,3 +99,24 @@ export const bindDrawAtom = atom(null, (get, set, draw: TerraDraw | null) => {
 export const reportGeometryAtom = atom(null, (_get, set, snapshot: GeoJSONStoreFeatures[]) => {
   set(drawStateAtom, { type: 'geometry', polygons: drawnPolygons(snapshot) });
 });
+
+/**
+ * Shows or hides every polygon on the map without touching the store: the parcels
+ * `filter_parcels` answers replace the drawing visually, but its geometry keeps
+ * driving the query. A property change is what makes Terra Draw restyle
+ * (`draw-styles.ts`, `hidden`). Idempotent, and a no-op until Terra Draw is bound, so
+ * the caller re-fires it once the map is ready.
+ */
+export const setPolygonsHiddenAtom = atom(null, (get, _set, hidden: boolean) => {
+  const draw = get(drawInstanceAtom);
+
+  if (!draw?.enabled) return;
+
+  for (const polygon of get(drawStateAtom).polygons) {
+    const current = draw.getSnapshotFeature(polygon.id);
+
+    if (current && (current.properties.hidden === true) !== hidden) {
+      draw.updateFeatureProperties(polygon.id, { hidden: hidden ? true : undefined });
+    }
+  }
+});

@@ -1,7 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import type { ExpressionSpecification } from 'maplibre-gl';
 import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre';
 
+import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
+import { parcelQueries } from '@/lib/api/parcels/queries';
 import { areasBounds } from '@/lib/map/area-bounds';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE } from '@/lib/map/basemap';
@@ -26,15 +29,18 @@ const FILL_OPACITY: ExpressionSpecification = ['case', ['get', 'active'], 0.5, 0
 const COLOR: ExpressionSpecification = ['case', ['get', 'active'], ACTIVE_COLOR, INACTIVE_COLOR];
 
 /**
- * Non-interactive satellite thumbnail for the analysis hero: the analysed areas from
- * the store, framed by their combined bounds, the active parcel tab highlighted.
- * Every gesture handler is off — the camera belongs to the fit, not the user. The
- * areas cannot change while the analysis page is open (analysis mode freezes
- * selection), so the mount-time fit is enough.
+ * Non-interactive satellite thumbnail for the analysis hero, showing what the main map
+ * showed: the parcels `filter_parcels` answered (the same layer, selected ones in
+ * yellow), which stand in for the drawn areas as on the main map; the areas themselves
+ * only show while no parcels exist, the active parcel tab highlighted. Framed by the
+ * combined bounds. Every gesture handler is off — the camera belongs to the fit, not
+ * the user. Nothing can change while the analysis page is open (analysis mode freezes
+ * selection, the parcels query is settled and cached), so the mount-time fit is enough.
  */
 export function MiniMap() {
   const areas = useAtomValue(drawPolygonsAtom);
   const storedIndex = useAtomValue(activeParcelTabAtom);
+  const { data: parcels } = useQuery(parcelQueries.filtered(areas));
 
   // Same clamp as the hero tabs: a stale index falls back to the first parcel.
   const activeIndex = storedIndex < areas.length ? storedIndex : 0;
@@ -42,7 +48,15 @@ export function MiniMap() {
     ...area,
     properties: { ...area.properties, active: index === activeIndex },
   }));
-  const bounds = areasBounds(areas);
+  const bounds = areasBounds([
+    ...areas,
+    ...(parcels?.results.flatMap((parcel) =>
+      parcel.geometry.features.filter(
+        (feature): feature is typeof feature & { geometry: { type: 'Polygon' } } =>
+          feature.geometry.type === 'Polygon',
+      ),
+    ) ?? []),
+  ]);
 
   return (
     <Map
@@ -64,10 +78,13 @@ export function MiniMap() {
       style={{ width: '100%', height: '100%' }}
     >
       <AttributionControl compact position="bottom-left" />
-      <Source type="geojson" data={{ type: 'FeatureCollection', features }}>
-        <Layer type="fill" paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }} />
-        <Layer type="line" paint={{ 'line-color': COLOR, 'line-width': 2 }} />
-      </Source>
+      <FilteredParcelsLayer />
+      {(parcels?.results.length ?? 0) === 0 && (
+        <Source type="geojson" data={{ type: 'FeatureCollection', features }}>
+          <Layer type="fill" paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }} />
+          <Layer type="line" paint={{ 'line-color': COLOR, 'line-width': 2 }} />
+        </Source>
+      )}
     </Map>
   );
 }

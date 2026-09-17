@@ -40,7 +40,21 @@ const UPLOAD: ParcelVariant = {
   outlineWidth: 2,
 };
 
+/**
+ * Once `filter_parcels` has answered, the parcels replace the drawing on the map: the
+ * drawn or uploaded polygon is painted fully transparent (`hidden`, set by
+ * `setPolygonsHiddenAtom`) rather than removed, since its geometry still drives the
+ * parcels query and the analysis.
+ */
+const HIDDEN: ParcelVariant = {
+  fill: '#000000',
+  fillOpacity: 0,
+  outline: '#000000',
+  outlineWidth: 0,
+};
+
 function variant(feature: GeoJSONStoreFeatures): ParcelVariant {
+  if (feature.properties.hidden === true) return HIDDEN;
   if (feature.properties.analysis === true) return YELLOW;
   if (feature.properties.origin === 'upload') return UPLOAD;
 
