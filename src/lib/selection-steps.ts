@@ -11,7 +11,7 @@ export type SelectionStep = (typeof SELECTION_STEPS)[number]['number'];
 export type PanelStep = Exclude<SelectionStep, 3>;
 
 export type SelectionProgress = {
-  /** Drawn or uploaded polygons plus clicked cadastral parcels. */
+  /** Drawn or uploaded polygons. */
   areaCount: number;
   /** The draw tool is armed: a polygon is being traced right now. */
   drawing: boolean;

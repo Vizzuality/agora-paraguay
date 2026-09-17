@@ -5,7 +5,6 @@ import type { ParseOutcome, UploadErrorCode, UploadResult } from '@/lib/upload/t
 import { selectAnalysisPolygonAtom } from '@/store/analysis';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { backToSelectionAtom } from '@/store/mode';
-import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
  * Uploaded areas of interest. Parsing lives in `src/lib/upload/`, the Terra Draw
@@ -21,15 +20,13 @@ import { selectedParcelsAtom } from '@/store/parcels';
 export const uploadResultAtom = atom<UploadResult | null>(null);
 
 /**
- * The shared start of a new selection session: drops the clicked cadastral parcels,
- * dismisses the previous upload notice, and returns the app to selection mode — an
- * upload or a fresh drawing after Analizar makes the map clickable again.
+ * The shared start of a new selection session: dismisses the previous upload notice and
+ * returns the app to selection mode — an upload or a fresh drawing after Analizar.
  * `startDrawAtom` and `uploadFeaturesAtom` both route through here. Lives in this file
  * because it owns `uploadResultAtom` (any other home would create an import cycle).
  */
 export const resetSelectionSessionAtom = atom(null, (_get, set) => {
   set(uploadResultAtom, null);
-  set(selectedParcelsAtom, []);
   set(backToSelectionAtom);
 });
 
@@ -59,8 +56,8 @@ export const uploadFeaturesAtom = atom(
     // `change` event — report the new geometry by hand. Idempotent if the event fires.
     set(drawStateAtom, { type: 'geometry', polygons: outcome.polygons });
 
-    // Replace semantics extend to the clicked cadastral parcels: an upload starts the
-    // selection over (and, after Analizar, returns the app to selection mode).
+    // An upload starts the selection over (and, after Analizar, returns the app to
+    // selection mode).
     set(resetSelectionSessionAtom);
 
     // Nothing landed: the outcome is an error, not a "with warnings" import of zero.

@@ -3,13 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { ResolvedAnalysisFilters } from '@/lib/analysis/filters';
 import {
   defaultIndicatorIds,
-  parcelIdOf,
   riesgoOf,
   toAnalysisRequest,
   visibilityOf,
 } from '@/lib/analysis/request';
 import type { Indicator } from '@/lib/api/metadata/schemas';
-import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 
 const FILTERS: ResolvedAnalysisFilters = {
   fechaSiembra: '2026-06-18',
@@ -24,14 +22,6 @@ function indicator(id: string, isDefault?: boolean): Indicator {
   return { id, name: id, ...(isDefault === undefined ? {} : { default: isDefault }) };
 }
 
-function parcel(id: string): ParcelFeature {
-  return {
-    type: 'Feature',
-    properties: { id, name: id },
-    geometry: { type: 'Polygon', coordinates: [] },
-  };
-}
-
 describe('riesgoOf', () => {
   it('maps public to sanitario and private to productivo', () => {
     expect(riesgoOf('public')).toBe('sanitario');
@@ -42,17 +32,6 @@ describe('riesgoOf', () => {
     expect(visibilityOf('sanitario')).toBe('public');
     expect(visibilityOf('productivo')).toBe('private');
     expect(visibilityOf(riesgoOf('private'))).toBe('private');
-  });
-});
-
-describe('parcelIdOf', () => {
-  it('reads the integer out of the mock `parcel-N` id, or a bare number', () => {
-    expect(parcelIdOf(parcel('parcel-12'))).toBe(12);
-    expect(parcelIdOf(parcel('8668'))).toBe(8668);
-  });
-
-  it('throws on an id with no number — silently sending NaN would 400 later', () => {
-    expect(() => parcelIdOf(parcel('estancia'))).toThrow(/not numeric/);
   });
 });
 

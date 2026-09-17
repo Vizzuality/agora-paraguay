@@ -7,7 +7,6 @@ import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE } from '@/lib/map/basemap';
 import { activeParcelTabAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
-import { selectedParcelsAtom } from '@/store/parcels';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
@@ -34,11 +33,9 @@ const COLOR: ExpressionSpecification = ['case', ['get', 'active'], ACTIVE_COLOR,
  * selection), so the mount-time fit is enough.
  */
 export function MiniMap() {
-  const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
+  const areas = useAtomValue(drawPolygonsAtom);
   const storedIndex = useAtomValue(activeParcelTabAtom);
 
-  const areas = [...polygons, ...selectedParcels];
   // Same clamp as the hero tabs: a stale index falls back to the first parcel.
   const activeIndex = storedIndex < areas.length ? storedIndex : 0;
   const features = areas.map((area, index) => ({

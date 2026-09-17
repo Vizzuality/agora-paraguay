@@ -3,7 +3,6 @@ import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { MapView } from '@/components/map';
-import { ParcelDiseasesProbe } from '@/components/parcel-diseases-probe';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectionBlock, SelectionBlockLayout } from '@/components/sidebar/selection-block';
 import { backToSelectionAtom } from '@/store/mode';
@@ -50,11 +49,6 @@ function Panel() {
 
       <ClientOnly fallback={<SelectionBlockLayout step={1} />}>
         <SelectionBlock />
-      </ClientOnly>
-
-      {/* TODO(diseases-probe): temporary, see the component. */}
-      <ClientOnly>
-        <ParcelDiseasesProbe />
       </ClientOnly>
     </aside>
   );

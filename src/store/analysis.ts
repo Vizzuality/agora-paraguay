@@ -9,9 +9,7 @@ import { selectableIndicators, toggleIndicatorId } from '@/lib/analysis/indicato
 import type { AnalysisResponse } from '@/lib/api/analysis/schemas';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
-import { canSelectParcel } from '@/lib/map/draw-state';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
-import { modeAtom } from '@/store/mode';
 
 /**
  * The polygon picked for analysis — app-owned, unlike Terra Draw's edit selection,
@@ -95,13 +93,4 @@ export const selectedIndicatorIdsAtom = atom(
       ),
     );
   },
-);
-
-/**
- * Whether a map click currently picks a parcel. Drives the click handler and cursor.
- * Selection mode only — Analizar freezes it — and only while the map is idle
- * (`canSelectParcel`). The single gate: `toggleParcelAtom` routes through it too.
- */
-export const parcelClickEnabledAtom = atom(
-  (get) => get(modeAtom) === 'selection' && canSelectParcel(get(drawStateAtom)),
 );

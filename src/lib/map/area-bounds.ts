@@ -3,8 +3,8 @@ export type Bounds = [number, number, number, number];
 
 /**
  * Combined bounding box of the analysed areas. Structural parameter on purpose (like
- * `polygonName`): it accepts drawn polygons and cadastral parcels alike. `null` when
- * there is nothing to frame — the caller keeps its default camera.
+ * `polygonName`): any feature with polygon coordinates. `null` when there is nothing
+ * to frame — the caller keeps its default camera.
  */
 export function areasBounds(areas: { geometry: { coordinates: number[][][] } }[]): Bounds | null {
   let west = Infinity;

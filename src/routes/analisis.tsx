@@ -31,7 +31,6 @@ import {
 } from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
-import { selectedParcelsAtom } from '@/store/parcels';
 
 /** The analysis tabs. URL state, not store state: a shared link lands on the same tab. */
 export type RiesgoTab = 'sanitario' | 'productivo';
@@ -99,9 +98,8 @@ function AnalysisPage() {
 /** The hero with the parcel tabs filled from the submitted selection. */
 function SelectionHero({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
 
-  const parcels = [...polygons, ...selectedParcels].map((area, index) => polygonName(area, index));
+  const parcels = polygons.map((area, index) => polygonName(area, index));
 
   return <AnalysisHero riesgo={riesgo} parcels={parcels} />;
 }
@@ -225,9 +223,8 @@ function WidgetPlaceholder() {
  */
 function EmptySelectionRedirect() {
   const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
   const navigate = useNavigate();
-  const empty = polygons.length === 0 && selectedParcels.length === 0;
+  const empty = polygons.length === 0;
 
   useEffect(() => {
     if (empty) void navigate({ to: '/', replace: true });

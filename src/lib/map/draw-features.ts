@@ -34,11 +34,10 @@ export function drawnPolygons(snapshot: GeoJSONStoreFeatures[]): DrawnPolygon[] 
 }
 
 /**
- * Display name for the polygon list and the analysis payload. Uploaded polygons and
- * cadastral parcels carry `properties.name` (from the source file or the parcel
- * record); hand-drawn ones have no name, so they fall back to their 1-based position
- * in the list. Structural parameter type on purpose: it accepts any named feature,
- * not only Terra Draw's.
+ * Display name for the polygon list and the analysis payload. Uploaded polygons carry
+ * `properties.name` from the source file; hand-drawn ones have no name, so they fall
+ * back to their 1-based position in the list. Structural parameter type on purpose: it
+ * accepts any named feature, not only Terra Draw's.
  */
 export function polygonName(polygon: { properties: { name?: unknown } }, index: number): string {
   const { name } = polygon.properties;

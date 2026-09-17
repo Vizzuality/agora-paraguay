@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 import {
-  canSelectParcel,
   drawReducer,
   INITIAL_DRAW_STATE,
   terraDrawMode,
@@ -84,18 +83,5 @@ describe('terraDrawMode', () => {
   it('maps the tool onto a Terra Draw mode', () => {
     expect(terraDrawMode(bound)).toBe('static');
     expect(terraDrawMode({ ...bound, tool: 'draw' })).toBe('polygon');
-  });
-});
-
-describe('canSelectParcel', () => {
-  it('allows parcel clicks only while the map is idle', () => {
-    const idle: DrawState = { ...bound, tool: null, polygons: [first, second] };
-
-    expect(canSelectParcel(idle)).toBe(true);
-    expect(canSelectParcel({ ...idle, bound: false })).toBe(false);
-    expect(canSelectParcel({ ...idle, tool: 'draw' })).toBe(false);
-    // An empty draw store still allows clicks: cadastral parcels are selectable
-    // without anything drawn. The app-mode gate lives in `parcelClickEnabledAtom`.
-    expect(canSelectParcel({ ...idle, polygons: [] })).toBe(true);
   });
 });

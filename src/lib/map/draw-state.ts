@@ -79,12 +79,3 @@ export function drawReducer(state: DrawState, action: DrawAction): DrawState {
 export function terraDrawMode(state: DrawState): TerraDrawModeName {
   return state.bound && state.tool === 'draw' ? 'polygon' : 'static';
 }
-
-/**
- * Whether the map is idle enough for a click to mean "pick a parcel". Only while no
- * tool is active: in draw mode a click places a vertex. The app-mode gate (selection
- * vs analysis) lives in `parcelClickEnabledAtom`, which combines this with `modeAtom`.
- */
-export function canSelectParcel(state: DrawState): boolean {
-  return state.bound && state.tool === null;
-}

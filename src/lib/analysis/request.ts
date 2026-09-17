@@ -1,7 +1,6 @@
 import type { ResolvedAnalysisFilters } from '@/lib/analysis/filters';
 import type { AnalysisRequest, AnalysisVisibility } from '@/lib/api/analysis/schemas';
 import type { Indicator, Riesgo } from '@/lib/api/metadata/schemas';
-import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 
 /*
  * Builds the `POST /api/analysis/{visibility}` body out of app state — pure, node-tested.
@@ -17,19 +16,6 @@ export function riesgoOf(visibility: AnalysisVisibility): Riesgo {
 /** The inverse: which analysis path serves a riesgo tab. */
 export function visibilityOf(riesgo: Riesgo): AnalysisVisibility {
   return riesgo === 'sanitario' ? 'public' : 'private';
-}
-
-/**
- * TODO(mock-parcels): the mock cadastral layer ids are `parcel-N`; the API wants the
- * integer. Goes when the layer is fed from `filter_parcels`, whose `parcel_id` is
- * already a number.
- */
-export function parcelIdOf(parcel: ParcelFeature): number {
-  const id = Number.parseInt(parcel.properties.id.replace(/^\D*/, ''), 10);
-
-  if (Number.isNaN(id)) throw new Error(`Parcel id is not numeric: ${parcel.properties.id}`);
-
-  return id;
 }
 
 /** The indicators flagged `default`, or every indicator when the API flags none. */
