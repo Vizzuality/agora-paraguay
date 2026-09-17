@@ -14,20 +14,46 @@ import {
 } from './schemas';
 
 /*
- * The only module in `metadata/` that knows which data is fake: filters and indicators
- * are real; only the legacy analysis options run on the mock branch.
+ * The only module in `metadata/` that knows which data is fake. Today only auth talks to
+ * the API: with `VITE_USE_MOCK_API` on (the default) every function here serves its
+ * fixture; off, filters and indicators hit the backend and the analysis options, which
+ * have no endpoint yet, throw.
  */
 
-/** `GET /api/filters/` — the filters and their values. */
+/**
+ * `GET /api/filters/` — the filters and their values.
+ *
+ * TODO(mock-filters): the mock branch answers the spec's example; drop it when the
+ * endpoint is reachable (grep `mock-filters`).
+ */
 export async function fetchFilters(): Promise<Filters> {
+  if (env.VITE_USE_MOCK_API) {
+    const { filtersFixture } = await import('./fixtures/filters');
+
+    return filtersSchema.parse(filtersFixture);
+  }
+
   return filtersSchema.parse(await getJson('/api/filters/'));
 }
 
 /**
  * `GET /api/analysis/{public|private}` — the indicators of a riesgo and their metadata.
  * Same path the analysis is POSTed to; the verb tells them apart.
+ *
+ * TODO(mock-indicators): the mock branch answers the fixture of the riesgo asked and
+ * ignores `cultivo`; drop it when the endpoint is reachable (grep `mock-indicators`).
  */
 export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
+  if (env.VITE_USE_MOCK_API) {
+    const fixtures = await import('./fixtures/indicators');
+
+    return indicatorsSchema.parse(
+      params.riesgo === 'sanitario'
+        ? fixtures.sanitarioIndicatorsFixture
+        : fixtures.productivoIndicatorsFixture,
+    );
+  }
+
   return indicatorsSchema.parse(
     await getJson(analysisPath(visibilityOf(params.riesgo)), { cultivo: params.cultivo }),
   );

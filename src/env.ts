@@ -5,7 +5,9 @@ import { z } from 'zod';
  * Environment variables, validated at module load.
  *
  * `VITE_USE_MOCK_API` exists so the mock and real data paths can coexist while the
- * external API is being built. See `src/lib/api/client.ts`.
+ * external API is being built: on (the default), every endpoint but auth serves its
+ * fixture; off, the ones that exist hit the backend. See the `client.ts` of each domain
+ * under `src/lib/api/`.
  */
 export const env = createEnv({
   clientPrefix: 'VITE_',

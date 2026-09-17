@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-// Pinned off although filters and indicators ignore it: `analysis-options` still reads it.
+// These assert on the real fetch; the mock branch is covered in `client-mock.test.ts`.
 vi.mock('@/env', () => ({ env: { VITE_USE_MOCK_API: false } }));
 
 import { fetchFilters, fetchIndicators } from '@/lib/api/metadata/client';

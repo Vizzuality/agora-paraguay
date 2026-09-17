@@ -2,8 +2,9 @@
 
 Front end for the Ágora Paraguay platform, built with [TanStack Start](https://tanstack.com/start).
 
-The API is **external and does not exist yet**, so the app currently serves mock data. See
-[Data layer](#data-layer) for how it is wired and what changes when the real API arrives.
+The API is **external and still being built**: today only login reaches it, every other
+endpoint serves mock data. See [Data layer](#data-layer) for how it is wired and what changes
+as the real endpoints arrive.
 
 ## Requirements
 
@@ -125,9 +126,9 @@ Every domain has the same three files, and mock data lives behind a single seam 
 ```
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
-├── auth/                   POST /api/auth/login/ (+csrf); GET /api/auth/me/ parked (TODO(auth-me))
-├── parcels/                POST /api/parcels/filter_parcels, POST /api/parcels/get-parcel-diseases/; the cadastral layer (mock)
-├── metadata/               GET /api/filters/, GET /api/analysis/{public|private} (indicator list); analysis options (mock)
+├── auth/                   POST /api/auth/login/ (+csrf) — real; GET /api/auth/me/ parked (TODO(auth-me))
+├── parcels/                POST /api/parcels/filter_parcels, POST /api/parcels/get-parcel-diseases/
+├── metadata/               GET /api/filters/, GET /api/analysis/{public|private} (indicator list); analysis options (mock only)
 └── analysis/               POST /api/analysis/{public|private}
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
     ├── client.ts           The ONLY module in the domain that knows which data is fake
@@ -140,9 +141,12 @@ Rules that keep the swap cheap:
 - Components import from a domain's `queries.ts` only, never from `client.ts` or `fixtures/`.
 - Every response is parsed through the Zod schemas, mock or real, so contract drift surfaces at
   the boundary instead of as `undefined` deep in a component.
-- Real endpoints ignore `VITE_USE_MOCK_API`; it only gates the endpoints the spec does not cover
-  yet (the cadastral parcel layer, the analysis hero options). Each of those carries a
-  `TODO(mock-…)` marker — grep it to find every trace when the real endpoint lands.
+- **Only auth talks to the API today.** With `VITE_USE_MOCK_API` on (the default) every other
+  function in a `client.ts` serves its fixture; set it to `false` to hit the backend for the
+  endpoints that exist (`filter_parcels`, `get-parcel-diseases/`, filters, indicators, the
+  analysis). The analysis hero options have no endpoint at all and only work mocked. Every mock
+  branch carries a `TODO(mock-…)` marker — grep it to find every trace when the real endpoint
+  lands.
 - Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
   add fields without breaking the parse; tighten them as the contract settles.
 
