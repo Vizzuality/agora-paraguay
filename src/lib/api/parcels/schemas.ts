@@ -4,10 +4,10 @@ import { analysisResponseSchema } from '@/lib/api/analysis/schemas';
 import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /*
- * Parcels contract: `POST /api/parcels/filter_parcels`, `POST /api/parcels/get-parcel-diseases/`
- * and the (still mock) cadastral layer. GeoJSON geometries are declared here rather than
- * via `@types/geojson`, matching the stance in `draw-features.ts`: `geojson` is only a
- * transitive dependency.
+ * Parcels contract: `POST /api/parcels/filter_parcels` and
+ * `POST /api/parcels/get-parcel-diseases/`. GeoJSON geometries are declared here rather
+ * than via `@types/geojson`, matching the stance in `draw-features.ts`: `geojson` is only
+ * a transitive dependency.
  */
 
 const positionSchema = z.tuple([z.number(), z.number()]);
@@ -27,27 +27,6 @@ const arealGeometrySchema = z.discriminatedUnion('type', [
   polygonGeometrySchema,
   multiPolygonGeometrySchema,
 ]);
-
-/**
- * TODO(mock-parcels): invented contract, not in the API spec. The spec has no "all
- * parcels" endpoint — the cadastral layer is expected to come from `filter_parcels`
- * results once the selection flow drives it. Replace or delete then (grep
- * `mock-parcels`).
- */
-export const parcelFeatureSchema = z.object({
-  type: z.literal('Feature'),
-  properties: z.object({ id: z.string().min(1), name: z.string().min(1) }),
-  geometry: polygonGeometrySchema,
-});
-
-export type ParcelFeature = z.infer<typeof parcelFeatureSchema>;
-
-export const parcelCollectionSchema = z.object({
-  type: z.literal('FeatureCollection'),
-  features: z.array(parcelFeatureSchema),
-});
-
-export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
 
 /**
  * `POST /api/parcels/filter_parcels` body. The drawn or uploaded polygons filter the
@@ -97,6 +76,21 @@ export function toFilterParcelsRequest(
   polygons: DrawnPolygon[],
   options: FilterParcelsOptions = DEFAULT_FILTER_PARCELS_OPTIONS,
 ): FilterParcelsRequest {
+  console.log(polygons, options);
+  console.log(
+    filterParcelsRequestSchema.parse({
+      filtering_polygons: {
+        type: 'FeatureCollection',
+        features: polygons.map((polygon, index) => ({
+          type: 'Feature',
+          properties: { id: String(polygon.id), name: polygonName(polygon, index) },
+          geometry: polygon.geometry,
+        })),
+      },
+      overlap_percentage_threshold: options.overlapPercentageThreshold,
+      buffer: options.buffer,
+    }),
+  );
   return filterParcelsRequestSchema.parse({
     filtering_polygons: {
       type: 'FeatureCollection',

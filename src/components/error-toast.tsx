@@ -32,12 +32,13 @@ export function ErrorToast({
   );
 }
 
-/** Doubles as the out-of-Paraguay body until that is redefined. */
+/**
+ * Shown under Analizar when `filter_parcels` flags no parcel for the drawn areas.
+ * Doubles as the out-of-Paraguay body until that is redefined.
+ */
 export const NO_PARCEL_INTERSECTION_MESSAGE =
   'El polígono que ha dibujado no toca el área de ninguna parcela.';
 
-// TODO: mount once the parcels API can test intersection — a drawn polygon that
-// touches no cadastral parcel should surface this toast.
 export function NoParcelIntersectionToast({ onDismiss }: Readonly<{ onDismiss: () => void }>) {
   return (
     <ErrorToast

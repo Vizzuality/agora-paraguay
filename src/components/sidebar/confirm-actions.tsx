@@ -3,26 +3,27 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, Undo2 } from 'lucide-react';
 
+import { NO_PARCEL_INTERSECTION_MESSAGE } from '@/components/error-toast';
 import { ActionCardButton } from '@/components/sidebar/action-card-button';
 import { resolveAnalysisFilters } from '@/lib/analysis/filters';
 import { analysisMutations } from '@/lib/api/analysis/queries';
 import { metadataQueries } from '@/lib/api/metadata/queries';
+import { parcelQueries } from '@/lib/api/parcels/queries';
 import { analysisFiltersAtom, analysisResultAtom } from '@/store/analysis';
 import { drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
 import { startAnalysisAtom } from '@/store/mode';
-import { selectedParcelsAtom } from '@/store/parcels';
 
 /**
- * Step 2 of the selection (Figma 7172:1800): start over, or analyse every area on the
- * map — drawn, uploaded, and the cadastral parcels selected by clicking them. Analizar
- * runs the whole chain (`analyzeSelection`: indicators, parcel filtering, analysis) and
- * lands on riesgo sanitario, the public side, so the request goes to `public`.
- * Renders inside `<ClientOnly>` (it reads the draw atoms).
+ * Step 2 of the selection: start over, or analyse the parcels the
+ * drawn or uploaded areas selected. `filter_parcels` already ran when the areas landed
+ * (`parcelQueries.filtered`, painted on the map); Analizar sends its flagged parcels to
+ * the analysis (`analyzeSelection`) and lands on riesgo sanitario, the public side, so
+ * the request goes to `public`. Renders inside `<ClientOnly>` (it reads the draw atoms).
  */
 export function ConfirmActions() {
   const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
   const selectedFilters = useAtomValue(analysisFiltersAtom);
+  const parcels = useQuery(parcelQueries.filtered(polygons));
   const restart = useSetAtom(restartSelectionAtom);
   const setResult = useSetAtom(analysisResultAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
@@ -42,15 +43,17 @@ export function ConfirmActions() {
     },
   });
 
-  const hasAreas = polygons.length > 0 || selectedParcels.length > 0;
+  const parcelIds =
+    parcels.data?.results.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id) ??
+    [];
+  const noIntersection = parcels.isSuccess && parcelIds.length === 0;
 
   function analyze() {
     if (!options) return;
 
     mutation.mutate({
       visibility: 'public',
-      polygons,
-      parcels: selectedParcels,
+      parcelIds,
       filters: resolveAnalysisFilters(selectedFilters, options),
     });
   }
@@ -65,12 +68,22 @@ export function ConfirmActions() {
         <ActionCardButton
           variant="default"
           icon={CircleArrowRight}
-          disabled={!hasAreas || !options || mutation.isPending}
+          disabled={parcelIds.length === 0 || !options || mutation.isPending}
           onClick={analyze}
         >
           {mutation.isPending ? 'Analizando…' : 'Analizar'}
         </ActionCardButton>
       </div>
+
+      {parcels.isError && (
+        <p className="text-sm text-destructive">
+          No se pudieron cargar las parcelas: {parcels.error.message}
+        </p>
+      )}
+
+      {noIntersection && (
+        <p className="text-sm text-destructive">{NO_PARCEL_INTERSECTION_MESSAGE}</p>
+      )}
 
       {mutation.isError && (
         <p className="text-sm text-destructive">El análisis falló: {mutation.error.message}</p>

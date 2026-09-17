@@ -1,16 +1,8 @@
 import { env } from '@/env';
 import type { ResolvedAnalysisFilters } from '@/lib/analysis/filters';
-import {
-  defaultIndicatorIds,
-  parcelIdOf,
-  riesgoOf,
-  toAnalysisRequest,
-} from '@/lib/analysis/request';
+import { defaultIndicatorIds, riesgoOf, toAnalysisRequest } from '@/lib/analysis/request';
 import { postJson } from '@/lib/api/http';
 import { fetchIndicators } from '@/lib/api/metadata/client';
-import { filterParcels } from '@/lib/api/parcels/client';
-import { toFilterParcelsRequest, type ParcelFeature } from '@/lib/api/parcels/schemas';
-import type { DrawnPolygon } from '@/lib/map/draw-features';
 
 import {
   analysisPath,
@@ -46,34 +38,28 @@ export async function runAnalysis(
 
 export type AnalyzeSelectionVariables = {
   visibility: AnalysisVisibility;
-  /** Drawn or uploaded areas: resolved to parcels through `filter_parcels` first. */
-  polygons: DrawnPolygon[];
-  /** Cadastral parcels clicked on the map: already parcels, sent as they are. */
-  parcels: ParcelFeature[];
+  /**
+   * The parcels flagged `selected` by `filter_parcels`, which already ran when the
+   * drawing finished or the upload landed (`parcelQueries.filtered`).
+   */
+  parcelIds: number[];
   filters: ResolvedAnalysisFilters;
 };
 
 /**
- * What Analizar does, as one chain: the indicators for the riesgo, the parcels the
- * polygons select (skipped when nothing was drawn), then the analysis itself. The
- * indicators and parcel calls run in parallel; the analysis waits for both.
+ * What Analizar does: the indicators for the riesgo, then the analysis over the parcels
+ * the selection step already resolved. An empty parcel list fails the request parse
+ * before anything is POSTed.
  */
 export async function analyzeSelection(
   variables: AnalyzeSelectionVariables,
 ): Promise<AnalysisResponse> {
-  const { visibility, polygons, parcels, filters } = variables;
+  const { visibility, parcelIds, filters } = variables;
   const riesgo = riesgoOf(visibility);
 
-  const [indicators, filtered] = await Promise.all([
-    fetchIndicators(riesgo === 'sanitario' ? { riesgo, cultivo: filters.cultivo } : { riesgo }),
-    polygons.length > 0 ? filterParcels(toFilterParcelsRequest(polygons)) : null,
-  ]);
-
-  const parcelIds = [
-    ...(filtered?.results.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id) ??
-      []),
-    ...parcels.map(parcelIdOf),
-  ];
+  const indicators = await fetchIndicators(
+    riesgo === 'sanitario' ? { riesgo, cultivo: filters.cultivo } : { riesgo },
+  );
 
   return runAnalysis(
     visibility,

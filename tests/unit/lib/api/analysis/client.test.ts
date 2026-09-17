@@ -10,7 +10,6 @@ import {
   analysisRequestSchema,
   analysisResponseSchema,
 } from '@/lib/api/analysis/schemas';
-import type { ParcelFeature } from '@/lib/api/parcels/schemas';
 
 const request = {
   parcel_ids: [8668, 7866],
@@ -145,14 +144,6 @@ describe('runAnalysis', () => {
 describe('analyzeSelection', () => {
   const fetchMock = vi.fn<typeof fetch>();
 
-  const SQUARE: [number, number][] = [
-    [0, 0],
-    [0, 1],
-    [1, 1],
-    [1, 0],
-    [0, 0],
-  ];
-
   const filters = {
     fechaSiembra: '2026-06-18',
     fechaAnalisis: '2026-08-18',
@@ -162,54 +153,15 @@ describe('analyzeSelection', () => {
     fechaFin: '2025-12-31',
   };
 
-  const polygon = {
-    id: '6f3a2f6e-7f7a-4a3e-9a3e-2f6e7f7a4a3e',
-    type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [SQUARE] },
-    properties: { mode: 'polygon' },
-  } as never;
-
-  const parcel: ParcelFeature = {
-    type: 'Feature',
-    properties: { id: 'parcel-12', name: 'Parcela 12' },
-    geometry: { type: 'Polygon', coordinates: [SQUARE] },
-  };
-
-  /**
-   * Answers by verb and path, so the order of the parallel calls does not matter. The
-   * indicator list and the analysis share the path: GET lists, POST runs.
-   */
+  /** Answers by verb: the indicator list and the analysis share the path — GET lists, POST runs. */
   function respondByPath() {
-    fetchMock.mockImplementation((input, init) => {
-      const url = String(input);
-
-      if (init?.method === 'GET') {
-        return Promise.resolve(Response.json([{ id: 'iep', name: 'IEP', default: true }]));
-      }
-
-      if (url === '/api/parcels/filter_parcels') {
-        return Promise.resolve(
-          Response.json({
-            status: 'success',
-            message: '',
-            results: [
-              {
-                parcel_id: 8668,
-                geometry: { type: 'FeatureCollection', features: [] },
-                selected: true,
-              },
-              {
-                parcel_id: 7866,
-                geometry: { type: 'FeatureCollection', features: [] },
-                selected: false,
-              },
-            ],
-          }),
-        );
-      }
-
-      return Promise.resolve(Response.json(response));
-    });
+    fetchMock.mockImplementation((_input, init) =>
+      Promise.resolve(
+        init?.method === 'GET'
+          ? Response.json([{ id: 'iep', name: 'IEP', default: true }])
+          : Response.json(response),
+      ),
+    );
   }
 
   function calledPaths() {
@@ -235,22 +187,16 @@ describe('analyzeSelection', () => {
     vi.unstubAllGlobals();
   });
 
-  it('filters the drawn polygons, keeps the selected parcels, and runs the public analysis', async () => {
-    const result = await analyzeSelection({
-      visibility: 'public',
-      polygons: [polygon],
-      parcels: [parcel],
-      filters,
-    });
+  it('asks the sanitario indicators and runs the public analysis over the given parcels', async () => {
+    const result = await analyzeSelection({ visibility: 'public', parcelIds: [8668], filters });
 
     expect(result).toEqual(response);
     expect(calledPaths()).toEqual([
       'GET /api/analysis/public?cultivo=soja',
-      'POST /api/parcels/filter_parcels',
       'POST /api/analysis/public',
     ]);
     expect(bodyOf('/api/analysis/public')).toEqual({
-      parcel_ids: [8668, 12],
+      parcel_ids: [8668],
       filters: {
         crop: 'soja',
         cycle: 'zafra',
@@ -261,17 +207,17 @@ describe('analyzeSelection', () => {
     });
   });
 
-  it('skips filter_parcels when nothing was drawn, and asks productivo indicators without cultivo', async () => {
-    await analyzeSelection({ visibility: 'private', polygons: [], parcels: [parcel], filters });
+  it('asks productivo indicators without cultivo', async () => {
+    await analyzeSelection({ visibility: 'private', parcelIds: [8668, 12], filters });
 
     expect(calledPaths()).toEqual(['GET /api/analysis/private', 'POST /api/analysis/private']);
-    expect(bodyOf('/api/analysis/private').parcel_ids).toEqual([12]);
+    expect(bodyOf('/api/analysis/private').parcel_ids).toEqual([8668, 12]);
   });
 
-  it('fails before the analysis call when there is nothing to analyse', async () => {
+  it('fails before the analysis call when no parcel was selected', async () => {
     await expect(
-      analyzeSelection({ visibility: 'public', polygons: [], parcels: [], filters }),
+      analyzeSelection({ visibility: 'public', parcelIds: [], filters }),
     ).rejects.toThrow(ZodError);
-    expect(calledPaths()).not.toContain('/api/analysis/public');
+    expect(calledPaths()).not.toContain('POST /api/analysis/public');
   });
 });

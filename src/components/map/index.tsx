@@ -7,8 +7,8 @@ import Map, {
 } from 'react-map-gl/maplibre';
 
 import { DrawLayer } from '@/components/map/draw-layer';
+import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
-import { ParcelsLayer } from '@/components/map/parcels-layer';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
@@ -73,8 +73,8 @@ export function MapView({ children }: { children?: ReactNode }) {
       <ScaleControl position="bottom-left" />
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
-      {/* TODO(mock-parcels): mock layer — swap for the real parcels source when available. */}
-      <ParcelsLayer />
+      {/* The parcels filter_parcels answers for the drawn areas; the drawn polygons paint on top. */}
+      <FilteredParcelsLayer />
       <DrawLayer />
       <ParcelPattern />
       {children}

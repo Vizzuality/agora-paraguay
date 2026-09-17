@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { filterParcels } from '@/lib/api/parcels/client';
-import { filterParcelsFixture } from '@/lib/api/parcels/fixtures/filter-parcels';
+import { fetchParcelDiseases, filterParcels } from '@/lib/api/parcels/client';
+import { mockFilterParcels } from '@/lib/api/parcels/fixtures/filter-parcels';
+import { parcelDiseasesFixture } from '@/lib/api/parcels/fixtures/parcel-diseases';
 import { filterParcelsResponseSchema, type FilterParcelsRequest } from '@/lib/api/parcels/schemas';
 
 const SQUARE: [number, number][] = [
@@ -44,19 +45,43 @@ describe('filterParcels (mock)', () => {
     vi.unstubAllGlobals();
   });
 
-  it("answers the spec's example without touching the network", async () => {
-    await expect(filterParcels(request())).resolves.toEqual(filterParcelsFixture);
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+  it('answers fake parcels around the polygons it is sent, without touching the network', async () => {
+    const response = await filterParcels(request());
 
-  it('keeps the fixture honest against the response contract', () => {
-    expect(() => filterParcelsResponseSchema.parse(filterParcelsFixture)).not.toThrow();
-    expect(filterParcelsFixture.results.map((parcel) => parcel.selected)).toEqual([true, false]);
+    expect(response).toEqual(mockFilterParcels(request()));
+    expect(() => filterParcelsResponseSchema.parse(response)).not.toThrow();
+    expect(response.results.some((parcel) => parcel.selected)).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('still rejects a malformed request — the body the mock accepts is the body the API gets', async () => {
     await expect(filterParcels(request({ overlap_percentage_threshold: 150 }))).rejects.toThrow(
       ZodError,
     );
+  });
+});
+
+/** Mock branch — the diseases answer is the analysis fixture, whatever the request. */
+describe('fetchParcelDiseases (mock)', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('answers the mocked parcels without touching the network', async () => {
+    await expect(fetchParcelDiseases({ parcel_ids: [8668], crop: 'soja' })).resolves.toEqual(
+      parcelDiseasesFixture,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('still rejects a malformed request before answering', async () => {
+    await expect(fetchParcelDiseases({ parcel_ids: [] })).rejects.toThrow(ZodError);
   });
 });
