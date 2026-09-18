@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, cookieValue, csrfToken, getJson, postJson } from '@/lib/api/http';
+import { ApiError, cookieValue, CSRF_PATH, csrfToken, getJson, postJson } from '@/lib/api/http';
 
 describe('cookieValue', () => {
   it('reads one cookie out of a document.cookie string', () => {
@@ -76,13 +76,52 @@ describe('getJson / postJson', () => {
     });
   });
 
-  it('omits the CSRF header when no csrftoken cookie is readable', async () => {
+  it('fetches a CSRF token first when no cookie is set, and echoes the one the body carries', async () => {
     vi.stubGlobal('document', { cookie: '' });
+    fetchMock.mockResolvedValueOnce(Response.json({ csrfToken: 'fresh' }));
+    fetchMock.mockResolvedValueOnce(Response.json({ ok: true }));
+
+    await postJson('/api/x', { a: 1 });
+
+    const [tokenUrl, tokenInit] = fetchMock.mock.calls[0];
+    expect(String(tokenUrl)).toBe(CSRF_PATH);
+    expect(tokenInit).toMatchObject({ credentials: 'include' });
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({
+      method: 'POST',
+      headers: { 'X-CSRFToken': 'fresh' },
+    });
+  });
+
+  it('falls back to the cookie the token endpoint set when its body carries none', async () => {
+    const document = { cookie: '' };
+    vi.stubGlobal('document', document);
+    fetchMock.mockImplementationOnce(() => {
+      document.cookie = 'csrftoken=from-cookie';
+
+      return Promise.resolve(Response.json({}));
+    });
     fetchMock.mockResolvedValueOnce(Response.json({}));
 
     await postJson('/api/x', {});
 
-    expect(fetchMock.mock.calls[0][1]?.headers).not.toHaveProperty('X-CSRFToken');
+    expect(fetchMock.mock.calls[1][1]?.headers).toMatchObject({ 'X-CSRFToken': 'from-cookie' });
+  });
+
+  it('POSTs without the header when the token endpoint is unreachable, so the 403 surfaces', async () => {
+    vi.stubGlobal('document', { cookie: '' });
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    fetchMock.mockResolvedValueOnce(new Response('forbidden', { status: 403 }));
+
+    await expect(postJson('/api/x', {})).rejects.toMatchObject({ status: 403 });
+    expect(fetchMock.mock.calls[1][1]?.headers).not.toHaveProperty('X-CSRFToken');
+  });
+
+  it('does not fetch a token when the cookie is already there', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({}));
+
+    await postJson('/api/x', {});
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('returns null for an empty body', async () => {

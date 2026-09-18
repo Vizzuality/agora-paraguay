@@ -23,11 +23,55 @@ export function cookieValue(cookies: string, name: string): string | null {
 }
 
 /**
- * Django's CSRF token, left in the `csrftoken` cookie by the login flow. Readable only
- * while the API is same-origin (the dev proxy, or served under `/api`).
+ * Django's CSRF token, left in the `csrftoken` cookie by the login flow or by
+ * `ensureCsrfToken`. Readable only while the API is same-origin (the dev proxy, or
+ * served under `/api`).
  */
 export function csrfToken(): string | null {
   return cookieValue(globalThis.document?.cookie ?? '', 'csrftoken');
+}
+
+/** Where Django hands out a CSRF token (the view also sets the `csrftoken` cookie). */
+export const CSRF_PATH = '/api/auth/csrf/';
+
+/** The token fetch in flight, so parallel POSTs from a cold start share one round trip. */
+let pendingCsrfToken: Promise<string | null> | null = null;
+
+/**
+ * The token a POST needs: the cookie when the login flow or an earlier POST already set
+ * it, else fetched — Django protects the public analysis endpoints too, and an anonymous
+ * visitor has no cookie until something asks for one. Best effort: when the token
+ * endpoint is unreachable the POST goes out without the header and Django's 403 surfaces
+ * as the `ApiError` it is.
+ */
+export async function ensureCsrfToken(): Promise<string | null> {
+  const fromCookie = csrfToken();
+
+  if (fromCookie !== null) return fromCookie;
+
+  pendingCsrfToken ??= fetchCsrfToken().finally(() => {
+    pendingCsrfToken = null;
+  });
+
+  return pendingCsrfToken;
+}
+
+/** Token from the body when the view echoes it (`{ csrfToken }`), else from the cookie it set. */
+async function fetchCsrfToken(): Promise<string | null> {
+  try {
+    const response = await fetch(`${API_URL}${CSRF_PATH}`, { credentials: 'include' });
+
+    if (!response.ok) return null;
+
+    const text = await response.text();
+    const body: unknown = text ? JSON.parse(text) : null;
+    const echoed =
+      typeof body === 'object' && body !== null && 'csrfToken' in body ? body.csrfToken : null;
+
+    return (typeof echoed === 'string' && echoed !== '' ? echoed : null) ?? csrfToken();
+  } catch {
+    return null;
+  }
 }
 
 /** A failed request: a non-2xx status, or no response at all (`status: null`). */
@@ -83,9 +127,9 @@ export function getJson(
   return send(query ? `${path}?${query}` : path, { method: 'GET' });
 }
 
-/** POST a JSON body. Django rejects a session-authenticated POST without the CSRF header. */
-export function postJson(path: string, body: unknown): Promise<unknown> {
-  const token = csrfToken();
+/** POST a JSON body. Django rejects any POST without the CSRF header, anonymous ones included. */
+export async function postJson(path: string, body: unknown): Promise<unknown> {
+  const token = await ensureCsrfToken();
 
   return send(path, {
     method: 'POST',
