@@ -1,5 +1,6 @@
+import { useNavigate } from '@tanstack/react-router';
 import { parseAsFloat, useQueryStates } from 'nuqs';
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
 import Map, {
   AttributionControl,
   ScaleControl,
@@ -21,38 +22,63 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 /**
  * The camera lives in the URL, so a view is shareable and survives a reload.
  * Geometry never goes here — only the three numbers describing where we are looking.
+ * Read through nuqs (parsing, defaults); written through the router in `handleMoveEnd`.
  */
 function useMapViewState() {
-  return useQueryStates(
-    {
-      lng: parseAsFloat.withDefault(INITIAL_VIEW_STATE.longitude),
-      lat: parseAsFloat.withDefault(INITIAL_VIEW_STATE.latitude),
-      zoom: parseAsFloat.withDefault(INITIAL_VIEW_STATE.zoom),
-    },
-    // The URL is rewritten on every camera move, so keep it out of session history:
-    // otherwise the back button replays each pan and zoom one frame at a time.
-    { history: 'replace', throttleMs: 200 },
-  );
+  const [viewState] = useQueryStates({
+    lng: parseAsFloat.withDefault(INITIAL_VIEW_STATE.longitude),
+    lat: parseAsFloat.withDefault(INITIAL_VIEW_STATE.latitude),
+    zoom: parseAsFloat.withDefault(INITIAL_VIEW_STATE.zoom),
+  });
+
+  return viewState;
 }
 
 export function MapView({ children }: { children?: ReactNode }) {
-  const [viewState, setViewState] = useMapViewState();
+  const viewState = useMapViewState();
+  const navigate = useNavigate();
 
+  // Leaving the page while the camera animates (a fit to new areas) makes MapLibre's
+  // teardown stop the animation, which fires one last `moveend`. Writing it to the URL
+  // then would navigate back to `/`: the nuqs adapter targets the pathname it was
+  // mounted under. A layout-effect cleanup runs before the child map's own teardown,
+  // so this flag is already down when that `moveend` arrives.
+  const alive = useRef(true);
+
+  useLayoutEffect(() => {
+    alive.current = true;
+
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
+  // Written through the router, synchronously, not through nuqs's setter: nuqs queues
+  // writes (50 ms at least) and targets the pathname captured when they were queued, so
+  // a camera write queued just before Analizar navigates would land on /analisis as a
+  // jump back to `/`. `replace`, so the back button never replays pans and zooms.
   const handleMoveEnd = useCallback(
     (event: ViewStateChangeEvent) => {
+      if (!alive.current) return;
+
       const next = normalizeViewState({
         longitude: event.viewState.longitude,
         latitude: event.viewState.latitude,
         zoom: event.viewState.zoom,
       });
 
-      void setViewState({
-        lng: next.longitude,
-        lat: next.latitude,
-        zoom: next.zoom,
+      void navigate({
+        to: '.',
+        search: (previous) => ({
+          ...previous,
+          lng: next.longitude,
+          lat: next.latitude,
+          zoom: next.zoom,
+        }),
+        replace: true,
       });
     },
-    [setViewState],
+    [navigate],
   );
 
   return (
