@@ -24,10 +24,10 @@ test('panning twice keeps the camera URL well-formed', async ({ page }) => {
   // on the old behaviour.
   expect(url.match(/\?/g)).toHaveLength(1);
 
-  // Panning changes lng/lat only — zoom stays at its default and nuqs omits it.
+  // Every camera write carries the three numbers, each exactly once.
   const params = new URL(url).searchParams;
 
-  for (const key of ['lng', 'lat']) {
+  for (const key of ['lng', 'lat', 'zoom']) {
     const values = params.getAll(key);
 
     expect(values).toHaveLength(1);

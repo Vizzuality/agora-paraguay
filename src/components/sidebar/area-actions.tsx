@@ -12,9 +12,8 @@ import { failUploadAtom, uploadFeaturesAtom, uploadResultAtom } from '@/store/up
 
 /**
  * Step 1 of the selection: the two ways to bring an área de interés onto the map —
- * upload a file of polygons or draw one. The third entry point, clicking cadastral
- * parcels, lives on the map itself. Upload outcomes are reported by `UploadFeedback`,
- * which outlives this component into step 2.
+ * upload a file of polygons or draw one. Upload outcomes are reported by
+ * `UploadFeedback`, which outlives this component into step 2.
  *
  * Rendered inside `<ClientOnly>`: it reads the draw atoms.
  */

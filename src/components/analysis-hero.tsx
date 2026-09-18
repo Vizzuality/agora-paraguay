@@ -18,31 +18,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  isPeriodOptionDisabled,
-  optionsFor,
-  resolveAnalysisFilters,
-  type AnalysisFilterKey,
-} from '@/lib/analysis/filters';
+import { resolveFilterSelection } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
   scrollEdges,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
+import { visibilityOf } from '@/lib/analysis/request';
 import { metadataQueries } from '@/lib/api/metadata/queries';
-import type { AnalysisOption } from '@/lib/api/metadata/schemas';
+import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import type { RiesgoTab } from '@/routes/analisis';
 import { activeParcelTabAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
 
 /**
- * `riesgo` doubles as the public/private switch: sanitario is the public hero with the
- * four analysis dropdowns, productivo the logged-in one with only the period bounds.
+ * The analysed parcels as tabs, and the filters the API offers for that side of the
+ * analysis: `riesgo` picks the `visibility` the filters are asked for.
  */
-export function AnalysisHero({
-  riesgo,
-  parcels,
-}: Readonly<{ riesgo: RiesgoTab; parcels: string[] }>) {
+export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
       <MiniMapThumbnail />
@@ -56,52 +48,89 @@ export function AnalysisHero({
   );
 }
 
-type HeroSelectSpec = { key: AnalysisFilterKey; label: string };
-
-const SANITARIO_FIELDS: HeroSelectSpec[] = [
-  { key: 'fechaSiembra', label: 'Fecha de siembra' },
-  { key: 'fechaAnalisis', label: 'Fecha del análisis' },
-  { key: 'cultivo', label: 'Cultivo' },
-  { key: 'ciclo', label: 'Ciclo' },
-];
-
-const PRODUCTIVO_FIELDS: HeroSelectSpec[] = [
-  { key: 'fechaInicio', label: 'Fecha de inicio' },
-  { key: 'fechaFin', label: 'Fecha fin' },
-];
-
 /**
- * The dropdowns. Options load client-side after hydration like every query here, so
- * there is a first render without them: the selects show a loading placeholder,
- * disabled, instead of a Suspense boundary the rest of the app does not use.
+ * One field per filter `GET /api/parcels/filters/` returns: a dropdown for a category, a
+ * date input for a date. Only this page asks for them. They load client-side after
+ * hydration like every query here, so there is a first render without them: two disabled
+ * placeholder selects hold the layout instead of a Suspense boundary the rest of the app
+ * does not use.
  */
-function HeroFilters({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
-  const fields = riesgo === 'sanitario' ? SANITARIO_FIELDS : PRODUCTIVO_FIELDS;
-  const { data: options } = useQuery(metadataQueries.analysisOptions());
+function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
+  const { data: filters, error } = useQuery(
+    metadataQueries.filters({ visibility: visibilityOf(riesgo) }),
+  );
   const selected = useAtomValue(analysisFiltersAtom);
   const setFilter = useSetAtom(setAnalysisFilterAtom);
-  const resolved = options ? resolveAnalysisFilters(selected, options) : null;
+  const resolved = filters ? resolveFilterSelection(selected, filters) : {};
+
+  if (error) {
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        No se pudieron cargar los filtros: {error.message}
+      </p>
+    );
+  }
 
   return (
-    <div
-      className={cn(
-        'gap-x-3 gap-y-6',
-        riesgo === 'sanitario' ? 'grid grid-cols-2' : 'flex flex-col',
+    <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+      {filters ? (
+        filters.map((filter) => (
+          <HeroField
+            key={filter.id}
+            filter={filter}
+            value={resolved[filter.id] ?? ''}
+            onChange={(value) => setFilter({ id: filter.id, value })}
+          />
+        ))
+      ) : (
+        <>
+          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+        </>
       )}
-    >
-      {fields.map((field) => (
-        <HeroSelect
-          key={field.key}
-          label={field.label}
-          options={options ? optionsFor(field.key, options) : []}
-          value={resolved?.[field.key] ?? ''}
-          onChange={(value) => setFilter({ key: field.key, value })}
-          // The period bounds constrain each other: the start never passes the end.
-          isDisabled={(value) =>
-            resolved !== null && isPeriodOptionDisabled(field.key, value, resolved)
-          }
-        />
-      ))}
+    </div>
+  );
+}
+
+/** The control a filter's `field_type` calls for. */
+function HeroField({
+  filter,
+  value,
+  onChange,
+}: Readonly<{ filter: Filter; value: string; onChange: (value: string) => void }>) {
+  const field = filter.field_type;
+
+  switch (field.type) {
+    case 'category':
+      return (
+        <HeroSelect label={filter.name} options={field.options} value={value} onChange={onChange} />
+      );
+    case 'date':
+      return <HeroDate label={filter.name} value={value} onChange={onChange} />;
+  }
+}
+
+/**
+ * A date filter, ISO `YYYY-MM-DD` in and out (the API's `format`). A native date input
+ * never shows a placeholder, so the label always sits on the border.
+ */
+function HeroDate({
+  label,
+  value,
+  onChange,
+}: Readonly<{ label: string; value: string; onChange: (value: string) => void }>) {
+  const id = useId();
+
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        type="date"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={cn(FLOATING_FIELD_CLASS, 'border')}
+      />
+      <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
     </div>
   );
 }
@@ -255,13 +284,11 @@ function HeroSelect({
   options,
   value,
   onChange,
-  isDisabled,
 }: Readonly<{
   label: string;
   options: AnalysisOption[];
   value: string;
   onChange: (value: string) => void;
-  isDisabled: (value: string) => boolean;
 }>) {
   const id = useId();
   const loading = options.length === 0;
@@ -276,7 +303,7 @@ function HeroSelect({
         <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
         <SelectContent>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value} disabled={isDisabled(option.value)}>
+            <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
           ))}

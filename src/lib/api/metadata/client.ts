@@ -1,62 +1,41 @@
-import { env } from '@/env';
 import { getJson } from '@/lib/api/http';
 
 import {
-  analysisOptionsSchema,
   filtersSchema,
   indicatorsSchema,
-  type AnalysisOptions,
   type Filters,
+  type FiltersParams,
   type Indicators,
   type IndicatorsParams,
 } from './schemas';
 
 /*
- * The only module in `metadata/` that knows which data is fake: filters are real;
- * indicators and the legacy analysis options run on the mock branch.
+ * The only module in `metadata/` that knows which data is fake. Filters are real; the
+ * indicators have no endpoint yet and serve their fixture.
  */
 
-/** `GET /api/filters/` — the filters and their values. */
-export async function fetchFilters(): Promise<Filters> {
-  return filtersSchema.parse(await getJson('/api/filters/'));
+/**
+ * `GET /api/parcels/filters/?visibility={public|private}` — the filters of that side of
+ * the analysis and their values.
+ */
+export async function fetchFilters(params: FiltersParams): Promise<Filters> {
+  return filtersSchema.parse(await getJson('/api/parcels/filters/', params));
 }
 
 /**
- * `GET /api/indicators/` — the indicators and their metadata, optionally by riesgo/cultivo.
+ * The indicators of a riesgo and their metadata.
  *
- * TODO(mock-indicators): the mock branch answers the fixture for the riesgo asked (both
- * without one); `cultivo` is ignored. Drop it when the endpoint is reachable (grep
- * `mock-indicators`).
+ * TODO(mock-indicators): no list endpoint exists yet — `GET` on the analysis paths answers
+ * 405 (checked 2026-09-18), so this serves the fixture of the riesgo asked, ignoring
+ * `cultivo`. Wire the real call here when the backend names it (grep
+ * `mock-indicators`); nothing else changes, Analizar already chains through this.
  */
-export async function fetchIndicators(params: IndicatorsParams = {}): Promise<Indicators> {
-  if (env.VITE_USE_MOCK_API) {
-    const fixtures = await import('./fixtures/indicators');
-    const fixture =
-      params.riesgo === 'sanitario'
-        ? fixtures.sanitarioIndicatorsFixture
-        : params.riesgo === 'productivo'
-          ? fixtures.productivoIndicatorsFixture
-          : fixtures.indicatorsFixture;
+export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
+  const fixtures = await import('./fixtures/indicators');
 
-    return indicatorsSchema.parse(fixture);
-  }
-
-  return indicatorsSchema.parse(await getJson('/api/indicators/', params));
-}
-
-/**
- * TODO(mock-analysis-options): serves the option lists for the analysis hero dropdowns
- * from a fixture. Replace with `fetchFilters` and delete `fixtures/analysis-options.ts`
- * (grep `mock-analysis-options`).
- */
-export async function fetchAnalysisOptions(): Promise<AnalysisOptions> {
-  if (env.VITE_USE_MOCK_API) {
-    const { analysisOptionsFixture } = await import('./fixtures/analysis-options');
-
-    return analysisOptionsSchema.parse(analysisOptionsFixture);
-  }
-
-  throw new Error(
-    'The real API client is not implemented. Set VITE_USE_MOCK_API=true to serve fixtures.',
+  return indicatorsSchema.parse(
+    params.riesgo === 'sanitario'
+      ? fixtures.sanitarioIndicatorsFixture
+      : fixtures.productivoIndicatorsFixture,
   );
 }

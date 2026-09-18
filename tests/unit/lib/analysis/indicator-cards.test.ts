@@ -1,18 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { generalInfo, indicatorCards, levelOf, toneOf } from '@/lib/analysis/indicator-cards';
-import { analysisFixture } from '@/lib/api/analysis/fixtures/analysis';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import { sanitarioIndicatorsFixture } from '@/lib/api/metadata/fixtures/indicators';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
 /** A bare analysed parcel carrying only the given columns. */
 function parcel(properties: Record<string, string | number | null>): AnalysisParcel {
-  return {
-    type: 'Feature',
-    properties: { parcela_id: 'P1', ...properties },
-    geometry: { type: 'MultiPolygon', coordinates: [] },
-  };
+  return { parcel_id: 'D07D21P00000001', properties };
 }
 
 const asianRust: Indicator = {
@@ -46,6 +40,23 @@ const production: Indicator = {
   unit: 't/ha',
   indicator_type: { type: 'numeric' },
 };
+
+const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
+
+const phenology: Indicator = {
+  id: 'phenology_stage',
+  name: 'Momento fenológico',
+  indicator_type: { type: 'text' },
+};
+
+const brownSpot: Indicator = {
+  id: 'brown_spot',
+  name: 'Septoria glycines',
+  indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
+};
+
+/** The sanitario metadata as `GET /api/parcels/analysis/diseases/` lists it, in its order. */
+const sanitarioIndicators = [station, dataQuality, crop, phenology, asianRust, brownSpot];
 
 describe('levelOf', () => {
   it('splits the ruler in thirds, the cut points belonging to the higher class', () => {
@@ -85,19 +96,31 @@ describe('indicatorCards', () => {
     expect(indicatorCards(parcel({ asian_rust: 2 }), undefined)).toEqual([]);
   });
 
-  it('says "Sin datos" for a selected indicator without a reading: missing, blank, null or "NA"', () => {
+  it('shows only the indicators the response answered: missing, blank, null or "NA" get no card', () => {
     const cards = indicatorCards(
       parcel({ data_quality: '', weather_station: null, Pro_soja: 'NA', asian_rust: 2 }),
       [station, dataQuality, production, asianRust, itr],
     );
 
+    expect(cards.map((card) => [card.id, card.level])).toEqual([['asian_rust', 'Medio']]);
+  });
+
+  it('matches a column to its indicator ignoring case — the backend answers Asian_rust', () => {
+    const [card] = indicatorCards(parcel({ Asian_rust: 3 }), [asianRust]);
+
+    expect(card).toMatchObject({ id: 'asian_rust', label: 'Phakopsora pachyrhizi', level: 'Alto' });
+  });
+
+  it('shows a column the metadata does not know as a plain figure, after the known ones', () => {
+    const cards = indicatorCards(parcel({ Late_blight: 2, asian_rust: 1, note: 'x' }), [asianRust]);
+
     expect(cards.map((card) => [card.id, card.level])).toEqual([
-      ['data_quality', 'Sin datos'],
-      ['Pro_soja', 'Sin datos'],
-      ['asian_rust', 'Medio'],
-      ['ITR_soja', 'Sin datos'],
+      ['asian_rust', 'Bajo'],
+      ['Late_blight', '2'],
     ]);
-    expect(cards[0]).toEqual({ id: 'data_quality', label: 'Calidad del dato', level: 'Sin datos' });
+    expect(generalInfo(parcel({ note: 'x', asian_rust: 1 }), [asianRust])).toEqual([
+      { id: 'note', label: 'note', value: 'x' },
+    ]);
   });
 
   it('keeps metadata order, not column order', () => {
@@ -192,10 +215,11 @@ describe('indicatorCards', () => {
     expect(card).toEqual({ id: 'Pro_soja', label: 'Producción base', level: '2,77 t/ha' });
   });
 
-  it('turns the shipped fixtures into one card per measured index, per parcel', () => {
-    const [first, , third] = analysisFixture.features;
+  it('turns an analysed parcel into one card per measured index, per parcel', () => {
+    const first = parcel({ data_quality: 92, asian_rust: 3, brown_spot: 2 });
+    const third = parcel({ data_quality: 78, asian_rust: 2, brown_spot: 3 });
 
-    expect(indicatorCards(first, sanitarioIndicatorsFixture).map((card) => card.id)).toEqual([
+    expect(indicatorCards(first, sanitarioIndicators).map((card) => card.id)).toEqual([
       'data_quality',
       'asian_rust',
       'brown_spot',
@@ -203,7 +227,7 @@ describe('indicatorCards', () => {
 
     // Different parcels, different readings — the tab switch has to show it.
     const rust = (parcel: AnalysisParcel) =>
-      indicatorCards(parcel, sanitarioIndicatorsFixture).find((card) => card.id === 'asian_rust');
+      indicatorCards(parcel, sanitarioIndicators).find((card) => card.id === 'asian_rust');
 
     expect(rust(first)).toMatchObject({ position: 100, caption: '3' });
     expect(rust(third)).toMatchObject({ position: 50, caption: '2' });
@@ -217,8 +241,6 @@ describe('generalInfo', () => {
   });
 
   it('lists the text indicators the parcel carries, in metadata order, and nothing measured', () => {
-    const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
-
     expect(
       generalInfo(parcel({ crop_type: 'Soja', asian_rust: 3, weather_station: 'Hohenau' }), [
         station,
@@ -237,12 +259,15 @@ describe('generalInfo', () => {
     expect(generalInfo(parcel({}), [station])).toEqual([]);
   });
 
-  it("groups the fixture parcel's station, crop and phenology", () => {
-    const [first] = analysisFixture.features;
+  it("groups a parcel's station, crop and phenology", () => {
+    const first = parcel({
+      weather_station: 'Colonias Unidas - Capitán Meza',
+      crop_type: 'Soja',
+      phenology_stage: 'R5 (Inicio de grano)',
+      asian_rust: 3,
+    });
 
-    expect(
-      generalInfo(first, sanitarioIndicatorsFixture).map((row) => [row.id, row.value]),
-    ).toEqual([
+    expect(generalInfo(first, sanitarioIndicators).map((row) => [row.id, row.value])).toEqual([
       ['weather_station', 'Colonias Unidas - Capitán Meza'],
       ['crop_type', 'Soja'],
       ['phenology_stage', 'R5 (Inicio de grano)'],

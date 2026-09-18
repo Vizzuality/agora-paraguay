@@ -93,7 +93,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 
 **filterParcels**
 
-- POSTs the body to filter_parcels with the CSRF token and parses the results
+- POSTs the body to filter-parcels with the CSRF token and parses the results
 - surfaces an HTTP failure as an ApiError
 - rejects a response that does not match the contract
 - rejects a malformed request before touching the network

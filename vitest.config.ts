@@ -13,13 +13,13 @@ export default defineConfig({
     // which is why the include below is scoped to `tests/unit` rather than the whole
     // `tests` tree.
     //
-    // Tests cover pure logic only — schemas, the mock client, map view and draw state.
+    // Tests cover pure logic only — schemas, the API clients, map view and draw state.
     // Component tests require jsdom + testing-library.
     environment: 'node',
     include: ['tests/unit/**/*.test.ts'],
     // Vite loads the developer's `.env` into `import.meta.env`; the API tests assert on
-    // paths and on the mock branch, so both flags are pinned regardless of it.
-    env: { VITE_API_URL: '', VITE_USE_MOCK_API: 'true' },
+    // paths, so the origin is pinned regardless of it.
+    env: { VITE_API_URL: '' },
     coverage: {
       provider: 'v8',
       // text-summary keeps the number visible in CI logs; lcov is the interchange

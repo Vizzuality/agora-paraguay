@@ -1,7 +1,9 @@
+import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { Layer, Source, useMap } from 'react-map-gl/maplibre';
 
+import { parcelQueries } from '@/lib/api/parcels/queries';
 import { dotPatternImage } from '@/lib/map/draw-styles';
 import { drawPolygonsAtom } from '@/store/draw';
 
@@ -11,11 +13,13 @@ const PATTERN_ID = 'parcel-dots';
  * The dot texture the design repeats inside every parcel. Terra Draw's adapter can
  * only paint hex + opacity (see `draw-styles.ts`), so the dots are a declarative
  * `fill-pattern` layer over all parcels — the per-parcel colors underneath stay
- * Terra Draw's job.
+ * Terra Draw's job. Gone with the drawing once the parcels `filter-parcels` answers
+ * have replaced it on the map (`FilteredParcelsLayer`).
  */
 export function ParcelPattern() {
   const { current: mapRef } = useMap();
   const polygons = useAtomValue(drawPolygonsAtom);
+  const { data: parcels } = useQuery(parcelQueries.filtered(polygons));
 
   useEffect(() => {
     const map = mapRef?.getMap();
@@ -35,7 +39,7 @@ export function ParcelPattern() {
     };
   }, [mapRef]);
 
-  if (polygons.length === 0) return null;
+  if (polygons.length === 0 || (parcels?.results.length ?? 0) > 0) return null;
 
   return (
     <Source

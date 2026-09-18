@@ -2,8 +2,9 @@
 
 Front end for the Ágora Paraguay platform, built with [TanStack Start](https://tanstack.com/start).
 
-The API is **external and does not exist yet**, so the app currently serves mock data. See
-[Data layer](#data-layer) for how it is wired and what changes when the real API arrives.
+The API is **external and still being built**: login, filters, parcel filtering and the analysis
+reach it; the indicator list is the one fixture left. See [Data layer](#data-layer) for how it
+is wired.
 
 ## Requirements
 
@@ -19,8 +20,8 @@ pnpm setup          # first production build (generates the route tree) + Playwr
 pnpm dev            # http://localhost:3000
 ```
 
-No `.env` file is needed — the app runs with sensible defaults (mock data, built-in satellite
-basemap). Copy `.env.example` to `.env` only to override them; note that setting
+No `.env` file is needed — the app runs with sensible defaults (local Django behind the proxy,
+built-in satellite basemap). Copy `.env.example` to `.env` only to override them; note that setting
 `VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
 
 Auth, parcel filtering, metadata and analysis call the real Django API (see
@@ -68,7 +69,7 @@ tests/
   e2e/    # Playwright, real browser against the dev server
 ```
 
-Unit tests cover pure logic (schemas, the mock client, map view and draw state); component
+Unit tests cover pure logic (schemas, the API clients, map view and draw state); component
 tests would need jsdom + testing-library, which is not set up. End-to-end specs drive the
 real UI and stub the basemap style, so they need no network.
 
@@ -93,9 +94,9 @@ flowchart TD
   upload["src/lib/upload\nshapefile / KML / GeoJSON → polygons"]
   analysis["src/lib/analysis\nfilters, request builder"]
   queries["src/lib/api/*/queries.ts\nqueryOptions / mutationOptions"]
-  client["src/lib/api/*/client.ts\nthe only module that knows what is mock"]
+  client["src/lib/api/*/client.ts\nthe only module that knows the endpoints"]
   http["src/lib/api/http.ts\nAPI_URL, CSRF, getJson / postJson"]
-  fixtures["src/lib/api/*/fixtures\nTODO(mock-…)"]
+  fixtures["src/lib/api/metadata/fixtures\nindicator list, TODO(mock-indicators)"]
   api[("External API\nAGORA Project API — not built yet")]
   maplibre[("MapLibre GL + Terra Draw")]
 
@@ -120,29 +121,30 @@ comments (`src/store/draw-core.ts`, `src/components/map/index.tsx`).
 ## Data layer
 
 The API layer is organised by the domains of the API spec (auth, parcels, metadata, analysis).
-Every domain has the same three files, and mock data lives behind a single seam per domain:
+Every domain has the same three files; the one fixture left sits behind its domain's `client.ts`:
 
 ```
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
-├── auth/                   POST /api/auth/login/ (+csrf); GET /api/auth/me/ parked (TODO(auth-me))
-├── parcels/                POST /api/parcels/filter_parcels; the cadastral layer (mock)
-├── metadata/               GET /api/filters/, GET /api/indicators/; analysis options (mock)
-└── analysis/               POST /api/analysis/{public|private}
+├── auth/                   POST /api/auth/login/ (+csrf) — real; GET /api/auth/me/ parked (TODO(auth-me))
+├── parcels/                POST /api/parcels/filter-parcels/
+├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); indicator list — fixture, no endpoint yet
+└── analysis/               POST /api/parcels/analysis/{diseases|production}/
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
-    ├── client.ts           The ONLY module in the domain that knows which data is fake
-    ├── queries.ts          queryOptions / mutationOptions factories — what components import
-    └── fixtures/           Mock data, where a domain still has any. Nothing outside the domain imports it
+    ├── client.ts           The ONLY module in the domain that knows the endpoint (and, for indicators, the fixture)
+    ├── queries.ts          queryOptions factories — what components import
+    └── fixtures/           Only metadata/ has one (the indicator list). Nothing outside the domain imports it
 ```
 
 Rules that keep the swap cheap:
 
 - Components import from a domain's `queries.ts` only, never from `client.ts` or `fixtures/`.
-- Every response is parsed through the Zod schemas, mock or real, so contract drift surfaces at
-  the boundary instead of as `undefined` deep in a component.
-- Real endpoints ignore `VITE_USE_MOCK_API`; it only gates the endpoints the spec does not cover
-  yet (the cadastral parcel layer, the analysis hero options). Each of those carries a
-  `TODO(mock-…)` marker — grep it to find every trace when the real endpoint lands.
+- Every response is parsed through the Zod schemas, fixture included, so contract drift surfaces
+  at the boundary instead of as `undefined` deep in a component.
+- **Everything but the indicator list talks to the API.** Auth, filters, `filter-parcels/` and
+  the analysis (`POST /api/parcels/analysis/…`) are real; there is no mock switch. The indicator
+  list has no endpoint yet (`GET` on the analysis paths answers 405) and serves its fixture,
+  marked `TODO(mock-indicators)` — grep it when the endpoint lands.
 - Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
   add fields without breaking the parse; tighten them as the contract settles.
 

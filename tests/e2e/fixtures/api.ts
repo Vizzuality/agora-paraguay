@@ -1,39 +1,53 @@
 import type { Page } from '@playwright/test';
 
+/** The hero filters as the live API shapes them: a category and two dates, one defaulted. */
+export const HERO_FILTERS = [
+  {
+    id: 'crop_type',
+    name: 'Tipo de cultivo',
+    description: 'Cultivo a evaluar.',
+    field_type: {
+      type: 'category',
+      options: [
+        { value: 'rice', label: 'Arroz' },
+        { value: 'soy', label: 'Soja' },
+      ],
+    },
+  },
+  {
+    id: 'sowing_date',
+    name: 'Fecha de siembra',
+    field_type: { type: 'date', format: 'YYYY-MM-DD', default: null },
+  },
+  {
+    id: 'date',
+    name: 'Fecha',
+    field_type: { type: 'date', format: 'YYYY-MM-DD', default: '2026-09-17' },
+  },
+];
+
 /**
- * Stubs the endpoints Analizar chains (`analyzeSelection`): indicators, parcel
- * filtering, and the analysis itself. Keeps the specs hermetic — the Django backend is
+ * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
+ * filtering, and the analysis itself — plus the filters the /analisis hero lists
+ * (`GET /api/parcels/filters/`). Keeps the specs hermetic — the Django backend is
  * never running under Playwright — while still exercising the real client code, so a
  * body the schemas reject fails the spec.
  *
- * Matched on the exact pathname, never a glob: `**\/api/analysis/**` would also catch
- * Vite serving `/src/lib/api/analysis/client.ts` and break the app's module graph.
+ * Matched on the exact pathname, never a glob: `**\/api/**` would also catch Vite
+ * serving `/src/lib/api/analysis/client.ts` and break the app's module graph.
  */
 export async function stubAnalysisApi(page: Page) {
   await page.route(
-    (url) => url.pathname === '/api/indicators/',
+    (url) => url.pathname === '/api/parcels/filters/',
     (route) =>
       route.fulfill({
         contentType: 'application/json',
-        body: JSON.stringify([
-          {
-            id: 'crop_type',
-            name: 'Tipo de cultivo',
-            default: true,
-            indicator_type: { type: 'text' },
-          },
-          {
-            id: 'asian_rust',
-            name: 'Phakopsora pachyrhizi',
-            default: true,
-            indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
-          },
-        ]),
+        body: JSON.stringify(HERO_FILTERS),
       }),
   );
 
   await page.route(
-    (url) => url.pathname === '/api/parcels/filter_parcels',
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
     (route) =>
       route.fulfill({
         contentType: 'application/json',
@@ -42,9 +56,33 @@ export async function stubAnalysisApi(page: Page) {
           message: '',
           input: { features: [] },
           results: [
+            // One selected parcel with real-shaped geometry (a MultiPolygon near
+            // Encarnación), so the camera has somewhere to fly once the answer lands.
             {
-              parcel_id: 8668,
-              geometry: { type: 'FeatureCollection', features: [] },
+              parcel_id: 'D07D21P00000002',
+              geometry: {
+                type: 'FeatureCollection',
+                features: [
+                  {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                      type: 'MultiPolygon',
+                      coordinates: [
+                        [
+                          [
+                            [-55.87, -27.33],
+                            [-55.86, -27.33],
+                            [-55.86, -27.32],
+                            [-55.87, -27.32],
+                            [-55.87, -27.33],
+                          ],
+                        ],
+                      ],
+                    },
+                  },
+                ],
+              },
               selected: true,
             },
           ],
@@ -52,29 +90,33 @@ export async function stubAnalysisApi(page: Page) {
       }),
   );
 
+  // The analysis run. The indicator list has no endpoint yet (the app serves its fixture,
+  // whose ids match the columns below), so only the POST is stubbed.
   await page.route(
-    (url) => url.pathname === '/api/analysis/public' || url.pathname === '/api/analysis/private',
-    (route) =>
-      route.fulfill({
+    (url) =>
+      url.pathname === '/api/parcels/analysis/diseases/' ||
+      url.pathname === '/api/parcels/analysis/production/',
+    (route) => {
+      // One parcel, answered with the columns the request asked for and nothing else, the
+      // way the backend does: the disease index sits at the top of its 1–3 range, so the
+      // card reads "Alto" over "3". Column casing as the backend writes it (`Asian_rust`).
+      const { indicators } = route.request().postDataJSON() as { indicators: string[] };
+      const columns: Record<string, string | number> = { crop_type: 'Soja', Asian_rust: 3 };
+      const properties = Object.fromEntries(
+        Object.entries(columns).filter(([column]) =>
+          indicators.some((id) => id.toLowerCase() === column.toLowerCase()),
+        ),
+      );
+
+      return route.fulfill({
         contentType: 'application/json',
-        // One analysed parcel per submitted area, its disease index at the top of the 1–3
-        // range: the first tab's card reads "Alto" over the value "3" — the same reading
-        // the shipped fixture gives, so the spec passes with `VITE_USE_MOCK_API` on or off.
         body: JSON.stringify({
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              properties: {
-                fid: 0,
-                parcela_id: 'D07D21P00000001',
-                crop_type: 'Soja',
-                asian_rust: 3,
-              },
-              geometry: { type: 'MultiPolygon', coordinates: [] },
-            },
-          ],
+          status: 'success',
+          message: '',
+          input: {},
+          indicators: [{ parcel_id: 'D07D21P00000002', properties }],
         }),
-      }),
+      });
+    },
   );
 }

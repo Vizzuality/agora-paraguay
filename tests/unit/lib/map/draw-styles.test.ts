@@ -50,6 +50,13 @@ describe('PARCEL_STYLES', () => {
     expect(PARCEL_STYLES.outlineWidth(drawn)).toBe(2);
   });
 
+  it('paints a hidden parcel fully transparent, whatever else it is', () => {
+    const hidden = parcel('h', { origin: 'upload', analysis: true, hidden: true });
+
+    expect(PARCEL_STYLES.fillOpacity(hidden)).toBe(0);
+    expect(PARCEL_STYLES.outlineWidth(hidden)).toBe(0);
+  });
+
   it('paints the drawing handles yellow with a white outline', () => {
     expect(PARCEL_STYLES.closingPointColor).toBe('#F1FF28');
     expect(PARCEL_STYLES.coordinatePointColor).toBe('#F1FF28');

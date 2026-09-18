@@ -3,8 +3,9 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /*
  * From one analysed parcel to what its `RiskClassCard`s show. Pure, node-tested. The
- * response is one Feature per parcel with the indicators as property columns; the names,
- * scales and class labels come from `GET /api/indicators/`. Cards are per parcel — the
+ * response is one entry per parcel with the indicators as property columns; the names,
+ * scales and class labels come from the indicator list (`metadataQueries.indicators`).
+ * Cards are per parcel — the
  * hero's parcel tab picks which — never a summary over the set.
  *
  * Text indicators (station, crop, phenology) are not risks: they go together into the
@@ -60,9 +61,13 @@ export function isGeneralInfo(indicator: Indicator): boolean {
   return type === undefined || type === 'text';
 }
 
-/** The parcel's value for the indicator, or `undefined` when it has no reading. */
+/**
+ * The parcel's value for the indicator, or `undefined` when it has no reading. The exact
+ * id first; failing that, the column that matches it ignoring case — the backend answers
+ * `Asian_rust` to a request for `asian_rust`.
+ */
 function readingOf(parcel: AnalysisParcel, indicator: Indicator): string | number | undefined {
-  const value = parcel.properties[indicator.id];
+  const value = parcel.properties[indicator.id] ?? columnIgnoringCase(parcel, indicator.id);
 
   if (value === null || value === undefined || value === '' || value === NOT_AVAILABLE) {
     return undefined;
@@ -71,14 +76,25 @@ function readingOf(parcel: AnalysisParcel, indicator: Indicator): string | numbe
   return value;
 }
 
-/** The figure when the parcel has no usable reading for a selected indicator. */
+function columnIgnoringCase(
+  parcel: AnalysisParcel,
+  id: string,
+): string | number | null | undefined {
+  const wanted = id.toLowerCase();
+  const key = Object.keys(parcel.properties).find((column) => column.toLowerCase() === wanted);
+
+  return key === undefined ? undefined : parcel.properties[key];
+}
+
+/** The figure when the parcel's reading exists but the metadata cannot place it. */
 export const NO_READING = 'Sin datos';
 
 /**
- * One risk card per measured indicator (range, category, numeric), in metadata order.
- * The list is the user's selection, so every indicator gets a card: one without a reading
- * (missing column, blank, "NA", or a value the metadata cannot place) says so instead
- * of vanishing.
+ * One risk card per measured indicator the response carries (range, category, numeric),
+ * in metadata order. The response decides what is shown: an indicator the backend did not
+ * answer (missing column, blank, null, "NA") gets no card, however it was requested. A
+ * reading the metadata cannot place still shows, as "Sin datos". Columns the metadata
+ * does not know come last, as plain figures under their own column name.
  */
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
@@ -86,24 +102,38 @@ export function indicatorCards(
 ): IndicatorCard[] {
   if (!parcel || !indicators) return [];
 
-  return indicators.flatMap((indicator) => {
+  const known = indicators.flatMap((indicator) => {
     if (isGeneralInfo(indicator)) return [];
 
     const value = readingOf(parcel, indicator);
-    const card = value === undefined ? null : toCard(indicator, value);
 
-    return [card ?? { id: indicator.id, label: indicator.name, level: NO_READING }];
+    if (value === undefined) return [];
+
+    return [
+      toCard(indicator, value) ?? { id: indicator.id, label: indicator.name, level: NO_READING },
+    ];
   });
+
+  const unknown = unknownColumns(parcel, indicators).flatMap(([column, value]) =>
+    typeof value === 'number' || !Number.isNaN(Number(value))
+      ? [{ id: column, label: column, level: formatValue(Number(value), undefined) }]
+      : [],
+  );
+
+  return [...known, ...unknown];
 }
 
-/** The text indicators the parcel carries, in metadata order, for the general-info card. */
+/**
+ * The text indicators the parcel carries, in metadata order, for the general-info card;
+ * then any text column the metadata does not know, under its own column name.
+ */
 export function generalInfo(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
 ): GeneralInfoRow[] {
   if (!parcel || !indicators) return [];
 
-  return indicators.flatMap((indicator) => {
+  const known = indicators.flatMap((indicator) => {
     if (!isGeneralInfo(indicator)) return [];
 
     const value = readingOf(parcel, indicator);
@@ -111,6 +141,29 @@ export function generalInfo(
     return value === undefined
       ? []
       : [{ id: indicator.id, label: indicator.name, value: String(value) }];
+  });
+
+  const unknown = unknownColumns(parcel, indicators).flatMap(([column, value]) =>
+    typeof value === 'string' && Number.isNaN(Number(value))
+      ? [{ id: column, label: column, value }]
+      : [],
+  );
+
+  return [...known, ...unknown];
+}
+
+/** The parcel's readable columns no indicator in the metadata claims, ignoring case. */
+function unknownColumns(
+  parcel: AnalysisParcel,
+  indicators: Indicators,
+): [string, string | number][] {
+  const claimed = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
+
+  return Object.entries(parcel.properties).flatMap(([column, value]) => {
+    if (claimed.has(column.toLowerCase())) return [];
+    if (value === null || value === '' || value === NOT_AVAILABLE) return [];
+
+    return [[column, value] as [string, string | number]];
   });
 }
 

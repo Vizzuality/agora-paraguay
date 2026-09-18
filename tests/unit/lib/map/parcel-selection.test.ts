@@ -1,63 +1,115 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ParcelFeature } from '@/lib/api/parcels/schemas';
-import { parcelAtPoint, toggleParcel } from '@/lib/map/parcel-selection';
+import type { FilteredParcel } from '@/lib/api/parcels/schemas';
+import {
+  applyToggles,
+  parcelAtPoint,
+  selectedParcelIds,
+  toggleParcelId,
+} from '@/lib/map/parcel-selection';
 
-function parcel(id: string, west: number, south: number, east: number, north: number) {
+/** A unit-square parcel at (x, y), as `filter-parcels/` shapes it. */
+function parcel(id: string, x: number, y: number, selected: boolean): FilteredParcel {
   return {
-    type: 'Feature',
-    properties: { id, name: `Parcela ${id}` },
+    parcel_id: id,
+    selected,
     geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [west, south],
-          [east, south],
-          [east, north],
-          [west, north],
-          [west, south],
-        ],
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [x, y],
+                [x + 1, y],
+                [x + 1, y + 1],
+                [x, y + 1],
+                [x, y],
+              ],
+            ],
+          },
+        },
       ],
     },
-  } as ParcelFeature;
+  };
 }
 
-const first = parcel('p-1', 0, 0, 1, 1);
-const second = parcel('p-2', 2, 0, 3, 1);
+const ANSWER = [parcel('P1', 0, 0, true), parcel('P2', 1, 0, true), parcel('P3', 2, 0, false)];
 
-describe('toggleParcel', () => {
-  it('adds a parcel that is not selected', () => {
-    expect(toggleParcel([], first)).toEqual([first]);
-    expect(toggleParcel([first], second)).toEqual([first, second]);
+describe('toggleParcelId', () => {
+  it('adds an id, and removes it on the second toggle', () => {
+    expect(toggleParcelId([], 'P2')).toEqual(['P2']);
+    expect(toggleParcelId(['P2'], 'P3')).toEqual(['P2', 'P3']);
+    expect(toggleParcelId(['P2', 'P3'], 'P2')).toEqual(['P3']);
+  });
+});
+
+describe('applyToggles', () => {
+  it('returns the answer untouched when nothing was flipped', () => {
+    expect(applyToggles(ANSWER, [])).toBe(ANSWER);
   });
 
-  it('removes a parcel that already is, keeping the rest', () => {
-    expect(toggleParcel([first, second], first)).toEqual([second]);
+  it('inverts the flag of the flipped parcels, both ways', () => {
+    const refined = applyToggles(ANSWER, ['P2', 'P3']);
+
+    expect(refined.map((entry) => [entry.parcel_id, entry.selected])).toEqual([
+      ['P1', true],
+      ['P2', false],
+      ['P3', true],
+    ]);
+    // The answer itself is never mutated: it belongs to the query cache.
+    expect(ANSWER[1].selected).toBe(true);
   });
 
-  it('toggles by id, so a re-fetched feature object still matches', () => {
-    const refetched = parcel('p-1', 0, 0, 1, 1);
-
-    expect(toggleParcel([first], refetched)).toEqual([]);
+  it('ignores flips for parcels no longer in the answer', () => {
+    expect(applyToggles(ANSWER, ['P99'])).toEqual(ANSWER);
   });
+});
 
-  it('never mutates the selection it was given', () => {
-    const selection = [first];
-
-    toggleParcel(selection, second);
-    toggleParcel(selection, first);
-
-    expect(selection).toEqual([first]);
+describe('selectedParcelIds', () => {
+  it('lists the selected parcels, after the flips', () => {
+    expect(selectedParcelIds(ANSWER)).toEqual(['P1', 'P2']);
+    expect(selectedParcelIds(applyToggles(ANSWER, ['P1', 'P3']))).toEqual(['P2', 'P3']);
   });
 });
 
 describe('parcelAtPoint', () => {
-  it('finds the parcel under the point', () => {
-    expect(parcelAtPoint([first, second], { lng: 2.5, lat: 0.5 })).toBe(second);
+  it('finds the parcel under the point, or null off every parcel', () => {
+    expect(parcelAtPoint(ANSWER, { lng: 1.5, lat: 0.5 })?.parcel_id).toBe('P2');
+    expect(parcelAtPoint(ANSWER, { lng: 2.5, lat: 0.5 })?.parcel_id).toBe('P3');
+    expect(parcelAtPoint(ANSWER, { lng: 5, lat: 5 })).toBeNull();
   });
 
-  it('misses with null, and is empty-safe', () => {
-    expect(parcelAtPoint([first, second], { lng: 1.5, lat: 0.5 })).toBeNull();
-    expect(parcelAtPoint([], { lng: 0.5, lat: 0.5 })).toBeNull();
+  it('reads every outer ring of a MultiPolygon parcel', () => {
+    const split: FilteredParcel = {
+      parcel_id: 'P7',
+      selected: false,
+      geometry: {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'MultiPolygon',
+              coordinates: [
+                parcel('P0', 10, 10, false).geometry.features[0].geometry.coordinates as [
+                  number,
+                  number,
+                ][][],
+                parcel('P0', 20, 20, false).geometry.features[0].geometry.coordinates as [
+                  number,
+                  number,
+                ][][],
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    expect(parcelAtPoint([split], { lng: 20.5, lat: 20.5 })?.parcel_id).toBe('P7');
+    expect(parcelAtPoint([split], { lng: 15, lat: 15 })).toBeNull();
   });
 });
