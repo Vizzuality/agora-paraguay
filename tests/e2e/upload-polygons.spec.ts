@@ -65,9 +65,10 @@ test('Reiniciar clears an upload so the next one starts fresh', async ({ page })
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
 
-  // Only the last upload made it.
-  const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['Estancia KML', 'Campo KML']);
+  // Only the last upload made it: the status above counted its 2 areas, not 5, and the
+  // analysis went through. The hero tabs are the analysed parcels, not the areas.
+  const parcels = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await expect(parcels).toHaveText(['D07D21P00000002']);
 });
 
 test('imports a KMZ with names from the KML inside', async ({ page }) => {
@@ -110,9 +111,9 @@ test('accepted upload polygons can be analysed', async ({ page }) => {
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
 
-  // The submitted areas are the hero's parcel tabs, under their upload names.
-  const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['Estancia Norte (1/2)', 'Estancia Norte (2/2)', 'Campo Sur']);
+  // The hero tabs are the parcels the (stubbed) analysis answered, by cadastral id.
+  const parcels = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await expect(parcels).toHaveText(['D07D21P00000002']);
 });
 
 // The copy borrows the no-intersection toast until the real intersection check.
