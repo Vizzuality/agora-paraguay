@@ -1,27 +1,20 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchAnalysisOptions, fetchFilters, fetchIndicators } from './client';
-import type { IndicatorsParams } from './schemas';
+import { fetchFilters, fetchIndicators } from './client';
+import type { FiltersParams, IndicatorsParams } from './schemas';
 
 export const metadataQueries = {
-  filters: () =>
+  /** The analysis hero dropdowns. Value lists barely change: no refetch when the tab regains focus. */
+  filters: (params: FiltersParams) =>
     queryOptions({
-      queryKey: ['metadata', 'filters'] as const,
-      queryFn: fetchFilters,
+      queryKey: ['metadata', 'filters', params] as const,
+      queryFn: () => fetchFilters(params),
+      staleTime: 5 * 60 * 1000,
     }),
 
   indicators: (params: IndicatorsParams) =>
     queryOptions({
       queryKey: ['metadata', 'indicators', params] as const,
       queryFn: () => fetchIndicators(params),
-    }),
-
-  /** Option lists behind the analysis hero dropdowns (AGP-29). */
-  analysisOptions: () =>
-    queryOptions({
-      queryKey: ['metadata', 'analysis-options'] as const,
-      queryFn: fetchAnalysisOptions,
-      // TODO(mock-analysis-options): static fixture, so never stale — goes with the mock.
-      staleTime: Infinity,
     }),
 };

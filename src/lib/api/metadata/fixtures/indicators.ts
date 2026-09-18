@@ -1,8 +1,8 @@
 import type { Indicators } from '@/lib/api/metadata/schemas';
 
 /**
- * TODO(mock-indicators): stand-in for `GET /api/analysis/{public|private}` while the
- * endpoint is not reachable. Delete with the mock branch in `client.ts`.
+ * TODO(mock-indicators): stand-in for the indicator list while the backend has no
+ * endpoint for it. Delete with the fixture branch in `client.ts`.
  *
  * Mocked data. Sanitario ids are the property columns of the public analysis response;
  * productivo keeps the spec's `resiliencia` example until its response shape lands. Split
@@ -69,10 +69,4 @@ export const productivoIndicatorsFixture: Indicators = [
       categories: ['muy bajo', 'bajo', 'medio', 'alto'],
     },
   },
-];
-
-/** Every indicator, the answer to `GET /api/indicators/` without a `riesgo`. */
-export const indicatorsFixture: Indicators = [
-  ...sanitarioIndicatorsFixture,
-  ...productivoIndicatorsFixture,
 ];

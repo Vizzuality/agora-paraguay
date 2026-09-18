@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 /*
- * Metadata contract: `GET /api/filters/` and the indicator list behind
- * `GET /api/analysis/{public|private}`. Both are marked "attributes to be defined" in
- * the spec, so the schemas declare what the examples show and let extra fields through
- * (`looseObject`) rather than rejecting them.
+ * Metadata contract: `GET /api/parcels/filters/?visibility={public|private}` and the
+ * indicator list (no endpoint yet, see `client.ts`). The indicator attributes are
+ * still "to be defined" in the spec, so that schema lets extra fields through
+ * (`looseObject`); the filters follow the live response (Sept 2026).
  */
 
 /** Every list has the same shape — `{ value, label }` — so dropdowns render them all the same way. */
@@ -12,29 +12,41 @@ const optionSchema = z.object({ value: z.string().min(1), label: z.string().min(
 
 export type AnalysisOption = z.infer<typeof optionSchema>;
 
-/** A filter the user picks from a list. */
-const optionsFilterSchema = z.looseObject({
-  id: z.string().min(1),
-  name: z.string().min(1),
+/** A filter the user picks from a list (`crop_type`). */
+const categoryFieldSchema = z.looseObject({
+  type: z.literal('category'),
   options: z.array(optionSchema),
 });
 
-/** A filter with a single value (the spec's `start-date`). */
-const valueFilterSchema = z.looseObject({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  value: z.string(),
+/** A date the user types (`sowing_date`, `date`); `default` is what the hero starts with. */
+const dateFieldSchema = z.looseObject({
+  type: z.literal('date'),
+  format: z.string().optional(),
+  default: z.iso.date().nullable().optional(),
 });
 
-export const filterSchema = z.union([optionsFilterSchema, valueFilterSchema]);
+/**
+ * A filter of the analysis hero. Unknown `field_type.type`s fail the parse on purpose: a
+ * new kind needs a control before it can be shown.
+ */
+export const filterSchema = z.looseObject({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  field_type: z.discriminatedUnion('type', [categoryFieldSchema, dateFieldSchema]),
+});
 
 export type Filter = z.infer<typeof filterSchema>;
+export type FilterField = Filter['field_type'];
 
 export const filtersSchema = z.array(filterSchema);
 
 export type Filters = z.infer<typeof filtersSchema>;
 
-/** The two analysis tabs; each is one side of `/api/analysis/{public|private}`. */
+/** Which side of the analysis a request is for: riesgo sanitario is public, productivo private. */
+export type FiltersParams = { visibility: 'public' | 'private' };
+
+/** The two analysis tabs; each is one side of `/api/parcels/analysis/{diseases|production}/`. */
 export type Riesgo = 'sanitario' | 'productivo';
 
 /**
@@ -84,24 +96,3 @@ export type Indicator = z.infer<typeof indicatorSchema>;
 export const indicatorsSchema = z.array(indicatorSchema);
 
 export type Indicators = z.infer<typeof indicatorsSchema>;
-
-/**
- * TODO(mock-analysis-options): invented contract behind the analysis hero dropdowns
- * (AGP-29). `GET /api/filters/` is its replacement once the filter attributes are
- * defined; migrate `src/lib/analysis/filters.ts` to `Filters` then and delete this
- * with `fixtures/analysis-options.ts` (grep `mock-analysis-options`).
- *
- * Date lists keep ISO `YYYY-MM-DD` values so they sort lexically, with the display form
- * in `label`. `periodo` feeds both bounds of the productivo date range.
- */
-const dateOptionSchema = optionSchema.extend({ value: z.iso.date() });
-
-export const analysisOptionsSchema = z.object({
-  fechasSiembra: z.array(dateOptionSchema).min(1),
-  fechasAnalisis: z.array(dateOptionSchema).min(1),
-  cultivos: z.array(optionSchema).min(1),
-  ciclos: z.array(optionSchema).min(1),
-  periodo: z.array(dateOptionSchema).min(2),
-});
-
-export type AnalysisOptions = z.infer<typeof analysisOptionsSchema>;

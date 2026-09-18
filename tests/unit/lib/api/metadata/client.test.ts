@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-// These assert on the real fetch; the mock branch is covered in `client-mock.test.ts`.
-vi.mock('@/env', () => ({ env: { VITE_USE_MOCK_API: false } }));
-
 import { fetchFilters, fetchIndicators } from '@/lib/api/metadata/client';
 
 const fetchMock = vi.fn<typeof fetch>();
@@ -18,68 +15,66 @@ afterEach(() => {
 });
 
 describe('fetchFilters', () => {
+  /** The live response (Sept 2026): a category and two dates, one with a default. */
   const filters = [
-    { id: 'filter-1', name: 'Filter 1', options: [{ label: 'Option 1', value: 'option-1' }] },
-    { id: 'start-date', name: 'Start date', value: '2010-03-23' },
+    {
+      id: 'crop_type',
+      name: 'Tipo de cultivo',
+      description: 'Cultivo a evaluar.',
+      field_type: {
+        type: 'category',
+        options: [
+          { value: 'rice', label: 'Arroz' },
+          { value: 'soy', label: 'Soja' },
+        ],
+      },
+    },
+    {
+      id: 'sowing_date',
+      name: 'Fecha de siembra',
+      field_type: { type: 'date', format: 'YYYY-MM-DD', default: null },
+    },
+    { id: 'date', name: 'Fecha', field_type: { type: 'date', default: '2026-09-17' } },
   ];
 
-  it('GETs /api/filters/ and accepts both list and single-value filters', async () => {
+  it('GETs /api/parcels/filters/ for the visibility asked and accepts categories and dates', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
 
-    await expect(fetchFilters()).resolves.toEqual(filters);
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/filters/');
+    await expect(fetchFilters({ visibility: 'private' })).resolves.toEqual(filters);
+    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?visibility=private');
   });
 
-  it('rejects a filter that is neither', async () => {
-    fetchMock.mockResolvedValueOnce(Response.json([{ id: 'x', name: 'X' }]));
+  it('rejects a field type it has no control for, and a non-ISO date default', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([{ id: 'x', name: 'X', field_type: { type: 'range', min: 0, max: 1 } }]),
+    );
+    await expect(fetchFilters({ visibility: 'public' })).rejects.toThrow(ZodError);
 
-    await expect(fetchFilters()).rejects.toThrow(ZodError);
+    fetchMock.mockResolvedValueOnce(
+      Response.json([{ id: 'd', name: 'D', field_type: { type: 'date', default: '17/09/2026' } }]),
+    );
+    await expect(fetchFilters({ visibility: 'public' })).rejects.toThrow(ZodError);
   });
 });
 
 describe('fetchIndicators', () => {
-  const indicators = [
-    {
-      id: 'iep',
-      name: 'Índice de exposición a plagas',
-      description: 'Lorem ipsum',
-      unit: '%',
-      default: true,
-      indicator_type: { type: 'range', min: 0, max: 100, step: '1' },
-    },
-    {
-      id: 'resiliencia',
-      name: 'Resiliencia',
-      indicator_type: { type: 'category', value: null, categories: ['muy bajo', 'bajo'] },
-    },
-  ];
+  const fetchMock = vi.fn<typeof fetch>();
 
-  it('GETs the public analysis path for sanitario, with cultivo as a query parameter', async () => {
-    fetchMock.mockResolvedValueOnce(Response.json(indicators));
-
-    await expect(fetchIndicators({ riesgo: 'sanitario', cultivo: 'soja' })).resolves.toEqual(
-      indicators,
-    );
-
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(String(url)).toBe('/api/analysis/public?cultivo=soja');
-    expect(init).toMatchObject({ method: 'GET' });
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    fetchMock.mockReset();
   });
 
-  it('GETs the private analysis path for productivo, and accepts extra attributes', async () => {
-    fetchMock.mockResolvedValueOnce(Response.json([{ ...indicators[0], source: 'INBIO' }]));
-
-    const [indicator] = await fetchIndicators({ riesgo: 'productivo' });
-
-    expect(indicator).toMatchObject({ id: 'iep', source: 'INBIO' });
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/analysis/private');
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
-  it('rejects an indicator type it does not know', async () => {
-    fetchMock.mockResolvedValueOnce(
-      Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'gauge' } }]),
-    );
+  it('serves the fixture — there is no list endpoint yet', async () => {
+    const { sanitarioIndicatorsFixture } = await import('@/lib/api/metadata/fixtures/indicators');
 
-    await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);
+    await expect(fetchIndicators({ riesgo: 'sanitario', cultivo: 'soy' })).resolves.toEqual(
+      sanitarioIndicatorsFixture,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

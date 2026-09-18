@@ -1,100 +1,47 @@
-import type { AnalysisOption, AnalysisOptions } from '@/lib/api/metadata/schemas';
+import type { Filters } from '@/lib/api/metadata/schemas';
 
 /**
- * The analysis hero dropdowns (AGP-29). The public hero (riesgo sanitario) shows the
- * first four; the private one (riesgo productivo) shows the two period bounds.
+ * The analysis hero fields: one per filter `GET /api/parcels/filters/` returns, keyed by
+ * the filter's `id`. Nothing here knows which filters exist — the list is the API's.
  */
-export type AnalysisFilterKey =
-  | 'fechaSiembra'
-  | 'fechaAnalisis'
-  | 'cultivo'
-  | 'ciclo'
-  | 'fechaInicio'
-  | 'fechaFin';
 
-/** What the user picked. `null` is "not chosen yet" — the default comes from the options. */
-export type AnalysisFilters = Record<AnalysisFilterKey, string | null>;
+/** What the user picked or typed, by filter id. A missing id is "untouched": its default comes from the filter. */
+export type AnalysisFilterSelection = Record<string, string>;
 
-/** What the dropdowns display: every filter resolved to a value present in its options. */
-export type ResolvedAnalysisFilters = Record<AnalysisFilterKey, string>;
+export const EMPTY_ANALYSIS_FILTERS: AnalysisFilterSelection = {};
 
-export const EMPTY_ANALYSIS_FILTERS: AnalysisFilters = {
-  fechaSiembra: null,
-  fechaAnalisis: null,
-  cultivo: null,
-  ciclo: null,
-  fechaInicio: null,
-  fechaFin: null,
-};
+/**
+ * Every filter resolved to what the hero displays and Analizar sends. A category keeps a
+ * pick still among its options, else takes the first one; a date keeps whatever was typed,
+ * else the API's default. A filter with nothing to show (no options, no default) is left
+ * out, so the request omits it. Runs on every render against whatever the query returned.
+ */
+export function resolveFilterSelection(
+  selected: AnalysisFilterSelection,
+  filters: Filters,
+): Record<string, string> {
+  const resolved: Record<string, string> = {};
 
-/** The option list a filter picks from. Both period bounds share `periodo`. */
-export function optionsFor(key: AnalysisFilterKey, options: AnalysisOptions): AnalysisOption[] {
-  switch (key) {
-    case 'fechaSiembra':
-      return options.fechasSiembra;
-    case 'fechaAnalisis':
-      return options.fechasAnalisis;
-    case 'cultivo':
-      return options.cultivos;
-    case 'ciclo':
-      return options.ciclos;
-    case 'fechaInicio':
-    case 'fechaFin':
-      return options.periodo;
+  for (const filter of filters) {
+    const pick = selected[filter.id];
+    const field = filter.field_type;
+
+    switch (field.type) {
+      case 'category': {
+        const values = field.options.map((option) => option.value);
+
+        if (pick !== undefined && values.includes(pick)) resolved[filter.id] = pick;
+        else if (values.length > 0) resolved[filter.id] = values[0];
+        break;
+      }
+      case 'date': {
+        const value = pick ?? field.default ?? '';
+
+        if (value !== '') resolved[filter.id] = value;
+        break;
+      }
+    }
   }
-}
-
-/** The values a filter may take, in option order. */
-export function optionValues(key: AnalysisFilterKey, options: AnalysisOptions): string[] {
-  return optionsFor(key, options).map((option) => option.value);
-}
-
-/** Where a filter lands when nothing valid is chosen: the first option, except the period end. */
-function defaultValue(key: AnalysisFilterKey, values: string[]): string {
-  return key === 'fechaFin' ? values[values.length - 1] : values[0];
-}
-
-/**
- * Whether a period option must be greyed out given the other bound: the start can never
- * be later than the end. Only `fechaInicio` and `fechaFin` are constrained; every other
- * filter returns `false`. ISO `YYYY-MM-DD` values compare lexically.
- */
-export function isPeriodOptionDisabled(
-  key: AnalysisFilterKey,
-  value: string,
-  resolved: ResolvedAnalysisFilters,
-): boolean {
-  switch (key) {
-    case 'fechaInicio':
-      return value > resolved.fechaFin;
-    case 'fechaFin':
-      return value < resolved.fechaInicio;
-    default:
-      return false;
-  }
-}
-
-/**
- * Turns the stored selection into what the dropdowns show. Runs on every render of the
- * hero, against whatever the options query returned: a pick that is no longer offered
- * falls back to the default rather than leaving the select blank.
- */
-export function resolveAnalysisFilters(
-  selected: AnalysisFilters,
-  options: AnalysisOptions,
-): ResolvedAnalysisFilters {
-  const keys = Object.keys(EMPTY_ANALYSIS_FILTERS) as AnalysisFilterKey[];
-  const resolved = Object.fromEntries(
-    keys.map((key) => {
-      const values = optionValues(key, options);
-      const pick = selected[key];
-
-      return [key, pick !== null && values.includes(pick) ? pick : defaultValue(key, values)];
-    }),
-  ) as ResolvedAnalysisFilters;
-
-  // ISO `YYYY-MM-DD` values compare lexically, so the period end never precedes its start.
-  if (resolved.fechaFin < resolved.fechaInicio) resolved.fechaFin = resolved.fechaInicio;
 
   return resolved;
 }
