@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { areasBounds } from '@/lib/map/area-bounds';
+import { areasBounds, featuresBounds, newlyAdded } from '@/lib/map/area-bounds';
 
 function polygon(coordinates: number[][][]) {
   return { geometry: { coordinates } };
@@ -67,5 +67,69 @@ describe('areasBounds', () => {
 
   it('returns null when there is nothing to frame', () => {
     expect(areasBounds([])).toBeNull();
+  });
+});
+
+describe('newlyAdded', () => {
+  it('lists the ids that were not there before, in current order', () => {
+    expect(newlyAdded(['a'], ['b', 'a', 'c'])).toEqual(['b', 'c']);
+  });
+
+  it('is empty for an edit (same ids) or a deletion', () => {
+    expect(newlyAdded(['a', 'b'], ['a', 'b'])).toEqual([]);
+    expect(newlyAdded(['a', 'b'], ['a'])).toEqual([]);
+  });
+
+  it('treats every id as new when nothing was known', () => {
+    expect(newlyAdded([], ['a'])).toEqual(['a']);
+  });
+});
+
+describe('featuresBounds', () => {
+  it('reads every polygon of a MultiPolygon, and mixes Polygons in', () => {
+    expect(
+      featuresBounds([
+        {
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0],
+              ],
+            ],
+          },
+        },
+        {
+          geometry: {
+            type: 'MultiPolygon',
+            coordinates: [
+              [
+                [
+                  [5, 5],
+                  [6, 5],
+                  [6, 6],
+                  [5, 5],
+                ],
+              ],
+              [
+                [
+                  [-2, 3],
+                  [-1, 3],
+                  [-1, 4],
+                  [-2, 3],
+                ],
+              ],
+            ],
+          },
+        },
+      ]),
+    ).toEqual([-2, 0, 6, 6]);
+  });
+
+  it('returns null with nothing to frame', () => {
+    expect(featuresBounds([])).toBeNull();
   });
 });

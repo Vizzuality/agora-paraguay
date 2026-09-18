@@ -56,9 +56,33 @@ export async function stubAnalysisApi(page: Page) {
           message: '',
           input: { features: [] },
           results: [
+            // One selected parcel with real-shaped geometry (a MultiPolygon near
+            // Encarnación), so the camera has somewhere to fly once the answer lands.
             {
               parcel_id: 'D07D21P00000002',
-              geometry: { type: 'FeatureCollection', features: [] },
+              geometry: {
+                type: 'FeatureCollection',
+                features: [
+                  {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                      type: 'MultiPolygon',
+                      coordinates: [
+                        [
+                          [
+                            [-55.87, -27.33],
+                            [-55.86, -27.33],
+                            [-55.86, -27.32],
+                            [-55.87, -27.32],
+                            [-55.87, -27.33],
+                          ],
+                        ],
+                      ],
+                    },
+                  },
+                ],
+              },
               selected: true,
             },
           ],

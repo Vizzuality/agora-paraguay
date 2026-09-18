@@ -5,7 +5,7 @@ import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { areasBounds } from '@/lib/map/area-bounds';
+import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE } from '@/lib/map/basemap';
 import { activeParcelTabAtom } from '@/store/analysis';
@@ -14,9 +14,6 @@ import { drawPolygonsAtom } from '@/store/draw';
 import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
-
-/** Breathing room around the framed areas, in px. */
-const FIT_PADDING = 40;
 
 /**
  * The parcel palette from the main map (`draw-styles.ts`): the active parcel gets the
@@ -48,14 +45,9 @@ export function MiniMap() {
     ...area,
     properties: { ...area.properties, active: index === activeIndex },
   }));
-  const bounds = areasBounds([
+  const bounds = featuresBounds([
     ...areas,
-    ...(parcels?.results.flatMap((parcel) =>
-      parcel.geometry.features.filter(
-        (feature): feature is typeof feature & { geometry: { type: 'Polygon' } } =>
-          feature.geometry.type === 'Polygon',
-      ),
-    ) ?? []),
+    ...(parcels?.results.flatMap((parcel) => parcel.geometry.features) ?? []),
   ]);
 
   return (

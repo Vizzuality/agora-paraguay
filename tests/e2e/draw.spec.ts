@@ -54,6 +54,12 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
   await expect(currentStep).toContainText('Paso 2');
   await expect(analyze).toBeEnabled();
   await expect(draw).toBeHidden();
+
+  // The camera flies to the new area: the first camera write of the session, with a
+  // zoom closer than the country-wide default (5.5).
+  await expect
+    .poll(() => Number(new URL(page.url()).searchParams.get('zoom')))
+    .toBeGreaterThan(5.5);
 });
 
 test('cancelling an armed session stays on step 1', async ({ page }) => {
