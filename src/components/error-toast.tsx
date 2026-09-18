@@ -33,7 +33,7 @@ export function ErrorToast({
 }
 
 /**
- * Shown under Analizar when `filter_parcels` flags no parcel for the drawn areas.
+ * Shown under Analizar when `filter-parcels` flags no parcel for the drawn areas.
  * Doubles as the out-of-Paraguay body until that is redefined.
  */
 export const NO_PARCEL_INTERSECTION_MESSAGE =

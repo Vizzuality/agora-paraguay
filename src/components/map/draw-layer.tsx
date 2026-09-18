@@ -3,7 +3,7 @@ import { useTerraDraw } from '@/lib/map/use-terra-draw';
 
 /**
  * Binds Terra Draw to the enclosing `<Map>`, plus the idle-mode click that flips the
- * parcels `filter_parcels` answered. Renders nothing: the controls live outside the map,
+ * parcels `filter-parcels` answered. Renders nothing: the controls live outside the map,
  * next to everything else that reads the drawn polygon.
  */
 export function DrawLayer() {

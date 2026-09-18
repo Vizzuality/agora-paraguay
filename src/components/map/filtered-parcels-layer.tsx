@@ -15,7 +15,7 @@ const FILL_OPACITY: ExpressionSpecification = ['case', ['get', 'selected'], 0.35
 const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
 
 /**
- * The parcels `filter_parcels` answers for the polygons on the map, after the user's
+ * The parcels `filter-parcels` answers for the polygons on the map, after the user's
  * clicks: the selected ones highlighted, the ones around them outlined. Plain MapLibre
  * layers, not Terra Draw features: they are reference data, so they stay out of the
  * draw store. Renders nothing until a drawing or upload exists and the query answers.

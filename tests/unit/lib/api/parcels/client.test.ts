@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { fetchParcelDiseases, filterParcels } from '@/lib/api/parcels/client';
-import { mockFilterParcels } from '@/lib/api/parcels/fixtures/filter-parcels';
-import { parcelDiseasesFixture } from '@/lib/api/parcels/fixtures/parcel-diseases';
-import { filterParcelsResponseSchema, type FilterParcelsRequest } from '@/lib/api/parcels/schemas';
+import { FILTER_PARCELS_PATH, filterParcels } from '@/lib/api/parcels/client';
+import type { FilterParcelsRequest } from '@/lib/api/parcels/schemas';
 
 const SQUARE: [number, number][] = [
   [0, 0],
@@ -14,7 +12,7 @@ const SQUARE: [number, number][] = [
   [0, 0],
 ];
 
-function request(overrides: Partial<FilterParcelsRequest> = {}): FilterParcelsRequest {
+function request(): FilterParcelsRequest {
   return {
     filtering_polygons: {
       type: 'FeatureCollection',
@@ -28,16 +26,28 @@ function request(overrides: Partial<FilterParcelsRequest> = {}): FilterParcelsRe
     },
     overlap_percentage_threshold: 50,
     buffer: 50,
-    ...overrides,
   };
 }
 
-/** Mock branch — `VITE_USE_MOCK_API` defaults to true under Vitest. */
-describe('filterParcels (mock)', () => {
+const response = {
+  status: 'success',
+  message: '',
+  input: { features: [{ id: 0 }] },
+  results: [
+    {
+      parcel_id: 'D07D21P00000002',
+      geometry: { type: 'FeatureCollection', features: [] },
+      selected: true,
+    },
+  ],
+};
+
+describe('filterParcels', () => {
   const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
     vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
     fetchMock.mockReset();
   });
 
@@ -45,43 +55,30 @@ describe('filterParcels (mock)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('answers fake parcels around the polygons it is sent, without touching the network', async () => {
-    const response = await filterParcels(request());
+  it('POSTs the documented body to filter_parcels with the CSRF token and parses the results', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(response));
 
-    expect(response).toEqual(mockFilterParcels(request()));
-    expect(() => filterParcelsResponseSchema.parse(response)).not.toThrow();
-    expect(response.results.some((parcel) => parcel.selected)).toBe(true);
-    expect(fetchMock).not.toHaveBeenCalled();
+    await expect(filterParcels(request())).resolves.toEqual(response);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe(FILTER_PARCELS_PATH);
+    expect(init).toMatchObject({
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'abc' },
+      body: JSON.stringify(request()),
+    });
   });
 
-  it('still rejects a malformed request — the body the mock accepts is the body the API gets', async () => {
-    await expect(filterParcels(request({ overlap_percentage_threshold: 150 }))).rejects.toThrow(
-      ZodError,
-    );
-  });
-});
+  it('surfaces an HTTP failure as an ApiError', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('forbidden', { status: 403 }));
 
-/** Mock branch — the diseases answer is the analysis fixture, whatever the request. */
-describe('fetchParcelDiseases (mock)', () => {
-  const fetchMock = vi.fn<typeof fetch>();
-
-  beforeEach(() => {
-    vi.stubGlobal('fetch', fetchMock);
-    fetchMock.mockReset();
+    await expect(filterParcels(request())).rejects.toMatchObject({ name: 'ApiError', status: 403 });
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  it('rejects a response that does not match the contract', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ type: 'FeatureCollection', features: [] }));
 
-  it('answers the mocked parcels without touching the network', async () => {
-    await expect(fetchParcelDiseases({ parcel_ids: [8668], crop: 'soja' })).resolves.toEqual(
-      parcelDiseasesFixture,
-    );
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it('still rejects a malformed request before answering', async () => {
-    await expect(fetchParcelDiseases({ parcel_ids: [] })).rejects.toThrow(ZodError);
+    await expect(filterParcels(request())).rejects.toThrow(ZodError);
   });
 });

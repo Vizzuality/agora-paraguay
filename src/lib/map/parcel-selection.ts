@@ -2,7 +2,7 @@ import type { FilteredParcel } from '@/lib/api/parcels/schemas';
 import { ringContains, type MapPoint } from '@/lib/map/point-in-polygon';
 
 /**
- * Manual refinement of what `filter_parcels` answered — pure, node-tested. The API
+ * Manual refinement of what `filter-parcels` answered — pure, node-tested. The API
  * flags the parcels over the overlap threshold; the user can flip any returned parcel
  * by clicking it. The flips are kept as a list of parcel ids and applied on top of the
  * answer, so a refetch (an edited polygon) keeps the user's choices for the parcels
@@ -10,12 +10,12 @@ import { ringContains, type MapPoint } from '@/lib/map/point-in-polygon';
  */
 
 /** Adds `id` to the flipped list, or removes it if it is already there. */
-export function toggleParcelId(toggled: number[], id: number): number[] {
+export function toggleParcelId(toggled: string[], id: string): string[] {
   return toggled.includes(id) ? toggled.filter((entry) => entry !== id) : [...toggled, id];
 }
 
 /** The answer with the user's flips applied: a flipped parcel's `selected` is inverted. */
-export function applyToggles(parcels: FilteredParcel[], toggled: number[]): FilteredParcel[] {
+export function applyToggles(parcels: FilteredParcel[], toggled: string[]): FilteredParcel[] {
   if (toggled.length === 0) return parcels;
 
   return parcels.map((parcel) =>
@@ -24,7 +24,7 @@ export function applyToggles(parcels: FilteredParcel[], toggled: number[]): Filt
 }
 
 /** The ids Analizar sends: every parcel selected after the flips. */
-export function selectedParcelIds(parcels: FilteredParcel[]): number[] {
+export function selectedParcelIds(parcels: FilteredParcel[]): string[] {
   return parcels.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id);
 }
 

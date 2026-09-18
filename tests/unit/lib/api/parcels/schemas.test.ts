@@ -135,14 +135,18 @@ describe('filterParcelsResponseSchema', () => {
     input: { features: [{ id: 0 }] },
     results: [
       {
-        parcel_id: 8668,
+        parcel_id: 'D07D21P00000002',
         geometry: {
           type: 'FeatureCollection',
           features: [{ type: 'Feature', properties: {}, geometry: polygonGeometry() }],
         },
         selected: true,
       },
-      { parcel_id: 7866, geometry: { type: 'FeatureCollection', features: [] }, selected: false },
+      {
+        parcel_id: 'D07D23P00000008',
+        geometry: { type: 'FeatureCollection', features: [] },
+        selected: false,
+      },
     ],
   };
 
@@ -162,13 +166,13 @@ describe('filterParcelsResponseSchema', () => {
     expect(filterParcelsResponseSchema.safeParse(body).success).toBe(true);
   });
 
-  it('rejects a parcel without the selected flag or with a string id', () => {
+  it('rejects a parcel without the selected flag or with a numeric id — codes are strings', () => {
     const noFlag = structuredClone(response) as { results: Record<string, unknown>[] };
     delete noFlag.results[0].selected;
     expect(filterParcelsResponseSchema.safeParse(noFlag).success).toBe(false);
 
-    const stringId = structuredClone(response) as { results: Record<string, unknown>[] };
-    stringId.results[0].parcel_id = '8668';
-    expect(filterParcelsResponseSchema.safeParse(stringId).success).toBe(false);
+    const numericId = structuredClone(response) as { results: Record<string, unknown>[] };
+    numericId.results[0].parcel_id = 8668;
+    expect(filterParcelsResponseSchema.safeParse(numericId).success).toBe(false);
   });
 });

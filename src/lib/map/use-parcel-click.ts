@@ -11,7 +11,7 @@ import { parcelClickEnabledAtom, toggleParcelAtom } from '@/store/parcels';
 
 /**
  * Click-to-flip on the map: while no tool is active and the app is in selection mode,
- * clicking one of the parcels `filter_parcels` answered toggles its selection
+ * clicking one of the parcels `filter-parcels` answered toggles its selection
  * (`src/store/parcels.ts`), and hovering one shows a pointer.
  *
  * The hit-test runs against the answer's own geometry (`parcel-selection.ts`), not the

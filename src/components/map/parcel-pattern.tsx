@@ -13,7 +13,7 @@ const PATTERN_ID = 'parcel-dots';
  * The dot texture the design repeats inside every parcel. Terra Draw's adapter can
  * only paint hex + opacity (see `draw-styles.ts`), so the dots are a declarative
  * `fill-pattern` layer over all parcels — the per-parcel colors underneath stay
- * Terra Draw's job. Gone with the drawing once the parcels `filter_parcels` answers
+ * Terra Draw's job. Gone with the drawing once the parcels `filter-parcels` answers
  * have replaced it on the map (`FilteredParcelsLayer`).
  */
 export function ParcelPattern() {

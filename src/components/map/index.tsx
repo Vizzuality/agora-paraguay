@@ -73,7 +73,7 @@ export function MapView({ children }: { children?: ReactNode }) {
       <ScaleControl position="bottom-left" />
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
-      {/* The parcels filter_parcels answers for the drawn areas; the drawn polygons paint on top. */}
+      {/* The parcels filter-parcels answers for the drawn areas; the drawn polygons paint on top. */}
       <FilteredParcelsLayer />
       <DrawLayer />
       <ParcelPattern />

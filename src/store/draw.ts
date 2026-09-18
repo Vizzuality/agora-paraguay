@@ -102,7 +102,7 @@ export const reportGeometryAtom = atom(null, (_get, set, snapshot: GeoJSONStoreF
 
 /**
  * Shows or hides every polygon on the map without touching the store: the parcels
- * `filter_parcels` answers replace the drawing visually, but its geometry keeps
+ * `filter-parcels` answers replace the drawing visually, but its geometry keeps
  * driving the query. A property change is what makes Terra Draw restyle
  * (`draw-styles.ts`, `hidden`). Idempotent, and a no-op until Terra Draw is bound, so
  * the caller re-fires it once the map is ready.

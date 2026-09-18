@@ -5,12 +5,12 @@ import { drawStateAtom } from '@/store/draw-core';
 import { modeAtom } from '@/store/mode';
 
 /**
- * The user's manual refinement of the parcels `filter_parcels` answered for the drawn
+ * The user's manual refinement of the parcels `filter-parcels` answered for the drawn
  * areas: the ids whose `selected` flag is flipped, applied on read by the map layer and
  * by Analizar (`applyToggles`). Kept apart from the query cache on purpose — the answer
  * belongs to the API, the flips to the session.
  */
-const toggledParcelIdsBaseAtom = atom<number[]>([]);
+const toggledParcelIdsBaseAtom = atom<string[]>([]);
 
 export const toggledParcelIdsAtom = atom((get) => get(toggledParcelIdsBaseAtom));
 
@@ -25,7 +25,7 @@ export const parcelClickEnabledAtom = atom((get) => {
 });
 
 /** Flips one returned parcel. The single gate: routes through `parcelClickEnabledAtom`. */
-export const toggleParcelAtom = atom(null, (get, set, id: number) => {
+export const toggleParcelAtom = atom(null, (get, set, id: string) => {
   if (!get(parcelClickEnabledAtom)) return;
 
   set(toggledParcelIdsBaseAtom, toggleParcelId(get(toggledParcelIdsBaseAtom), id));

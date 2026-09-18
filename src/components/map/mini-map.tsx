@@ -30,7 +30,7 @@ const COLOR: ExpressionSpecification = ['case', ['get', 'active'], ACTIVE_COLOR,
 
 /**
  * Non-interactive satellite thumbnail for the analysis hero, showing what the main map
- * showed: the parcels `filter_parcels` answered (the same layer, selected ones in
+ * showed: the parcels `filter-parcels` answered (the same layer, selected ones in
  * yellow), which stand in for the drawn areas as on the main map; the areas themselves
  * only show while no parcels exist, the active parcel tab highlighted. Framed by the
  * combined bounds. Every gesture handler is off — the camera belongs to the fit, not

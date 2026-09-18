@@ -1,11 +1,9 @@
 import { z } from 'zod';
 
-import { analysisResponseSchema } from '@/lib/api/analysis/schemas';
 import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /*
- * Parcels contract: `POST /api/parcels/filter_parcels` and
- * `POST /api/parcels/get-parcel-diseases/`. GeoJSON geometries are declared here rather
+ * Parcels contract: `POST /api/parcels/filter-parcels/`. GeoJSON geometries are declared here rather
  * than via `@types/geojson`, matching the stance in `draw-features.ts`: `geojson` is only
  * a transitive dependency.
  */
@@ -29,7 +27,7 @@ const arealGeometrySchema = z.discriminatedUnion('type', [
 ]);
 
 /**
- * `POST /api/parcels/filter_parcels` body. The drawn or uploaded polygons filter the
+ * `POST /api/parcels/filter-parcels/` body. The drawn or uploaded polygons filter the
  * cadastre: the API buffers them by `buffer` metres and returns the parcels around,
  * flagging those whose area overlaps a polygon by at least
  * `overlap_percentage_threshold` percent. Snake_case on purpose — this is the wire
@@ -76,21 +74,6 @@ export function toFilterParcelsRequest(
   polygons: DrawnPolygon[],
   options: FilterParcelsOptions = DEFAULT_FILTER_PARCELS_OPTIONS,
 ): FilterParcelsRequest {
-  console.log(polygons, options);
-  console.log(
-    filterParcelsRequestSchema.parse({
-      filtering_polygons: {
-        type: 'FeatureCollection',
-        features: polygons.map((polygon, index) => ({
-          type: 'Feature',
-          properties: { id: String(polygon.id), name: polygonName(polygon, index) },
-          geometry: polygon.geometry,
-        })),
-      },
-      overlap_percentage_threshold: options.overlapPercentageThreshold,
-      buffer: options.buffer,
-    }),
-  );
   return filterParcelsRequestSchema.parse({
     filtering_polygons: {
       type: 'FeatureCollection',
@@ -106,13 +89,14 @@ export function toFilterParcelsRequest(
 }
 
 /**
- * `filter_parcels` response. Every parcel around the polygons comes back; `selected`
+ * `filter-parcels/` response. Every parcel around the polygons comes back; `selected`
  * marks the ones over the overlap threshold. The spec (WIP) wraps each parcel's
  * geometry in a FeatureCollection — modelled as given, loose on the feature so the
  * backend can add properties without breaking the parse.
  */
 const filteredParcelSchema = z.object({
-  parcel_id: z.number().int(),
+  /** The cadastral code (`D07D21P00000002`), as the backend answers it (2026-09-18). */
+  parcel_id: z.string().min(1),
   geometry: z.object({
     type: z.literal('FeatureCollection'),
     features: z.array(z.looseObject({ type: z.literal('Feature'), geometry: arealGeometrySchema })),
@@ -131,26 +115,3 @@ export const filterParcelsResponseSchema = z.object({
 });
 
 export type FilterParcelsResponse = z.infer<typeof filterParcelsResponseSchema>;
-
-/**
- * `POST /api/parcels/get-parcel-diseases/` body: which parcels to score and for which
- * crop and dates. Wire shape, snake_case. Not in the written spec yet, so unknown fields
- * pass through (`looseObject`); tighten as the backend settles.
- */
-export const parcelDiseasesRequestSchema = z.looseObject({
-  parcel_ids: z.array(z.number().int()).min(1),
-  /** Cultivo; the backend defaults it when absent. */
-  crop: z.string().min(1).optional(),
-  start_date: z.iso.date().optional(),
-  end_date: z.iso.date().optional(),
-});
-
-export type ParcelDiseasesRequest = z.infer<typeof parcelDiseasesRequestSchema>;
-
-/**
- * The response is the public disease scoring: one Feature per parcel with the disease
- * indices as property columns — the same GeoJSON the analysis page renders.
- */
-export const parcelDiseasesResponseSchema = analysisResponseSchema;
-
-export type ParcelDiseasesResponse = z.infer<typeof parcelDiseasesResponseSchema>;

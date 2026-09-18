@@ -41,7 +41,7 @@ const UPLOAD: ParcelVariant = {
 };
 
 /**
- * Once `filter_parcels` has answered, the parcels replace the drawing on the map: the
+ * Once `filter-parcels` has answered, the parcels replace the drawing on the map: the
  * drawn or uploaded polygon is painted fully transparent (`hidden`, set by
  * `setPolygonsHiddenAtom`) rather than removed, since its geometry still drives the
  * parcels query and the analysis.
