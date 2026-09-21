@@ -4,7 +4,6 @@ import { fetchFilters, fetchIndicators } from './client';
 import type { FiltersParams, IndicatorsParams } from './schemas';
 
 export const metadataQueries = {
-  /** The analysis hero dropdowns. Value lists barely change: no refetch when the tab regains focus. */
   filters: (params: FiltersParams) =>
     queryOptions({
       queryKey: ['metadata', 'filters', params] as const,

@@ -75,6 +75,18 @@ const categoryIndicatorTypeSchema = z.looseObject({
 /** Free text (`weather_station`, `phenology_stage`) and open numbers (`Pro_soja` t/ha). */
 const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric']) });
 
+/**
+ * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in
+ * `analysis/schemas.ts`. Unknown types fail the parse: a new kind needs a card first.
+ */
+export const indicatorTypeSchema = z.discriminatedUnion('type', [
+  rangeIndicatorTypeSchema,
+  categoryIndicatorTypeSchema,
+  plainIndicatorTypeSchema,
+]);
+
+export type IndicatorType = z.infer<typeof indicatorTypeSchema>;
+
 export const indicatorSchema = z.looseObject({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -82,13 +94,7 @@ export const indicatorSchema = z.looseObject({
   unit: z.string().optional(),
   /** Whether the indicator is selected before the user touches anything. */
   default: z.boolean().optional(),
-  indicator_type: z
-    .discriminatedUnion('type', [
-      rangeIndicatorTypeSchema,
-      categoryIndicatorTypeSchema,
-      plainIndicatorTypeSchema,
-    ])
-    .optional(),
+  indicator_type: indicatorTypeSchema,
 });
 
 export type Indicator = z.infer<typeof indicatorSchema>;

@@ -1,4 +1,9 @@
-import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
+import {
+  indicatorReadingSchema,
+  NOT_AVAILABLE,
+  type AnalysisParcel,
+  type ParcelValue,
+} from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /*
@@ -44,9 +49,6 @@ export function toneOf(position: number): RiskTone {
   return 'low';
 }
 
-/** The backend writes this where a parcel has no reading for an indicator. */
-const NOT_AVAILABLE = 'NA';
-
 /** One row of the general-info card: the indicator's name and the parcel's text for it. */
 export type GeneralInfoRow = {
   id: string;
@@ -54,11 +56,9 @@ export type GeneralInfoRow = {
   value: string;
 };
 
-/** Text indicators, and untyped ones: nothing to class, so they read as plain facts. */
+/** Text indicators: nothing to class, so they read as plain facts. */
 export function isGeneralInfo(indicator: Indicator): boolean {
-  const type = indicator.indicator_type?.type;
-
-  return type === undefined || type === 'text';
+  return indicator.indicator_type.type === 'text';
 }
 
 /**
@@ -76,10 +76,18 @@ function readingOf(parcel: AnalysisParcel, indicator: Indicator): string | numbe
   return value;
 }
 
-function columnIgnoringCase(
-  parcel: AnalysisParcel,
-  id: string,
-): string | number | null | undefined {
+/**
+ * The reading checked against the indicator's type (`indicatorReadingSchema`): a `numeric`
+ * column must carry a number, a `text` one a string, and so on. `undefined` when the
+ * backend answered something else — the card then reads "Sin datos".
+ */
+function typedReading(indicator: Indicator, value: string | number): string | number | undefined {
+  const parsed = indicatorReadingSchema(indicator.indicator_type).safeParse(value);
+
+  return parsed.success ? parsed.data : undefined;
+}
+
+function columnIgnoringCase(parcel: AnalysisParcel, id: string): ParcelValue | undefined {
   const wanted = id.toLowerCase();
   const key = Object.keys(parcel.properties).find((column) => column.toLowerCase() === wanted);
 
@@ -138,9 +146,17 @@ export function generalInfo(
 
     const value = readingOf(parcel, indicator);
 
-    return value === undefined
-      ? []
-      : [{ id: indicator.id, label: indicator.name, value: String(value) }];
+    if (value === undefined) return [];
+
+    const typed = typedReading(indicator, value);
+
+    return [
+      {
+        id: indicator.id,
+        label: indicator.name,
+        value: typed === undefined ? NO_READING : String(typed),
+      },
+    ];
   });
 
   const unknown = unknownColumns(parcel, indicators).flatMap(([column, value]) =>
@@ -169,14 +185,17 @@ function unknownColumns(
 
 function toCard(indicator: Indicator, value: string | number): IndicatorCard | null {
   const type = indicator.indicator_type;
+  const typed = typedReading(indicator, value);
 
-  switch (type?.type) {
+  if (typed === undefined) return null;
+
+  switch (type.type) {
     case 'category':
-      return categoryCard(indicator, type.categories, value);
+      return categoryCard(indicator, type.categories, typed);
     case 'range':
-      return rangeCard(indicator, value);
+      return rangeCard(indicator, Number(typed));
     case 'numeric':
-      return numericCard(indicator, value);
+      return numericCard(indicator, Number(typed));
     default:
       return null;
   }
@@ -220,34 +239,26 @@ function classIndex(value: string | number, categories: string[]): number | unde
  * Bounded number (`data_quality` 0–100 %, a disease index 1–3): placed on the range and
  * classed by `levelOf`, the value itself as caption.
  */
-function rangeCard(indicator: Indicator, value: string | number): IndicatorCard | null {
-  const number = Number(value);
-
-  if (Number.isNaN(number)) return null;
-
-  const position = scalePosition(number, indicator);
+function rangeCard(indicator: Indicator, value: number): IndicatorCard {
+  const position = scalePosition(value, indicator);
 
   return {
     id: indicator.id,
     label: indicator.name,
     level: levelOf(position),
     position,
-    caption: formatValue(number, indicator.unit),
+    caption: formatValue(value, indicator.unit),
   };
 }
 
 /** Open number (`Pro_soja` t/ha): no scale to class it on, so the value is the figure. */
-function numericCard(indicator: Indicator, value: string | number): IndicatorCard | null {
-  const number = Number(value);
-
-  if (Number.isNaN(number)) return null;
-
-  return { id: indicator.id, label: indicator.name, level: formatValue(number, indicator.unit) };
+function numericCard(indicator: Indicator, value: number): IndicatorCard {
+  return { id: indicator.id, label: indicator.name, level: formatValue(value, indicator.unit) };
 }
 
 /** Where a number sits on the indicator's range as 0–100. */
 function scalePosition(value: number, indicator: Indicator): number {
-  const range = indicator.indicator_type?.type === 'range' ? indicator.indicator_type : undefined;
+  const range = indicator.indicator_type.type === 'range' ? indicator.indicator_type : undefined;
   const min = range?.min ?? 0;
   const max = range?.max ?? 100;
 

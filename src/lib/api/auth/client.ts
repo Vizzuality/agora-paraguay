@@ -89,7 +89,7 @@ export async function login(credentials: Credentials): Promise<Session> {
 
 /**
  * TODO(auth-password): parked — no route or form calls this yet, and its tests went with
- * the dead-code sweep of 2026-09-18. Kept on purpose for the reset flow.
+ * the dead-code sweep. Kept on purpose for the reset flow.
  *
  * Sets the password — from a one-time link (`uid` + `token`) or for the logged-in user.
  * The client-side validators run in the parse, so a weak password fails as a `ZodError`

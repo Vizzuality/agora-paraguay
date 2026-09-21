@@ -134,7 +134,7 @@ describe('indicatorCards', () => {
 
   describe('range indicators', () => {
     it('places the value on the range and prints it as caption, unit included', () => {
-      const [card] = indicatorCards(parcel({ data_quality: '92' }), [dataQuality]);
+      const [card] = indicatorCards(parcel({ data_quality: 92 }), [dataQuality]);
 
       expect(card).toMatchObject({
         id: 'data_quality',
@@ -144,21 +144,18 @@ describe('indicatorCards', () => {
       });
     });
 
+    it('reads a number delivered as a string as no reading: the type says number', () => {
+      expect(indicatorCards(parcel({ data_quality: '92' }), [dataQuality])[0].level).toBe(
+        'Sin datos',
+      );
+    });
+
     it('spreads a 1–3 disease index over the ruler: 1 at 0, 2 at 50, 3 at 100', () => {
       const positions = [1, 2, 3].map(
         (value) => indicatorCards(parcel({ asian_rust: value }), [asianRust])[0].position,
       );
 
       expect(positions).toEqual([0, 50, 100]);
-    });
-
-    it('leaves an untyped indicator to the general info: no scale to sit on', () => {
-      const bare: Indicator = { id: 'data_quality', name: 'Calidad' };
-
-      expect(indicatorCards(parcel({ data_quality: '50' }), [bare])).toEqual([]);
-      expect(generalInfo(parcel({ data_quality: '50' }), [bare])).toEqual([
-        { id: 'data_quality', label: 'Calidad', value: '50' },
-      ]);
     });
 
     it('reads a non-numeric range value as no reading', () => {
@@ -215,6 +212,11 @@ describe('indicatorCards', () => {
     expect(card).toEqual({ id: 'Pro_soja', label: 'Producción base', level: '2,77 t/ha' });
   });
 
+  it('reads a numeric indicator that is not a number as no reading', () => {
+    expect(indicatorCards(parcel({ Pro_soja: '2.774' }), [production])[0].level).toBe('Sin datos');
+    expect(indicatorCards(parcel({ Pro_soja: 'alto' }), [production])[0].level).toBe('Sin datos');
+  });
+
   it('turns an analysed parcel into one card per measured index, per parcel', () => {
     const first = parcel({ data_quality: 92, asian_rust: 3, brown_spot: 2 });
     const third = parcel({ data_quality: 78, asian_rust: 2, brown_spot: 3 });
@@ -257,6 +259,10 @@ describe('generalInfo', () => {
     expect(generalInfo(parcel({ weather_station: 'NA' }), [station])).toEqual([]);
     expect(generalInfo(parcel({ weather_station: '' }), [station])).toEqual([]);
     expect(generalInfo(parcel({}), [station])).toEqual([]);
+  });
+
+  it('reads a number for a text indicator as "Sin datos"', () => {
+    expect(generalInfo(parcel({ weather_station: 12 }), [station])[0].value).toBe('Sin datos');
   });
 
   it("groups a parcel's station, crop and phenology", () => {

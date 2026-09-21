@@ -6,6 +6,7 @@ import {
   analysisPath,
   analysisRequestSchema,
   analysisResponseSchema,
+  indicatorReadingSchema,
 } from '@/lib/api/analysis/schemas';
 
 const request = {
@@ -16,7 +17,7 @@ const request = {
   date: '2026-09-17',
 };
 
-/** The envelope the backend answered on 2026-09-18, plus a string-encoded reading. */
+/** The envelope the backend answers, plus a string-encoded reading. */
 const response = {
   status: 'success',
   message: '',
@@ -80,6 +81,26 @@ describe('analysisResponseSchema', () => {
     expect(
       analysisResponseSchema.safeParse({ type: 'FeatureCollection', features: [] }).success,
     ).toBe(false);
+  });
+});
+
+describe('indicatorReadingSchema', () => {
+  const accepts = (type: Parameters<typeof indicatorReadingSchema>[0], value: unknown) =>
+    indicatorReadingSchema(type).safeParse(value).success;
+
+  it('wants a number for numeric and range — not a numeric string', () => {
+    expect(accepts({ type: 'numeric' }, 2.77)).toBe(true);
+    expect(accepts({ type: 'numeric' }, '2.77')).toBe(false);
+    expect(accepts({ type: 'range', min: 1, max: 3 }, 2)).toBe(true);
+    expect(accepts({ type: 'range', min: 1, max: 3 }, '2')).toBe(false);
+  });
+
+  it('wants text for text, and a label or class code for category', () => {
+    expect(accepts({ type: 'text' }, 'Hohenau')).toBe(true);
+    expect(accepts({ type: 'text' }, 7)).toBe(false);
+    expect(accepts({ type: 'category', categories: ['a', 'b'] }, 'a')).toBe(true);
+    expect(accepts({ type: 'category', categories: ['a', 'b'] }, 1)).toBe(true);
+    expect(accepts({ type: 'category', categories: ['a', 'b'] }, 1.5)).toBe(false);
   });
 });
 

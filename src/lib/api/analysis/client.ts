@@ -10,9 +10,8 @@ import {
 } from './schemas';
 
 /**
- * POSTs the selected parcels and filters and gets back the indicator values. Real in both
- * modes — the endpoint is live (checked 2026-09-18). The request is parsed at the
- * boundary, so contract drift fails here instead of as a 4xx against the API.
+ * POSTs the selected parcels and filters and gets back the indicator values. The request is
+ * parsed at the boundary, so contract drift fails here instead of as a 4xx against the API.
  */
 export async function runAnalysis(
   visibility: AnalysisVisibility,

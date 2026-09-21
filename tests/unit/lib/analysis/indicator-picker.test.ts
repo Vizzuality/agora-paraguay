@@ -9,19 +9,22 @@ import {
 } from '@/lib/analysis/indicator-picker';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 
+const range = { type: 'range', min: 1, max: 3 } as const;
+const text = { type: 'text' } as const;
+
 const indicators: Indicators = [
-  { id: 'asian_rust', name: 'Roya asiática', default: true },
-  { id: 'brown_spot', name: 'Mancha marrón', default: true },
-  { id: 'data_quality', name: 'Calidad del dato', default: false },
-  { id: 'weather_station', name: 'Estación' },
+  { id: 'asian_rust', name: 'Roya asiática', default: true, indicator_type: range },
+  { id: 'brown_spot', name: 'Mancha marrón', default: true, indicator_type: range },
+  { id: 'data_quality', name: 'Calidad del dato', default: false, indicator_type: range },
+  { id: 'weather_station', name: 'Estación', indicator_type: text },
 ];
 
 describe('selectableIndicators', () => {
-  it('leaves out the general-info facts: text and untyped indicators', () => {
+  it('leaves out the general-info facts: text indicators', () => {
     const withTypes: Indicators = [
-      { id: 'asian_rust', name: 'Roya', indicator_type: { type: 'range', min: 1, max: 3 } },
-      { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } },
-      { id: 'weather_station', name: 'Estación' },
+      { id: 'asian_rust', name: 'Roya', indicator_type: range },
+      { id: 'crop_type', name: 'Cultivo', indicator_type: text },
+      { id: 'weather_station', name: 'Estación', indicator_type: text },
       { id: 'ITR', name: 'ITR', indicator_type: { type: 'category', categories: ['a', 'b'] } },
     ];
 
@@ -77,7 +80,7 @@ describe('toggleIndicatorId', () => {
 });
 
 describe('matchesIndicator', () => {
-  const rust = { id: 'asian_rust', name: 'Roya asiática' };
+  const rust = { id: 'asian_rust', name: 'Roya asiática', indicator_type: range };
 
   it('matches a blank query', () => {
     expect(matchesIndicator(rust, '')).toBe(true);

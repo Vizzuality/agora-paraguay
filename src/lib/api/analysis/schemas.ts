@@ -1,10 +1,12 @@
 import { z } from 'zod';
 
+import type { IndicatorType } from '@/lib/api/metadata/schemas';
+
 /*
  * Analysis contract: `POST` runs the enumerated indicators over the selected parcels.
- * Django routes (Sept 2026): `api/parcels/analysis/diseases/` (public, riesgo sanitario)
+ * Django routes: `api/parcels/analysis/diseases/` (public, riesgo sanitario)
  * and `api/parcels/analysis/production/` (private, riesgo productivo). POST only — GET
- * answers 405; the indicator list is still fixture-served (`metadata/client.ts`).
+ * answers 405; with no parcels the same POST lists the indicators (`metadata/client.ts`).
  */
 
 /** Which side of the analysis the request goes to: riesgo sanitario is public, productivo private. */
@@ -18,7 +20,7 @@ export function analysisPath(visibility: AnalysisVisibility): string {
 }
 
 /**
- * The POST body, flat (checked against the backend 2026-09-18): `parcels`, the ids
+ * The POST body, flat: `parcels`, the ids
  * `filter-parcels` returned; `indicators`, the ids to compute; and the hero selection
  * keyed by the ids `GET /api/parcels/filters/` lists (`crop_type`, `sowing_date`, `date`,
  * … — whatever the backend defines). Which filter keys exist is the API's call, so the
@@ -52,10 +54,36 @@ export const analysisRequestSchema = z
   );
 
 /**
- * One indicator reading of an analysed parcel. Numbers may arrive as strings (an earlier
- * sample exported `"asian_rust": "2"`), so both are accepted; the reading side coerces.
+ * One indicator reading as the wire carries it: what type it must be is only known once
+ * the indicator's metadata is at hand, so the envelope accepts any scalar and the reading
+ * side checks each column with `indicatorReadingSchema`.
  */
 const parcelValueSchema = z.union([z.string(), z.number(), z.null()]);
+
+export type ParcelValue = z.infer<typeof parcelValueSchema>;
+
+/** The backend writes this where a parcel has no reading for an indicator. */
+export const NOT_AVAILABLE = 'NA';
+
+/** A category reading: one of the ordered labels, or its index (the sample encodes classes as codes). */
+const categoryReadingSchema = z.union([z.string().min(1), z.int().nonnegative()]);
+
+/**
+ * What a parcel's reading of an indicator must be, by its `indicator_type.type`: a number
+ * for `numeric` and `range`, text for `text`, a label or class code for `category`. "NA"
+ * and blanks are the absence of a reading and are filtered out before this runs.
+ */
+export function indicatorReadingSchema(type: IndicatorType): z.ZodType<string | number> {
+  switch (type.type) {
+    case 'numeric':
+    case 'range':
+      return z.number();
+    case 'text':
+      return z.string();
+    case 'category':
+      return categoryReadingSchema;
+  }
+}
 
 /**
  * One analysed parcel: the id `filter-parcels` gave it and the indicators it was scored
@@ -72,7 +100,7 @@ const analysisParcelSchema = z.looseObject({
 export type AnalysisParcel = z.infer<typeof analysisParcelSchema>;
 
 /**
- * The envelope `POST /api/parcels/analysis/{diseases|production}/` answers (2026-09-18):
+ * The envelope `POST /api/parcels/analysis/{diseases|production}/` answers:
  * `status`/`message`, the echoed `input`, and one entry per parcel under `indicators`.
  * Nothing arrives pre-aggregated; the cards read one parcel at a time.
  */
