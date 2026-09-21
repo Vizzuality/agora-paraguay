@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { areasBounds, featuresBounds, newlyAdded } from '@/lib/map/area-bounds';
+import { featuresBounds, newlyAdded } from '@/lib/map/area-bounds';
 
 function polygon(coordinates: number[][][]) {
-  return { geometry: { coordinates } };
+  return { geometry: { type: 'Polygon' as const, coordinates } };
 }
 
-describe('areasBounds', () => {
+describe('featuresBounds (polygons)', () => {
   it('returns [west, south, east, north] of a single ring', () => {
     const area = polygon([
       [
@@ -18,7 +18,7 @@ describe('areasBounds', () => {
       ],
     ]);
 
-    expect(areasBounds([area])).toEqual([-58.4, -23.5, -58.1, -23.2]);
+    expect(featuresBounds([area])).toEqual([-58.4, -23.5, -58.1, -23.2]);
   });
 
   it('combines the bounds of every area', () => {
@@ -41,7 +41,7 @@ describe('areasBounds', () => {
       ],
     ]);
 
-    expect(areasBounds([a, b])).toEqual([0, 0, 4, 5]);
+    expect(featuresBounds([a, b])).toEqual([0, 0, 4, 5]);
   });
 
   it('a hole never widens the bounds beyond the outer ring', () => {
@@ -62,11 +62,11 @@ describe('areasBounds', () => {
       ],
     ]);
 
-    expect(areasBounds([area])).toEqual([0, 0, 4, 4]);
+    expect(featuresBounds([area])).toEqual([0, 0, 4, 4]);
   });
 
   it('returns null when there is nothing to frame', () => {
-    expect(areasBounds([])).toBeNull();
+    expect(featuresBounds([])).toBeNull();
   });
 });
 
@@ -85,7 +85,7 @@ describe('newlyAdded', () => {
   });
 });
 
-describe('featuresBounds', () => {
+describe('featuresBounds (multipolygons and mixes)', () => {
   it('reads every polygon of a MultiPolygon, and mixes Polygons in', () => {
     expect(
       featuresBounds([

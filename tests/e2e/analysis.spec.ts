@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
-import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
+import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
 // ~640px wide).
@@ -59,6 +59,12 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(analyze).toBeEnabled();
   expect(filtersRequests).toBe(0);
 
+  // The (stubbed) parcel paints in the selection yellow over the drawn area once the
+  // camera has flown there. It is larger than the drawing, so its painted area is the
+  // reference for "the parcels are on the map" — the drawing alone would be smaller.
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  const parcelsArea = await yellowPixelCount(page);
+
   // Analizar only navigates; nothing was POSTed from /.
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
@@ -92,8 +98,11 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-05-01');
   await expect.poll(() => analysisBodies.length).toBe(3);
 
-  // The hero mini map renders the analysed parcel over the (stubbed) satellite basemap.
+  // The hero mini map paints the selected parcel over the (stubbed) satellite basemap —
+  // the same layer as the main map, without Terra Draw — and is interactive.
   await expect(mapCanvas(page)).toBeVisible();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
 
   // One hero tab per parcel the (stubbed) analysis answered, labelled by its id.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
@@ -175,10 +184,15 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page).toHaveURL(/riesgo=productivo/);
 
-  // Going back remounts the map; the selection survives, so the panel resumes on step 2.
+  // Going back remounts the map; the selection survives, so the panel resumes on step 2
+  // and the parcels are painted again from the cached answer.
   await page.goBack();
   await expect(controls(page).restart).toBeVisible();
   await expect(analyze).toBeEnabled();
+  await expect(mapCanvas(page)).toBeVisible();
+  await expect
+    .poll(() => yellowPixelCount(page), { timeout: 10_000 })
+    .toBeGreaterThan(parcelsArea * 0.8);
 });
 
 test('logs in from the header dialog', async ({ page }) => {

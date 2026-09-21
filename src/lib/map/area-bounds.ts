@@ -17,19 +17,10 @@ type ArealGeometry =
   | { type: 'MultiPolygon'; coordinates: number[][][][] };
 
 /**
- * Combined bounding box of the analysed areas. Structural parameter on purpose (like
- * `polygonName`): any feature with polygon coordinates. `null` when there is nothing
- * to frame — the caller keeps its default camera.
+ * Combined bounding box of any Polygon or MultiPolygon features — the drawn areas and
+ * the parcels the API answers alike. Structural parameter on purpose (like
+ * `polygonName`). `null` when there is nothing to frame — the caller keeps its camera.
  */
-export function areasBounds(areas: { geometry: { coordinates: number[][][] } }[]): Bounds | null {
-  return featuresBounds(
-    areas.map((area) => ({
-      geometry: { type: 'Polygon', coordinates: area.geometry.coordinates },
-    })),
-  );
-}
-
-/** Combined bounding box of any Polygon or MultiPolygon features — the parcels the API answers. */
 export function featuresBounds(features: { geometry: ArealGeometry }[]): Bounds | null {
   let west = Infinity;
   let south = Infinity;

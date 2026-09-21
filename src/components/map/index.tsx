@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
+import { useAtomValue } from 'jotai';
 import { parseAsFloat, useQueryStates } from 'nuqs';
 import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
 import Map, {
@@ -14,6 +15,7 @@ import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
 import { normalizeViewState } from '@/lib/map/view-state';
+import { drawAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
@@ -37,6 +39,7 @@ function useMapViewState() {
 export function MapView({ children }: { children?: ReactNode }) {
   const viewState = useMapViewState();
   const navigate = useNavigate();
+  const { bound } = useAtomValue(drawAtom);
 
   // Leaving the page while the camera animates (a fit to new areas) makes MapLibre's
   // teardown stop the animation, which fires one last `moveend`. Writing it to the URL
@@ -99,8 +102,13 @@ export function MapView({ children }: { children?: ReactNode }) {
       <ScaleControl position="bottom-left" />
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
-      {/* The parcels filter-parcels answers for the drawn areas; the drawn polygons paint on top. */}
-      <FilteredParcelsLayer />
+      {/*
+       * The parcels filter-parcels answers for the drawn areas. Mounted only once Terra
+       * Draw is bound: MapLibre paints layers in add order, and on a remount (back from
+       * /analisis) the cached answer would otherwise add these layers before Terra Draw's,
+       * leaving the drawing on top of the parcels it is meant to hide behind.
+       */}
+      {bound && <FilteredParcelsLayer />}
       <DrawLayer />
       <ParcelPattern />
       {children}

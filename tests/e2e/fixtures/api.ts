@@ -79,16 +79,29 @@ export async function stubAnalysisApi(page: Page) {
 
   await page.route(
     (url) => url.pathname === '/api/parcels/filter-parcels/',
-    (route) =>
-      route.fulfill({
+    (route) => {
+      // One selected parcel with real-shaped geometry (a MultiPolygon): the bounding box
+      // of the first drawn polygon, grown a little, so it paints where the drawing is and
+      // the camera fly to the areas keeps it in frame.
+      const body = route.request().postDataJSON() as {
+        filtering_polygons: { features: { geometry: { coordinates: number[][][] } }[] };
+      };
+      const ring = body.filtering_polygons.features[0]?.geometry.coordinates[0] ?? [];
+      const lngs = ring.map(([lng]) => lng);
+      const lats = ring.map(([, lat]) => lat);
+      const pad = 0.002;
+      const west = Math.min(...lngs) - pad;
+      const east = Math.max(...lngs) + pad;
+      const south = Math.min(...lats) - pad;
+      const north = Math.max(...lats) + pad;
+
+      return route.fulfill({
         contentType: 'application/json',
         body: JSON.stringify({
           status: 'success',
           message: '',
           input: { features: [] },
           results: [
-            // One selected parcel with real-shaped geometry (a MultiPolygon near
-            // Encarnación), so the camera has somewhere to fly once the answer lands.
             {
               parcel_id: 'D07D21P00000002',
               geometry: {
@@ -102,11 +115,11 @@ export async function stubAnalysisApi(page: Page) {
                       coordinates: [
                         [
                           [
-                            [-55.87, -27.33],
-                            [-55.86, -27.33],
-                            [-55.86, -27.32],
-                            [-55.87, -27.32],
-                            [-55.87, -27.33],
+                            [west, south],
+                            [east, south],
+                            [east, north],
+                            [west, north],
+                            [west, south],
                           ],
                         ],
                       ],
@@ -118,7 +131,8 @@ export async function stubAnalysisApi(page: Page) {
             },
           ],
         }),
-      }),
+      });
+    },
   );
 
   // The analysis path answers two requests: the indicator list (`parcel_ids: []`, no
