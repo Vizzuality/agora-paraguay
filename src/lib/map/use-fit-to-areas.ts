@@ -11,7 +11,7 @@ const FIT_MAX_ZOOM = 16;
 /**
  * Eases the camera to the areas the moment new ones land — a finished drawing or an
  * upload — so the user sees where their selection is. One move per addition; the
- * parcels `filter-parcels` answers sit within a 50 m buffer of the areas, so they fall
+ * parcels `filter-parcels` answers sit within a few metres of the areas, so they fall
  * inside the frame too. Only additions move the camera: editing a vertex, deleting an
  * area or coming back from /analisis (the store restores the same ids) leave it where
  * the user put it. The move reaches the URL through the map's `moveend` like any other.

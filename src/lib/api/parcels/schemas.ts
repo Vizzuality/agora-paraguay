@@ -60,8 +60,8 @@ export type FilterParcelsOptions = {
 };
 
 export const DEFAULT_FILTER_PARCELS_OPTIONS: FilterParcelsOptions = {
-  overlapPercentageThreshold: 50,
-  buffer: 50,
+  overlapPercentageThreshold: 20,
+  buffer: 20,
 };
 
 /**
