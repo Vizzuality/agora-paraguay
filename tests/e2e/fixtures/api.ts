@@ -27,6 +27,37 @@ export const HERO_FILTERS = [
 ];
 
 /**
+ * The indicator lists the analysis paths answer with no parcels, with the ids the
+ * analysis stub has columns for. Ids and names are what the specs look for.
+ */
+export const SANITARIO_INDICATORS = [
+  {
+    id: 'crop_type',
+    name: 'Tipo de cultivo',
+    description: 'Cultivo a evaluar.',
+    default: true,
+    indicator_type: { type: 'text' },
+  },
+  {
+    id: 'asian_rust',
+    name: 'Phakopsora pachyrhizi',
+    description: 'Enfermedad favorecida por humedad elevada y altas temperaturas.',
+    default: true,
+    indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
+  },
+];
+
+export const PRODUCTIVO_INDICATORS = [
+  {
+    id: 'Pro_soja',
+    name: 'Producción base histórica de soja',
+    unit: 't/ha',
+    default: true,
+    indicator_type: { type: 'numeric' },
+  },
+];
+
+/**
  * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
  * filtering, and the analysis itself — plus the filters the /analisis hero lists
  * (`GET /api/parcels/filters/`). Keeps the specs hermetic — the Django backend is
@@ -90,17 +121,30 @@ export async function stubAnalysisApi(page: Page) {
       }),
   );
 
-  // The analysis run. The indicator list has no endpoint yet (the app serves its fixture,
-  // whose ids match the columns below), so only the POST is stubbed.
+  // The analysis path answers two requests: the indicator list (`parcel_ids: []`, no
+  // parcels) and the analysis run (`parcels` + `indicators`).
   await page.route(
     (url) =>
       url.pathname === '/api/parcels/analysis/diseases/' ||
       url.pathname === '/api/parcels/analysis/production/',
     (route) => {
+      const body = route.request().postDataJSON() as { indicators?: string[] };
+
+      if (body.indicators === undefined) {
+        return route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify(
+            new URL(route.request().url()).pathname.endsWith('/diseases/')
+              ? SANITARIO_INDICATORS
+              : PRODUCTIVO_INDICATORS,
+          ),
+        });
+      }
+
       // One parcel, answered with the columns the request asked for and nothing else, the
       // way the backend does: the disease index sits at the top of its 1–3 range, so the
       // card reads "Alto" over "3". Column casing as the backend writes it (`Asian_rust`).
-      const { indicators } = route.request().postDataJSON() as { indicators: string[] };
+      const { indicators } = body;
       const columns: Record<string, string | number> = { crop_type: 'Soja', Asian_rust: 3 };
       const properties = Object.fromEntries(
         Object.entries(columns).filter(([column]) =>

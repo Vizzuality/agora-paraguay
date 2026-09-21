@@ -36,14 +36,18 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   const { draw, analyze } = controls(page);
 
   // The hero filters belong to /analisis: nothing on / may ask for them. The analysis
-  // itself runs there too, once per distinct request.
+  // itself runs there too, once per distinct request. The indicator list shares the
+  // path but carries no `indicators`, so it is not counted as a run.
   let filtersRequests = 0;
   const analysisBodies: { indicators: string[]; crop_type?: string }[] = [];
   page.on('request', (request) => {
     const { pathname } = new URL(request.url());
     if (pathname === '/api/parcels/filters/') filtersRequests += 1;
     if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
-      analysisBodies.push(request.postDataJSON() as { indicators: string[]; crop_type?: string });
+      const body = request.postDataJSON() as { indicators?: string[]; crop_type?: string };
+      if (body.indicators !== undefined) {
+        analysisBodies.push(body as { indicators: string[]; crop_type?: string });
+      }
     }
   });
 

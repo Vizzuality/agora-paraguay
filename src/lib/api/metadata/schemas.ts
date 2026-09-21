@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 /*
  * Metadata contract: `GET /api/parcels/filters/?visibility={public|private}` and the
- * indicator list (no endpoint yet, see `client.ts`). The indicator attributes are
+ * indicator list (the analysis POST with no parcels, see `client.ts`). The indicator attributes are
  * still "to be defined" in the spec, so that schema lets extra fields through
- * (`looseObject`); the filters follow the live response (Sept 2026).
+ * (`looseObject`); the filters follow the live response.
  */
 
 /** Every list has the same shape — `{ value, label }` — so dropdowns render them all the same way. */
@@ -96,3 +96,12 @@ export type Indicator = z.infer<typeof indicatorSchema>;
 export const indicatorsSchema = z.array(indicatorSchema);
 
 export type Indicators = z.infer<typeof indicatorsSchema>;
+
+/**
+ * What the list request answers: the array itself, or the analysis envelope with the
+ * list under `indicators`. Both are accepted until the backend fixes one.
+ */
+export const indicatorsListResponseSchema = z.union([
+  indicatorsSchema,
+  z.looseObject({ indicators: indicatorsSchema }).transform((envelope) => envelope.indicators),
+]);

@@ -7,6 +7,7 @@ const fetchMock = vi.fn<typeof fetch>();
 
 beforeEach(() => {
   vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
   fetchMock.mockReset();
 });
 
@@ -15,7 +16,7 @@ afterEach(() => {
 });
 
 describe('fetchFilters', () => {
-  /** The live response (Sept 2026): a category and two dates, one with a default. */
+  /** The live response: a category and two dates, one with a default. */
   const filters = [
     {
       id: 'crop_type',
@@ -58,23 +59,55 @@ describe('fetchFilters', () => {
 });
 
 describe('fetchIndicators', () => {
-  const fetchMock = vi.fn<typeof fetch>();
+  const indicators = [
+    {
+      id: 'data_quality',
+      name: 'Calidad de los datos',
+      unit: '%',
+      default: true,
+      indicator_type: { type: 'range', min: 0, max: 100, step: '1' },
+    },
+    { id: 'weather_station', name: 'Estación', indicator_type: { type: 'text' } },
+    { id: 'Pro_soja', name: 'Producción', unit: 't/ha', indicator_type: { type: 'numeric' } },
+  ];
 
-  beforeEach(() => {
-    vi.stubGlobal('fetch', fetchMock);
-    fetchMock.mockReset();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('serves the fixture — there is no list endpoint yet', async () => {
-    const { sanitarioIndicatorsFixture } = await import('@/lib/api/metadata/fixtures/indicators');
+  it('POSTs the analysis path of the riesgo with no parcels and the cultivo as crop', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(indicators));
 
     await expect(fetchIndicators({ riesgo: 'sanitario', cultivo: 'soy' })).resolves.toEqual(
-      sanitarioIndicatorsFixture,
+      indicators,
     );
-    expect(fetchMock).not.toHaveBeenCalled();
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/parcels/analysis/diseases/');
+    expect(init).toMatchObject({ method: 'POST' });
+    expect(JSON.parse(String(init?.body))).toEqual({
+      parcel_ids: [],
+      filters: { crop: 'soy' },
+    });
+  });
+
+  it('POSTs the production path with empty filters when there is no cultivo', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json([]));
+
+    await expect(fetchIndicators({ riesgo: 'productivo' })).resolves.toEqual([]);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/parcels/analysis/production/');
+    expect(JSON.parse(String(init?.body))).toEqual({ parcel_ids: [], filters: {} });
+  });
+
+  it('unwraps the list when it arrives inside the analysis envelope', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ status: 'ok', indicators }));
+
+    await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
+  });
+
+  it('rejects an indicator type it has no card for', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'gauge' } }]),
+    );
+
+    await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);
   });
 });

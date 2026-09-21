@@ -2,9 +2,8 @@
 
 Front end for the Ágora Paraguay platform, built with [TanStack Start](https://tanstack.com/start).
 
-The API is **external and still being built**: login, filters, parcel filtering and the analysis
-reach it; the indicator list is the one fixture left. See [Data layer](#data-layer) for how it
-is wired.
+The API is **external and still being built**: every call reaches it, there is no mock data
+left. See [Data layer](#data-layer) for how it is wired.
 
 ## Requirements
 
@@ -96,7 +95,6 @@ flowchart TD
   queries["src/lib/api/*/queries.ts\nqueryOptions / mutationOptions"]
   client["src/lib/api/*/client.ts\nthe only module that knows the endpoints"]
   http["src/lib/api/http.ts\nAPI_URL, CSRF, getJson / postJson"]
-  fixtures["src/lib/api/metadata/fixtures\nindicator list, TODO(mock-indicators)"]
   api[("External API\nAGORA Project API — not built yet")]
   maplibre[("MapLibre GL + Terra Draw")]
 
@@ -110,7 +108,6 @@ flowchart TD
   store --> upload
   queries --> client
   client --> http
-  client -.-> fixtures
   http --> api
   map --> maplibre
 ```
@@ -128,23 +125,21 @@ src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
 ├── auth/                   POST /api/auth/login/ (+csrf) — real; GET /api/auth/me/ parked (TODO(auth-me))
 ├── parcels/                POST /api/parcels/filter-parcels/
-├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); indicator list — fixture, no endpoint yet
+├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); POST /api/parcels/analysis/{diseases|production}/ with no parcels (indicator list)
 └── analysis/               POST /api/parcels/analysis/{diseases|production}/
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
-    ├── client.ts           The ONLY module in the domain that knows the endpoint (and, for indicators, the fixture)
-    ├── queries.ts          queryOptions factories — what components import
-    └── fixtures/           Only metadata/ has one (the indicator list). Nothing outside the domain imports it
+    ├── client.ts           The ONLY module in the domain that knows the endpoint
+    └── queries.ts          queryOptions factories — what components import
 ```
 
 Rules that keep the swap cheap:
 
-- Components import from a domain's `queries.ts` only, never from `client.ts` or `fixtures/`.
-- Every response is parsed through the Zod schemas, fixture included, so contract drift surfaces
-  at the boundary instead of as `undefined` deep in a component.
-- **Everything but the indicator list talks to the API.** Auth, filters, `filter-parcels/` and
-  the analysis (`POST /api/parcels/analysis/…`) are real; there is no mock switch. The indicator
-  list has no endpoint yet (`GET` on the analysis paths answers 405) and serves its fixture,
-  marked `TODO(mock-indicators)` — grep it when the endpoint lands.
+- Components import from a domain's `queries.ts` only, never from `client.ts`.
+- Every response is parsed through the Zod schemas, so contract drift surfaces at the boundary
+  instead of as `undefined` deep in a component.
+- **Everything talks to the API; there is no mock switch.** The indicator list is the analysis
+  `POST` of the riesgo with `parcel_ids` empty: same path, no parcels, the backend answers what
+  it can score.
 - Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
   add fields without breaking the parse; tighten them as the contract settles.
 

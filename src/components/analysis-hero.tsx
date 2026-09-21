@@ -83,6 +83,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
           />
         ))
       ) : (
+        // Placeholder: two disabled selects hold the layout until the filters land.
         <>
           <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
           <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
