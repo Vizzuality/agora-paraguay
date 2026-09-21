@@ -5,7 +5,6 @@ import { useId, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { resolveAnalysisFilters } from '@/lib/analysis/filters';
 import {
   matchesIndicator,
   selectableIndicators,
@@ -27,9 +26,8 @@ type IndicatorPickerProps = {
  * `<ClientOnly>` (it reads the analysis atoms).
  */
 export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
-  const selectedFilters = useAtomValue(analysisFiltersAtom);
-  const { data: options } = useQuery(metadataQueries.analysisOptions());
-  const cultivo = options ? resolveAnalysisFilters(selectedFilters, options).cultivo : undefined;
+  // TODO(filters-cultivo): same hand-off as `useAnalysis`.
+  const cultivo = useAtomValue(analysisFiltersAtom).crop_type;
   const { data: indicators } = useQuery(
     metadataQueries.indicators(riesgo === 'sanitario' ? { riesgo, cultivo } : { riesgo }),
   );

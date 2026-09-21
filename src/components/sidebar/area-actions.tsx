@@ -8,13 +8,13 @@ import { UploadError } from '@/lib/upload/types';
 import { cn } from '@/lib/utils';
 import { drawAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
 import { modeAtom } from '@/store/mode';
+import { areaRejectionAtom } from '@/store/selection';
 import { failUploadAtom, uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
 
 /**
  * Step 1 of the selection: the two ways to bring an área de interés onto the map —
- * upload a file of polygons or draw one. The third entry point, clicking cadastral
- * parcels, lives on the map itself. Upload outcomes are reported by `UploadFeedback`,
- * which outlives this component into step 2.
+ * upload a file of polygons or draw one. Upload outcomes are reported by
+ * `UploadFeedback`, which outlives this component into step 2.
  *
  * Rendered inside `<ClientOnly>`: it reads the draw atoms.
  */
@@ -22,6 +22,7 @@ export function AreaActions() {
   const draw = useAtomValue(drawAtom);
   const mode = useAtomValue(modeAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
+  const rejection = useAtomValue(areaRejectionAtom);
   const setTool = useSetAtom(setDrawToolAtom);
   const startDraw = useSetAtom(startDrawAtom);
   const uploadFeatures = useSetAtom(uploadFeaturesAtom);
@@ -61,8 +62,11 @@ export function AreaActions() {
 
       <ActionCardButton
         icon={Upload}
-        // The entry point that caused the showing error carries a destructive border.
-        className={cn(uploadResult?.error != null && 'border-destructive')}
+        // The entry point that caused the showing error carries a destructive border
+        // (Figma 7288:2096): a file that failed, or areas the cadastre does not cover.
+        className={cn(
+          (uploadResult?.error != null || rejection?.source === 'upload') && 'border-destructive',
+        )}
         onClick={() => inputRef.current?.click()}
         disabled={!draw.bound}
       >
@@ -71,7 +75,10 @@ export function AreaActions() {
 
       <ActionCardButton
         icon={SquarePen}
-        className="aria-pressed:border-primary aria-pressed:text-primary"
+        className={cn(
+          'aria-pressed:border-primary aria-pressed:text-primary',
+          rejection?.source === 'draw' && 'border-destructive',
+        )}
         // Activation clears the map — a draw session always starts from scratch.
         onClick={() => (drawing ? setTool(null) : startDraw())}
         aria-pressed={drawing}

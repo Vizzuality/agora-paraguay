@@ -1,5 +1,7 @@
+import { useNavigate } from '@tanstack/react-router';
+import { useAtomValue } from 'jotai';
 import { parseAsFloat, useQueryStates } from 'nuqs';
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
 import Map, {
   AttributionControl,
   ScaleControl,
@@ -7,12 +9,13 @@ import Map, {
 } from 'react-map-gl/maplibre';
 
 import { DrawLayer } from '@/components/map/draw-layer';
+import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
-import { ParcelsLayer } from '@/components/map/parcels-layer';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
 import { normalizeViewState } from '@/lib/map/view-state';
+import { drawAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
@@ -21,38 +24,64 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 /**
  * The camera lives in the URL, so a view is shareable and survives a reload.
  * Geometry never goes here — only the three numbers describing where we are looking.
+ * Read through nuqs (parsing, defaults); written through the router in `handleMoveEnd`.
  */
 function useMapViewState() {
-  return useQueryStates(
-    {
-      lng: parseAsFloat.withDefault(INITIAL_VIEW_STATE.longitude),
-      lat: parseAsFloat.withDefault(INITIAL_VIEW_STATE.latitude),
-      zoom: parseAsFloat.withDefault(INITIAL_VIEW_STATE.zoom),
-    },
-    // The URL is rewritten on every camera move, so keep it out of session history:
-    // otherwise the back button replays each pan and zoom one frame at a time.
-    { history: 'replace', throttleMs: 200 },
-  );
+  const [viewState] = useQueryStates({
+    lng: parseAsFloat.withDefault(INITIAL_VIEW_STATE.longitude),
+    lat: parseAsFloat.withDefault(INITIAL_VIEW_STATE.latitude),
+    zoom: parseAsFloat.withDefault(INITIAL_VIEW_STATE.zoom),
+  });
+
+  return viewState;
 }
 
 export function MapView({ children }: { children?: ReactNode }) {
-  const [viewState, setViewState] = useMapViewState();
+  const viewState = useMapViewState();
+  const navigate = useNavigate();
+  const { bound } = useAtomValue(drawAtom);
 
+  // Leaving the page while the camera animates (a fit to new areas) makes MapLibre's
+  // teardown stop the animation, which fires one last `moveend`. Writing it to the URL
+  // then would navigate back to `/`: the nuqs adapter targets the pathname it was
+  // mounted under. A layout-effect cleanup runs before the child map's own teardown,
+  // so this flag is already down when that `moveend` arrives.
+  const alive = useRef(true);
+
+  useLayoutEffect(() => {
+    alive.current = true;
+
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
+  // Written through the router, synchronously, not through nuqs's setter: nuqs queues
+  // writes (50 ms at least) and targets the pathname captured when they were queued, so
+  // a camera write queued just before Analizar navigates would land on /analisis as a
+  // jump back to `/`. `replace`, so the back button never replays pans and zooms.
   const handleMoveEnd = useCallback(
     (event: ViewStateChangeEvent) => {
+      if (!alive.current) return;
+
       const next = normalizeViewState({
         longitude: event.viewState.longitude,
         latitude: event.viewState.latitude,
         zoom: event.viewState.zoom,
       });
 
-      void setViewState({
-        lng: next.longitude,
-        lat: next.latitude,
-        zoom: next.zoom,
+      void navigate({
+        to: '.',
+        search: (previous) => ({
+          ...previous,
+          lng: next.longitude,
+          lat: next.latitude,
+          zoom: next.zoom,
+        }),
+        replace: true,
       });
     },
-    [setViewState],
+    [navigate],
   );
 
   return (
@@ -73,8 +102,13 @@ export function MapView({ children }: { children?: ReactNode }) {
       <ScaleControl position="bottom-left" />
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
-      {/* TODO(mock-parcels): mock layer — swap for the real parcels source when available. */}
-      <ParcelsLayer />
+      {/*
+       * The parcels filter-parcels answers for the drawn areas. Mounted only once Terra
+       * Draw is bound: MapLibre paints layers in add order, and on a remount (back from
+       * /analisis) the cached answer would otherwise add these layers before Terra Draw's,
+       * leaving the drawing on top of the parcels it is meant to hide behind.
+       */}
+      {bound && <FilteredParcelsLayer />}
       <DrawLayer />
       <ParcelPattern />
       {children}

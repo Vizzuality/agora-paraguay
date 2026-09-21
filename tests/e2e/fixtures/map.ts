@@ -59,3 +59,36 @@ export async function drawPolygon(page: Page, vertices: { x: number; y: number }
 
   await page.keyboard.press('Enter');
 }
+
+/**
+ * How many canvas pixels read as the selected-parcel yellow (`#F1FF28` at 0.35 over the
+ * blank basemap). The layers live on a WebGL canvas, nothing in the DOM: a screenshot,
+ * decoded in the page on a 2D canvas, is the only way to assert what is painted.
+ */
+export async function yellowPixelCount(page: Page): Promise<number> {
+  const png = await mapCanvas(page).screenshot();
+
+  return page.evaluate(async (base64) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64}`;
+    await image.decode();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    if (!context) return 0;
+    context.drawImage(image, 0, 0);
+
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    let count = 0;
+
+    for (let index = 0; index < data.length; index += 4) {
+      const [r, g, b] = [data[index], data[index + 1], data[index + 2]];
+      // Yellow: red and green high and close, blue well below both.
+      if (r > 150 && g > 150 && Math.abs(r - g) < 40 && g - b > 60) count += 1;
+    }
+
+    return count;
+  }, png.toString('base64'));
+}

@@ -5,6 +5,7 @@ import { ErrorToast, NO_PARCEL_INTERSECTION_MESSAGE } from '@/components/error-t
 import { Button } from '@/components/ui/button';
 import type { UploadResult } from '@/lib/upload/types';
 import { drawAtom } from '@/store/draw';
+import { areaRejectionAtom, type AreaRejection } from '@/store/selection';
 import { uploadResultAtom } from '@/store/upload';
 
 /** How many upload warnings are shown before collapsing into "and N more". */
@@ -19,6 +20,7 @@ const MAX_VISIBLE_WARNINGS = 5;
 export function UploadFeedback() {
   const draw = useAtomValue(drawAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
+  const rejection = useAtomValue(areaRejectionAtom);
 
   return (
     <>
@@ -26,11 +28,37 @@ export function UploadFeedback() {
           way to tell why the buttons are inert, or that an upload landed. */}
       <output aria-label="Estado de la selección" className="sr-only">
         {!draw.bound && 'El mapa todavía se está cargando.'}
-        {uploadResult !== null && uploadStatus(uploadResult)}
+        {rejection !== null
+          ? rejectionMessage(rejection)
+          : uploadResult !== null && uploadStatus(uploadResult)}
       </output>
 
-      <UploadNotices />
+      {rejection !== null ? <AreaRejectionToast rejection={rejection} /> : <UploadNotices />}
     </>
+  );
+}
+
+/** The backend says why (in English); the local copy stands in if it says nothing. */
+function rejectionMessage(rejection: AreaRejection): string {
+  return rejection.message || NO_PARCEL_INTERSECTION_MESSAGE;
+}
+
+/**
+ * The areas were outside the cadastre's coverage (Figma 7288:2099). Takes the place of
+ * the upload notice while shown: the same answer rejected an upload's areas too, so
+ * its "imported N areas" would contradict the map.
+ */
+function AreaRejectionToast({ rejection }: Readonly<{ rejection: AreaRejection }>) {
+  const setRejection = useSetAtom(areaRejectionAtom);
+
+  return (
+    <ErrorToast
+      label="Aviso de área"
+      dismissLabel="Descartar el aviso de área"
+      onDismiss={() => setRejection(null)}
+    >
+      <p>{rejectionMessage(rejection)}</p>
+    </ErrorToast>
   );
 }
 

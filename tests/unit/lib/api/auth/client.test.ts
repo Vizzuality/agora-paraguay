@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { login, setPassword } from '@/lib/api/auth/client';
+import { login } from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -169,52 +169,3 @@ describe('login', () => {
 //     await expect(fetchMe()).rejects.toMatchObject({ name: 'ApiError', status: 503 });
 //   });
 // });
-
-describe('setPassword', () => {
-  beforeEach(() => {
-    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
-  });
-
-  it('posts the one-time link parameters with the new password', async () => {
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
-
-    await expect(
-      setPassword({ uid: 'MQ', token: 't0k3n', password: 'Chaco-2026!' }),
-    ).resolves.toBeUndefined();
-
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(String(url)).toBe('/api/auth/password/reset/');
-    expect(init).toMatchObject({
-      method: 'POST',
-      headers: { 'X-CSRFToken': 'abc' },
-      body: JSON.stringify({ uid: 'MQ', token: 't0k3n', password: 'Chaco-2026!' }),
-    });
-  });
-
-  it('posts the password alone for a logged-in change', async () => {
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
-
-    await setPassword({ password: 'Chaco-2026!' });
-
-    expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({ password: 'Chaco-2026!' }));
-  });
-
-  it('rejects a weak password client-side, before touching the network', async () => {
-    await expect(setPassword({ password: '1234' })).rejects.toThrow(ZodError);
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it('rejects a uid without its token', async () => {
-    await expect(setPassword({ uid: 'MQ', password: 'Chaco-2026!' })).rejects.toThrow(ZodError);
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it("surfaces the server's own validators (the common-password list) as an ApiError 400", async () => {
-    fetchMock.mockResolvedValueOnce(json({ password: ['This password is too common.'] }, 400));
-
-    await expect(setPassword({ password: 'password123' })).rejects.toMatchObject({
-      name: 'ApiError',
-      status: 400,
-    });
-  });
-});

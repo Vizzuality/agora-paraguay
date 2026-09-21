@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { stubAnalysisApi } from './fixtures/api';
+import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
 import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 
 // Positions are relative to the canvas, which is the right half of the 1280×720
@@ -54,6 +54,12 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
   await expect(currentStep).toContainText('Paso 2');
   await expect(analyze).toBeEnabled();
   await expect(draw).toBeHidden();
+
+  // The camera flies to the new area: the first camera write of the session, with a
+  // zoom closer than the country-wide default (5.5).
+  await expect
+    .poll(() => Number(new URL(page.url()).searchParams.get('zoom')))
+    .toBeGreaterThan(5.5);
 });
 
 test('cancelling an armed session stays on step 1', async ({ page }) => {
@@ -100,4 +106,33 @@ test('loses the drawing on reload', async ({ page }) => {
 
   await expect(controls(page).draw).toBeEnabled();
   await expect(controls(page).analyze).toBeHidden();
+});
+
+// The cadastre does not cover the drawn area: the API answers `empty` (HTTP 200) and the
+// drawing is rejected — back to step 1 with the reason in the error toast (Figma
+// 7288:2099) and the entry point that made it outlined (7288:2096) until dismissed.
+test('a drawing outside the cadastre is rejected back to step 1 with the reason', async ({
+  page,
+}) => {
+  const { draw, analyze, currentStep } = controls(page);
+  const notice = page.getByRole('region', { name: 'Aviso de área' });
+
+  await stubUncoveredArea(page);
+
+  await draw.click();
+  await drawPolygon(page, POLYGON);
+
+  await expect(currentStep).toContainText('Paso 1');
+  await expect(analyze).toBeHidden();
+  await expect(notice).toContainText('Ha habido un error.');
+  await expect(notice).toContainText(OUT_OF_COVERAGE_MESSAGE);
+
+  // Token-anchored: `ActionCardButton` paints its border from the variant, and the
+  // rejection swaps it for the destructive one.
+  await expect(draw).toHaveAccessibleName('Dibujar polígono');
+  await expect(draw).toHaveClass(/(^| )border-destructive( |$)/);
+
+  await notice.getByRole('button', { name: 'Descartar el aviso de área' }).click();
+  await expect(notice).toBeHidden();
+  await expect(draw).not.toHaveClass(/(^| )border-destructive( |$)/);
 });

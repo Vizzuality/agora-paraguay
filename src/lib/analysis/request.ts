@@ -1,58 +1,38 @@
-import type { ResolvedAnalysisFilters } from '@/lib/analysis/filters';
+import type { AnalysisFilterSelection } from '@/lib/analysis/filters';
+import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
+import { selectableIndicators, visibleIndicatorIds } from '@/lib/analysis/indicator-picker';
 import type { AnalysisRequest, AnalysisVisibility } from '@/lib/api/analysis/schemas';
-import type { Indicator } from '@/lib/api/metadata/schemas';
-import type { ParcelFeature } from '@/lib/api/parcels/schemas';
+import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * Builds the `POST /api/analysis/{visibility}` body out of app state — pure, node-tested.
- * The hero vocabulary (fechaSiembra, cultivo, …) is mapped to the wire filters here and
- * nowhere else.
+ * Builds the `POST /api/parcels/analysis/{diseases|production}/` body out of app state —
+ * pure, node-tested. The hero selection is already keyed by the API's filter ids, so it
+ * goes on the wire as is, flat, with the parcel and indicator lists beside it.
  */
 
-/** Which riesgo tab a visibility is: sanitario is public, productivo private. */
-export function riesgoOf(visibility: AnalysisVisibility): 'sanitario' | 'productivo' {
-  return visibility === 'public' ? 'sanitario' : 'productivo';
+/** Which analysis path serves a riesgo tab: sanitario is public, productivo private. */
+export function visibilityOf(riesgo: Riesgo): AnalysisVisibility {
+  return riesgo === 'sanitario' ? 'public' : 'private';
 }
 
 /**
- * TODO(mock-parcels): the mock cadastral layer ids are `parcel-N`; the API wants the
- * integer. Goes when the layer is fed from `filter_parcels`, whose `parcel_id` is
- * already a number.
+ * The indicator ids to ask the analysis for: the general-info facts (always on the page)
+ * plus the measured ones the picker shows — the user's selection, else the API's
+ * defaults. Metadata order.
  */
-export function parcelIdOf(parcel: ParcelFeature): number {
-  const id = Number.parseInt(parcel.properties.id.replace(/^\D*/, ''), 10);
+export function requestedIndicatorIds(indicators: Indicators, selected: string[] | null): string[] {
+  const visible = new Set(visibleIndicatorIds(selectableIndicators(indicators), selected));
 
-  if (Number.isNaN(id)) throw new Error(`Parcel id is not numeric: ${parcel.properties.id}`);
-
-  return id;
+  return indicators
+    .filter((indicator) => isGeneralInfo(indicator) || visible.has(indicator.id))
+    .map((indicator) => indicator.id);
 }
 
-/** The indicators flagged `default`, or every indicator when the API flags none. */
-export function defaultIndicatorIds(indicators: Indicator[]): string[] {
-  const defaults = indicators.filter((indicator) => indicator.default === true);
-
-  return (defaults.length > 0 ? defaults : indicators).map((indicator) => indicator.id);
-}
-
-/**
- * Sanitario (public) reads the four hero dropdowns: the crop cycle bounded by the
- * sowing and analysis dates. Productivo (private) reads the period only.
- */
+/** The selection as picked in the hero (filter id → value), the parcels and the indicators, flat. */
 export function toAnalysisRequest(
-  visibility: AnalysisVisibility,
-  parcelIds: number[],
-  filters: ResolvedAnalysisFilters,
+  parcelIds: string[],
+  selection: AnalysisFilterSelection,
   indicators: string[],
 ): AnalysisRequest {
-  const wireFilters =
-    visibility === 'public'
-      ? {
-          crop: filters.cultivo,
-          cycle: filters.ciclo,
-          start_date: filters.fechaSiembra,
-          end_date: filters.fechaAnalisis,
-        }
-      : { start_date: filters.fechaInicio, end_date: filters.fechaFin };
-
-  return { parcel_ids: parcelIds, filters: { ...wireFilters, indicators } };
+  return { ...selection, parcels: parcelIds, indicators };
 }

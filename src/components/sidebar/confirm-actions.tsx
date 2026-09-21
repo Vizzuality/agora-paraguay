@@ -1,79 +1,69 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, Undo2 } from 'lucide-react';
 
+import {
+  NO_PARCEL_INTERSECTION_MESSAGE,
+  PARCELS_REQUEST_FAILED_MESSAGE,
+} from '@/components/error-toast';
 import { ActionCardButton } from '@/components/sidebar/action-card-button';
-import { resolveAnalysisFilters } from '@/lib/analysis/filters';
-import { analysisMutations } from '@/lib/api/analysis/queries';
-import { metadataQueries } from '@/lib/api/metadata/queries';
-import { analysisFiltersAtom, analysisResultAtom } from '@/store/analysis';
+import { parcelQueries } from '@/lib/api/parcels/queries';
+import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
 import { startAnalysisAtom } from '@/store/mode';
-import { selectedParcelsAtom } from '@/store/parcels';
+import { toggledParcelIdsAtom } from '@/store/parcels';
 
 /**
- * Step 2 of the selection (Figma 7172:1800): start over, or analyse every area on the
- * map — drawn, uploaded, and the cadastral parcels selected by clicking them. Analizar
- * runs the whole chain (`analyzeSelection`: indicators, parcel filtering, analysis) and
- * lands on riesgo sanitario, the public side, so the request goes to `public`.
+ * Step 2 of the selection: start over, or analyse the parcels the drawn or uploaded
+ * areas selected. `filter-parcels` already ran when the areas landed
+ * (`parcelQueries.filtered`, painted on the map), and the user may have flipped some by
+ * clicking them; Analizar sends the parcels selected after those flips to the analysis
+ * page, which runs it (`useAnalysis`) and lands on riesgo sanitario, the public side.
  * Renders inside `<ClientOnly>` (it reads the draw atoms).
  */
 export function ConfirmActions() {
   const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
-  const selectedFilters = useAtomValue(analysisFiltersAtom);
+  const toggled = useAtomValue(toggledParcelIdsAtom);
+  const { data: parcels, isError, isSuccess } = useQuery(parcelQueries.filtered(polygons));
   const restart = useSetAtom(restartSelectionAtom);
-  const setResult = useSetAtom(analysisResultAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
   const navigate = useNavigate();
 
-  // The hero defaults double as the request's filters until the user opens the hero.
-  const { data: options } = useQuery(metadataQueries.analysisOptions());
+  const parcelIds = parcels ? selectedParcelIds(applyToggles(parcels.results, toggled)) : [];
 
-  const mutation = useMutation({
-    ...analysisMutations.analyzeSelection(),
-    // Entering the mode before navigating keeps the store consistent even if navigation
-    // fails. `useMutation`-level so an unmount cannot skip it.
-    onSuccess: (result) => {
-      setResult(result);
-      startAnalysis();
-      void navigate({ to: '/analisis' });
-    },
-  });
+  // Parcels around the areas, none over the threshold: the user can still click one.
+  // (No parcel at all is `useRejectUncoveredAreas`: the areas go, back to step 1.)
+  // `isSuccess`, not `parcels`: a re-keyed query shows the previous parcels as
+  // placeholder while the answer is not in yet.
+  const noIntersection = isSuccess && parcelIds.length === 0;
 
-  const hasAreas = polygons.length > 0 || selectedParcels.length > 0;
-
+  // Entering the mode before navigating keeps the store consistent even if navigation fails.
   function analyze() {
-    if (!options) return;
-
-    mutation.mutate({
-      visibility: 'public',
-      polygons,
-      parcels: selectedParcels,
-      filters: resolveAnalysisFilters(selectedFilters, options),
-    });
+    startAnalysis();
+    void navigate({ to: '/analisis' });
   }
-
   return (
     <section aria-live="polite" className="flex w-full flex-col gap-2">
       <div className="grid grid-cols-2 gap-1.5">
-        <ActionCardButton icon={Undo2} onClick={() => restart()} disabled={mutation.isPending}>
+        <ActionCardButton icon={Undo2} onClick={() => restart()}>
           Reiniciar
         </ActionCardButton>
 
         <ActionCardButton
           variant="default"
           icon={CircleArrowRight}
-          disabled={!hasAreas || !options || mutation.isPending}
+          disabled={parcelIds.length === 0}
           onClick={analyze}
         >
-          {mutation.isPending ? 'Analizando…' : 'Analizar'}
+          Analizar
         </ActionCardButton>
       </div>
 
-      {mutation.isError && (
-        <p className="text-sm text-destructive">El análisis falló: {mutation.error.message}</p>
+      {isError && <p className="text-sm text-destructive">{PARCELS_REQUEST_FAILED_MESSAGE}</p>}
+
+      {noIntersection && (
+        <p className="text-sm text-destructive">{NO_PARCEL_INTERSECTION_MESSAGE}</p>
       )}
     </section>
   );

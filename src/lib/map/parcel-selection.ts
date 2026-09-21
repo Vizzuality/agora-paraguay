@@ -1,27 +1,46 @@
-import type { ParcelFeature } from '@/lib/api/parcels/schemas';
+import type { FilteredParcel } from '@/lib/api/parcels/schemas';
 import { ringContains, type MapPoint } from '@/lib/map/point-in-polygon';
 
 /**
- * Selection logic for the cadastral parcels layer — pure, node-tested. The selection
- * is a toggled set: clicking a parcel adds it, clicking it again removes it, and
- * every selected parcel is submitted together when the analysis is sent
- * (multi-select, unlike the single-highlight selection of the drawn polygons).
+ * Manual refinement of what `filter-parcels` answered — pure, node-tested. The API
+ * flags the parcels over the overlap threshold; the user can flip any returned parcel
+ * by clicking it. The flips are kept as a list of parcel ids and applied on top of the
+ * answer, so a refetch (an edited polygon) keeps the user's choices for the parcels
+ * that are still there and drops the rest with the parcels themselves.
  */
 
-/** Adds `parcel` to the selection, or removes it if it is already there. */
-export function toggleParcel(selection: ParcelFeature[], parcel: ParcelFeature): ParcelFeature[] {
-  const without = selection.filter((entry) => entry.properties.id !== parcel.properties.id);
-
-  return without.length === selection.length ? [...selection, parcel] : without;
+/** Adds `id` to the flipped list, or removes it if it is already there. */
+export function toggleParcelId(toggled: string[], id: string): string[] {
+  return toggled.includes(id) ? toggled.filter((entry) => entry !== id) : [...toggled, id];
 }
 
-/**
- * The cadastral parcel under `point`, or `null`. Later features win, mirroring
- * `polygonAtPoint` — though the mock parcels never overlap by construction.
- */
-export function parcelAtPoint(parcels: ParcelFeature[], point: MapPoint): ParcelFeature | null {
+/** The answer with the user's flips applied: a flipped parcel's `selected` is inverted. */
+export function applyToggles(parcels: FilteredParcel[], toggled: string[]): FilteredParcel[] {
+  if (toggled.length === 0) return parcels;
+
+  return parcels.map((parcel) =>
+    toggled.includes(parcel.parcel_id) ? { ...parcel, selected: !parcel.selected } : parcel,
+  );
+}
+
+/** The ids Analizar sends: every parcel selected after the flips. */
+export function selectedParcelIds(parcels: FilteredParcel[]): string[] {
+  return parcels.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id);
+}
+
+/** The outer rings of a parcel's geometry, whatever its polygon type. */
+function outerRingsOf(parcel: FilteredParcel): number[][][] {
+  return parcel.geometry.features.flatMap((feature) =>
+    feature.geometry.type === 'Polygon'
+      ? [feature.geometry.coordinates[0]]
+      : feature.geometry.coordinates.map((polygon) => polygon[0]),
+  );
+}
+
+/** The returned parcel under `point`, or `null`. Later parcels win, like `polygonAtPoint`. */
+export function parcelAtPoint(parcels: FilteredParcel[], point: MapPoint): FilteredParcel | null {
   for (let index = parcels.length - 1; index >= 0; index--) {
-    if (ringContains(parcels[index].geometry.coordinates[0], point)) {
+    if (outerRingsOf(parcels[index]).some((ring) => ringContains(ring, point))) {
       return parcels[index];
     }
   }

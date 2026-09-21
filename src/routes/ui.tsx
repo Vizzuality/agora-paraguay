@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import {
   ChevronDown,
@@ -11,7 +11,7 @@ import {
   Star,
   Trash2,
 } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { RiskClassCard } from '@/components/risk-class-card';
@@ -105,8 +105,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
-import { defaultIndicatorIds } from '@/lib/analysis/request';
-import { analysisMutations } from '@/lib/api/analysis/queries';
+import { requestedIndicatorIds, toAnalysisRequest } from '@/lib/analysis/request';
+import { analysisQueries } from '@/lib/api/analysis/queries';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 
 export const Route = createFileRoute('/ui')({ component: UiKitPage });
@@ -505,28 +505,22 @@ function UiKitPage() {
 
 /**
  * The analysis cards as `/analisis` builds them: indicator metadata from the query, one
- * analysed parcel from the analysis mutation (the mock answers offline), mapped through
- * `generalInfo` and `indicatorCards`. Nothing hand-typed, so the kit tracks the data.
+ * analysed parcel from the analysis query (real endpoint), mapped through `generalInfo`
+ * and `indicatorCards`. Nothing hand-typed, so the kit tracks the data.
  */
 function AnalysisCardsDemo() {
   const { data: indicators } = useQuery(metadataQueries.indicators({ riesgo: 'sanitario' }));
-  const { data: analysis, mutate, isIdle } = useMutation(analysisMutations.run('public'));
+  // The kit has no Analizar button: one fixed parcel, the default indicators.
+  const request = indicators
+    ? toAnalysisRequest(
+        ['D07D21P00000001'],
+        { crop_type: 'soy', date: '2026-09-17' },
+        requestedIndicatorIds(indicators, null),
+      )
+    : null;
+  const { data: analysis } = useQuery(analysisQueries.result('public', request));
 
-  // The kit has no Analizar button: run the analysis once the indicators are known.
-  useEffect(() => {
-    if (!indicators || !isIdle) return;
-
-    mutate({
-      parcel_ids: [1],
-      filters: {
-        start_date: '2026-06-18',
-        end_date: '2026-08-18',
-        indicators: defaultIndicatorIds(indicators),
-      },
-    });
-  }, [indicators, isIdle, mutate]);
-
-  const parcel = analysis?.features[0];
+  const parcel = analysis?.indicators[0];
   const info = generalInfo(parcel, indicators);
   const cards = indicatorCards(parcel, indicators);
 

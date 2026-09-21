@@ -1,17 +1,10 @@
 import { atom } from 'jotai';
 
-import {
-  EMPTY_ANALYSIS_FILTERS,
-  type AnalysisFilterKey,
-  type AnalysisFilters,
-} from '@/lib/analysis/filters';
+import { EMPTY_ANALYSIS_FILTERS, type AnalysisFilterSelection } from '@/lib/analysis/filters';
 import { selectableIndicators, toggleIndicatorId } from '@/lib/analysis/indicator-picker';
-import type { AnalysisResponse } from '@/lib/api/analysis/schemas';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
-import { canSelectParcel } from '@/lib/map/draw-state';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
-import { modeAtom } from '@/store/mode';
 
 /**
  * The polygon picked for analysis — app-owned, unlike Terra Draw's edit selection,
@@ -49,29 +42,22 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
 export const activeParcelTabAtom = atom(0);
 
 /**
- * The last analysis the API answered (Analizar, `analysisMutations.analyzeSelection`).
- * `null` until one succeeds. Lives here rather than in the mutation because /analisis
- * renders it after the confirm panel has unmounted.
- */
-export const analysisResultAtom = atom<AnalysisResponse | null>(null);
-
-/**
- * The hero dropdown selection (AGP-29). One selection for the whole analysis, not one
- * per parcel tab: the tab index is clamped when the selection shrinks, so a per-index
- * record would silently attach one parcel's choices to another. Revisit when parcels
- * carry ids through the hero.
+ * The hero dropdown selection, keyed by the API's filter id. One selection for the whole
+ * analysis, not one per parcel tab: the tab index is clamped when the selection shrinks,
+ * so a per-index record would silently attach one parcel's choices to another. Revisit
+ * when parcels carry ids through the hero.
  *
- * Stored as the user's picks only (`null` = untouched); defaults are derived at read
- * time from the options query (`resolveAnalysisFilters`), so they follow the data.
+ * Stored as the user's picks only (a missing id = untouched); defaults are derived at
+ * read time from the filters query (`resolveFilterSelection`), so they follow the data.
  */
-const analysisFiltersBaseAtom = atom<AnalysisFilters>(EMPTY_ANALYSIS_FILTERS);
+const analysisFiltersBaseAtom = atom<AnalysisFilterSelection>(EMPTY_ANALYSIS_FILTERS);
 
 export const analysisFiltersAtom = atom((get) => get(analysisFiltersBaseAtom));
 
 export const setAnalysisFilterAtom = atom(
   null,
-  (get, set, update: { key: AnalysisFilterKey; value: string }) => {
-    set(analysisFiltersBaseAtom, { ...get(analysisFiltersBaseAtom), [update.key]: update.value });
+  (get, set, update: { id: string; value: string }) => {
+    set(analysisFiltersBaseAtom, { ...get(analysisFiltersBaseAtom), [update.id]: update.value });
   },
 );
 
@@ -95,13 +81,4 @@ export const selectedIndicatorIdsAtom = atom(
       ),
     );
   },
-);
-
-/**
- * Whether a map click currently picks a parcel. Drives the click handler and cursor.
- * Selection mode only — Analizar freezes it — and only while the map is idle
- * (`canSelectParcel`). The single gate: `toggleParcelAtom` routes through it too.
- */
-export const parcelClickEnabledAtom = atom(
-  (get) => get(modeAtom) === 'selection' && canSelectParcel(get(drawStateAtom)),
 );

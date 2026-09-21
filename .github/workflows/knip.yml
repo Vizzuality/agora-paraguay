@@ -1,0 +1,42 @@
+name: Knip
+
+# Knip analyzes the whole module graph at once, so this job runs without a
+# paths filter — almost any change can affect reachability.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: knip-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  knip:
+    name: Unused files & dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # --ignore-scripts: same reasoning as ci.yml.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # Build first: the router plugin generates src/routeTree.gen.ts (gitignored).
+      # Without it `src/router.tsx` has an unresolved import and every route, store
+      # and dependency behind it reads as unused.
+      - run: pnpm build
+
+      # Scoped to structural issue types; unused exports and types are reported
+      # locally by `pnpm knip` but not enforced here yet.
+      - run: pnpm knip --include files,dependencies,devDependencies,unlisted,binaries,unresolved

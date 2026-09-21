@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /*
- * Parcels contract: `POST /api/parcels/filter_parcels` and the (still mock) cadastral
- * layer. GeoJSON geometries are declared here rather than via `@types/geojson`,
- * matching the stance in `draw-features.ts`: `geojson` is only a transitive dependency.
+ * Parcels contract: `POST /api/parcels/filter-parcels/`. GeoJSON geometries are declared here rather
+ * than via `@types/geojson`, matching the stance in `draw-features.ts`: `geojson` is only
+ * a transitive dependency.
  */
 
 const positionSchema = z.tuple([z.number(), z.number()]);
@@ -27,28 +27,7 @@ const arealGeometrySchema = z.discriminatedUnion('type', [
 ]);
 
 /**
- * TODO(mock-parcels): invented contract, not in the API spec. The spec has no "all
- * parcels" endpoint — the cadastral layer is expected to come from `filter_parcels`
- * results once the selection flow drives it. Replace or delete then (grep
- * `mock-parcels`).
- */
-export const parcelFeatureSchema = z.object({
-  type: z.literal('Feature'),
-  properties: z.object({ id: z.string().min(1), name: z.string().min(1) }),
-  geometry: polygonGeometrySchema,
-});
-
-export type ParcelFeature = z.infer<typeof parcelFeatureSchema>;
-
-export const parcelCollectionSchema = z.object({
-  type: z.literal('FeatureCollection'),
-  features: z.array(parcelFeatureSchema),
-});
-
-export type ParcelCollection = z.infer<typeof parcelCollectionSchema>;
-
-/**
- * `POST /api/parcels/filter_parcels` body. The drawn or uploaded polygons filter the
+ * `POST /api/parcels/filter-parcels/` body. The drawn or uploaded polygons filter the
  * cadastre: the API buffers them by `buffer` metres and returns the parcels around,
  * flagging those whose area overlaps a polygon by at least
  * `overlap_percentage_threshold` percent. Snake_case on purpose — this is the wire
@@ -110,13 +89,14 @@ export function toFilterParcelsRequest(
 }
 
 /**
- * `filter_parcels` response. Every parcel around the polygons comes back; `selected`
+ * `filter-parcels/` response. Every parcel around the polygons comes back; `selected`
  * marks the ones over the overlap threshold. The spec (WIP) wraps each parcel's
  * geometry in a FeatureCollection — modelled as given, loose on the feature so the
  * backend can add properties without breaking the parse.
  */
 const filteredParcelSchema = z.object({
-  parcel_id: z.number().int(),
+  /** The cadastral code (`D07D21P00000002`), as the backend answers it. */
+  parcel_id: z.string().min(1),
   geometry: z.object({
     type: z.literal('FeatureCollection'),
     features: z.array(z.looseObject({ type: z.literal('Feature'), geometry: arealGeometrySchema })),
@@ -127,11 +107,17 @@ const filteredParcelSchema = z.object({
 export type FilteredParcel = z.infer<typeof filteredParcelSchema>;
 
 export const filterParcelsResponseSchema = z.object({
+  /** `success` with parcels; `empty` when the area is outside the cadastre's coverage. */
   status: z.string(),
+  /** Shown to the user as answered when `results` is empty (in English). */
   message: z.string(),
   /** Echo of the filtering polygons; shape not fixed, nothing in the app reads it. */
   input: z.unknown().optional(),
-  results: z.array(filteredParcelSchema),
+  // A `status: "empty"` answer (HTTP 200) carries `results: {}`, not `[]`: read as no parcels.
+  results: z.union([
+    z.array(filteredParcelSchema),
+    z.object({}).transform((): FilteredParcel[] => []),
+  ]),
 });
 
 export type FilterParcelsResponse = z.infer<typeof filterParcelsResponseSchema>;

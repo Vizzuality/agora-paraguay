@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import {
   ClientOnly,
   createFileRoute,
@@ -18,20 +17,12 @@ import { RiskClassCard } from '@/components/risk-class-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { Button } from '@/components/ui/button';
-import { resolveAnalysisFilters } from '@/lib/analysis/filters';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
-import { metadataQueries } from '@/lib/api/metadata/queries';
-import { polygonName } from '@/lib/map/draw-features';
-import {
-  activeParcelTabAtom,
-  analysisFiltersAtom,
-  analysisResultAtom,
-  selectedIndicatorIdsAtom,
-} from '@/store/analysis';
+import { useAnalysis } from '@/lib/analysis/use-analysis';
+import { activeParcelTabAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
-import { selectedParcelsAtom } from '@/store/parcels';
 
 /** The analysis tabs. URL state, not store state: a shared link lands on the same tab. */
 export type RiesgoTab = 'sanitario' | 'productivo';
@@ -96,12 +87,15 @@ function AnalysisPage() {
   );
 }
 
-/** The hero with the parcel tabs filled from the submitted selection. */
+/**
+ * The hero with one tab per parcel the analysis answered, labelled by its cadastral id.
+ * The response is per parcel and carries no link back to the drawn or uploaded area, so
+ * the areas' names do not appear here.
+ */
 function SelectionHero({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
-  const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
+  const { analysis } = useAnalysis(riesgo);
 
-  const parcels = [...polygons, ...selectedParcels].map((area, index) => polygonName(area, index));
+  const parcels = analysis.data?.indicators.map((parcel) => String(parcel.parcel_id)) ?? [];
 
   return <AnalysisHero riesgo={riesgo} parcels={parcels} />;
 }
@@ -163,27 +157,19 @@ function LoginGate() {
 }
 
 /**
- * Riesgo sanitario: the active parcel tab's indicators (`analysisResultAtom`) — its text
- * facts in the general-info card, then one risk card per selected measured indicator.
- * Cards are per parcel, never a summary of the selection.
- *
- * TODO(mock-analysis): the tab index picks the response feature by position. The real
- * mapping is by parcel id once the selection carries the ids `filter_parcels` returns.
+ * Riesgo sanitario: the active parcel tab's indicators — its text facts in the
+ * general-info card, then one risk card per selected measured indicator. Cards are per
+ * parcel, never a summary of the selection. The tab index is the position in the
+ * response, the same list the hero's tabs are built from (`SelectionHero`). Changing the
+ * picker or the hero filters re-runs the analysis (`useAnalysis`); the previous cards stay
+ * until the new answer lands.
  */
 function SanitarioWidgets() {
-  const result = useAtomValue(analysisResultAtom);
+  const { analysis, indicators } = useAnalysis('sanitario');
   const activeTab = useAtomValue(activeParcelTabAtom);
-  const selectedFilters = useAtomValue(analysisFiltersAtom);
-  const { data: options } = useQuery(metadataQueries.analysisOptions());
-  // Same params Analizar sent, so the names match the values the API scored.
-  const cultivo = options ? resolveAnalysisFilters(selectedFilters, options).cultivo : undefined;
-  const { data: indicators } = useQuery(
-    metadataQueries.indicators({ riesgo: 'sanitario', cultivo }),
-  );
-
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
-  const parcel = result?.features[activeTab];
+  const parcel = analysis.data?.indicators[activeTab];
   // General info is always on; the cards are the selected measured indicators (the API's
   // defaults until the user touches Personalizar indicadores).
   const info = generalInfo(parcel, indicators);
@@ -194,6 +180,16 @@ function SanitarioWidgets() {
 
   return (
     <div className="flex flex-col gap-4">
+      {analysis.isError && (
+        <p role="alert" className="text-sm text-destructive">
+          El análisis falló: {analysis.error.message}
+        </p>
+      )}
+      {analysis.isFetching && !analysis.data && (
+        <p aria-live="polite" className="text-sm text-muted-foreground">
+          Analizando…
+        </p>
+      )}
       {info.length > 0 && <GeneralInfoCard items={info} />}
       <WidgetGrid>
         {cards.map((card) => (
@@ -225,9 +221,8 @@ function WidgetPlaceholder() {
  */
 function EmptySelectionRedirect() {
   const polygons = useAtomValue(drawPolygonsAtom);
-  const selectedParcels = useAtomValue(selectedParcelsAtom);
   const navigate = useNavigate();
-  const empty = polygons.length === 0 && selectedParcels.length === 0;
+  const empty = polygons.length === 0;
 
   useEffect(() => {
     if (empty) void navigate({ to: '/', replace: true });
