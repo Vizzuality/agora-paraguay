@@ -1,0 +1,40 @@
+name: Knip
+
+# Knip analyzes the module graph of every workspace at once, so this job
+# runs without a paths filter — almost any change can affect reachability.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref so a rapid re-push frees the runner.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  knip:
+    name: Unused files & dependencies
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5.0.0
+      - name: Setup Node & pnpm
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          cache-scope: knip
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # Scoped to structural issue types; unused exports/types are reported
+      # locally by `pnpm knip` but not enforced here yet.
+      - name: Run knip
+        run: pnpm knip --include files,dependencies,devDependencies,unlisted,binaries,unresolved
+        
