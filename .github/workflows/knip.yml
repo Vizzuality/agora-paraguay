@@ -32,6 +32,11 @@ jobs:
       # --ignore-scripts: same reasoning as ci.yml.
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
+      # Build first: the router plugin generates src/routeTree.gen.ts (gitignored).
+      # Without it `src/router.tsx` has an unresolved import and every route, store
+      # and dependency behind it reads as unused.
+      - run: pnpm build
+
       # Scoped to structural issue types; unused exports and types are reported
       # locally by `pnpm knip` but not enforced here yet.
       - run: pnpm knip --include files,dependencies,devDependencies,unlisted,binaries,unresolved
