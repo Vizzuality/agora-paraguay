@@ -178,3 +178,27 @@ export async function stubAnalysisApi(page: Page) {
     },
   );
 }
+
+/** What the live API says for an area outside the cadastre, HTTP 200. */
+export const OUT_OF_COVERAGE_MESSAGE = 'The submitted area is outside our current coverage.';
+
+/**
+ * Overrides the `filter-parcels` stub with the live API's answer for an area outside
+ * the cadastre: `status: "empty"`, `results: {}` (an object, not a list). Registered
+ * after `stubAnalysisApi`, so Playwright tries it first.
+ */
+export async function stubUncoveredArea(page: Page) {
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
+    (route) =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'empty',
+          message: OUT_OF_COVERAGE_MESSAGE,
+          input: { features: [] },
+          results: {},
+        }),
+      }),
+  );
+}

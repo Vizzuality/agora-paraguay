@@ -3,7 +3,10 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, Undo2 } from 'lucide-react';
 
-import { NO_PARCEL_INTERSECTION_MESSAGE } from '@/components/error-toast';
+import {
+  NO_PARCEL_INTERSECTION_MESSAGE,
+  PARCELS_REQUEST_FAILED_MESSAGE,
+} from '@/components/error-toast';
 import { ActionCardButton } from '@/components/sidebar/action-card-button';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
@@ -22,22 +25,24 @@ import { toggledParcelIdsAtom } from '@/store/parcels';
 export function ConfirmActions() {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
-  const parcels = useQuery(parcelQueries.filtered(polygons));
+  const { data: parcels, isError, isSuccess } = useQuery(parcelQueries.filtered(polygons));
   const restart = useSetAtom(restartSelectionAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
   const navigate = useNavigate();
 
-  const parcelIds = parcels.data
-    ? selectedParcelIds(applyToggles(parcels.data.results, toggled))
-    : [];
-  const noIntersection = parcels.isSuccess && parcelIds.length === 0;
+  const parcelIds = parcels ? selectedParcelIds(applyToggles(parcels.results, toggled)) : [];
+
+  // Parcels around the areas, none over the threshold: the user can still click one.
+  // (No parcel at all is `useRejectUncoveredAreas`: the areas go, back to step 1.)
+  // `isSuccess`, not `parcels`: a re-keyed query shows the previous parcels as
+  // placeholder while the answer is not in yet.
+  const noIntersection = isSuccess && parcelIds.length === 0;
 
   // Entering the mode before navigating keeps the store consistent even if navigation fails.
   function analyze() {
     startAnalysis();
     void navigate({ to: '/analisis' });
   }
-
   return (
     <section aria-live="polite" className="flex w-full flex-col gap-2">
       <div className="grid grid-cols-2 gap-1.5">
@@ -55,11 +60,7 @@ export function ConfirmActions() {
         </ActionCardButton>
       </div>
 
-      {parcels.isError && (
-        <p className="text-sm text-destructive">
-          No se pudieron cargar las parcelas: {parcels.error.message}
-        </p>
-      )}
+      {isError && <p className="text-sm text-destructive">{PARCELS_REQUEST_FAILED_MESSAGE}</p>}
 
       {noIntersection && (
         <p className="text-sm text-destructive">{NO_PARCEL_INTERSECTION_MESSAGE}</p>

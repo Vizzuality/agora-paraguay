@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 
@@ -31,5 +31,9 @@ export const parcelQueries = {
       queryFn: () => filterParcels(toFilterParcelsRequest(polygons, options)),
       enabled: polygons.length > 0,
       staleTime: Infinity,
+      // A geometry change (a vertex drag, a restore after /analisis) re-keys the query;
+      // the parcels already on the map stay painted until the new answer lands instead
+      // of vanishing for the round trip.
+      placeholderData: keepPreviousData,
     }),
 };

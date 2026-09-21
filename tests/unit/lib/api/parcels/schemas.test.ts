@@ -166,6 +166,19 @@ describe('filterParcelsResponseSchema', () => {
     expect(filterParcelsResponseSchema.safeParse(body).success).toBe(true);
   });
 
+  // Real answer for an area outside the cadastre: HTTP 200, `results: {}`.
+  it('reads the `empty` answer, whose results are an object, as no parcels', () => {
+    const parsed = filterParcelsResponseSchema.parse({
+      status: 'empty',
+      message: 'The submitted area is outside our current coverage.',
+      input: { features: [{ id: '89a010e7-efd8-44a4-ad2f-8ea1f03bd6ec', name: 'Área 1' }] },
+      results: {},
+    });
+
+    expect(parsed.results).toEqual([]);
+    expect(parsed.message).toBe('The submitted area is outside our current coverage.');
+  });
+
   it('rejects a parcel without the selected flag or with a numeric id — codes are strings', () => {
     const noFlag = structuredClone(response) as { results: Record<string, unknown>[] };
     delete noFlag.results[0].selected;

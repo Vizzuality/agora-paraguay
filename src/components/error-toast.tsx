@@ -50,3 +50,7 @@ export function NoParcelIntersectionToast({ onDismiss }: Readonly<{ onDismiss: (
     </ErrorToast>
   );
 }
+
+/** Shown under Analizar when `filter-parcels` fails, whatever the reason. */
+export const PARCELS_REQUEST_FAILED_MESSAGE =
+  'No se pudieron cargar las parcelas. Intentá de nuevo más tarde.';

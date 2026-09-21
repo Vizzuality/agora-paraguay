@@ -95,7 +95,7 @@ export function toFilterParcelsRequest(
  * backend can add properties without breaking the parse.
  */
 const filteredParcelSchema = z.object({
-  /** The cadastral code (`D07D21P00000002`), as the backend answers it (2026-09-18). */
+  /** The cadastral code (`D07D21P00000002`), as the backend answers it. */
   parcel_id: z.string().min(1),
   geometry: z.object({
     type: z.literal('FeatureCollection'),
@@ -107,11 +107,17 @@ const filteredParcelSchema = z.object({
 export type FilteredParcel = z.infer<typeof filteredParcelSchema>;
 
 export const filterParcelsResponseSchema = z.object({
+  /** `success` with parcels; `empty` when the area is outside the cadastre's coverage. */
   status: z.string(),
+  /** Shown to the user as answered when `results` is empty (in English). */
   message: z.string(),
   /** Echo of the filtering polygons; shape not fixed, nothing in the app reads it. */
   input: z.unknown().optional(),
-  results: z.array(filteredParcelSchema),
+  // A `status: "empty"` answer (HTTP 200) carries `results: {}`, not `[]`: read as no parcels.
+  results: z.union([
+    z.array(filteredParcelSchema),
+    z.object({}).transform((): FilteredParcel[] => []),
+  ]),
 });
 
 export type FilterParcelsResponse = z.infer<typeof filterParcelsResponseSchema>;

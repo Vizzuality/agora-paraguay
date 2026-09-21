@@ -6,6 +6,7 @@ import { selectAnalysisPolygonAtom } from '@/store/analysis';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { backToSelectionAtom } from '@/store/mode';
 import { resetParcelTogglesAtom } from '@/store/parcels';
+import { areaRejectionAtom } from '@/store/selection';
 
 /**
  * Uploaded areas of interest. Parsing lives in `src/lib/upload/`, the Terra Draw
@@ -29,6 +30,7 @@ export const uploadResultAtom = atom<UploadResult | null>(null);
  */
 export const resetSelectionSessionAtom = atom(null, (_get, set) => {
   set(uploadResultAtom, null);
+  set(areaRejectionAtom, null);
   set(resetParcelTogglesAtom);
   set(backToSelectionAtom);
 });
