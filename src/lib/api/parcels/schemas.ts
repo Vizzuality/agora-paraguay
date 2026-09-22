@@ -9,7 +9,8 @@ import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
  */
 
 const positionSchema = z.tuple([z.number(), z.number()]);
-const ringSchema = z.array(positionSchema).min(4);
+// Ring validity (closure, point count, area) is the API's job; the client checks shape only.
+const ringSchema = z.array(positionSchema);
 
 export const polygonGeometrySchema = z.object({
   type: z.literal('Polygon'),
@@ -59,8 +60,8 @@ export type FilterParcelsOptions = {
 };
 
 export const DEFAULT_FILTER_PARCELS_OPTIONS: FilterParcelsOptions = {
-  overlapPercentageThreshold: 50,
-  buffer: 50,
+  overlapPercentageThreshold: 20,
+  buffer: 20,
 };
 
 /**

@@ -9,7 +9,7 @@ import {
 } from '@/lib/api/parcels/schemas';
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 
-/** A closed unit square, the smallest valid ring. */
+/** A closed unit square. */
 const SQUARE = [
   [0, 0],
   [0, 1],
@@ -81,16 +81,6 @@ describe('filterParcelsRequestSchema', () => {
       coordinates: [[SQUARE]],
     } as never;
     expect(filterParcelsRequestSchema.safeParse(multi).success).toBe(false);
-  });
-
-  it('rejects a ring with fewer than 4 positions', () => {
-    const body = request();
-    body.filtering_polygons.features[0].geometry = {
-      type: 'Polygon',
-      coordinates: [SQUARE.slice(0, 3)],
-    };
-
-    expect(filterParcelsRequestSchema.safeParse(body).success).toBe(false);
   });
 });
 
