@@ -104,9 +104,17 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
   await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
 
-  // One hero tab per parcel the (stubbed) analysis answered, labelled by its id.
+  // Todas, then one hero tab per submitted parcel, labelled by its id. Todas is the
+  // starting tab; picking a parcel moves the marker to it.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['D07D21P00000002']);
+  await expect(areas).toHaveText(['Todas', 'D07D21P00000002']);
+  await expect(page.getByRole('button', { name: 'Todas' })).toHaveAttribute('aria-current', 'true');
+  await page.getByRole('button', { name: 'D07D21P00000002' }).click();
+  await expect(page.getByRole('button', { name: 'D07D21P00000002' })).toHaveAttribute(
+    'aria-current',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: 'Todas' })).not.toHaveAttribute('aria-current');
 
   // The active parcel's disease index sits at the top of its 1–3 range: a risk class
   // card with the class as its figure and the measured value as caption.

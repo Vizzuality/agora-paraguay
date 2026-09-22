@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ArrowLeft, ArrowRight, List } from 'lucide-react';
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { resolveActiveParcel } from '@/lib/analysis/active-parcel';
 import { resolveFilterSelection } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
@@ -28,7 +29,7 @@ import { visibilityOf } from '@/lib/analysis/request';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import { activeParcelTabAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
+import { activeParcelIdAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
 
 /**
  * The analysed parcels as tabs, and the filters the API offers for that side of the
@@ -154,9 +155,8 @@ function MiniMapThumbnail() {
  * legend" and becomes the same border chip the floating labels use.
  */
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
-  const [storedIndex, setActiveIndex] = useAtom(activeParcelTabAtom);
-  // Re-analysing a smaller selection can leave a stale index behind: clamp to the first.
-  const activeIndex = storedIndex < parcels.length ? storedIndex : 0;
+  const [stored, setActive] = useAtom(activeParcelIdAtom);
+  const active = resolveActiveParcel(parcels, stored);
 
   const stripRef = useRef<HTMLDivElement>(null);
   // Where the strip is heading while a smooth scroll is in flight, so a second arrow
@@ -210,21 +210,17 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         <ScrollArea viewportRef={stripRef}>
           {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
           <ul className="flex gap-5 px-4">
-            {parcels.map((parcel, index) => (
+            {/* Todas first: every submitted parcel highlighted, the page's starting tab. */}
+            <li className="shrink-0">
+              <ParcelTab active={active === null} onClick={() => setActive(null)}>
+                Todas
+              </ParcelTab>
+            </li>
+            {parcels.map((parcel) => (
               <li key={parcel} className="shrink-0">
-                <button
-                  type="button"
-                  aria-current={index === activeIndex || undefined}
-                  onClick={() => setActiveIndex(index)}
-                  className={cn(
-                    'cursor-pointer py-2 text-sm whitespace-nowrap',
-                    index === activeIndex
-                      ? 'border-b-[3px] border-primary text-primary'
-                      : 'text-accent-foreground',
-                  )}
-                >
+                <ParcelTab active={parcel === active} onClick={() => setActive(parcel)}>
                   {parcel}
-                </button>
+                </ParcelTab>
               </li>
             ))}
           </ul>
@@ -272,6 +268,27 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         <ArrowRight />
       </Button>
     </fieldset>
+  );
+}
+
+/** One tab of the strip; `aria-current` marks the one in force (the e2e suite reads it). */
+function ParcelTab({
+  active,
+  onClick,
+  children,
+}: Readonly<{ active: boolean; onClick: () => void; children: ReactNode }>) {
+  return (
+    <button
+      type="button"
+      aria-current={active || undefined}
+      onClick={onClick}
+      className={cn(
+        'cursor-pointer py-2 text-sm whitespace-nowrap',
+        active ? 'border-b-[3px] border-primary text-primary' : 'text-accent-foreground',
+      )}
+    >
+      {children}
+    </button>
   );
 }
 

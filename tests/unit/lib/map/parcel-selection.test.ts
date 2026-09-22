@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { FilteredParcel } from '@/lib/api/parcels/schemas';
 import {
   applyToggles,
+  highlightParcels,
   parcelAtPoint,
   selectedParcelIds,
   toggleParcelId,
@@ -37,6 +38,31 @@ function parcel(id: string, x: number, y: number, selected: boolean): FilteredPa
 }
 
 const ANSWER = [parcel('P1', 0, 0, true), parcel('P2', 1, 0, true), parcel('P3', 2, 0, false)];
+
+describe('highlightParcels', () => {
+  it('marks only the given ids as selected, whatever the API flagged', () => {
+    expect(highlightParcels(ANSWER, ['P3']).map((entry) => entry.selected)).toEqual([
+      false,
+      false,
+      true,
+    ]);
+  });
+
+  it('highlights every submitted parcel under Todas and none with an empty list', () => {
+    expect(highlightParcels(ANSWER, ['P1', 'P2']).map((entry) => entry.selected)).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    expect(highlightParcels(ANSWER, []).every((entry) => !entry.selected)).toBe(true);
+  });
+
+  it('leaves the answer untouched', () => {
+    highlightParcels(ANSWER, ['P3']);
+
+    expect(ANSWER.map((entry) => entry.selected)).toEqual([true, true, false]);
+  });
+});
 
 describe('toggleParcelId', () => {
   it('adds an id, and removes it on the second toggle', () => {

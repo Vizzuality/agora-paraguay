@@ -23,6 +23,14 @@ export function applyToggles(parcels: FilteredParcel[], toggled: string[]): Filt
   );
 }
 
+/**
+ * The answer repainted for the analysis page, where `selected` means "highlighted": true
+ * only for `ids` (the active tab's parcel, or every submitted one under Todas).
+ */
+export function highlightParcels(parcels: FilteredParcel[], ids: string[]): FilteredParcel[] {
+  return parcels.map((parcel) => ({ ...parcel, selected: ids.includes(parcel.parcel_id) }));
+}
+
 /** The ids Analizar sends: every parcel selected after the flips. */
 export function selectedParcelIds(parcels: FilteredParcel[]): string[] {
   return parcels.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id);

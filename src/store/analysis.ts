@@ -52,14 +52,17 @@ export const analysedParcelIdsAtom = atom(
   },
 );
 
-/** The parcel tab open on the analysis page — an index into `analysedParcelIdsAtom`. */
-export const activeParcelTabAtom = atom(0);
+/**
+ * The hero tab open on the analysis page: a submitted parcel's id, or `null` for Todas
+ * (every submitted parcel highlighted). An id, not a position, so the tabs, the widgets
+ * and the mini map name the same parcel whatever order each lists them in. Read through
+ * `resolveActiveParcel`, which falls back to Todas when the id left the selection.
+ */
+export const activeParcelIdAtom = atom<string | null>(null);
 
 /**
  * The hero dropdown selection, keyed by the API's filter id. One selection for the whole
- * analysis, not one per parcel tab: the tab index is clamped when the selection shrinks,
- * so a per-index record would silently attach one parcel's choices to another. Revisit
- * when parcels carry ids through the hero.
+ * analysis, not one per parcel tab.
  *
  * Stored as the user's picks only (a missing id = untouched); defaults are derived at
  * read time from the filters query (`resolveFilterSelection`), so they follow the data.

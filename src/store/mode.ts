@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import { analysedParcelIdsAtom } from '@/store/analysis';
+import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawStateAtom } from '@/store/draw-core';
 
 /**
@@ -26,10 +26,14 @@ const appModeAtom = atom<AppMode>('selection');
 /** Read-only view: the mode only changes through the transition atoms below. */
 export const modeAtom = atom((get) => get(appModeAtom));
 
-/** Analizar submitted: park the tool, record the parcels it sends, freeze the selection. */
+/**
+ * Analizar submitted: park the tool, record the parcels it sends, open the page on Todas,
+ * freeze the selection.
+ */
 export const startAnalysisAtom = atom(null, (_get, set, parcelIds: string[]) => {
   set(drawStateAtom, { type: 'tool', tool: null });
   set(analysedParcelIdsAtom, parcelIds);
+  set(activeParcelIdAtom, null);
   set(appModeAtom, 'analysis');
 });
 

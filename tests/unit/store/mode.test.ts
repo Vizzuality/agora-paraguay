@@ -1,7 +1,7 @@
 import { createStore } from 'jotai';
 import { describe, expect, it } from 'vitest';
 
-import { analysedParcelIdsAtom } from '@/store/analysis';
+import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { backToSelectionAtom, modeAtom, startAnalysisAtom } from '@/store/mode';
 
 describe('startAnalysisAtom', () => {
@@ -12,6 +12,15 @@ describe('startAnalysisAtom', () => {
 
     expect(store.get(modeAtom)).toBe('analysis');
     expect(store.get(analysedParcelIdsAtom)).toEqual(['D07D21P00000002', 'D07D23P00000008']);
+  });
+
+  it('opens the analysis page on Todas, whatever tab the previous run left active', () => {
+    const store = createStore();
+
+    store.set(activeParcelIdAtom, 'D07D21P00000002');
+    store.set(startAnalysisAtom, ['D07D21P00000002', 'D07D23P00000008']);
+
+    expect(store.get(activeParcelIdAtom)).toBeNull();
   });
 
   it('keeps the submitted parcels through a trip back to selection until Analizar runs again', () => {

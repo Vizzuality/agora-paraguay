@@ -4,7 +4,7 @@ import type { ExpressionSpecification } from 'maplibre-gl';
 import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { applyToggles } from '@/lib/map/parcel-selection';
+import { applyToggles, highlightParcels } from '@/lib/map/parcel-selection';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -14,25 +14,33 @@ const FILL_OPACITY: ExpressionSpecification = ['case', ['get', 'selected'], 0.35
 const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
 
 /**
- * The parcels `filter-parcels` answers for the polygons on the map, after the user's
- * clicks: the selected ones highlighted, the ones around them outlined. Plain MapLibre
- * layers, not Terra Draw features: they are reference data, so they stay out of the
- * draw store. Renders nothing until a drawing or upload exists and the query answers.
- * A pure function of the query — hiding the drawing behind these parcels is
+ * The parcels `filter-parcels` answers for the polygons on the map: the highlighted ones
+ * in yellow, the ones around them outlined. On the main map the highlight is the
+ * selection after the user's clicks; the hero mini map passes `highlightedIds` instead —
+ * the active tab's parcel, or every submitted one under Todas. Plain MapLibre layers, not
+ * Terra Draw features: they are reference data, so they stay out of the draw store.
+ * Renders nothing until a drawing or upload exists and the query answers. A pure
+ * function of the query — hiding the drawing behind these parcels is
  * `useHideDrawingBehindParcels`, a Terra Draw side effect mounted from `DrawLayer`.
- * Shared by the main map and the hero mini map; the main map mounts it only once Terra
- * Draw is bound (see `MapView`), the mini map has no Terra Draw and mounts it outright.
+ * The main map mounts it only once Terra Draw is bound (see `MapView`), the mini map has
+ * no Terra Draw and mounts it outright.
  */
-export function FilteredParcelsLayer() {
+export function FilteredParcelsLayer({
+  highlightedIds,
+}: Readonly<{ highlightedIds?: string[] }> = {}) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
 
   if (!data) return null;
 
+  const painted = highlightedIds
+    ? highlightParcels(data.results, highlightedIds)
+    : applyToggles(data.results, toggled);
+
   // Every parcel's FeatureCollection flattened into one source, the flag and id set as
   // the feature properties so the paint expressions can read them.
-  const features = applyToggles(data.results, toggled).flatMap((parcel) =>
+  const features = painted.flatMap((parcel) =>
     parcel.geometry.features.map((feature) => ({
       type: 'Feature' as const,
       geometry: feature.geometry,
