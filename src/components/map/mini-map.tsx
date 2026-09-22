@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
+import { ParcelNumberBadges } from '@/components/map/parcel-number-badges';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { resolveActiveParcel } from '@/lib/analysis/active-parcel';
 import { parcelQueries } from '@/lib/api/parcels/queries';
@@ -24,7 +25,8 @@ const AREA_COLOR = '#F1FF28';
 /**
  * Satellite map for the analysis hero, showing the parcels `filter-parcels` answered
  * with the hero's active tab highlighted: one parcel in yellow, or every submitted one
- * under Todas; the rest outlined as context. Clicking a submitted parcel switches the tab
+ * under Todas; the rest outlined as context. Each submitted parcel carries its number
+ * (`ParcelNumberBadges`). Clicking a submitted parcel switches the tab
  * and a tab switch frames the parcel (`useActiveParcelSync`). The areas themselves only
  * paint while no parcels exist. Framed by the combined bounds on mount, then the user's:
  * pan, zoom and the zoom buttons work as on the main map. The camera is not written to
@@ -61,7 +63,12 @@ export function MiniMap() {
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
       <FilteredParcelsLayer highlightedIds={highlighted} />
-      {parcels && <ActiveParcelSync parcels={parcels.results} submitted={submitted} />}
+      {parcels && (
+        <>
+          <ParcelNumberBadges parcels={parcels.results} submitted={submitted} />
+          <ActiveParcelSync parcels={parcels.results} submitted={submitted} />
+        </>
+      )}
       {(parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
           <Layer type="fill" paint={{ 'fill-color': AREA_COLOR, 'fill-opacity': 0.5 }} />
