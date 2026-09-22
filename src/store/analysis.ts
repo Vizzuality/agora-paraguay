@@ -38,7 +38,21 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
   draw.updateFeatureProperties(id, { analysis: true });
 });
 
-/** The parcel tab open on the analysis page — an index into the submitted area list. */
+/**
+ * The parcels Analizar submitted: the ones `filter-parcels` flagged, after the user's
+ * flips, frozen at the click (`startAnalysisAtom`). The analysis page reads this list —
+ * never the live query plus toggles, which shift under it once the map is gone.
+ */
+const analysedParcelIdsBaseAtom = atom<string[]>([]);
+
+export const analysedParcelIdsAtom = atom(
+  (get) => get(analysedParcelIdsBaseAtom),
+  (_get, set, parcelIds: string[]) => {
+    set(analysedParcelIdsBaseAtom, parcelIds);
+  },
+);
+
+/** The parcel tab open on the analysis page — an index into `analysedParcelIdsAtom`. */
 export const activeParcelTabAtom = atom(0);
 
 /**
