@@ -40,7 +40,7 @@ export function ConfirmActions() {
 
   // Entering the mode before navigating keeps the store consistent even if navigation fails.
   function analyze() {
-    startAnalysis();
+    startAnalysis(parcelIds);
     void navigate({ to: '/analisis' });
   }
   return (

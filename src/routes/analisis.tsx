@@ -20,7 +20,11 @@ import { Button } from '@/components/ui/button';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
-import { activeParcelTabAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
+import {
+  activeParcelTabAtom,
+  analysedParcelIdsAtom,
+  selectedIndicatorIdsAtom,
+} from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
 
@@ -88,16 +92,15 @@ function AnalysisPage() {
 }
 
 /**
- * The hero with one tab per parcel the analysis answered, labelled by its cadastral id.
- * The response is per parcel and carries no link back to the drawn or uploaded area, so
- * the areas' names do not appear here.
+ * The hero with one tab per parcel Analizar submitted, labelled by its cadastral id. Tabs
+ * come from that snapshot, not the analysis answer, so they show before the POST resolves.
+ * Parcels carry no link back to the drawn or uploaded area, so the areas' names do not
+ * appear here.
  */
 function SelectionHero({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
-  const { analysis } = useAnalysis(riesgo);
+  const parcelIds = useAtomValue(analysedParcelIdsAtom);
 
-  const parcels = analysis.data?.indicators.map((parcel) => String(parcel.parcel_id)) ?? [];
-
-  return <AnalysisHero riesgo={riesgo} parcels={parcels} />;
+  return <AnalysisHero riesgo={riesgo} parcels={parcelIds} />;
 }
 
 function TitleRow({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
@@ -159,17 +162,20 @@ function LoginGate() {
 /**
  * Riesgo sanitario: the active parcel tab's indicators — its text facts in the
  * general-info card, then one risk card per selected measured indicator. Cards are per
- * parcel, never a summary of the selection. The tab index is the position in the
- * response, the same list the hero's tabs are built from (`SelectionHero`). Changing the
- * picker or the hero filters re-runs the analysis (`useAnalysis`); the previous cards stay
- * until the new answer lands.
+ * parcel, never a summary of the selection. The tab index points into the submitted
+ * parcels, the same list the hero's tabs are built from (`SelectionHero`); the answer is
+ * matched by id, since the backend need not echo the parcels in request order. Changing
+ * the picker or the hero filters re-runs the analysis (`useAnalysis`); the previous cards
+ * stay until the new answer lands.
  */
 function SanitarioWidgets() {
-  const { analysis, indicators } = useAnalysis('sanitario');
+  const { analysis, indicators, parcelIds } = useAnalysis('sanitario');
   const activeTab = useAtomValue(activeParcelTabAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
-  const parcel = analysis.data?.indicators[activeTab];
+  // Same clamp as the hero's tabs: a shrunken selection falls back to the first parcel.
+  const activeId = parcelIds[activeTab < parcelIds.length ? activeTab : 0];
+  const parcel = analysis.data?.indicators.find((entry) => String(entry.parcel_id) === activeId);
   // General info is always on; the cards are the selected measured indicators (the API's
   // defaults until the user touches Personalizar indicadores).
   const info = generalInfo(parcel, indicators);
