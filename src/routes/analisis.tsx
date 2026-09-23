@@ -17,6 +17,7 @@ import { RiskClassCard } from '@/components/risk-class-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { Button } from '@/components/ui/button';
+import { WidgetIa } from '@/components/widget-ia';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
@@ -135,11 +136,21 @@ function ProductivoHero() {
   );
 }
 
-/** Riesgo productivo needs an account: login gate until a session exists. */
+/**
+ * Riesgo productivo needs an account: login gate until a session exists. Behind it, the
+ * (still empty) widget grid and the AI summary tile under it.
+ */
 function ProductivoGate() {
   const session = useAtomValue(sessionAtom);
 
-  return session ? <WidgetGrid /> : <LoginGate />;
+  if (!session) return <LoginGate />;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <WidgetGrid />
+      <WidgetIa />
+    </div>
+  );
 }
 
 /** The private-content gate: empty widget frames around the login card. */
@@ -218,7 +229,7 @@ function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {
 
 /** Empty widget frame behind the login gate (Figma 5180:11125). */
 function WidgetPlaceholder() {
-  return <div aria-hidden className="min-w-[200px] flex-1 rounded-3xl border-3 border-border" />;
+  return <div aria-hidden className="min-w-50 flex-1 rounded-3xl border-3 border-border" />;
 }
 
 /**
