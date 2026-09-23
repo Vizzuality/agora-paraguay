@@ -52,19 +52,21 @@ export const analysedParcelIdsAtom = atom(
   },
 );
 
-/** The parcel tab open on the analysis page — an index into `analysedParcelIdsAtom`. */
-export const activeParcelTabAtom = atom(0);
+/**
+ * The parcel tab open on the analysis page: one analysed parcel's id, or `null` for
+ * "Todas" — the whole selection, which is also where the page lands.
+ */
+export const activeParcelTabAtom = atom<string | null>(null);
 
 /**
- * The analysed parcel the open tab points at. Re-analysing a smaller selection can leave
- * a stale index behind, so an out-of-range index falls back to the first parcel — the one
- * clamp every reader (tabs, cards, mini map) shares. `undefined` while nothing is analysed.
+ * The analysed parcel the open tab points at, `null` for Todas. Re-analysing a smaller
+ * selection can leave a tab pointing at a parcel that is no longer analysed: that reads as
+ * Todas — the one fallback every reader (tabs, cards, mini map) shares.
  */
 export const activeParcelIdAtom = atom((get) => {
-  const parcelIds = get(analysedParcelIdsBaseAtom);
-  const index = get(activeParcelTabAtom);
+  const parcelId = get(activeParcelTabAtom);
 
-  return parcelIds[index < parcelIds.length ? index : 0];
+  return parcelId !== null && get(analysedParcelIdsBaseAtom).includes(parcelId) ? parcelId : null;
 });
 
 /**
@@ -74,9 +76,7 @@ export const activeParcelIdAtom = atom((get) => {
  * filters and indicators, so no re-run follows.
  */
 export const selectAnalysedParcelAtom = atom(null, (get, set, parcelId: string) => {
-  const index = get(analysedParcelIdsBaseAtom).indexOf(parcelId);
-
-  if (index !== -1) set(activeParcelTabAtom, index);
+  if (get(analysedParcelIdsBaseAtom).includes(parcelId)) set(activeParcelTabAtom, parcelId);
 });
 
 /**

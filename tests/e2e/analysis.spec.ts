@@ -12,6 +12,9 @@ const FIRST_POLYGON = [
   { x: 360, y: 350 },
 ];
 
+/** MapLibre's default `fitBounds` ease, with slack: clicks mid-flight hit the wrong spot. */
+const FIT_ANIMATION = 800;
+
 function controls(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
@@ -104,20 +107,20 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
   await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
 
-  // One hero tab per parcel the (stubbed) analysis answered, labelled by its id; the
-  // first one is open.
+  // Todas first, then one hero tab per parcel the (stubbed) analysis answered, labelled
+  // by its id; the page lands on Todas.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText([WEST_PARCEL_ID, EAST_PARCEL_ID]);
+  await expect(areas).toHaveText(['Todas', WEST_PARCEL_ID, EAST_PARCEL_ID]);
   await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
-  // The active parcel's disease index sits at the top of its 1–3 range: a risk class
-  // card with the class as its figure and the measured value as caption.
+  // Under Todas the risk card combines the parcels: disease indices 3 and 1 average to
+  // 2, the middle of the 1–3 range — the class as figure, the combined value as caption.
   const card = page
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
     .locator('..');
-  await expect(card).toContainText('Alto');
-  await expect(card).toContainText('3');
+  await expect(card).toContainText('Medio');
+  await expect(card).toContainText('2');
 
   // Its text facts (crop, station, phenology) share one general-info card instead.
   const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
@@ -216,6 +219,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await expect(page).toHaveURL(/\/analisis/);
 
   const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  const allTab = tabs.filter({ hasText: 'Todas' }).getByRole('button');
   const westTab = tabs.filter({ hasText: WEST_PARCEL_ID }).getByRole('button');
   const eastTab = tabs.filter({ hasText: EAST_PARCEL_ID }).getByRole('button');
   const card = page
@@ -223,51 +227,59 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
     .locator('..')
     .locator('..');
 
-  // Lands on the first parcel: its high index reads "Alto".
-  await expect(westTab).toHaveAttribute('aria-current', 'true');
-  await expect(card).toContainText('Alto');
+  // Lands on Todas: the combined index (3 and 1 → 2) reads "Medio".
+  await expect(allTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Medio');
   await expect.poll(() => analysisRuns.length).toBe(1);
 
-  // The list button opens a single-choice menu of the analysed parcels, the open one
-  // marked. Picking the other one opens its tab and swaps the cards to its values.
+  // The list button opens a single-choice menu — Todas, then the analysed parcels — with
+  // the open one marked. Picking a parcel opens its tab and swaps the cards to its values.
   await page.getByRole('button', { name: 'Ver lista de parcelas' }).click();
   const menu = page.getByRole('menu');
-  await expect(menu.getByRole('menuitemradio')).toHaveText([WEST_PARCEL_ID, EAST_PARCEL_ID]);
-  await expect(menu.getByRole('menuitemradio', { name: WEST_PARCEL_ID })).toHaveAttribute(
+  await expect(menu.getByRole('menuitemradio')).toHaveText([
+    'Todas',
+    WEST_PARCEL_ID,
+    EAST_PARCEL_ID,
+  ]);
+  await expect(menu.getByRole('menuitemradio', { name: 'Todas' })).toHaveAttribute(
     'aria-checked',
     'true',
   );
   await menu.getByRole('menuitemradio', { name: EAST_PARCEL_ID }).click();
   await expect(menu).toBeHidden();
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
-  await expect(westTab).not.toHaveAttribute('aria-current', 'true');
+  await expect(allTab).not.toHaveAttribute('aria-current', 'true');
   await expect(card).toContainText('Bajo');
 
-  // The mini map paints the open tab's parcel only. The two stubbed parcels split the
-  // framed area down the middle; the frame is fitted to the parcels, which are taller
-  // than wide, so they fill the canvas height and sit centred horizontally — a click a
-  // little left of centre lands on the west one and opens its tab, a little right, the
-  // east one. Switching tabs never re-runs the analysis — the cards come from the answer
-  // already in hand.
+  // Back to Todas from the strip: both parcels paint again, the frame fits them both.
+  // The two stubbed parcels split the drawn bbox down the middle and are taller than
+  // wide, so fitted they fill the canvas height and sit centred horizontally.
+  await allTab.click();
+  await expect(card).toContainText('Medio');
   const canvas = mapCanvas(page);
   await expect(canvas).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
-  const oneParcelArea = await yellowPixelCount(page);
+  await page.waitForTimeout(FIT_ANIMATION);
+  const bothArea = await yellowPixelCount(page);
   const box = await canvas.boundingBox();
   if (!box) throw new Error('Mini map canvas has no bounding box');
   const centre = { x: box.width / 2, y: box.height / 2 };
   const offset = box.height * 0.15;
 
+  // A click a little left of centre lands on the west parcel: its tab opens, only it
+  // paints, and the frame fits it — narrower than both, so less yellow on screen.
   await canvas.click({ position: { x: centre.x - offset, y: centre.y } });
   await expect(westTab).toHaveAttribute('aria-current', 'true');
   await expect(card).toContainText('Alto');
+  await page.waitForTimeout(FIT_ANIMATION);
+  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
 
+  // With the west parcel centred, the east one sits right of it: a click there opens
+  // its tab. Switching tabs never re-runs the analysis — the cards come from the answer
+  // already in hand.
   await canvas.click({ position: { x: centre.x + offset, y: centre.y } });
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
   await expect(card).toContainText('Bajo');
-
-  // Still one parcel highlighted, not both.
-  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(oneParcelArea * 1.5);
   expect(analysisRuns).toHaveLength(1);
 });
 

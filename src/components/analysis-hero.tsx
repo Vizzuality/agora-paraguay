@@ -166,15 +166,21 @@ function MiniMapThumbnail() {
  * A fieldset names the group; its legend, absolutely positioned, stops being a "rendered
  * legend" and becomes the same border chip the floating labels use.
  *
- * Three ways to open a tab: clicking it, picking it in the list dropdown, or clicking
- * its parcel on the mini map (`selectAnalysedParcelAtom`). The last two may target a tab
- * out of view, so the strip scrolls to bring it to the leading edge; a direct click never
- * scrolls, since the tab is already under the pointer.
+ * Todas — the whole selection — comes first, then one tab per analysed parcel. Three ways
+ * to open a tab: clicking it, picking it in the list dropdown, or clicking its parcel on
+ * the mini map (`selectAnalysedParcelAtom`). The last two may target a tab out of view, so
+ * the strip scrolls to bring it to the leading edge; a direct click never scrolls, since
+ * the tab is already under the pointer.
  */
+const ALL_TAB = 'Todas';
+
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   const activeId = useAtomValue(activeParcelIdAtom);
-  const setActiveIndex = useSetAtom(activeParcelTabAtom);
-  const activeIndex = Math.max(parcels.indexOf(activeId ?? ''), 0);
+  const setActiveTab = useSetAtom(activeParcelTabAtom);
+  const tabs = [ALL_TAB, ...parcels];
+  // Index 0 is Todas (`activeId === null`); a parcel's index is its position plus one.
+  const activeIndex = activeId === null ? 0 : parcels.indexOf(activeId) + 1;
+  const setActiveIndex = (index: number) => setActiveTab(index === 0 ? null : parcels[index - 1]);
 
   const stripRef = useRef<HTMLDivElement>(null);
   // Where the strip is heading while a smooth scroll is in flight, so a second arrow
@@ -246,8 +252,8 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         <ScrollArea viewportRef={stripRef}>
           {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
           <ul className="flex gap-5 px-4">
-            {parcels.map((parcel, index) => (
-              <li key={parcel} className="shrink-0">
+            {tabs.map((tab, index) => (
+              <li key={tab} className="shrink-0">
                 <button
                   type="button"
                   aria-current={index === activeIndex || undefined}
@@ -262,7 +268,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
                       : 'text-accent-foreground',
                   )}
                 >
-                  {parcel}
+                  {tab}
                 </button>
               </li>
             ))}
@@ -308,9 +314,9 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
             value={String(activeIndex)}
             onValueChange={(value) => setActiveIndex(Number(value))}
           >
-            {parcels.map((parcel, index) => (
-              <DropdownMenuRadioItem key={parcel} value={String(index)}>
-                {parcel}
+            {tabs.map((tab, index) => (
+              <DropdownMenuRadioItem key={tab} value={String(index)}>
+                {tab}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
