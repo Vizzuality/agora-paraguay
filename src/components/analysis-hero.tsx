@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { ArrowLeft, ArrowRight, List } from 'lucide-react';
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   FLOATING_CHIP_CLASS,
   FLOATING_FIELD_CLASS,
@@ -22,13 +29,19 @@ import { resolveFilterSelection } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
   scrollEdges,
+  scrollLeftForTab,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
 import { visibilityOf } from '@/lib/analysis/request';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import { activeParcelTabAtom, analysisFiltersAtom, setAnalysisFilterAtom } from '@/store/analysis';
+import {
+  activeParcelIdAtom,
+  activeParcelTabAtom,
+  analysisFiltersAtom,
+  setAnalysisFilterAtom,
+} from '@/store/analysis';
 
 /**
  * The analysed parcels as tabs, and the filters the API offers for that side of the
@@ -152,17 +165,46 @@ function MiniMapThumbnail() {
  * Not Radix Tabs on purpose: `role="tab"` requires tab panels this page does not have.
  * A fieldset names the group; its legend, absolutely positioned, stops being a "rendered
  * legend" and becomes the same border chip the floating labels use.
+ *
+ * Todas — the whole selection — comes first, then one tab per analysed parcel. Three ways
+ * to open a tab: clicking it, picking it in the list dropdown, or clicking its parcel on
+ * the mini map (`selectAnalysedParcelAtom`). The last two may target a tab out of view, so
+ * the strip scrolls to bring it to the leading edge; a direct click never scrolls, since
+ * the tab is already under the pointer.
  */
+const ALL_TAB = 'Todas';
+
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
-  const [storedIndex, setActiveIndex] = useAtom(activeParcelTabAtom);
-  // Re-analysing a smaller selection can leave a stale index behind: clamp to the first.
-  const activeIndex = storedIndex < parcels.length ? storedIndex : 0;
+  const activeId = useAtomValue(activeParcelIdAtom);
+  const setActiveTab = useSetAtom(activeParcelTabAtom);
+  const tabs = [ALL_TAB, ...parcels];
+  // Index 0 is Todas (`activeId === null`); a parcel's index is its position plus one.
+  const activeIndex = activeId === null ? 0 : parcels.indexOf(activeId) + 1;
+  const setActiveIndex = (index: number) => setActiveTab(index === 0 ? null : parcels[index - 1]);
 
   const stripRef = useRef<HTMLDivElement>(null);
   // Where the strip is heading while a smooth scroll is in flight, so a second arrow
   // press builds on it instead of on the half-way `scrollLeft`.
   const pendingLeft = useRef<number | null>(null);
+  // Raised by a click on a tab, so the scroll-to-tab effect below lets that one pass.
+  const skipScroll = useRef(false);
   const [{ atStart, atEnd }, setEdges] = useState({ atStart: true, atEnd: true });
+
+  useEffect(() => {
+    if (skipScroll.current) {
+      skipScroll.current = false;
+      return;
+    }
+
+    const strip = stripRef.current;
+    const tab = strip?.querySelectorAll('li')[activeIndex];
+    if (!strip || !tab) return;
+
+    const gutter = parseFloat(getComputedStyle(tab.parentElement as HTMLElement).paddingLeft) || 0;
+    const left = scrollLeftForTab(tab.offsetLeft, strip, gutter);
+    pendingLeft.current = left;
+    strip.scrollTo({ left, behavior: 'smooth' });
+  }, [activeIndex]);
 
   // Edge state feeds the arrows' `disabled`: recomputed on scroll, resize and tab changes.
   // Layout effect so the first paint already has the right arrow enabled (client-only tree).
@@ -210,12 +252,15 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         <ScrollArea viewportRef={stripRef}>
           {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
           <ul className="flex gap-5 px-4">
-            {parcels.map((parcel, index) => (
-              <li key={parcel} className="shrink-0">
+            {tabs.map((tab, index) => (
+              <li key={tab} className="shrink-0">
                 <button
                   type="button"
                   aria-current={index === activeIndex || undefined}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => {
+                    skipScroll.current = index !== activeIndex;
+                    setActiveIndex(index);
+                  }}
                   className={cn(
                     'cursor-pointer py-2 text-sm whitespace-nowrap',
                     index === activeIndex
@@ -223,7 +268,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
                       : 'text-accent-foreground',
                   )}
                 >
-                  {parcel}
+                  {tab}
                 </button>
               </li>
             ))}
@@ -251,15 +296,32 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
       >
         <ArrowLeft />
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="Ver lista de parcelas"
-        className="size-8 rounded-full"
-      >
-        <List />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Ver lista de parcelas"
+            className="size-8 rounded-full"
+          >
+            <List />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {/* Radio items: the open tab is marked, and the menu reads as a single choice. */}
+          <DropdownMenuRadioGroup
+            value={String(activeIndex)}
+            onValueChange={(value) => setActiveIndex(Number(value))}
+          >
+            {tabs.map((tab, index) => (
+              <DropdownMenuRadioItem key={tab} value={String(index)}>
+                {tab}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Button
         type="button"
         variant="ghost"

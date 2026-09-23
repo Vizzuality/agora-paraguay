@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
-import { stubAnalysisApi } from './fixtures/api';
+import { EAST_PARCEL_ID, stubAnalysisApi, WEST_PARCEL_ID } from './fixtures/api';
 import { mapCanvas, stubBasemap } from './fixtures/map';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
@@ -74,7 +74,7 @@ test('Reiniciar clears an upload so the next one starts fresh', async ({ page })
   // Only the last upload made it: the status above counted its 2 areas, not 5, and the
   // analysis went through. The hero tabs are the analysed parcels, not the areas.
   const parcels = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(parcels).toHaveText(['D07D21P00000002']);
+  await expect(parcels).toHaveText(['Todas', WEST_PARCEL_ID, EAST_PARCEL_ID]);
 });
 
 test('imports a KMZ with names from the KML inside', async ({ page }) => {
@@ -119,7 +119,7 @@ test('accepted upload polygons can be analysed', async ({ page }) => {
 
   // The hero tabs are the parcels the (stubbed) analysis answered, by cadastral id.
   const parcels = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(parcels).toHaveText(['D07D21P00000002']);
+  await expect(parcels).toHaveText(['Todas', WEST_PARCEL_ID, EAST_PARCEL_ID]);
 });
 
 // The copy borrows the no-intersection toast until the real intersection check.

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { stubAnalysisApi } from './fixtures/api';
+import { EAST_PARCEL_ID, stubAnalysisApi, WEST_PARCEL_ID } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 
@@ -11,6 +11,9 @@ const FIRST_POLYGON = [
   { x: 360, y: 250 },
   { x: 360, y: 350 },
 ];
+
+/** MapLibre's default `fitBounds` ease, with slack: clicks mid-flight hit the wrong spot. */
+const FIT_ANIMATION = 800;
 
 function controls(page: Page) {
   return {
@@ -104,18 +107,20 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
   await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
 
-  // One hero tab per parcel the (stubbed) analysis answered, labelled by its id.
+  // Todas first, then one hero tab per parcel the (stubbed) analysis answered, labelled
+  // by its id; the page lands on Todas.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['D07D21P00000002']);
+  await expect(areas).toHaveText(['Todas', WEST_PARCEL_ID, EAST_PARCEL_ID]);
+  await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
-  // The active parcel's disease index sits at the top of its 1–3 range: a risk class
-  // card with the class as its figure and the measured value as caption.
+  // Under Todas the risk card combines the parcels: disease indices 3 and 1 average to
+  // 2, the middle of the 1–3 range — the class as figure, the combined value as caption.
   const card = page
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
     .locator('..');
-  await expect(card).toContainText('Alto');
-  await expect(card).toContainText('3');
+  await expect(card).toContainText('Medio');
+  await expect(card).toContainText('2');
 
   // Its text facts (crop, station, phenology) share one general-info card instead.
   const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
@@ -194,6 +199,88 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect
     .poll(() => yellowPixelCount(page), { timeout: 10_000 })
     .toBeGreaterThan(parcelsArea * 0.8);
+});
+
+test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  const analysisRuns: string[] = [];
+  page.on('request', (request) => {
+    const { pathname } = new URL(request.url());
+    if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
+      const body = request.postDataJSON() as { indicators?: string[] };
+      if (body.indicators !== undefined) analysisRuns.push(pathname);
+    }
+  });
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  const allTab = tabs.filter({ hasText: 'Todas' }).getByRole('button');
+  const westTab = tabs.filter({ hasText: WEST_PARCEL_ID }).getByRole('button');
+  const eastTab = tabs.filter({ hasText: EAST_PARCEL_ID }).getByRole('button');
+  const card = page
+    .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
+    .locator('..')
+    .locator('..');
+
+  // Lands on Todas: the combined index (3 and 1 → 2) reads "Medio".
+  await expect(allTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Medio');
+  await expect.poll(() => analysisRuns.length).toBe(1);
+
+  // The list button opens a single-choice menu — Todas, then the analysed parcels — with
+  // the open one marked. Picking a parcel opens its tab and swaps the cards to its values.
+  await page.getByRole('button', { name: 'Ver lista de parcelas' }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitemradio')).toHaveText([
+    'Todas',
+    WEST_PARCEL_ID,
+    EAST_PARCEL_ID,
+  ]);
+  await expect(menu.getByRole('menuitemradio', { name: 'Todas' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await menu.getByRole('menuitemradio', { name: EAST_PARCEL_ID }).click();
+  await expect(menu).toBeHidden();
+  await expect(eastTab).toHaveAttribute('aria-current', 'true');
+  await expect(allTab).not.toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Bajo');
+
+  // Back to Todas from the strip: both parcels paint again, the frame fits them both.
+  // The two stubbed parcels split the drawn bbox down the middle and are taller than
+  // wide, so fitted they fill the canvas height and sit centred horizontally.
+  await allTab.click();
+  await expect(card).toContainText('Medio');
+  const canvas = mapCanvas(page);
+  await expect(canvas).toBeVisible();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  await page.waitForTimeout(FIT_ANIMATION);
+  const bothArea = await yellowPixelCount(page);
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Mini map canvas has no bounding box');
+  const centre = { x: box.width / 2, y: box.height / 2 };
+  const offset = box.height * 0.15;
+
+  // A click a little left of centre lands on the west parcel: its tab opens, only it
+  // paints, and the frame fits it — narrower than both, so less yellow on screen.
+  await canvas.click({ position: { x: centre.x - offset, y: centre.y } });
+  await expect(westTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Alto');
+  await page.waitForTimeout(FIT_ANIMATION);
+  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
+
+  // With the west parcel centred, the east one sits right of it: a click there opens
+  // its tab. Switching tabs never re-runs the analysis — the cards come from the answer
+  // already in hand.
+  await canvas.click({ position: { x: centre.x + offset, y: centre.y } });
+  await expect(eastTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Bajo');
+  expect(analysisRuns).toHaveLength(1);
 });
 
 test('swaps the login card for the reset-password card and back', async ({ page }) => {

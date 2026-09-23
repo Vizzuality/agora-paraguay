@@ -10,12 +10,88 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
  * From one analysed parcel to what its `RiskClassCard`s show. Pure, node-tested. The
  * response is one entry per parcel with the indicators as property columns; the names,
  * scales and class labels come from the indicator list (`metadataQueries.indicators`).
- * Cards are per parcel — the
- * hero's parcel tab picks which — never a summary over the set.
+ * Cards are per parcel — the hero's parcel tab picks which. The Todas tab shows the same
+ * cards over a synthetic parcel that combines the set (`combinedParcel`).
  *
  * Text indicators (station, crop, phenology) are not risks: they go together into the
  * general-info card (`generalInfo`), the measured ones into one risk card each.
  */
+
+/** The `parcel_id` of the parcel `combinedParcel` builds — never a cadastral id. */
+export const COMBINED_PARCEL_ID = 'todas';
+
+/**
+ * One parcel standing for the whole set, for the Todas tab: each column combined over the
+ * parcels that carry a reading for it. Range and open numbers average; a category is the
+ * most frequent one (first wins a tie); text lists the distinct values. Columns the
+ * metadata does not know follow the same rule by the shape of their values: numbers
+ * average, strings list. `null` for an empty set.
+ */
+export function combinedParcel(
+  parcels: AnalysisParcel[],
+  indicators: Indicators | undefined,
+): AnalysisParcel | null {
+  if (parcels.length === 0) return null;
+
+  const typeOf = new Map(
+    (indicators ?? []).map((indicator) => [
+      indicator.id.toLowerCase(),
+      indicator.indicator_type.type,
+    ]),
+  );
+  const columns = new Set(parcels.flatMap((parcel) => Object.keys(parcel.properties)));
+  const properties: Record<string, ParcelValue> = {};
+
+  for (const column of columns) {
+    const readings = parcels.flatMap((parcel) => {
+      const value = parcel.properties[column];
+
+      return value === null || value === undefined || value === '' || value === NOT_AVAILABLE
+        ? []
+        : [value];
+    });
+
+    if (readings.length === 0) continue;
+
+    properties[column] = combineReadings(readings, typeOf.get(column.toLowerCase()));
+  }
+
+  return { parcel_id: COMBINED_PARCEL_ID, properties };
+}
+
+function combineReadings(readings: (string | number)[], type: string | undefined): ParcelValue {
+  const numbers = readings.map(Number);
+  const numeric = numbers.every((number) => !Number.isNaN(number));
+
+  if (type === 'category' || type === 'text' || !numeric) {
+    return type === 'category' ? mostFrequent(readings) : distinctList(readings);
+  }
+
+  return numbers.reduce((sum, number) => sum + number, 0) / numbers.length;
+}
+
+function mostFrequent(readings: (string | number)[]): ParcelValue {
+  const counts = new Map<string, { value: string | number; count: number }>();
+
+  for (const value of readings) {
+    const key = String(value).trim().toLowerCase();
+    const entry = counts.get(key) ?? { value, count: 0 };
+    entry.count += 1;
+    counts.set(key, entry);
+  }
+
+  let best: { value: string | number; count: number } | undefined;
+
+  for (const entry of counts.values()) {
+    if (best === undefined || entry.count > best.count) best = entry;
+  }
+
+  return best?.value ?? null;
+}
+
+function distinctList(readings: (string | number)[]): string {
+  return [...new Set(readings.map((value) => String(value).trim()))].join(', ');
+}
 
 export type IndicatorCard = {
   id: string;

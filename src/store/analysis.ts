@@ -52,8 +52,32 @@ export const analysedParcelIdsAtom = atom(
   },
 );
 
-/** The parcel tab open on the analysis page — an index into `analysedParcelIdsAtom`. */
-export const activeParcelTabAtom = atom(0);
+/**
+ * The parcel tab open on the analysis page: one analysed parcel's id, or `null` for
+ * "Todas" — the whole selection, which is also where the page lands.
+ */
+export const activeParcelTabAtom = atom<string | null>(null);
+
+/**
+ * The analysed parcel the open tab points at, `null` for Todas. Re-analysing a smaller
+ * selection can leave a tab pointing at a parcel that is no longer analysed: that reads as
+ * Todas — the one fallback every reader (tabs, cards, mini map) shares.
+ */
+export const activeParcelIdAtom = atom((get) => {
+  const parcelId = get(activeParcelTabAtom);
+
+  return parcelId !== null && get(analysedParcelIdsBaseAtom).includes(parcelId) ? parcelId : null;
+});
+
+/**
+ * Opens the tab of one analysed parcel by id — what a click on the hero mini map does.
+ * An id outside the analysed list (a neighbouring parcel that was not selected) is
+ * ignored. Only the tab moves: the analysis request is keyed by the whole parcel list,
+ * filters and indicators, so no re-run follows.
+ */
+export const selectAnalysedParcelAtom = atom(null, (get, set, parcelId: string) => {
+  if (get(analysedParcelIdsBaseAtom).includes(parcelId)) set(activeParcelTabAtom, parcelId);
+});
 
 /**
  * The hero dropdown selection, keyed by the API's filter id. One selection for the whole

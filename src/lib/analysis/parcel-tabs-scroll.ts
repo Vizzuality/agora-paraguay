@@ -25,5 +25,26 @@ export function nextScrollLeft(
 ): number {
   const step = clientWidth * 0.8;
   const target = direction === 'left' ? scrollLeft - step : scrollLeft + step;
+  return clampScrollLeft(target, { clientWidth, scrollWidth });
+}
+
+/**
+ * Where the strip should scroll so the tab at `tabLeft` (its `offsetLeft` inside the
+ * scroller) becomes the first visible one, sitting right after the strip's own leading
+ * gutter (`padding`). Near the end the strip cannot scroll that far, so the tab lands as
+ * far left as the content allows.
+ */
+export function scrollLeftForTab(
+  tabLeft: number,
+  { clientWidth, scrollWidth }: Omit<ScrollMetrics, 'scrollLeft'>,
+  padding = 0,
+): number {
+  return clampScrollLeft(tabLeft - padding, { clientWidth, scrollWidth });
+}
+
+function clampScrollLeft(
+  target: number,
+  { clientWidth, scrollWidth }: Omit<ScrollMetrics, 'scrollLeft'>,
+): number {
   return Math.min(Math.max(target, 0), Math.max(scrollWidth - clientWidth, 0));
 }

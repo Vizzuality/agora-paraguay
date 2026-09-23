@@ -22,17 +22,29 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  * `useHideDrawingBehindParcels`, a Terra Draw side effect mounted from `DrawLayer`.
  * Shared by the main map and the hero mini map; the main map mounts it only once Terra
  * Draw is bound (see `MapView`), the mini map has no Terra Draw and mounts it outright.
+ *
+ * Which parcels paint yellow: the selection after the user's flips by default (the main
+ * map), or exactly `highlightedIds` when given (the mini map passes the active tab's
+ * parcel, so the hero shows one parcel at a time).
  */
-export function FilteredParcelsLayer() {
+export function FilteredParcelsLayer({ highlightedIds }: Readonly<{ highlightedIds?: string[] }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
 
   if (!data) return null;
 
+  const parcels =
+    highlightedIds === undefined
+      ? applyToggles(data.results, toggled)
+      : data.results.map((parcel) => ({
+          ...parcel,
+          selected: highlightedIds.includes(parcel.parcel_id),
+        }));
+
   // Every parcel's FeatureCollection flattened into one source, the flag and id set as
   // the feature properties so the paint expressions can read them.
-  const features = applyToggles(data.results, toggled).flatMap((parcel) =>
+  const features = parcels.flatMap((parcel) =>
     parcel.geometry.features.map((feature) => ({
       type: 'Feature' as const,
       geometry: feature.geometry,

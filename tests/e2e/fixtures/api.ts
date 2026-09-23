@@ -47,6 +47,10 @@ export const SANITARIO_INDICATORS = [
   },
 ];
 
+/** The two parcels `filter-parcels` answers for any drawing: west half, east half. */
+export const WEST_PARCEL_ID = 'D07D21P00000002';
+export const EAST_PARCEL_ID = 'D07D23P00000008';
+
 export const PRODUCTIVO_INDICATORS = [
   {
     id: 'Pro_soja',
@@ -80,9 +84,10 @@ export async function stubAnalysisApi(page: Page) {
   await page.route(
     (url) => url.pathname === '/api/parcels/filter-parcels/',
     (route) => {
-      // One selected parcel with real-shaped geometry (a MultiPolygon): the bounding box
-      // of the first drawn polygon, grown a little, so it paints where the drawing is and
-      // the camera fly to the areas keeps it in frame.
+      // Two selected parcels with real-shaped geometry (MultiPolygons): the bounding box
+      // of the first drawn polygon, grown a little, split down the middle into a west and
+      // an east half. They paint where the drawing is, the camera fly to the areas keeps
+      // them in frame, and the analysis page has two tabs to switch between.
       const body = route.request().postDataJSON() as {
         filtering_polygons: { features: { geometry: { coordinates: number[][][] } }[] };
       };
@@ -94,6 +99,35 @@ export async function stubAnalysisApi(page: Page) {
       const east = Math.max(...lngs) + pad;
       const south = Math.min(...lats) - pad;
       const north = Math.max(...lats) + pad;
+      const middle = (west + east) / 2;
+
+      const parcel = (parcelId: string, left: number, right: number) => ({
+        parcel_id: parcelId,
+        geometry: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'MultiPolygon',
+                coordinates: [
+                  [
+                    [
+                      [left, south],
+                      [right, south],
+                      [right, north],
+                      [left, north],
+                      [left, south],
+                    ],
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+        selected: true,
+      });
 
       return route.fulfill({
         contentType: 'application/json',
@@ -101,35 +135,7 @@ export async function stubAnalysisApi(page: Page) {
           status: 'success',
           message: '',
           input: { features: [] },
-          results: [
-            {
-              parcel_id: 'D07D21P00000002',
-              geometry: {
-                type: 'FeatureCollection',
-                features: [
-                  {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                      type: 'MultiPolygon',
-                      coordinates: [
-                        [
-                          [
-                            [west, south],
-                            [east, south],
-                            [east, north],
-                            [west, north],
-                            [west, south],
-                          ],
-                        ],
-                      ],
-                    },
-                  },
-                ],
-              },
-              selected: true,
-            },
-          ],
+          results: [parcel(WEST_PARCEL_ID, west, middle), parcel(EAST_PARCEL_ID, middle, east)],
         }),
       });
     },
@@ -155,16 +161,24 @@ export async function stubAnalysisApi(page: Page) {
         });
       }
 
-      // One parcel, answered with the columns the request asked for and nothing else, the
-      // way the backend does: the disease index sits at the top of its 1–3 range, so the
-      // card reads "Alto" over "3". Column casing as the backend writes it (`Asian_rust`).
+      // Both parcels, answered with the columns the request asked for and nothing else,
+      // the way the backend does. The west parcel's disease index sits at the top of its
+      // 1–3 range (card reads "Alto" over "3"), the east one's at the bottom ("Bajo"), so
+      // the specs can tell which tab is open. Column casing as the backend writes it
+      // (`Asian_rust`).
       const { indicators } = body;
-      const columns: Record<string, string | number> = { crop_type: 'Soja', Asian_rust: 3 };
-      const properties = Object.fromEntries(
-        Object.entries(columns).filter(([column]) =>
-          indicators.some((id) => id.toLowerCase() === column.toLowerCase()),
-        ),
-      );
+      const answer = (parcelId: string, rust: number) => {
+        const columns: Record<string, string | number> = { crop_type: 'Soja', Asian_rust: rust };
+
+        return {
+          parcel_id: parcelId,
+          properties: Object.fromEntries(
+            Object.entries(columns).filter(([column]) =>
+              indicators.some((id) => id.toLowerCase() === column.toLowerCase()),
+            ),
+          ),
+        };
+      };
 
       return route.fulfill({
         contentType: 'application/json',
@@ -172,7 +186,7 @@ export async function stubAnalysisApi(page: Page) {
           status: 'success',
           message: '',
           input: {},
-          indicators: [{ parcel_id: 'D07D21P00000002', properties }],
+          indicators: [answer(WEST_PARCEL_ID, 3), answer(EAST_PARCEL_ID, 1)],
         }),
       });
     },
