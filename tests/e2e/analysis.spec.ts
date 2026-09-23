@@ -164,6 +164,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByLabel('Usuario')).toBeVisible();
   await expect(page.getByLabel('Contraseña')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
 
   // Back on the public tab the gate goes away again.
   await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
@@ -226,6 +227,9 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page).toHaveURL(/riesgo=productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+
+  await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Generar resumen' })).toBeVisible();
 
   // While the session is active the user button is a no-op.
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
