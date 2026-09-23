@@ -2,9 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
 import { useId } from 'react';
 
+import { AuthCard, AuthLinkButton } from '@/components/auth/auth-card';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
   CardContent,
   CardDescription,
   CardFooter,
@@ -15,7 +15,6 @@ import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-la
 import { Input } from '@/components/ui/input';
 import { LoginError } from '@/lib/api/auth/client';
 import { authMutations } from '@/lib/api/auth/queries';
-import { cn } from '@/lib/utils';
 import { sessionAtom } from '@/store/auth';
 
 /**
@@ -24,11 +23,15 @@ import { sessionAtom } from '@/store/auth';
  * which the browser sends on its own but scripts cannot read, so the atom is the UI's
  * only record of who is signed in: the header dialog and the riesgo productivo tab
  * read it to swap the login gate for the identified state.
+ *
+ * "Restablecer contraseña" only reports up (`onReset`): the host decides how to show
+ * `ResetPasswordCard` — the gate swaps cards, the header popover swaps its content.
  */
 export function LoginCard({
   className,
   onSuccess,
-}: Readonly<{ className?: string; onSuccess?: () => void }>) {
+  onReset,
+}: Readonly<{ className?: string; onSuccess?: () => void; onReset: () => void }>) {
   const setSession = useSetAtom(sessionAtom);
 
   const fieldId = useId();
@@ -43,9 +46,7 @@ export function LoginCard({
   });
 
   return (
-    <Card
-      className={cn('w-[411px] shrink-0 gap-0 rounded-3xl border-0 py-0 shadow-none', className)}
-    >
+    <AuthCard className={className}>
       <form
         className="flex flex-col gap-6 py-10"
         onSubmit={(event) => {
@@ -129,8 +130,13 @@ export function LoginCard({
             sistema. Recargar la página, abrir una pestaña nueva o cerrar sesión obliga a repetir el
             análisis.
           </p>
+
+          <p className="w-full text-sm text-muted-foreground">
+            ¿Olvidó su contraseña?{' '}
+            <AuthLinkButton onClick={onReset}>Restablecer contraseña</AuthLinkButton>
+          </p>
         </CardFooter>
       </form>
-    </Card>
+    </AuthCard>
   );
 }

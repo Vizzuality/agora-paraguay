@@ -2,7 +2,9 @@ import { useAtomValue } from 'jotai';
 import { User } from 'lucide-react';
 import { useState } from 'react';
 
-import { LoginCard } from '@/components/login-card';
+import { LoginCard } from '@/components/auth/login-card';
+import type { AuthView } from '@/components/auth/login-gate';
+import { ResetPasswordCard } from '@/components/auth/reset-password-card';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { sessionAtom } from '@/store/auth';
@@ -23,14 +25,18 @@ export function UserButton(props: React.ComponentProps<typeof Button>) {
 export function LoginDialog() {
   const session = useAtomValue(sessionAtom);
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<AuthView>('login');
 
   return (
-    // Gating `open` on the session makes the logged-in button a no-op and closes the
-    // dialog the moment any login succeeds (e.g. through the in-page gate).
-    // A popover, not a centered dialog, so the card anchors to the button (right
-    // edges aligned, 20px below); `modal` plus the backdrop div make it behave like
-    // one — dimmed page, no interaction behind.
-    <Popover modal open={session ? false : open} onOpenChange={setOpen}>
+    <Popover
+      modal
+      open={session ? false : open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        // Reopening always starts at the login form.
+        if (!next) setView('login');
+      }}
+    >
       <PopoverTrigger asChild>
         <UserButton />
       </PopoverTrigger>
@@ -44,7 +50,15 @@ export function LoginDialog() {
         aria-label="Iniciar sesión"
         className="w-[411px] rounded-3xl border-0 p-0 shadow-lg"
       >
-        <LoginCard className="w-full" onSuccess={() => setOpen(false)} />
+        {view === 'login' ? (
+          <LoginCard
+            className="w-full"
+            onSuccess={() => setOpen(false)}
+            onReset={() => setView('reset')}
+          />
+        ) : (
+          <ResetPasswordCard className="w-full" onBackToLogin={() => setView('login')} />
+        )}
       </PopoverContent>
     </Popover>
   );
