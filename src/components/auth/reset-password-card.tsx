@@ -1,6 +1,7 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 
 import { AuthCard, AuthLinkButton } from '@/components/auth/auth-card';
+import { RequestSentCard } from '@/components/auth/request-sent-card';
 import { Button } from '@/components/ui/button';
 import {
   CardContent,
@@ -11,24 +12,51 @@ import {
 } from '@/components/ui/card';
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
+import { resetRequestMailto } from '@/lib/auth/reset-request';
 
 /**
  * The reset-password card (Figma 5596:1619): an email and a Solicitar button. Shown in
  * place of `LoginCard` by whoever hosts it (`LoginGate`, `LoginDialog`).
  *
- * TODO(auth-reset-request): Solicitar posts nothing yet. The API has no request-reset
- * endpoint — `POST /api/auth/password/reset/` sets a password from a one-time link
- * (`setPassword`), and there is no mail. Wire the call in `auth/client.ts` once it exists.
+ * There is no request-reset endpoint and no mail server, so Solicitar opens the user's
+ * mail client addressed to the admin (`resetRequestMailto`) and the card turns into the
+ * confirmation (`RequestSentCard`).
  */
 export function ResetPasswordCard({
   className,
   onBackToLogin,
 }: Readonly<{ className?: string; onBackToLogin: () => void }>) {
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const fieldId = useId();
+
+  if (sentTo !== null) {
+    return (
+      <RequestSentCard
+        className={className}
+        email={sentTo}
+        onLogin={onBackToLogin}
+        onRetry={() => setSentTo(null)}
+      />
+    );
+  }
 
   return (
     <AuthCard className={className}>
-      <form className="flex flex-col gap-6 py-10" onSubmit={(event) => event.preventDefault()}>
+      <form
+        className="flex flex-col gap-6 py-10"
+        onSubmit={(event) => {
+          event.preventDefault();
+
+          const email = new FormData(event.currentTarget).get('email');
+
+          if (typeof email !== 'string') return;
+
+          // `assign`, not `open`: a mailto never replaces the page, it hands off to the
+          // mail client and leaves the tab where it is.
+          window.location.assign(resetRequestMailto(email));
+          setSentTo(email);
+        }}
+      >
         <CardHeader className="gap-1.5 px-10">
           <CardTitle className="text-4xl font-semibold tracking-[-0.015em]">
             <h2>Restablecer contraseña</h2>

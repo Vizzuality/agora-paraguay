@@ -212,6 +212,18 @@ test('swaps the login card for the reset-password card and back', async ({ page 
   await expect(page.getByRole('button', { name: 'Solicitar' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Acceder' })).toBeHidden();
 
+  // Solicitar hands off to the mail client (a mailto, which leaves the tab in place)
+  // and turns the card into the confirmation naming the email.
+  await page.getByLabel('Email').fill('ana@example.org');
+  await page.getByRole('button', { name: 'Solicitar' }).click();
+  await expect(page.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
+  await expect(page.getByText('Si la dirección ana@example.org está registrada')).toBeVisible();
+  await expect(page).toHaveURL(/riesgo=productivo/);
+
+  // "Enviar otra solicitud" returns to the form…
+  await page.getByRole('button', { name: 'Enviar otra solicitud' }).click();
+  await expect(page.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
+
   // …and its link brings the login card back.
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
