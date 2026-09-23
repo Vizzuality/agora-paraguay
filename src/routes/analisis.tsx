@@ -9,10 +9,10 @@ import { Upload } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
 
 import { AnalysisHero } from '@/components/analysis-hero';
+import { LoginGate } from '@/components/auth/login-gate';
 import { Footer } from '@/components/footer';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { IndicatorPicker } from '@/components/indicator-picker';
-import { LoginCard } from '@/components/login-card';
 import { RiskClassCard } from '@/components/risk-class-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
@@ -153,23 +153,6 @@ function ProductivoGate() {
   );
 }
 
-/** The private-content gate: empty widget frames around the login card. */
-function LoginGate() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-stretch gap-4">
-        <WidgetPlaceholder />
-        <LoginCard />
-        <WidgetPlaceholder />
-      </div>
-      <div className="flex h-28 gap-4">
-        <WidgetPlaceholder />
-        <WidgetPlaceholder />
-      </div>
-    </div>
-  );
-}
-
 /**
  * Riesgo sanitario: the active parcel tab's indicators — its text facts in the
  * general-info card, then one risk card per selected measured indicator. Cards are per
@@ -225,11 +208,6 @@ function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">{children}</div>
   );
-}
-
-/** Empty widget frame behind the login gate (Figma 5180:11125). */
-function WidgetPlaceholder() {
-  return <div aria-hidden className="min-w-50 flex-1 rounded-3xl border-3 border-border" />;
 }
 
 /**

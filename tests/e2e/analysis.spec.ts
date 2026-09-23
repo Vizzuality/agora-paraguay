@@ -196,6 +196,28 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     .toBeGreaterThan(parcelsArea * 0.8);
 });
 
+test('swaps the login card for the reset-password card and back', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await page.getByRole('banner').getByRole('link', { name: 'Riesgo productivo' }).click();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+
+  // The reset card (Figma node 5596:1619) takes the login card's slot in the gate.
+  await page.getByRole('button', { name: 'Restablecer contraseña' }).click();
+  await expect(page.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
+  await expect(page.getByLabel('Email')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Solicitar' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Acceder' })).toBeHidden();
+
+  // …and its link brings the login card back.
+  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+  await expect(page.getByLabel('Usuario')).toBeVisible();
+});
+
 test('logs in from the header dialog', async ({ page }) => {
   const { draw, analyze } = controls(page);
 
@@ -211,6 +233,16 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(dialog).toBeVisible();
 
   // Escape dismisses it without logging in.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+
+  // The popover swaps to the reset card too, and reopens on the login form.
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await dialog.getByRole('button', { name: 'Restablecer contraseña' }).click();
+  await expect(dialog.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(dialog.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 
