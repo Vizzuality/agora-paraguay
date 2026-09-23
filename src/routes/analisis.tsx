@@ -22,7 +22,7 @@ import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
 import {
-  activeParcelTabAtom,
+  activeParcelIdAtom,
   analysedParcelIdsAtom,
   selectedIndicatorIdsAtom,
 } from '@/store/analysis';
@@ -156,19 +156,16 @@ function ProductivoGate() {
 /**
  * Riesgo sanitario: the active parcel tab's indicators — its text facts in the
  * general-info card, then one risk card per selected measured indicator. Cards are per
- * parcel, never a summary of the selection. The tab index points into the submitted
- * parcels, the same list the hero's tabs are built from (`SelectionHero`); the answer is
- * matched by id, since the backend need not echo the parcels in request order. Changing
- * the picker or the hero filters re-runs the analysis (`useAnalysis`); the previous cards
- * stay until the new answer lands.
+ * parcel, never a summary of the selection. The active parcel is the hero's open tab
+ * (`activeParcelIdAtom`); the answer is matched by id, since the backend need not echo
+ * the parcels in request order. Changing the picker or the hero filters re-runs the
+ * analysis (`useAnalysis`); the previous cards stay until the new answer lands.
  */
 function SanitarioWidgets() {
-  const { analysis, indicators, parcelIds } = useAnalysis('sanitario');
-  const activeTab = useAtomValue(activeParcelTabAtom);
+  const { analysis, indicators } = useAnalysis('sanitario');
+  const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
-  // Same clamp as the hero's tabs: a shrunken selection falls back to the first parcel.
-  const activeId = parcelIds[activeTab < parcelIds.length ? activeTab : 0];
   const parcel = analysis.data?.indicators.find((entry) => String(entry.parcel_id) === activeId);
   // General info is always on; the cards are the selected measured indicators (the API's
   // defaults until the user touches Personalizar indicadores).

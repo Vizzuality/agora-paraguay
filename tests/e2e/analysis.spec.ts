@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { stubAnalysisApi } from './fixtures/api';
+import { EAST_PARCEL_ID, stubAnalysisApi, WEST_PARCEL_ID } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 
@@ -104,9 +104,11 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
   await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
 
-  // One hero tab per parcel the (stubbed) analysis answered, labelled by its id.
+  // One hero tab per parcel the (stubbed) analysis answered, labelled by its id; the
+  // first one is open.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['D07D21P00000002']);
+  await expect(areas).toHaveText([WEST_PARCEL_ID, EAST_PARCEL_ID]);
+  await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
   // The active parcel's disease index sits at the top of its 1–3 range: a risk class
   // card with the class as its figure and the measured value as caption.
@@ -194,6 +196,79 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect
     .poll(() => yellowPixelCount(page), { timeout: 10_000 })
     .toBeGreaterThan(parcelsArea * 0.8);
+});
+
+test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  const analysisRuns: string[] = [];
+  page.on('request', (request) => {
+    const { pathname } = new URL(request.url());
+    if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
+      const body = request.postDataJSON() as { indicators?: string[] };
+      if (body.indicators !== undefined) analysisRuns.push(pathname);
+    }
+  });
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  const westTab = tabs.filter({ hasText: WEST_PARCEL_ID }).getByRole('button');
+  const eastTab = tabs.filter({ hasText: EAST_PARCEL_ID }).getByRole('button');
+  const card = page
+    .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
+    .locator('..')
+    .locator('..');
+
+  // Lands on the first parcel: its high index reads "Alto".
+  await expect(westTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Alto');
+  await expect.poll(() => analysisRuns.length).toBe(1);
+
+  // The list button opens a single-choice menu of the analysed parcels, the open one
+  // marked. Picking the other one opens its tab and swaps the cards to its values.
+  await page.getByRole('button', { name: 'Ver lista de parcelas' }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitemradio')).toHaveText([WEST_PARCEL_ID, EAST_PARCEL_ID]);
+  await expect(menu.getByRole('menuitemradio', { name: WEST_PARCEL_ID })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await menu.getByRole('menuitemradio', { name: EAST_PARCEL_ID }).click();
+  await expect(menu).toBeHidden();
+  await expect(eastTab).toHaveAttribute('aria-current', 'true');
+  await expect(westTab).not.toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Bajo');
+
+  // The mini map paints the open tab's parcel only. The two stubbed parcels split the
+  // framed area down the middle; the frame is fitted to the parcels, which are taller
+  // than wide, so they fill the canvas height and sit centred horizontally — a click a
+  // little left of centre lands on the west one and opens its tab, a little right, the
+  // east one. Switching tabs never re-runs the analysis — the cards come from the answer
+  // already in hand.
+  const canvas = mapCanvas(page);
+  await expect(canvas).toBeVisible();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  const oneParcelArea = await yellowPixelCount(page);
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Mini map canvas has no bounding box');
+  const centre = { x: box.width / 2, y: box.height / 2 };
+  const offset = box.height * 0.15;
+
+  await canvas.click({ position: { x: centre.x - offset, y: centre.y } });
+  await expect(westTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Alto');
+
+  await canvas.click({ position: { x: centre.x + offset, y: centre.y } });
+  await expect(eastTab).toHaveAttribute('aria-current', 'true');
+  await expect(card).toContainText('Bajo');
+
+  // Still one parcel highlighted, not both.
+  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(oneParcelArea * 1.5);
+  expect(analysisRuns).toHaveLength(1);
 });
 
 test('swaps the login card for the reset-password card and back', async ({ page }) => {

@@ -56,6 +56,30 @@ export const analysedParcelIdsAtom = atom(
 export const activeParcelTabAtom = atom(0);
 
 /**
+ * The analysed parcel the open tab points at. Re-analysing a smaller selection can leave
+ * a stale index behind, so an out-of-range index falls back to the first parcel — the one
+ * clamp every reader (tabs, cards, mini map) shares. `undefined` while nothing is analysed.
+ */
+export const activeParcelIdAtom = atom((get) => {
+  const parcelIds = get(analysedParcelIdsBaseAtom);
+  const index = get(activeParcelTabAtom);
+
+  return parcelIds[index < parcelIds.length ? index : 0];
+});
+
+/**
+ * Opens the tab of one analysed parcel by id — what a click on the hero mini map does.
+ * An id outside the analysed list (a neighbouring parcel that was not selected) is
+ * ignored. Only the tab moves: the analysis request is keyed by the whole parcel list,
+ * filters and indicators, so no re-run follows.
+ */
+export const selectAnalysedParcelAtom = atom(null, (get, set, parcelId: string) => {
+  const index = get(analysedParcelIdsBaseAtom).indexOf(parcelId);
+
+  if (index !== -1) set(activeParcelTabAtom, index);
+});
+
+/**
  * The hero dropdown selection, keyed by the API's filter id. One selection for the whole
  * analysis, not one per parcel tab: the tab index is clamped when the selection shrinks,
  * so a per-index record would silently attach one parcel's choices to another. Revisit
