@@ -3,6 +3,7 @@ import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { MapView } from '@/components/map';
+import { ParcelsLoading } from '@/components/map/parcels-loading';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectionBlock, SelectionBlockLayout } from '@/components/sidebar/selection-block';
 import { backToSelectionAtom } from '@/store/mode';
@@ -26,6 +27,7 @@ function SelectionPage() {
             during SSR. The fallback keeps the layout stable while it loads. */}
         <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
           <MapView />
+          <ParcelsLoading />
         </ClientOnly>
       </div>
     </main>

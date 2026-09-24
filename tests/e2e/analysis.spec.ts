@@ -201,32 +201,32 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     .toBeGreaterThan(parcelsArea * 0.8);
 });
 
-test('veils the mini map with a spinner while the analysis runs', async ({ page }) => {
+test('veils the map with a spinner while the parcels are looked up', async ({ page }) => {
   const { draw, analyze } = controls(page);
 
-  // Registered after the stub, so it runs first: holds the analysis run (not the
-  // indicator list) long enough to see the spinner, then falls through to the stub.
+  // Registered after the stub, so it runs first: holds `filter-parcels` long enough to
+  // see the spinner, then falls through to the stub.
   await page.route(
-    (url) => url.pathname === '/api/parcels/analysis/diseases/',
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
     async (route) => {
-      const body = route.request().postDataJSON() as { indicators?: string[] };
-      if (body.indicators !== undefined) await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1500));
       await route.fallback();
     },
   );
 
+  // Nothing pending before an area exists.
+  // `<output>` is a status region; the role takes no name from its contents, so match text.
+  const spinner = page.getByRole('status').filter({ hasText: 'Buscando parcelas…' });
+  await expect(spinner).toBeHidden();
+
+  // The finished drawing fires the lookup: the spinner sits over the map until the
+  // parcels are in, then Analizar can go.
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
-  await analyze.click();
-  await expect(page).toHaveURL(/\/analisis/);
-
-  // The spinner sits over the mini map and goes away with the answer, when the cards
-  // appear.
-  // `<output>` is a status region; the role takes no name from its contents, so match text.
-  const spinner = page.getByRole('status').filter({ hasText: 'Analizando…' });
   await expect(spinner).toBeVisible();
   await expect(spinner).toBeHidden({ timeout: 10_000 });
-  await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeVisible();
+  await expect(analyze).toBeEnabled();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
 });
 
 test('Selección de parcelas starts a new selection with an empty map', async ({ page }) => {
