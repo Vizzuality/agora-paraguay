@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { SquarePen, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
@@ -22,7 +22,7 @@ export function AreaActions() {
   const draw = useAtomValue(drawAtom);
   const mode = useAtomValue(modeAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
-  const rejection = useAtomValue(areaRejectionAtom);
+  const [rejection, setRejection] = useAtom(areaRejectionAtom);
   const setTool = useSetAtom(setDrawToolAtom);
   const startDraw = useSetAtom(startDrawAtom);
   const uploadFeatures = useSetAtom(uploadFeaturesAtom);
@@ -67,7 +67,13 @@ export function AreaActions() {
         className={cn(
           (uploadResult?.error != null || rejection?.source === 'upload') && 'border-destructive',
         )}
-        onClick={() => inputRef.current?.click()}
+        // Starting over dismisses the previous rejection right away, not once a file
+        // lands — the picker may be cancelled, and the outlined button would otherwise
+        // keep blaming areas that are already gone. Dibujar does the same via `startDraw`.
+        onClick={() => {
+          setRejection(null);
+          inputRef.current?.click();
+        }}
         disabled={!draw.bound}
       >
         Subir archivo
