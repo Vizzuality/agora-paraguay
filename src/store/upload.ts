@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 
 import { importReplacingFeatures } from '@/lib/map/import-features';
 import type { ParseOutcome, UploadErrorCode, UploadResult } from '@/lib/upload/types';
-import { selectAnalysisPolygonAtom } from '@/store/analysis';
+import { resetAnalysisAtom, selectAnalysisPolygonAtom } from '@/store/analysis';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { backToSelectionAtom } from '@/store/mode';
 import { resetParcelTogglesAtom } from '@/store/parcels';
@@ -23,15 +23,17 @@ export const uploadResultAtom = atom<UploadResult | null>(null);
 
 /**
  * The shared start of a new selection session: drops the user's parcel flips, dismisses
- * the previous upload notice, and returns the app to selection mode — an upload or a
- * fresh drawing after Analizar. `startDrawAtom` and `uploadFeaturesAtom` both route
- * through here. Lives in this file because it owns `uploadResultAtom` (any other home
- * would create an import cycle).
+ * the previous upload notice, forgets the previous analysis (its parcels, tab, filters
+ * and indicator picks) and returns the app to selection mode — an upload, a fresh
+ * drawing after Analizar, Reiniciar or "Selección de parcelas". `startDrawAtom`,
+ * `uploadFeaturesAtom` and `restartSelectionAtom` all route through here. Lives in this
+ * file because it owns `uploadResultAtom` (any other home would create an import cycle).
  */
 export const resetSelectionSessionAtom = atom(null, (_get, set) => {
   set(uploadResultAtom, null);
   set(areaRejectionAtom, null);
   set(resetParcelTogglesAtom);
+  set(resetAnalysisAtom);
   set(backToSelectionAtom);
 });
 

@@ -37,9 +37,12 @@ export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => 
 });
 
 /**
- * Starts the selection over: every polygon on the map — hand-drawn and uploaded — goes,
- * the tool is parked, and the session state (clicked parcels, upload notice, app mode)
- * resets. The Reiniciar button and every entry point that replaces route through here.
+ * Starts the selection over: every polygon — hand-drawn and uploaded — goes, the tool is
+ * parked, and the session state (clicked parcels, upload notice, previous analysis, app
+ * mode) resets. The Reiniciar button, "Selección de parcelas" on the analysis page and
+ * every entry point that replaces route through here. Works with the map gone too
+ * (/analisis has no Terra Draw): the polygons the store kept for the next bind are
+ * dropped, so `bindDrawAtom` finds nothing to restore.
  */
 export const restartSelectionAtom = atom(null, (get, set) => {
   const draw = get(drawInstanceAtom);
@@ -48,11 +51,13 @@ export const restartSelectionAtom = atom(null, (get, set) => {
     // Disarm before clearing: stopping polygon mode sweeps an in-progress ring.
     set(drawStateAtom, { type: 'tool', tool: null });
 
-    if (get(drawStateAtom).polygons.length > 0) {
-      draw.clear();
-      // `clear()` does not surface as a `change` event, so report it by hand.
-      set(drawStateAtom, { type: 'geometry', polygons: [] });
-    }
+    if (get(drawStateAtom).polygons.length > 0) draw.clear();
+  }
+
+  // `clear()` does not surface as a `change` event, so report it by hand — and with no
+  // instance at all this is the only thing that empties the store.
+  if (get(drawStateAtom).polygons.length > 0) {
+    set(drawStateAtom, { type: 'geometry', polygons: [] });
   }
 
   set(resetSelectionSessionAtom);

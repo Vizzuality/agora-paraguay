@@ -1,9 +1,11 @@
 import { Link } from '@tanstack/react-router';
 
 import { Logo } from '@/components/logo';
+import { SelectionLink } from '@/components/selection-link';
 import { RISK_LINKS, SELECTION_LINK } from '@/lib/nav-links';
 
-const FOOTER_LINKS = [SELECTION_LINK, ...RISK_LINKS];
+const LINK_CLASS =
+  'flex h-11 items-center justify-center rounded-2xl px-8 text-sm text-primary-foreground';
 
 /**
  * Bottom bar of the analysis screen (Figma node 5180:11421): brand logo on the
@@ -18,14 +20,9 @@ export function Footer() {
       </Link>
 
       <nav className="flex items-center gap-2">
-        {FOOTER_LINKS.map(({ label, to, search, replace }) => (
-          <Link
-            key={label}
-            to={to}
-            search={search}
-            replace={replace}
-            className="flex h-11 items-center justify-center rounded-2xl px-8 text-sm text-primary-foreground"
-          >
+        <SelectionLink className={LINK_CLASS}>{SELECTION_LINK.label}</SelectionLink>
+        {RISK_LINKS.map(({ label, to, search, replace }) => (
+          <Link key={label} to={to} search={search} replace={replace} className={LINK_CLASS}>
             {label}
           </Link>
         ))}

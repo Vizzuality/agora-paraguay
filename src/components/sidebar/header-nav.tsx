@@ -2,6 +2,7 @@ import { ClientOnly, getRouteApi, Link } from '@tanstack/react-router';
 import { SquarePen } from 'lucide-react';
 
 import { LoginDialog, UserButton } from '@/components/auth/login-dialog';
+import { SelectionLink } from '@/components/selection-link';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
@@ -20,10 +21,10 @@ export function HeaderNav() {
         variant="secondary"
         className="h-11 rounded-2xl px-8 font-normal text-accent-foreground"
       >
-        <Link to={SELECTION_LINK.to}>
+        <SelectionLink>
           <SquarePen aria-hidden />
           {SELECTION_LINK.label}
-        </Link>
+        </SelectionLink>
       </Button>
 
       <div className="flex items-center gap-5 rounded-2xl bg-secondary px-6 py-1 text-sm">
