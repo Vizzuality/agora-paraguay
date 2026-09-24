@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 /*
- * Metadata contract: `GET /api/parcels/filters/?visibility={public|private}` and the
- * indicator list (the analysis POST with no parcels, see `client.ts`). The indicator attributes are
- * still "to be defined" in the spec, so that schema lets extra fields through
+ * Metadata contract: `GET /api/parcels/filters/?visibility={public|private}` and
+ * `GET /api/parcels/indicators/` with `{ riesgo }`, reached through `/relay/indicators` (see
+ * `client.ts`). The indicator attributes
+ * are still "to be defined" in the spec, so that schema lets extra fields through
  * (`looseObject`); the filters follow the live response.
  */
 
@@ -49,14 +50,8 @@ export type FiltersParams = { visibility: 'public' | 'private' };
 /** The two analysis tabs; each is one side of `/api/parcels/analysis/{diseases|production}/`. */
 export type Riesgo = 'sanitario' | 'productivo';
 
-/**
- * What the indicator list is asked for: the riesgo picks the path, `cultivo` goes as a
- * query parameter and only applies to sanitario.
- */
-export type IndicatorsParams = {
-  riesgo: Riesgo;
-  cultivo?: string;
-};
+/** What the indicator list is asked for: the riesgo. A query parameter to the relay, a JSON body to the API. */
+export type IndicatorsParams = { riesgo: Riesgo };
 
 const rangeIndicatorTypeSchema = z.looseObject({
   type: z.literal('range'),
@@ -87,15 +82,44 @@ export const indicatorTypeSchema = z.discriminatedUnion('type', [
 
 export type IndicatorType = z.infer<typeof indicatorTypeSchema>;
 
-export const indicatorSchema = z.looseObject({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().optional(),
-  unit: z.string().optional(),
-  /** Whether the indicator is selected before the user touches anything. */
-  default: z.boolean().optional(),
-  indicator_type: indicatorTypeSchema,
-});
+/**
+ * The live list as the spec writes it. Two things it does differently: the open-number
+ * type is `number` where the spec (and the cards) say `numeric`; and the hero filter
+ * `crop_type` is echoed into the list as a filter (`field_type` with options) rather than
+ * an indicator. The analysis answers it as text ("Soja"), so it reads as a text indicator —
+ * general info, never in the picker.
+ */
+function asSpecIndicator(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+
+  const entry = raw as Record<string, unknown>;
+
+  if (!('indicator_type' in entry) && 'field_type' in entry) {
+    return { ...entry, indicator_type: { type: 'text' } };
+  }
+
+  const type = entry.indicator_type;
+
+  if (typeof type === 'object' && type !== null && 'type' in type && type.type === 'number') {
+    return { ...entry, indicator_type: { ...type, type: 'numeric' } };
+  }
+
+  return entry;
+}
+
+export const indicatorSchema = z.preprocess(
+  asSpecIndicator,
+  z.looseObject({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().optional(),
+    // `null` when the indicator has none (`weather_station`).
+    unit: z.string().nullable().optional(),
+    /** Whether the indicator is selected before the user touches anything. */
+    default: z.boolean().optional(),
+    indicator_type: indicatorTypeSchema,
+  }),
+);
 
 export type Indicator = z.infer<typeof indicatorSchema>;
 

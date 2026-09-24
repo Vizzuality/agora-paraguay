@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { Check, Search, SquarePen } from 'lucide-react';
 import { useId, useState } from 'react';
 
@@ -13,7 +13,7 @@ import {
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import { analysisFiltersAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
+import { selectedIndicatorIdsAtom } from '@/store/analysis';
 
 type IndicatorPickerProps = {
   riesgo: 'sanitario' | 'productivo';
@@ -26,11 +26,7 @@ type IndicatorPickerProps = {
  * `<ClientOnly>` (it reads the analysis atoms).
  */
 export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
-  // TODO(filters-cultivo): same hand-off as `useAnalysis`.
-  const cultivo = useAtomValue(analysisFiltersAtom).crop_type;
-  const { data: indicators } = useQuery(
-    metadataQueries.indicators(riesgo === 'sanitario' ? { riesgo, cultivo } : { riesgo }),
-  );
+  const { data: indicators } = useQuery(metadataQueries.indicators({ riesgo }));
 
   return (
     <Popover>
