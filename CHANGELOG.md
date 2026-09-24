@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.3.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.2.0...v0.3.0) (2026-09-24)
+
+
+### Features
+
+* add shadcn/ui foundation ([#17](https://github.com/Vizzuality/agora-paraguay/issues/17)) ([166155d](https://github.com/Vizzuality/agora-paraguay/commit/166155d9037b5b3204790eed98ff3575f698ae2f))
+* add the AI summary tile to riesgo productivo (AGP-38) ([#98](https://github.com/Vizzuality/agora-paraguay/issues/98)) ([bb842dc](https://github.com/Vizzuality/agora-paraguay/commit/bb842dc61a7f3f863a81c476fca7d05f2ebdda22))
+* add the reset-password card to the login gate (AGP-34) ([#99](https://github.com/Vizzuality/agora-paraguay/issues/99)) ([a0b9b54](https://github.com/Vizzuality/agora-paraguay/commit/a0b9b54491ed8f4370e25e2edc6d420ed1df3544))
+* analysis hero dropdowns fed by the options query (AGP-29) ([#60](https://github.com/Vizzuality/agora-paraguay/issues/60)) ([3cb2ab9](https://github.com/Vizzuality/agora-paraguay/commit/3cb2ab90b4e4fbd737fb4b697ae6295b8cef7171))
+* analysis hero with parcel tabs on analysis page (AGP-21) ([#45](https://github.com/Vizzuality/agora-paraguay/issues/45)) ([e3576ce](https://github.com/Vizzuality/agora-paraguay/commit/e3576ce57490a6d91b2f3ad90595a8d9cc977e7b))
+* app workflow — selection and analysis modes, styled map controls ([#38](https://github.com/Vizzuality/agora-paraguay/issues/38)) ([aeb96aa](https://github.com/Vizzuality/agora-paraguay/commit/aeb96aaf6f5910a0b3368bce960279368c072866))
+* default filter-parcels to 20% overlap and a 20 m buffer ([#88](https://github.com/Vizzuality/agora-paraguay/issues/88)) ([03b3f9d](https://github.com/Vizzuality/agora-paraguay/commit/03b3f9ddd8a0dbc42d4d0f1dc7db03bf974af2a1))
+* header login dialog anchored to the user button (AGP-23) ([#46](https://github.com/Vizzuality/agora-paraguay/issues/46)) ([d1472b8](https://github.com/Vizzuality/agora-paraguay/commit/d1472b82e149d6c6d8222eb1b32bf20167376ff3))
+* import polygons with holes and drop upload validations beyond the Paraguay check ([#59](https://github.com/Vizzuality/agora-paraguay/issues/59)) ([deeedb8](https://github.com/Vizzuality/agora-paraguay/commit/deeedb84a5f7dcef323e3e20e32587356e51e636))
+* login screen layout on analysis page (AGP-22) ([5da370a](https://github.com/Vizzuality/agora-paraguay/commit/5da370aa2e3e28163f3b3c959be39de36818984f))
+* make riesgo sanitario public and gate riesgo productivo behind login ([#44](https://github.com/Vizzuality/agora-paraguay/issues/44)) ([c35a84f](https://github.com/Vizzuality/agora-paraguay/commit/c35a84fdc1e8fcf2ebf5cef8d1c0624ac9900233))
+* map drawing with Terra Draw ([#21](https://github.com/Vizzuality/agora-paraguay/issues/21)) ([1421f29](https://github.com/Vizzuality/agora-paraguay/commit/1421f29ec5df1c1dfcbfc934461ba4d4f1d64275))
+* match widget cards to the design ([#20](https://github.com/Vizzuality/agora-paraguay/issues/20)) ([4100281](https://github.com/Vizzuality/agora-paraguay/commit/4100281133c302927d9fc2ab43d1db5eabef1eee))
+* mock parcels layer and click-to-select areas (AGP-19) ([#33](https://github.com/Vizzuality/agora-paraguay/issues/33)) ([98ef809](https://github.com/Vizzuality/agora-paraguay/commit/98ef8092dcc8ffcedb7e4808e8886cbdb2af3a1a))
+* open a mailto to the admin from Solicitar and confirm the request (AGP-34) ([#100](https://github.com/Vizzuality/agora-paraguay/issues/100)) ([bb4a4e7](https://github.com/Vizzuality/agora-paraguay/commit/bb4a4e7f559bee30d62f68137e12176e74f72a60))
+* organise API by spec domain, wire Analizar ([#75](https://github.com/Vizzuality/agora-paraguay/issues/75)) ([240cccb](https://github.com/Vizzuality/agora-paraguay/commit/240cccb82a0cc02b22c8541982f51c6af069e853))
+* paint the analysed parcel's indicators as risk class cards (AGP-21) ([#77](https://github.com/Vizzuality/agora-paraguay/issues/77)) ([b7a4de2](https://github.com/Vizzuality/agora-paraguay/commit/b7a4de2aa2efe44b381ce6cae466a4e197582011))
+* parcel tabs with Todas, list dropdown and mini-map selection (AGP-45) ([#103](https://github.com/Vizzuality/agora-paraguay/issues/103)) ([f2f868a](https://github.com/Vizzuality/agora-paraguay/commit/f2f868a1e29863e5b44dc5e91d2a1b674976ad62))
+* replace the Ágora logo with a LOGO placeholder ([#70](https://github.com/Vizzuality/agora-paraguay/issues/70)) ([65873d9](https://github.com/Vizzuality/agora-paraguay/commit/65873d95cde6a544c627cd00ea25c583adb40729))
+* satellite mini map on the analysis hero (AGP-27) ([#47](https://github.com/Vizzuality/agora-paraguay/issues/47)) ([22d534a](https://github.com/Vizzuality/agora-paraguay/commit/22d534a92fb66076f16fa24290b398fe29298a2e))
+* Selección de parcelas starts a new selection, hero and camera polish (AGP-43) ([#104](https://github.com/Vizzuality/agora-paraguay/issues/104)) ([c3d627a](https://github.com/Vizzuality/agora-paraguay/commit/c3d627a27e3a185d02add71bbe9d9a5815c99a40))
+* sign in against the Django session endpoints ([#61](https://github.com/Vizzuality/agora-paraguay/issues/61)) ([9278e43](https://github.com/Vizzuality/agora-paraguay/commit/9278e43bf3ff8db4301cadd4bea8e44f6a38af83))
+* walk the parcel selection through steps (AGP-36) ([#74](https://github.com/Vizzuality/agora-paraguay/issues/74)) ([0bee610](https://github.com/Vizzuality/agora-paraguay/commit/0bee61086163583c55c9d03315bf0eccb02d2968))
+* wire selection and analysis to the live API (filters, parcels, indicators, analysis) ([#87](https://github.com/Vizzuality/agora-paraguay/issues/87)) ([f6317cd](https://github.com/Vizzuality/agora-paraguay/commit/f6317cda909ff5a8df9810cf9979a78574d029f8))
+
+
+### Bug Fixes
+
+* freeze the submitted parcels for the analysis hero (AGP-29) ([#89](https://github.com/Vizzuality/agora-paraguay/issues/89)) ([99861cb](https://github.com/Vizzuality/agora-paraguay/commit/99861cbda410027601841535b8c8d264a4767a95))
+* paint drawn polygons and drawing handles in the highlight yellow ([#73](https://github.com/Vizzuality/agora-paraguay/issues/73)) ([661e61f](https://github.com/Vizzuality/agora-paraguay/commit/661e61f4561588bdac86c4a5762dc2d81eda44c2))
+* relay /api through the built server, not only the dev proxy ([#86](https://github.com/Vizzuality/agora-paraguay/issues/86)) ([b3d3442](https://github.com/Vizzuality/agora-paraguay/commit/b3d3442586ef7d00359847a29d8e93245576ff68))
+* scroll parcel tabs with the arrow buttons ([#58](https://github.com/Vizzuality/agora-paraguay/issues/58)) ([2e8f538](https://github.com/Vizzuality/agora-paraguay/commit/2e8f538176a75e9dee82d0f950c0c6475b70999a))
+* stop the camera query string doubling on every map move ([#32](https://github.com/Vizzuality/agora-paraguay/issues/32)) ([6d51ce7](https://github.com/Vizzuality/agora-paraguay/commit/6d51ce705d363b9178ed7a78afd70ad772e3db9c))
+
 ## [0.2.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.1.0...v0.2.0) (2026-08-12)
 
 
