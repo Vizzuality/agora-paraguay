@@ -204,6 +204,36 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     .toBeGreaterThan(parcelsArea * 0.8);
 });
 
+test('says why when the indicator list cannot be loaded', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  // Registered after `stubAnalysisApi`, so Playwright tries it first: the relay answers
+  // the way it does when the API is down, with the reason in the body.
+  await page.route(
+    (url) => url.pathname === '/relay/indicators',
+    (route) =>
+      route.fulfill({
+        status: 502,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'The API could not be reached.' }),
+      }),
+  );
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  // The page names the failure with the API's reason (after the query's retries), and
+  // the picker says the same instead of opening empty.
+  const reason = 'No se pudieron cargar los indicadores: The API could not be reached.';
+  await expect(page.getByRole('alert').filter({ hasText: reason })).toBeVisible({
+    timeout: 20_000,
+  });
+  await page.getByRole('button', { name: 'Personalizar indicadores' }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toHaveText(reason);
+});
+
 test('veils the map with a spinner while the parcels are looked up', async ({ page }) => {
   const { draw, analyze } = controls(page);
 

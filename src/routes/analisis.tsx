@@ -165,7 +165,7 @@ function ProductivoGate() {
  * the previous cards stay until the new answer lands.
  */
 function SanitarioWidgets() {
-  const { analysis, indicators, parcelIds, pending } = useAnalysis('sanitario');
+  const { analysis, indicators, indicatorsError, parcelIds, pending } = useAnalysis('sanitario');
   const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
@@ -187,6 +187,11 @@ function SanitarioWidgets() {
 
   return (
     <div className="flex flex-col gap-4">
+      {indicatorsError && (
+        <p role="alert" className="text-sm text-destructive">
+          No se pudieron cargar los indicadores: {errorReason(indicatorsError)}
+        </p>
+      )}
       {pending.length > 0 && (
         <p aria-live="polite" className="text-sm text-muted-foreground">
           Completa {listNames(pending.map((filter) => filter.name))} para ejecutar el análisis.

@@ -50,5 +50,11 @@ export function useAnalysis(riesgo: Riesgo) {
 
   const analysis = useQuery(analysisQueries.result(visibility, request));
 
-  return { analysis, indicators: indicators.data, parcelIds, pending };
+  return {
+    analysis,
+    indicators: indicators.data,
+    indicatorsError: indicators.error,
+    parcelIds,
+    pending,
+  };
 }
