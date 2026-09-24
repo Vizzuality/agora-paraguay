@@ -39,18 +39,14 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   const { draw, analyze } = controls(page);
 
   // The hero filters belong to /analisis: nothing on / may ask for them. The analysis
-  // itself runs there too, once per distinct request. The indicator list shares the
-  // path but carries no `indicators`, so it is not counted as a run.
+  // itself runs there too, once per distinct request.
   let filtersRequests = 0;
   const analysisBodies: { indicators: string[]; crop_type?: string }[] = [];
   page.on('request', (request) => {
     const { pathname } = new URL(request.url());
     if (pathname === '/api/parcels/filters/') filtersRequests += 1;
     if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
-      const body = request.postDataJSON() as { indicators?: string[]; crop_type?: string };
-      if (body.indicators !== undefined) {
-        analysisBodies.push(body as { indicators: string[]; crop_type?: string });
-      }
+      analysisBodies.push(request.postDataJSON() as { indicators: string[]; crop_type?: string });
     }
   });
 
@@ -85,10 +81,20 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
   expect(filtersRequests).toBe(1);
 
-  // The analysis ran once the filters, parcels and indicators were known — one POST,
-  // with the API's default crop and the default indicators.
+  // The backend requires every filter, so nothing is POSTed while the sowing date is
+  // empty: the page asks for it instead of failing with a 400.
+  await expect(
+    page.getByText('Completa Fecha de siembra para ejecutar el análisis.'),
+  ).toBeVisible();
+  expect(analysisBodies).toHaveLength(0);
+
+  // Typing it runs the analysis — one POST, with the API's default crop, the typed date
+  // and the default indicators.
+  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
+  await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-05-01');
+  await expect(page.getByText('Completa Fecha de siembra para ejecutar el análisis.')).toBeHidden();
   await expect.poll(() => analysisBodies.length).toBe(1);
-  expect(analysisBodies[0]).toMatchObject({ crop_type: 'rice' });
+  expect(analysisBodies[0]).toMatchObject({ crop_type: 'rice', sowing_date: '2026-05-01' });
   expect(analysisBodies[0].indicators).toContain('asian_rust');
 
   // Picking another crop re-runs it with the new filter.
@@ -97,9 +103,6 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(cultivo).toHaveText('Soja');
   await expect.poll(() => analysisBodies.length).toBe(2);
   expect(analysisBodies[1]).toMatchObject({ crop_type: 'soy' });
-  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
-  await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-05-01');
-  await expect.poll(() => analysisBodies.length).toBe(3);
 
   // The hero mini map paints the selected parcel over the (stubbed) satellite basemap —
   // the same layer as the main map, without Terra Draw — and is interactive.
@@ -147,9 +150,9 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await list.getByText('Phakopsora pachyrhizi').click();
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).not.toBeChecked();
   await page.keyboard.press('Escape');
-  await expect.poll(() => analysisBodies.length).toBe(4);
-  expect(analysisBodies[3].indicators).not.toContain('asian_rust');
-  expect(analysisBodies[3].indicators).toContain('crop_type');
+  await expect.poll(() => analysisBodies.length).toBe(3);
+  expect(analysisBodies[2].indicators).not.toContain('asian_rust');
+  expect(analysisBodies[2].indicators).toContain('crop_type');
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Información general' })).toBeVisible();
 
@@ -278,8 +281,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   page.on('request', (request) => {
     const { pathname } = new URL(request.url());
     if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
-      const body = request.postDataJSON() as { indicators?: string[] };
-      if (body.indicators !== undefined) analysisRuns.push(pathname);
+      analysisRuns.push(pathname);
     }
   });
 
@@ -287,6 +289,8 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await drawPolygon(page, FIRST_POLYGON);
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
+  // The sowing date has no default and the backend requires it: nothing runs until typed.
+  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
 
   const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   const allTab = tabs.filter({ hasText: 'Todas' }).getByRole('button');

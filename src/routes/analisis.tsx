@@ -18,9 +18,11 @@ import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { Button } from '@/components/ui/button';
 import { WidgetIa } from '@/components/widget-ia';
+import { listNames } from '@/lib/analysis/filters';
 import { combinedParcel, generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
+import { errorReason } from '@/lib/api/http';
 import {
   activeParcelIdAtom,
   analysedParcelIdsAtom,
@@ -163,7 +165,7 @@ function ProductivoGate() {
  * the previous cards stay until the new answer lands.
  */
 function SanitarioWidgets() {
-  const { analysis, indicators, parcelIds } = useAnalysis('sanitario');
+  const { analysis, indicators, parcelIds, pending } = useAnalysis('sanitario');
   const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
@@ -185,9 +187,14 @@ function SanitarioWidgets() {
 
   return (
     <div className="flex flex-col gap-4">
+      {pending.length > 0 && (
+        <p aria-live="polite" className="text-sm text-muted-foreground">
+          Completa {listNames(pending.map((filter) => filter.name))} para ejecutar el análisis.
+        </p>
+      )}
       {analysis.isError && (
         <p role="alert" className="text-sm text-destructive">
-          El análisis falló: {analysis.error.message}
+          El análisis falló: {errorReason(analysis.error)}
         </p>
       )}
       {analysis.isFetching && !analysis.data && (
