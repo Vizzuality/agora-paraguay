@@ -201,6 +201,76 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     .toBeGreaterThan(parcelsArea * 0.8);
 });
 
+test('veils the map with a spinner while the parcels are looked up', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  // Registered after the stub, so it runs first: holds `filter-parcels` long enough to
+  // see the spinner, then falls through to the stub.
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
+    async (route) => {
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.fallback();
+    },
+  );
+
+  // Nothing pending before an area exists.
+  // `<output>` is a status region; the role takes no name from its contents, so match text.
+  const spinner = page.getByRole('status').filter({ hasText: 'Buscando parcelas…' });
+  await expect(spinner).toBeHidden();
+
+  // The finished drawing fires the lookup: the spinner sits over the map until the
+  // parcels are in, then Analizar can go.
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await expect(spinner).toBeVisible();
+  await expect(spinner).toBeHidden({ timeout: 10_000 });
+  await expect(analyze).toBeEnabled();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+});
+
+test('Selección de parcelas starts a new selection with an empty map', async ({ page }) => {
+  const { draw, analyze, restart } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+  await expect(page.getByRole('group', { name: 'Parcela' })).toBeVisible();
+
+  // Unlike the browser's Back (which resumes the selection), the header link starts
+  // over: step 1 controls, nothing drawn, no parcels painted.
+  await page.getByRole('banner').getByRole('link', { name: 'Selección de parcelas' }).click();
+  await expect(page).toHaveURL(/\/(\?|$)/);
+  await expect(draw).toHaveText('Dibujar polígono');
+  await expect(analyze).toBeHidden();
+  await expect(restart).toBeHidden();
+  await expect(mapCanvas(page)).toBeVisible();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
+
+  // The old run is gone for good: forward to /analisis lands back on / (empty selection).
+  await page.goForward();
+  await expect(page).toHaveURL(/\/(\?|$)/);
+  await expect(analyze).toBeHidden();
+
+  // A fresh drawing works as on a first visit, and its analysis lands on Todas again.
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await expect(analyze).toBeEnabled();
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+  const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await expect(tabs.first()).toHaveText('Todas');
+  await expect(tabs.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
+
+  // The footer repeats the link with the same reset.
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Selección de parcelas' }).click();
+  await expect(page).toHaveURL(/\/(\?|$)/);
+  await expect(analyze).toBeHidden();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
+});
+
 test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
   const { draw, analyze } = controls(page);
 

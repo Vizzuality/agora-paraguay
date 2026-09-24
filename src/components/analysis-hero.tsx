@@ -359,8 +359,10 @@ function HeroSelect({
   return (
     <div className="relative">
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        {/* The label is the placeholder, so the value slot stays blank while empty. */}
-        <SelectTrigger id={id} className={FLOATING_FIELD_CLASS}>
+        {/* The label is the placeholder, so the value slot stays blank while empty. The
+            trigger sizes itself through `data-size`, which outranks the shared `h-12`:
+            restate it under the same variant so the select matches the date input. */}
+        <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
           <SelectValue placeholder=" " />
         </SelectTrigger>
         <FloatingLabel htmlFor={id}>{label}</FloatingLabel>

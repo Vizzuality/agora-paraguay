@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { atomWithReset, RESET } from 'jotai/utils';
 
 import { EMPTY_ANALYSIS_FILTERS, type AnalysisFilterSelection } from '@/lib/analysis/filters';
 import { selectableIndicators, toggleIndicatorId } from '@/lib/analysis/indicator-picker';
@@ -43,7 +44,7 @@ export const selectAnalysisPolygonAtom = atom(null, (get, set, id: FeatureId) =>
  * flips, frozen at the click (`startAnalysisAtom`). The analysis page reads this list —
  * never the live query plus toggles, which shift under it once the map is gone.
  */
-const analysedParcelIdsBaseAtom = atom<string[]>([]);
+const analysedParcelIdsBaseAtom = atomWithReset<string[]>([]);
 
 export const analysedParcelIdsAtom = atom(
   (get) => get(analysedParcelIdsBaseAtom),
@@ -56,7 +57,7 @@ export const analysedParcelIdsAtom = atom(
  * The parcel tab open on the analysis page: one analysed parcel's id, or `null` for
  * "Todas" — the whole selection, which is also where the page lands.
  */
-export const activeParcelTabAtom = atom<string | null>(null);
+export const activeParcelTabAtom = atomWithReset<string | null>(null);
 
 /**
  * The analysed parcel the open tab points at, `null` for Todas. Re-analysing a smaller
@@ -88,7 +89,7 @@ export const selectAnalysedParcelAtom = atom(null, (get, set, parcelId: string) 
  * Stored as the user's picks only (a missing id = untouched); defaults are derived at
  * read time from the filters query (`resolveFilterSelection`), so they follow the data.
  */
-const analysisFiltersBaseAtom = atom<AnalysisFilterSelection>(EMPTY_ANALYSIS_FILTERS);
+const analysisFiltersBaseAtom = atomWithReset<AnalysisFilterSelection>(EMPTY_ANALYSIS_FILTERS);
 
 export const analysisFiltersAtom = atom((get) => get(analysisFiltersBaseAtom));
 
@@ -100,12 +101,26 @@ export const setAnalysisFilterAtom = atom(
 );
 
 /**
+ * Everything the analysis page accumulated for one run: the submitted parcels, the open
+ * tab, the hero filters and the indicator picks. Fired when a new selection session
+ * starts (`resetSelectionSessionAtom`), so nothing from the previous run leaks into the
+ * next. Not fired by a mere trip back to `/` — the browser's Back keeps the run.
+ */
+export const resetAnalysisAtom = atom(null, (_get, set) => {
+  // `RESET` returns each `atomWithReset` to its own initial value: one place owns it.
+  set(analysedParcelIdsBaseAtom, RESET);
+  set(activeParcelTabAtom, RESET);
+  set(analysisFiltersBaseAtom, RESET);
+  set(selectedIndicatorIdsBaseAtom, RESET);
+});
+
+/**
  * Personalizar indicadores: the indicator ids the analysis page shows, or `null` while the
  * user has not touched the list (the API's `default` flags apply — `visibleIndicatorIds`).
  * One list for the whole analysis, like the filters above. Reads the list; writes toggle
  * one id, so the raw list is never set from a component.
  */
-const selectedIndicatorIdsBaseAtom = atom<string[] | null>(null);
+const selectedIndicatorIdsBaseAtom = atomWithReset<string[] | null>(null);
 
 export const selectedIndicatorIdsAtom = atom(
   (get) => get(selectedIndicatorIdsBaseAtom),
