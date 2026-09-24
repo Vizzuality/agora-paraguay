@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
-import { drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
+import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 
 // Positions are relative to the canvas, which is the right half of the 1280×720
 // viewport (~640px wide) — the sidebar has the left half.
@@ -82,16 +82,21 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
 
-  // The finished drawing eased the camera onto it: the URL holds a closer zoom.
+  // The finished drawing eased the camera onto it: the URL holds a closer zoom. And the
+  // (stubbed) parcels painted over it.
   await expect
     .poll(() => Number(new URL(page.url()).searchParams.get('zoom')), { timeout: 5_000 })
     .toBeGreaterThan(5.5);
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
 
   await restart.click();
 
   await expect(currentStep).toContainText('Paso 1');
   await expect(analyze).toBeHidden();
   await expect(draw).toHaveAccessibleName('Dibujar polígono');
+
+  // The parcels go with the drawing: nothing stays painted from the previous answer.
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
 
   // Back to the opening view (`INITIAL_VIEW_STATE`), written to the URL by `moveend`.
   await expect
