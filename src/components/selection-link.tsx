@@ -6,11 +6,10 @@ import { SELECTION_LINK } from '@/lib/nav-links';
 import { restartSelectionAtom } from '@/store/draw';
 
 /**
- * "Selección de parcelas", the way back from the analysis page — shared by the header
- * and the footer. Unlike the browser's Back, it starts a new selection: the areas, the
- * parcels and the previous analysis are cleared before `/` mounts, so the map comes back
- * empty on step 1. Renders outside `<ClientOnly>` on purpose: `useSetAtom` only hands
- * back a setter, nothing reads or writes the module store until the click.
+ * "Selección de parcelas" link (header and footer): goes to `/` and starts a new
+ * selection — areas, parcels and analysis cleared, map empty on step 1. Renders outside
+ * `<ClientOnly>` on purpose: `useSetAtom` only hands back a setter; the store is untouched
+ * until the click.
  */
 export function SelectionLink({
   className,

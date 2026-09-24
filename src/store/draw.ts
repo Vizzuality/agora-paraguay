@@ -37,12 +37,10 @@ export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => 
 });
 
 /**
- * Starts the selection over: every polygon — hand-drawn and uploaded — goes, the tool is
- * parked, and the session state (clicked parcels, upload notice, previous analysis, app
- * mode) resets. The Reiniciar button, "Selección de parcelas" on the analysis page and
- * every entry point that replaces route through here. Works with the map gone too
- * (/analisis has no Terra Draw): the polygons the store kept for the next bind are
- * dropped, so `bindDrawAtom` finds nothing to restore.
+ * Starts the selection over: polygons, tool and session state (parcel flips, upload
+ * notice, analysis, mode) all reset. Reiniciar and "Selección de parcelas" route through
+ * here. Also works without a map (/analisis): the stored polygons are dropped, so the
+ * next bind restores nothing.
  */
 export const restartSelectionAtom = atom(null, (get, set) => {
   const draw = get(drawInstanceAtom);

@@ -1,11 +1,14 @@
+import { useQuery } from '@tanstack/react-query';
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { MapView } from '@/components/map';
-import { ParcelsLoading } from '@/components/map/parcels-loading';
+import { MapLoading } from '@/components/map/map-loading';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectionBlock, SelectionBlockLayout } from '@/components/sidebar/selection-block';
+import { parcelQueries } from '@/lib/api/parcels/queries';
+import { drawPolygonsAtom } from '@/store/draw';
 import { backToSelectionAtom } from '@/store/mode';
 
 export const Route = createFileRoute('/')({
@@ -27,11 +30,19 @@ function SelectionPage() {
             during SSR. The fallback keeps the layout stable while it loads. */}
         <ClientOnly fallback={<div className="h-full w-full bg-muted" />}>
           <MapView />
-          <ParcelsLoading />
+          <ParcelsLookup />
         </ClientOnly>
       </div>
     </main>
   );
+}
+
+/** Veils the map while `filter-parcels` looks up the parcels for the areas just landed. */
+function ParcelsLookup() {
+  const polygons = useAtomValue(drawPolygonsAtom);
+  const { isFetching } = useQuery(parcelQueries.filtered(polygons));
+
+  return isFetching ? <MapLoading>Buscando parcelas…</MapLoading> : null;
 }
 
 /** Returning to `/` resumes selection: the surviving areas are editable again. */
