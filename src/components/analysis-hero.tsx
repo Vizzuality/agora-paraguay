@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { resolveFilterSelection } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
@@ -33,6 +34,7 @@ import {
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
 import { visibilityOf } from '@/lib/analysis/request';
+import { useAnalysis } from '@/lib/analysis/use-analysis';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
@@ -50,7 +52,7 @@ import {
 export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
-      <MiniMapThumbnail />
+      <MiniMapThumbnail riesgo={riesgo} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <ParcelTabs parcels={parcels} />
@@ -149,11 +151,26 @@ function HeroDate({
   );
 }
 
-/** Satellite mini map in the thumbnail slot. The area figure arrives with the API. */
-function MiniMapThumbnail() {
+/**
+ * Satellite mini map in the thumbnail slot, veiled by a spinner while the analysis POST
+ * is in flight — the first run and every re-run a filter or the picker triggers. Same
+ * query as the cards (`useAnalysis`), so the two never disagree. The area figure arrives
+ * with the API.
+ */
+function MiniMapThumbnail({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
+  const { analysis } = useAnalysis(riesgo);
+
   return (
     <div className="relative h-64 min-w-0 flex-1 overflow-hidden rounded-md bg-muted lg:h-[335px]">
       <MiniMap />
+      {analysis.isFetching && (
+        <div className="absolute inset-0 grid place-items-center bg-black/40 backdrop-blur-xs">
+          <output className="flex items-center gap-2 rounded-md bg-black/80 px-4 py-2 text-sm text-white">
+            <Spinner className="size-5" />
+            Analizando…
+          </output>
+        </div>
+      )}
       <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
         <span className="text-[36px] font-light tracking-[0.408px] text-white">17.5 ha</span>
       </div>
@@ -359,8 +376,10 @@ function HeroSelect({
   return (
     <div className="relative">
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        {/* The label is the placeholder, so the value slot stays blank while empty. */}
-        <SelectTrigger id={id} className={FLOATING_FIELD_CLASS}>
+        {/* The label is the placeholder, so the value slot stays blank while empty. The
+            trigger sizes itself through `data-size`, which outranks the shared `h-12`:
+            restate it under the same variant so the select matches the date input. */}
+        <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
           <SelectValue placeholder=" " />
         </SelectTrigger>
         <FloatingLabel htmlFor={id}>{label}</FloatingLabel>

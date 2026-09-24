@@ -73,7 +73,8 @@ test('cancelling an armed session stays on step 1', async ({ page }) => {
   await expect(currentStep).toContainText('Paso 1');
 });
 
-// Reiniciar starts over: whatever is on the map goes and the entry points come back.
+// Reiniciar starts over: whatever is on the map goes, the entry points come back and the
+// camera returns to the opening view.
 test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   const { draw, analyze, restart, currentStep } = controls(page);
 
@@ -81,11 +82,21 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
 
+  // The finished drawing eased the camera onto it: the URL holds a closer zoom.
+  await expect
+    .poll(() => Number(new URL(page.url()).searchParams.get('zoom')), { timeout: 5_000 })
+    .toBeGreaterThan(5.5);
+
   await restart.click();
 
   await expect(currentStep).toContainText('Paso 1');
   await expect(analyze).toBeHidden();
   await expect(draw).toHaveAccessibleName('Dibujar polígono');
+
+  // Back to the opening view (`INITIAL_VIEW_STATE`), written to the URL by `moveend`.
+  await expect
+    .poll(() => Object.fromEntries(new URL(page.url()).searchParams), { timeout: 5_000 })
+    .toEqual({ lng: '-58.44', lat: '-23.44', zoom: '5.5' });
 
   // A fresh session works exactly like the first one.
   await draw.click();
