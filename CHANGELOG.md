@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/Vizzuality/agora-paraguay/compare/v0.3.0...v0.3.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* a rejected drawing no longer taints the upload that follows (AGP-43) ([#106](https://github.com/Vizzuality/agora-paraguay/issues/106)) ([8ccf4e8](https://github.com/Vizzuality/agora-paraguay/commit/8ccf4e848d8d43ee31aa6a4fdbf453bfa7ece155))
+* Reiniciar clears the parcels layer with the drawing (AGP-43) ([#105](https://github.com/Vizzuality/agora-paraguay/issues/105)) ([9fa1d45](https://github.com/Vizzuality/agora-paraguay/commit/9fa1d45d2966fbd00d8fc1dfdc65eade08cbb511))
+
 ## [0.3.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.2.0...v0.3.0) (2026-09-24)
 
 
