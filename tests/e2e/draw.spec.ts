@@ -1,7 +1,12 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { expect, test, type Page } from '@playwright/test';
 
 import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
 import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
+
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
 // Positions are relative to the canvas, which is the right half of the 1280×720
 // viewport (~640px wide) — the sidebar has the left half.
@@ -15,6 +20,7 @@ function controls(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
+    upload: page.getByRole('button', { name: 'Subir archivo' }),
     // Step 2 only: Analizar appearing is the observable signal that an area landed.
     analyze: page.getByRole('button', { name: 'Analizar' }),
     restart: page.getByRole('button', { name: 'Reiniciar' }),
@@ -151,4 +157,47 @@ test('a drawing outside the cadastre is rejected back to step 1 with the reason'
   await notice.getByRole('button', { name: 'Descartar el aviso de área' }).click();
   await expect(notice).toBeHidden();
   await expect(draw).not.toHaveClass(/(^| )border-destructive( |$)/);
+});
+
+// Starting over from a rejection clears it: the next entry point must not inherit the
+// previous areas' verdict, and its own answer decides.
+test('a rejected drawing does not taint the upload that follows', async ({ page }) => {
+  const { draw, analyze, upload } = controls(page);
+  const notice = page.getByRole('region', { name: 'Aviso de área' });
+
+  // Only the drawing is outside coverage: the first `filter-parcels` answers empty, the
+  // upload's request falls through to the regular stub.
+  let requests = 0;
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
+    async (route) => {
+      requests += 1;
+      if (requests > 1) return route.fallback();
+
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'empty',
+          message: OUT_OF_COVERAGE_MESSAGE,
+          input: { features: [] },
+          results: {},
+        }),
+      });
+    },
+  );
+
+  await draw.click();
+  await drawPolygon(page, POLYGON);
+  await expect(notice).toContainText(OUT_OF_COVERAGE_MESSAGE);
+
+  // Pressing Subir archivo already dismisses the notice, before any file is picked.
+  await upload.click();
+  await expect(notice).toBeHidden();
+
+  await page.locator('input[type="file"]').setInputFiles(join(FIXTURES, 'farms.geojson'));
+  await expect(analyze).toBeEnabled();
+  await expect(notice).toBeHidden();
+  await expect(page.getByRole('status', { name: 'Estado de la selección' })).toContainText(
+    'Se importaron 3 áreas de farms.geojson.',
+  );
 });
