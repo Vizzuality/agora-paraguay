@@ -84,10 +84,11 @@ export type IndicatorType = z.infer<typeof indicatorTypeSchema>;
 
 /**
  * The live list as the spec writes it. Two things it does differently: the open-number
- * type is `number` where the spec (and the cards) say `numeric`; and the hero filter
- * `crop_type` is echoed into the list as a filter (`field_type` with options) rather than
- * an indicator. The analysis answers it as text ("Soja"), so it reads as a text indicator —
- * general info, never in the picker.
+ * type is `number` for sanitario and `numeric` for productivo — the API documentation
+ * itself writes it both ways, one per riesgo, for the same kind of value — and the cards
+ * only know `numeric`; and the hero filter `crop_type` is echoed into the list as a
+ * filter (`field_type` with options) rather than an indicator. The analysis answers it as
+ * text ("Soja"), so it reads as a text indicator — general info, never in the picker.
  */
 function asSpecIndicator(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
