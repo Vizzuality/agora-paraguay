@@ -104,6 +104,11 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => analysisBodies.length).toBe(2);
   expect(analysisBodies[1]).toMatchObject({ crop_type: 'soy' });
 
+  // So does changing the defaulted date: the value is part of the query key.
+  await page.getByLabel('Fecha', { exact: true }).fill('2026-09-10');
+  await expect.poll(() => analysisBodies.length).toBe(3);
+  expect(analysisBodies[2]).toMatchObject({ date: '2026-09-10', sowing_date: '2026-05-01' });
+
   // The hero mini map paints the selected parcel over the (stubbed) satellite basemap —
   // the same layer as the main map, without Terra Draw — and is interactive.
   await expect(mapCanvas(page)).toBeVisible();
@@ -150,9 +155,9 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await list.getByText('Phakopsora pachyrhizi').click();
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).not.toBeChecked();
   await page.keyboard.press('Escape');
-  await expect.poll(() => analysisBodies.length).toBe(3);
-  expect(analysisBodies[2].indicators).not.toContain('asian_rust');
-  expect(analysisBodies[2].indicators).toContain('crop_type');
+  await expect.poll(() => analysisBodies.length).toBe(4);
+  expect(analysisBodies[3].indicators).not.toContain('asian_rust');
+  expect(analysisBodies[3].indicators).toContain('crop_type');
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Información general' })).toBeVisible();
 
