@@ -74,12 +74,17 @@ async function fetchCsrfToken(): Promise<string | null> {
   }
 }
 
-/** A failed request: a non-2xx status, or no response at all (`status: null`). */
+/**
+ * A failed request: a non-2xx status, or no response at all (`status: null`). `detail` is
+ * the reason Django wrote in the body (`message` or `detail`), when it wrote one — what
+ * a user can act on, where the status alone says nothing.
+ */
 export class ApiError extends Error {
   readonly path: string;
   readonly status: number | null;
+  readonly detail: string | null;
 
-  constructor(path: string, status: number | null) {
+  constructor(path: string, status: number | null, detail: string | null = null) {
     super(
       status === null
         ? `Request to ${path} failed`
@@ -88,7 +93,34 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.path = path;
     this.status = status;
+    this.detail = detail;
   }
+}
+
+/** What to tell the user about a failed query: the API's own reason when it gave one, else the error message. */
+export function errorReason(error: unknown): string {
+  if (error instanceof ApiError && error.detail !== null) return error.detail;
+
+  return error instanceof Error ? error.message : String(error);
+}
+
+/** The human-readable reason in an error body, if the JSON carries one under `message` or `detail`. */
+function detailOf(text: string): string | null {
+  try {
+    const body: unknown = JSON.parse(text);
+
+    if (typeof body !== 'object' || body === null) return null;
+
+    for (const key of ['message', 'detail'] as const) {
+      const value = (body as Record<string, unknown>)[key];
+
+      if (typeof value === 'string' && value.trim() !== '') return value;
+    }
+  } catch {
+    // Not JSON: nothing to quote.
+  }
+
+  return null;
 }
 
 /**
@@ -108,9 +140,9 @@ async function send(path: string, init: RequestInit): Promise<unknown> {
     throw new ApiError(path, null);
   }
 
-  if (!response.ok) throw new ApiError(path, response.status);
-
   const text = await response.text();
+
+  if (!response.ok) throw new ApiError(path, response.status, detailOf(text));
 
   return text ? JSON.parse(text) : null;
 }

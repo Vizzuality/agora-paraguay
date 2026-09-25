@@ -1,6 +1,4 @@
-import { visibilityOf } from '@/lib/analysis/request';
-import { analysisPath } from '@/lib/api/analysis/schemas';
-import { getJson, postJson } from '@/lib/api/http';
+import { getJson } from '@/lib/api/http';
 
 import {
   filtersSchema,
@@ -22,18 +20,13 @@ export async function fetchFilters(params: FiltersParams): Promise<Filters> {
 }
 
 /**
- * `POST /api/parcels/analysis/{diseases|production}/` with no parcels — the indicators
- * of a riesgo and their metadata. Same path the analysis POSTs to; with `parcel_ids`
- * empty it lists what it can score. Body shape is the nested one
- * the backend expects: `parcel_ids` plus a `filters` object.
+ * Our own server, not the API: `GET /api/parcels/indicators/` wants `{ riesgo }` as a JSON
+ * body, which no browser can send on a GET. The server route (`src/routes/relay/`) sends
+ * it for us and relays the answer.
  */
-export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
-  const body = {
-    parcel_ids: [],
-    filters: params.cultivo === undefined ? {} : { crop: params.cultivo },
-  };
+const INDICATORS_PATH = '/relay/indicators';
 
-  return indicatorsListResponseSchema.parse(
-    await postJson(analysisPath(visibilityOf(params.riesgo)), body),
-  );
+/** `GET /relay/indicators?riesgo={sanitario|productivo}` — the indicators of a riesgo and their metadata. */
+export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
+  return indicatorsListResponseSchema.parse(await getJson(INDICATORS_PATH, params));
 }

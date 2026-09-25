@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, cookieValue, CSRF_PATH, csrfToken, getJson, postJson } from '@/lib/api/http';
+import {
+  ApiError,
+  cookieValue,
+  CSRF_PATH,
+  csrfToken,
+  errorReason,
+  getJson,
+  postJson,
+} from '@/lib/api/http';
 
 describe('cookieValue', () => {
   it('reads one cookie out of a document.cookie string', () => {
@@ -138,6 +146,30 @@ describe('getJson / postJson', () => {
       path: '/api/x',
       status: 403,
     });
+  });
+
+  it("quotes Django's reason from the error body as `detail`, and errorReason prefers it", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json(
+        { status: 'error', message: 'The sowing date field is required.', result: {} },
+        { status: 400 },
+      ),
+    );
+
+    const error = await postJson('/api/x', {}).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).detail).toBe('The sowing date field is required.');
+    expect(errorReason(error)).toBe('The sowing date field is required.');
+  });
+
+  it('leaves detail null for a non-JSON body, and errorReason falls back to the message', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('<html>Bad Gateway</html>', { status: 502 }));
+
+    const error = await getJson('/api/x').catch((caught: unknown) => caught);
+
+    expect((error as ApiError).detail).toBeNull();
+    expect(errorReason(error)).toBe('Request to /api/x failed with HTTP 502');
   });
 
   it('throws an ApiError with a null status when fetch itself rejects', async () => {

@@ -6,7 +6,7 @@ import type { IndicatorType } from '@/lib/api/metadata/schemas';
  * Analysis contract: `POST` runs the enumerated indicators over the selected parcels.
  * Django routes: `api/parcels/analysis/diseases/` (public, riesgo sanitario)
  * and `api/parcels/analysis/production/` (private, riesgo productivo). POST only — GET
- * answers 405; with no parcels the same POST lists the indicators (`metadata/client.ts`).
+ * answers 405. The indicator list has its own endpoint (`metadata/client.ts`).
  */
 
 /** Which side of the analysis the request goes to: riesgo sanitario is public, productivo private. */

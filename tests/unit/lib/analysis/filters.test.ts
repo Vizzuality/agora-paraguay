@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { EMPTY_ANALYSIS_FILTERS, resolveFilterSelection } from '@/lib/analysis/filters';
+import {
+  EMPTY_ANALYSIS_FILTERS,
+  listNames,
+  resolveFilterSelection,
+  unresolvedFilters,
+} from '@/lib/analysis/filters';
 import type { Filters } from '@/lib/api/metadata/schemas';
 
 /** The live `GET /api/parcels/filters/` shapes: a category and two dates, one defaulted. */
@@ -57,5 +62,29 @@ describe('resolveFilterSelection', () => {
 
   it('gives an empty response an empty selection', () => {
     expect(resolveFilterSelection({ crop_type: 'soy' }, [])).toEqual({});
+  });
+});
+
+describe('unresolvedFilters', () => {
+  it('names the filters the resolution left out — the sowing date until it is typed', () => {
+    const resolved = resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS);
+
+    expect(unresolvedFilters(resolved, FILTERS).map((filter) => filter.id)).toEqual([
+      'sowing_date',
+    ]);
+  });
+
+  it('is empty once every filter has a value', () => {
+    const resolved = resolveFilterSelection({ sowing_date: '2026-05-01' }, FILTERS);
+
+    expect(unresolvedFilters(resolved, FILTERS)).toEqual([]);
+  });
+});
+
+describe('listNames', () => {
+  it('joins names as Spanish prose', () => {
+    expect(listNames(['Fecha de siembra'])).toBe('Fecha de siembra');
+    expect(listNames(['Fecha de siembra', 'Fecha'])).toBe('Fecha de siembra y Fecha');
+    expect(listNames(['A', 'B', 'C'])).toBe('A, B y C');
   });
 });

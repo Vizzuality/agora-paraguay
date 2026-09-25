@@ -45,3 +45,17 @@ export function resolveFilterSelection(
 
   return resolved;
 }
+
+/**
+ * The filters still without a value after `resolveFilterSelection` — a date with no
+ * default the user has not typed yet. The backend requires every filter it lists, so the
+ * analysis waits for these instead of POSTing into a 400.
+ */
+export function unresolvedFilters(resolved: Record<string, string>, filters: Filters): Filters {
+  return filters.filter((filter) => !(filter.id in resolved));
+}
+
+/** Names as Spanish prose: "Fecha de siembra", "Fecha de siembra y Fecha", "A, B y C". */
+export function listNames(names: string[]): string {
+  return new Intl.ListFormat('es', { type: 'conjunction' }).format(names);
+}

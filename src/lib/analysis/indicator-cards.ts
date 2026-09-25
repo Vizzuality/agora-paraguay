@@ -343,7 +343,7 @@ function scalePosition(value: number, indicator: Indicator): number {
   return ((value - min) / (max - min)) * 100;
 }
 
-function formatValue(value: number, unit: string | undefined): string {
+function formatValue(value: number, unit: string | null | undefined): string {
   const number = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(value);
 
   return unit ? `${number} ${unit}` : number;
