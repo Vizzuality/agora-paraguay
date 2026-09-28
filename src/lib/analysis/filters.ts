@@ -55,7 +55,6 @@ export function unresolvedFilters(resolved: Record<string, string>, filters: Fil
   return filters.filter((filter) => !(filter.id in resolved));
 }
 
-/** Names as Spanish prose: "Fecha de siembra", "Fecha de siembra y Fecha", "A, B y C". */
 export function listNames(names: string[]): string {
   return new Intl.ListFormat('es', { type: 'conjunction' }).format(names);
 }
