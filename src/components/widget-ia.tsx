@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { type MutationStatus, useMutation } from '@tanstack/react-query';
 import { ListPlus, Loader, RefreshCw } from 'lucide-react';
 import Markdown from 'react-markdown';
 
@@ -9,10 +9,32 @@ import { analysisMutations } from '@/lib/api/analysis/queries';
 import { errorReason } from '@/lib/api/http';
 import { cn } from '@/lib/utils';
 
-type WidgetIaProps = {
+type WidgetIaProps = Readonly<{
   parcels: string[];
   className?: string;
-};
+}>;
+
+/** What sits under the title: placeholder while generating, the summary once it lands. */
+function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?: string }>) {
+  if (status === 'pending') return <SkeletonParagraph length="paragraph" />;
+
+  if (status === 'success') {
+    return (
+      <div
+        aria-live="polite"
+        className="flex flex-col gap-2 text-sm text-muted-foreground [&_:is(h1,h2,h3,h4)]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_strong]:font-semibold [&_ul]:list-disc"
+      >
+        <Markdown>{text}</Markdown>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-sm text-muted-foreground">
+      Puede añadir al informe un resumen generado con inteligencia artificial.
+    </p>
+  );
+}
 
 export function WidgetIa({ parcels, className }: WidgetIaProps) {
   const mutation = useMutation(analysisMutations.summary());
@@ -28,20 +50,7 @@ export function WidgetIa({ parcels, className }: WidgetIaProps) {
         <div className="flex max-w-150 grow flex-col gap-2" aria-busy={mutation.isPending}>
           <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
 
-          {mutation.isPending ? (
-            <SkeletonParagraph length="paragraph" />
-          ) : mutation.isSuccess ? (
-            <div
-              aria-live="polite"
-              className="flex flex-col gap-2 text-sm text-muted-foreground [&_:is(h1,h2,h3,h4)]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_strong]:font-semibold [&_ul]:list-disc"
-            >
-              <Markdown>{mutation.data}</Markdown>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Puede añadir al informe un resumen generado con inteligencia artificial.
-            </p>
-          )}
+          <SummaryBody status={mutation.status} text={mutation.data} />
 
           {mutation.isError && (
             <p role="alert" className="text-sm text-destructive">
