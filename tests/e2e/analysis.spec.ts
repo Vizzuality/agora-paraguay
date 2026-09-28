@@ -566,7 +566,10 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Resumen de 2 parcelas' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
 
-  // While the session is active the user button is a no-op.
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  // Signed in, the user button is the account menu, not the login dialog.
+  await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cuenta' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 });
