@@ -189,7 +189,7 @@ describe('createUser', () => {
     });
   });
 
-  it('surfaces the refusal a non-admin session gets as an ApiError', async () => {
+  it('surfaces the refusal a non-admin session gets, with the API reason', async () => {
     vi.stubGlobal('document', { cookie: 'csrftoken=t' });
     fetchMock.mockResolvedValueOnce(json({ detail: 'Administrator only.' }, 403));
 
@@ -198,6 +198,7 @@ describe('createUser', () => {
     ).rejects.toMatchObject({
       name: 'ApiError',
       status: 403,
+      detail: 'Administrator only.',
     });
   });
 
