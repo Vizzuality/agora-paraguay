@@ -116,7 +116,7 @@ function UserMenu({ session }: Readonly<{ session: Session }>) {
         </DropdownMenuItem>
         {session.isStaff && (
           <DropdownMenuItem asChild>
-            <Link to="/usuarios">Administrar usuarios</Link>
+            <Link to="/admin">Administrar usuarios</Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuItem disabled={mutation.isPending} onSelect={() => mutation.mutate()}>

@@ -7,7 +7,7 @@ import { NavBar } from '@/components/sidebar/nav-bar';
 import { useSession } from '@/lib/auth/use-session';
 
 /** Administrar usuarios, staff only. A placeholder for now: header, footer and a title. */
-export const Route = createFileRoute('/usuarios')({
+export const Route = createFileRoute('/admin')({
   component: UsersPage,
 });
 

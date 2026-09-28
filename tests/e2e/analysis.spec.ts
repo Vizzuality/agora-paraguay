@@ -486,7 +486,7 @@ test('staff reach Administrar usuarios from the user menu', async ({ page }) => 
   await page.getByRole('menuitem', { name: 'Administrar usuarios' }).click();
 
   // The placeholder admin page: header, footer and the title.
-  await expect(page).toHaveURL(/\/usuarios$/);
+  await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole('heading', { name: 'Página de administración' })).toBeVisible();
   await expect(page.getByRole('banner')).toBeVisible();
   await expect(page.getByRole('contentinfo')).toBeVisible();
