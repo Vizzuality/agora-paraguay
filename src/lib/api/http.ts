@@ -153,16 +153,17 @@ async function send(path: string, init: RequestInit): Promise<unknown> {
   return text ? JSON.parse(text) : null;
 }
 
-/** GET with optional query parameters; `undefined` values are left out. */
+/** GET with optional query parameters (`undefined` values are left out) and headers. */
 export function getJson(
   path: string,
   params: Record<string, string | undefined> = {},
+  headers?: HeadersInit,
 ): Promise<unknown> {
   const query = new URLSearchParams(
     Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined),
   ).toString();
 
-  return send(query ? `${path}?${query}` : path, { method: 'GET' });
+  return send(query ? `${path}?${query}` : path, { method: 'GET', headers });
 }
 
 /** A JSON POST's init, with the CSRF header Django demands of every POST, anonymous ones included. */

@@ -1,32 +1,31 @@
-import { mutationOptions } from '@tanstack/react-query';
+import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { createUser, login, logout } from './client';
+import { createUser, fetchMe, login, logout } from './client';
 import type { CreateUserRequest, Credentials } from './schemas';
 
-/*
- * TODO(auth-me): `GET /api/auth/me/` is parked. The session is client state set by
- * login (`src/store/auth.ts`); nothing reads this query yet, and the endpoint currently
- * answers an anonymous visitor with `400 {"isAuthenticated": false}` — a status
- * `fetchMe` reads as an API error, and a field name it does not know. Re-enable, with
- * `fetchMe` in `client.ts`, once the contract is settled with the backend.
- */
-// export const authQueries = {
-//   /** The session behind the cookie, `null` when anonymous. */
-//   me: () =>
-//     queryOptions({
-//       queryKey: ['auth', 'me'] as const,
-//       queryFn: fetchMe,
-//     }),
-// };
+export const authQueries = {
+  /**
+   * The session behind the cookie, `null` when anonymous. Asked once per page load and
+   * then written by login and logout (`useSessionActions`). No retries: on an outage the
+   * private content should gate at once, not after three back-offs.
+   */
+  me: () =>
+    queryOptions({
+      queryKey: ['auth', 'me'] as const,
+      queryFn: fetchMe,
+      staleTime: Infinity,
+      retry: false,
+    }),
+};
 
-/** Auth mutations. Login's resulting session is client state (`src/store/auth.ts`). */
+/** Auth mutations. Neither writes the session itself: `useSessionActions` refreshes or clears `authQueries.me`. */
 export const authMutations = {
   login: () =>
     mutationOptions({
       mutationKey: ['auth', 'login'] as const,
       mutationFn: (credentials: Credentials) => login(credentials),
     }),
-  /** Ends the Django session; the client session (`sessionAtom`) is the caller's to clear. */
+  /** Ends the Django session; the cached one is the caller's to clear. */
   logout: () =>
     mutationOptions({
       mutationKey: ['auth', 'logout'] as const,

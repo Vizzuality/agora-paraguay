@@ -5,8 +5,8 @@ import { AnalysisHeader } from '@/components/analysis-header';
 import { LoginGate } from '@/components/auth/login-gate';
 import { WidgetGrid } from '@/components/widget-grid';
 import { WidgetIa } from '@/components/widget-ia';
+import { useSession } from '@/lib/auth/use-session';
 import { analysedParcelIdsAtom } from '@/store/analysis';
-import { sessionAtom } from '@/store/auth';
 
 /**
  * Riesgo productivo needs an account: login gate until a session exists, with neither
@@ -33,7 +33,7 @@ function ProductivoPage() {
 
 /** Hero and title only for a logged-in analyst. */
 function ProductivoHeader() {
-  const session = useAtomValue(sessionAtom);
+  const session = useSession();
 
   if (!session) return null;
 
@@ -41,7 +41,7 @@ function ProductivoHeader() {
 }
 
 function ProductivoGate() {
-  const session = useAtomValue(sessionAtom);
+  const session = useSession();
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
 
   if (!session) return <LoginGate />;

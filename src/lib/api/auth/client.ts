@@ -1,4 +1,4 @@
-import { API_URL, csrfToken, postJson } from '@/lib/api/http';
+import { API_URL, ApiError, csrfToken, getJson, postJson } from '@/lib/api/http';
 
 import {
   createdUserSchema,
@@ -7,7 +7,9 @@ import {
   csrfResponseSchema,
   loginResponseSchema,
   sessionSchema,
+  meResponseSchema,
   setPasswordSchema,
+  toSession,
   type CreatedUser,
   type CreateUserRequest,
   type Credentials,
@@ -128,39 +130,36 @@ export async function setPassword(request: SetPasswordRequest): Promise<void> {
   await postJson('/api/auth/password/reset/', setPasswordSchema.parse(request));
 }
 
-/*
- * TODO(auth-me): parked with `authQueries.me` (see `queries.ts`). The endpoint answers
- * `400 {"isAuthenticated": false}` when anonymous; this reader expects 401/403 and
- * `authenticated`. Uncomment and align once the backend contract is settled.
+/** Statuses that mean "no session": the spec's 400, and the 401/403 Django would also use. */
+const ANONYMOUS_STATUSES = new Set([400, 401, 403]);
+
+/**
+ * `GET /api/auth/me/`: the user behind the session cookie, or `null` when there is none.
+ * The spec asks for `X-CSRFToken` on this GET too, so the cookie's value goes along when
+ * there is one — never a round trip for it. Anything else (5xx, offline) propagates as an
+ * `ApiError` so the caller can tell "anonymous" from "unknown".
  */
-// /** Statuses that mean "no session", not "the API is down". */
-// const ANONYMOUS_STATUSES = new Set([401, 403]);
-//
-// /**
-//  * `GET /api/auth/me/`: the session behind the cookie, or `null` when there is none.
-//  * Anything else (5xx, offline) propagates as an `ApiError` so the caller can tell
-//  * "anonymous" from "unknown".
-//  */
-// export async function fetchMe(): Promise<Session | null> {
-//   let body: unknown;
-//
-//   try {
-//     body = await getJson('/api/auth/me/');
-//   } catch (error) {
-//     if (
-//       error instanceof ApiError &&
-//       error.status !== null &&
-//       ANONYMOUS_STATUSES.has(error.status)
-//     ) {
-//       return null;
-//     }
-//
-//     throw error;
-//   }
-//
-//   const { authenticated, username } = meResponseSchema.parse(body ?? {});
-//
-//   if (authenticated === false || username === undefined) return null;
-//
-//   return sessionSchema.parse({ username });
-// }
+export async function fetchMe(): Promise<Session | null> {
+  const token = csrfToken();
+  let body: unknown;
+
+  try {
+    body = await getJson(
+      '/api/auth/me/',
+      {},
+      token === null ? undefined : { 'X-CSRFToken': token },
+    );
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      error.status !== null &&
+      ANONYMOUS_STATUSES.has(error.status)
+    ) {
+      return null;
+    }
+
+    throw error;
+  }
+
+  return toSession(meResponseSchema.parse(body ?? {}));
+}
