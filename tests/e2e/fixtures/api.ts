@@ -27,17 +27,12 @@ export const HERO_FILTERS = [
 ];
 
 /**
- * The indicator lists the analysis paths answer with no parcels, with the ids the
+ * The indicator lists `GET /relay/indicators?riesgo=` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
  */
 export const SANITARIO_INDICATORS = [
-  {
-    id: 'crop_type',
-    name: 'Tipo de cultivo',
-    description: 'Cultivo a evaluar.',
-    default: true,
-    indicator_type: { type: 'text' },
-  },
+  // The backend echoes the crop filter into the list as is — a filter, not an indicator.
+  HERO_FILTERS[0],
   {
     id: 'asian_rust',
     name: 'Phakopsora pachyrhizi',
@@ -63,8 +58,8 @@ export const PRODUCTIVO_INDICATORS = [
 
 /**
  * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
- * filtering, and the analysis itself — plus the filters the /analisis hero lists
- * (`GET /api/parcels/filters/`). Keeps the specs hermetic — the Django backend is
+ * filtering, the indicator list and the analysis itself — plus the filters the /analisis
+ * hero lists (`GET /api/parcels/filters/`). Keeps the specs hermetic — the Django backend is
  * never running under Playwright — while still exercising the real client code, so a
  * body the schemas reject fails the spec.
  *
@@ -141,32 +136,33 @@ export async function stubAnalysisApi(page: Page) {
     },
   );
 
-  // The analysis path answers two requests: the indicator list (`parcel_ids: []`, no
-  // parcels) and the analysis run (`parcels` + `indicators`).
+  // The indicator list of the riesgo asked for in the query string. Stubbed at the relay,
+  // so the server route never has to reach an API under Playwright.
+  await page.route(
+    (url) => url.pathname === '/relay/indicators',
+    (route) =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify(
+          new URL(route.request().url()).searchParams.get('riesgo') === 'productivo'
+            ? PRODUCTIVO_INDICATORS
+            : SANITARIO_INDICATORS,
+        ),
+      }),
+  );
+
+  // The analysis run (`parcels` + `indicators`).
   await page.route(
     (url) =>
       url.pathname === '/api/parcels/analysis/diseases/' ||
       url.pathname === '/api/parcels/analysis/production/',
     (route) => {
-      const body = route.request().postDataJSON() as { indicators?: string[] };
-
-      if (body.indicators === undefined) {
-        return route.fulfill({
-          contentType: 'application/json',
-          body: JSON.stringify(
-            new URL(route.request().url()).pathname.endsWith('/diseases/')
-              ? SANITARIO_INDICATORS
-              : PRODUCTIVO_INDICATORS,
-          ),
-        });
-      }
-
       // Both parcels, answered with the columns the request asked for and nothing else,
       // the way the backend does. The west parcel's disease index sits at the top of its
       // 1–3 range (card reads "Alto" over "3"), the east one's at the bottom ("Bajo"), so
       // the specs can tell which tab is open. Column casing as the backend writes it
       // (`Asian_rust`).
-      const { indicators } = body;
+      const { indicators } = route.request().postDataJSON() as { indicators: string[] };
       const answer = (parcelId: string, rust: number) => {
         const columns: Record<string, string | number> = { crop_type: 'Soja', Asian_rust: rust };
 

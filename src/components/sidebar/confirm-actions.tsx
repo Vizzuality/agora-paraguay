@@ -41,7 +41,7 @@ export function ConfirmActions() {
   // Entering the mode before navigating keeps the store consistent even if navigation fails.
   function analyze() {
     startAnalysis(parcelIds);
-    void navigate({ to: '/analisis' });
+    void navigate({ to: '/analisis/sanitario' });
   }
   return (
     <section aria-live="polite" className="flex w-full flex-col gap-2">

@@ -1,4 +1,4 @@
-import { ClientOnly, getRouteApi, Link } from '@tanstack/react-router';
+import { ClientOnly, Link, type LinkProps, useMatchRoute } from '@tanstack/react-router';
 import { SquarePen } from 'lucide-react';
 
 import { LoginDialog, UserButton } from '@/components/auth/login-dialog';
@@ -7,13 +7,8 @@ import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
-import type { RiesgoTab } from '@/routes/analisis';
-
-const analisisRoute = getRouteApi('/analisis');
 
 export function HeaderNav() {
-  const { riesgo } = analisisRoute.useSearch();
-
   return (
     <>
       <Button
@@ -28,8 +23,8 @@ export function HeaderNav() {
       </Button>
 
       <div className="flex items-center gap-5 rounded-2xl bg-secondary px-6 py-1 text-sm">
-        {RISK_TABS.map(({ label, riesgo: tab }) => (
-          <RiskTab key={tab} riesgo={tab} active={riesgo === tab}>
+        {RISK_TABS.map(({ label, to }) => (
+          <RiskTab key={label} to={to}>
             {label}
           </RiskTab>
         ))}
@@ -46,19 +41,17 @@ export function HeaderNav() {
   );
 }
 
-function RiskTab({
-  riesgo,
-  active,
-  children,
-}: Readonly<{ riesgo: RiesgoTab; active: boolean; children: React.ReactNode }>) {
+/** A tab is a link to its riesgo's route; the router marks the matching one (`aria-current="page"`). */
+function RiskTab({ to, children }: Readonly<{ to: LinkProps['to']; children: React.ReactNode }>) {
+  const matchRoute = useMatchRoute();
+  const active = matchRoute({ to }) !== false;
+
   return (
     <Link
-      to="/analisis"
-      search={{ riesgo }}
+      to={to}
       // Like the camera params: switching tabs must not stack history entries, or
       // the browser's Back stops leaving the page.
       replace
-      aria-current={active ? 'page' : undefined}
       className={cn(
         'py-2 text-accent-foreground',
         active && 'border-b-3 border-primary text-primary',

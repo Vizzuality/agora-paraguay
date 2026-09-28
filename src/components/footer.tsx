@@ -21,8 +21,8 @@ export function Footer() {
 
       <nav className="flex items-center gap-2">
         <SelectionLink className={LINK_CLASS}>{SELECTION_LINK.label}</SelectionLink>
-        {RISK_LINKS.map(({ label, to, search, replace }) => (
-          <Link key={label} to={to} search={search} replace={replace} className={LINK_CLASS}>
+        {RISK_LINKS.map(({ label, to, replace }) => (
+          <Link key={label} to={to} replace={replace} className={LINK_CLASS}>
             {label}
           </Link>
         ))}

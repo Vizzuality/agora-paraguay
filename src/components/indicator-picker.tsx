@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { Check, Search, SquarePen } from 'lucide-react';
 import { useId, useState } from 'react';
 
@@ -10,10 +10,11 @@ import {
   selectableIndicators,
   visibleIndicatorIds,
 } from '@/lib/analysis/indicator-picker';
+import { errorReason } from '@/lib/api/http';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import { analysisFiltersAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
+import { selectedIndicatorIdsAtom } from '@/store/analysis';
 
 type IndicatorPickerProps = {
   riesgo: 'sanitario' | 'productivo';
@@ -26,11 +27,7 @@ type IndicatorPickerProps = {
  * `<ClientOnly>` (it reads the analysis atoms).
  */
 export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
-  // TODO(filters-cultivo): same hand-off as `useAnalysis`.
-  const cultivo = useAtomValue(analysisFiltersAtom).crop_type;
-  const { data: indicators } = useQuery(
-    metadataQueries.indicators(riesgo === 'sanitario' ? { riesgo, cultivo } : { riesgo }),
-  );
+  const { data: indicators, error } = useQuery(metadataQueries.indicators({ riesgo }));
 
   return (
     <Popover>
@@ -46,7 +43,17 @@ export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
         sideOffset={8}
         className="w-auto min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
       >
-        {indicators && <IndicatorChecklist indicators={selectableIndicators(indicators)} />}
+        {indicators ? (
+          <IndicatorChecklist indicators={selectableIndicators(indicators)} />
+        ) : error ? (
+          <p role="alert" className="px-3 py-2.5 text-sm text-destructive">
+            No se pudieron cargar los indicadores: {errorReason(error)}
+          </p>
+        ) : (
+          <p aria-live="polite" className="px-3 py-2.5 text-sm text-muted-foreground">
+            Cargando indicadores…
+          </p>
+        )}
       </PopoverContent>
     </Popover>
   );
