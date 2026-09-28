@@ -1,7 +1,7 @@
 import { mutationOptions } from '@tanstack/react-query';
 
-import { login } from './client';
-import type { Credentials } from './schemas';
+import { createUser, login } from './client';
+import type { CreateUserRequest, Credentials } from './schemas';
 
 /*
  * TODO(auth-me): `GET /api/auth/me/` is parked. The session is client state set by
@@ -19,11 +19,17 @@ import type { Credentials } from './schemas';
 //     }),
 // };
 
-/** Login mutation. The resulting session is client state (`src/store/auth.ts`). */
+/** Auth mutations. Login's resulting session is client state (`src/store/auth.ts`). */
 export const authMutations = {
   login: () =>
     mutationOptions({
       mutationKey: ['auth', 'login'] as const,
       mutationFn: (credentials: Credentials) => login(credentials),
+    }),
+  /** Admin only: creates an account and returns its one-time password setup link. */
+  createUser: () =>
+    mutationOptions({
+      mutationKey: ['auth', 'admin', 'users', 'create'] as const,
+      mutationFn: (request: CreateUserRequest) => createUser(request),
     }),
 };
