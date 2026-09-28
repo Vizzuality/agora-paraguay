@@ -25,6 +25,26 @@ function controls(page: Page) {
   };
 }
 
+/** Draws the first polygon and takes Analizar to the analysis page. */
+async function analyzeFirstPolygon(page: Page) {
+  const { draw, analyze } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+}
+
+/** Signs in through the header dialog (stubbed: any credentials) and waits for it to close. */
+async function loginFromHeader(page: Page, username = 'analista') {
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  await dialog.getByLabel('Usuario o email').fill(username);
+  await dialog.getByLabel('Contraseña').fill('cualquiera');
+  await dialog.getByRole('button', { name: 'Acceder' }).click();
+  await expect(dialog).toBeHidden();
+}
+
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
@@ -427,20 +447,8 @@ test('swaps the login card for the reset-password card and back', async ({ page 
 });
 
 test('closes the session from the user menu', async ({ page }) => {
-  const { draw, analyze } = controls(page);
-
-  await draw.click();
-  await drawPolygon(page, FIRST_POLYGON);
-  await analyze.click();
-  await expect(page).toHaveURL(/\/analisis/);
-
-  // Sign in through the header dialog (stubbed: any credentials).
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
-  await dialog.getByLabel('Usuario o email').fill('analista');
-  await dialog.getByLabel('Contraseña').fill('cualquiera');
-  await dialog.getByRole('button', { name: 'Acceder' }).click();
-  await expect(dialog).toBeHidden();
+  await analyzeFirstPolygon(page);
+  await loginFromHeader(page);
 
   // Signed in, the user button opens the account menu instead (Figma node 5653:1665):
   // password reset is listed but out of scope, so it stays disabled.
@@ -471,20 +479,8 @@ test('closes the session from the user menu', async ({ page }) => {
 test('staff reach Administrar usuarios from the user menu', async ({ page }) => {
   // Registered after the beforeEach stub, so it answers first: `/me` says staff.
   await stubAuth(page, { staff: true });
-
-  const { draw, analyze } = controls(page);
-
-  await draw.click();
-  await drawPolygon(page, FIRST_POLYGON);
-  await analyze.click();
-  await expect(page).toHaveURL(/\/analisis/);
-
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
-  await dialog.getByLabel('Usuario o email').fill('admin');
-  await dialog.getByLabel('Contraseña').fill('cualquiera');
-  await dialog.getByRole('button', { name: 'Acceder' }).click();
-  await expect(dialog).toBeHidden();
+  await analyzeFirstPolygon(page);
+  await loginFromHeader(page, 'admin');
 
   await page.getByRole('button', { name: 'Cuenta' }).click();
   await page.getByRole('menuitem', { name: 'Administrar usuarios' }).click();
@@ -497,12 +493,7 @@ test('staff reach Administrar usuarios from the user menu', async ({ page }) => 
 });
 
 test('logs in from the header dialog', async ({ page }) => {
-  const { draw, analyze } = controls(page);
-
-  await draw.click();
-  await drawPolygon(page, FIRST_POLYGON);
-  await analyze.click();
-  await expect(page).toHaveURL(/\/analisis/);
+  await analyzeFirstPolygon(page);
 
   // The header's user button opens the login dialog (Figma node 5351:11729); its
   // accessible name comes from the dialog's screen-reader-only title.
@@ -525,11 +516,7 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(dialog).toBeHidden();
 
   // Logging in through the dialog closes it…
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await dialog.getByLabel('Usuario o email').fill('analista');
-  await dialog.getByLabel('Contraseña').fill('cualquiera');
-  await dialog.getByRole('button', { name: 'Acceder' }).click();
-  await expect(dialog).toBeHidden();
+  await loginFromHeader(page);
 
   // …and unlocks riesgo productivo: no in-page gate, the private title shows.
   const navbar = page.getByRole('banner');
