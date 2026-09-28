@@ -30,9 +30,21 @@ export const HERO_FILTERS = [
  * The indicator lists `GET /relay/indicators?riesgo=` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
  */
+/** The parcel area, answered as one more column; the thumbnail prints it, never a card. */
+const AREA_INDICATOR = {
+  id: 'area',
+  name: 'Área',
+  unit: 'ha',
+  indicator_type: { type: 'numeric' },
+};
+
+/** West 10.2 ha + east 7.3 ha: 17.5 ha under Todas. */
+export const PARCEL_AREAS: Record<string, number> = { D07D21P00000002: 10.2, D07D23P00000008: 7.3 };
+
 export const SANITARIO_INDICATORS = [
   // The backend echoes the crop filter into the list as is — a filter, not an indicator.
   HERO_FILTERS[0],
+  AREA_INDICATOR,
   {
     id: 'asian_rust',
     name: 'Phakopsora pachyrhizi',
@@ -47,6 +59,7 @@ export const WEST_PARCEL_ID = 'D07D21P00000002';
 export const EAST_PARCEL_ID = 'D07D23P00000008';
 
 export const PRODUCTIVO_INDICATORS = [
+  AREA_INDICATOR,
   {
     id: 'Pro_soja',
     name: 'Producción base histórica de soja',
@@ -173,12 +186,16 @@ export async function stubAnalysisApi(page: Page) {
     (route) => {
       // Both parcels, answered with the columns the request asked for and nothing else,
       // the way the backend does. The west parcel's disease index sits at the top of its
-      // 1–3 range (card reads "Alto" over "3"), the east one's at the bottom ("Bajo"), so
+      // 1–3 range (card reads "Severo"), the east one's at the bottom ("Sin riesgo"), so
       // the specs can tell which tab is open. Column casing as the backend writes it
       // (`Asian_rust`).
       const { indicators } = route.request().postDataJSON() as { indicators: string[] };
       const answer = (parcelId: string, rust: number) => {
-        const columns: Record<string, string | number> = { crop_type: 'Soja', Asian_rust: rust };
+        const columns: Record<string, string | number> = {
+          crop_type: 'Soja',
+          area: PARCEL_AREAS[parcelId],
+          Asian_rust: rust,
+        };
 
         return {
           parcel_id: parcelId,

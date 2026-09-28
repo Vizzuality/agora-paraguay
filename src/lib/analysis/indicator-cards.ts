@@ -6,6 +6,15 @@ import {
 } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
+import { isAreaIndicator } from './area';
+import {
+  categoryClasses,
+  classIndexAt,
+  RANGE_CLASSES,
+  WIDGET_BY_TYPE,
+  type RiskClass,
+} from './widget-config';
+
 /*
  * From one analysed parcel to what its `RiskClassCard`s show. Pure, node-tested. The
  * response is one entry per parcel with the indicators as property columns; the names,
@@ -13,8 +22,9 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
  * Cards are per parcel — the hero's parcel tab picks which. The Todas tab shows the same
  * cards over a synthetic parcel that combines the set (`combinedParcel`).
  *
- * Text indicators (station, crop, phenology) are not risks: they go together into the
- * general-info card (`generalInfo`), the measured ones into one risk card each.
+ * Text and open-number indicators (station, crop, phenology, a yield in t/ha) are not
+ * risks: they go together into the general-info card (`generalInfo`), the classed ones
+ * (range, category) into one risk card each.
  */
 
 /** The `parcel_id` of the parcel `combinedParcel` builds — never a cadastral id. */
@@ -93,37 +103,18 @@ function distinctList(readings: (string | number)[]): string {
   return [...new Set(readings.map((value) => String(value).trim()))].join(', ');
 }
 
+/** The ruler under a classed figure: the classes it is read in and where the reading sits, 0–100. */
+export type RiskScale = { classes: readonly RiskClass[]; position: number };
+
 export type IndicatorCard = {
   id: string;
   /** The indicator's name from the metadata. */
   label: string;
-  /** The figure: the class ("Bajo", "Medio", "Alto"), the category, or the number. */
+  /** The figure: the class ("Sin riesgo", "Moderado", "Severo"), the category, or the number. */
   level: string;
-  /** 0–100 along the ruler, or `undefined` when the value has no scale to sit on. */
-  position?: number;
-  /** Qualifies the figure: the measured value with its unit. */
-  caption?: string;
+  /** The ruler, or `undefined` when the value has no scale to sit on (an open number). */
+  scale?: RiskScale;
 };
-
-/** Where Medio and Alto start on the 0–100 ruler. The product's boundaries, not the API's. */
-const MEDIO_FROM = 33;
-const ALTO_FROM = 66;
-
-/** The class a 0–100 position falls in. */
-export function levelOf(position: number): string {
-  if (position >= ALTO_FROM) return 'Alto';
-  if (position >= MEDIO_FROM) return 'Medio';
-  return 'Bajo';
-}
-
-/** The ruler's colour band for a position — the same thirds as `levelOf`, named for CSS. */
-export type RiskTone = 'low' | 'medium' | 'high';
-
-export function toneOf(position: number): RiskTone {
-  if (position >= ALTO_FROM) return 'high';
-  if (position >= MEDIO_FROM) return 'medium';
-  return 'low';
-}
 
 /** One row of the general-info card: the indicator's name and the parcel's text for it. */
 export type GeneralInfoRow = {
@@ -132,9 +123,9 @@ export type GeneralInfoRow = {
   value: string;
 };
 
-/** Text indicators: nothing to class, so they read as plain facts. */
+/** Text and open-number indicators: nothing to class, so they read as plain facts. */
 export function isGeneralInfo(indicator: Indicator): boolean {
-  return indicator.indicator_type.type === 'text';
+  return WIDGET_BY_TYPE[indicator.indicator_type.type] === 'general-info';
 }
 
 /**
@@ -174,11 +165,10 @@ function columnIgnoringCase(parcel: AnalysisParcel, id: string): ParcelValue | u
 export const NO_READING = 'Sin datos';
 
 /**
- * One risk card per measured indicator the response carries (range, category, numeric),
- * in metadata order. The response decides what is shown: an indicator the backend did not
+ * One risk card per classed indicator the response carries (range, category), in
+ * metadata order. The response decides what is shown: an indicator the backend did not
  * answer (missing column, blank, null, "NA") gets no card, however it was requested. A
- * reading the metadata cannot place still shows, as "Sin datos". Columns the metadata
- * does not know come last, as plain figures under their own column name.
+ * reading the metadata cannot place still shows, as "Sin datos".
  */
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
@@ -186,8 +176,9 @@ export function indicatorCards(
 ): IndicatorCard[] {
   if (!parcel || !indicators) return [];
 
-  const known = indicators.flatMap((indicator) => {
-    if (isGeneralInfo(indicator)) return [];
+  return indicators.flatMap((indicator) => {
+    // The area is the thumbnail's figure (`area.ts`), not a card.
+    if (isGeneralInfo(indicator) || isAreaIndicator(indicator)) return [];
 
     const value = readingOf(parcel, indicator);
 
@@ -197,19 +188,12 @@ export function indicatorCards(
       toCard(indicator, value) ?? { id: indicator.id, label: indicator.name, level: NO_READING },
     ];
   });
-
-  const unknown = unknownColumns(parcel, indicators).flatMap(([column, value]) =>
-    typeof value === 'number' || !Number.isNaN(Number(value))
-      ? [{ id: column, label: column, level: formatValue(Number(value), undefined) }]
-      : [],
-  );
-
-  return [...known, ...unknown];
 }
 
 /**
- * The text indicators the parcel carries, in metadata order, for the general-info card;
- * then any text column the metadata does not know, under its own column name.
+ * The facts the parcel carries for the general-info card: the text and open-number
+ * indicators in metadata order (a number formatted with its unit), then any column the
+ * metadata does not know, under its own column name.
  */
 export function generalInfo(
   parcel: AnalysisParcel | null | undefined,
@@ -218,7 +202,7 @@ export function generalInfo(
   if (!parcel || !indicators) return [];
 
   const known = indicators.flatMap((indicator) => {
-    if (!isGeneralInfo(indicator)) return [];
+    if (!isGeneralInfo(indicator) || isAreaIndicator(indicator)) return [];
 
     const value = readingOf(parcel, indicator);
 
@@ -226,22 +210,23 @@ export function generalInfo(
 
     const typed = typedReading(indicator, value);
 
-    return [
-      {
-        id: indicator.id,
-        label: indicator.name,
-        value: typed === undefined ? NO_READING : String(typed),
-      },
-    ];
+    return [{ id: indicator.id, label: indicator.name, value: factText(typed, indicator.unit) }];
   });
 
-  const unknown = unknownColumns(parcel, indicators).flatMap(([column, value]) =>
-    typeof value === 'string' && Number.isNaN(Number(value))
-      ? [{ id: column, label: column, value }]
-      : [],
-  );
+  const unknown = unknownColumns(parcel, indicators).map(([column, value]) => ({
+    id: column,
+    label: column,
+    value: factText(value, undefined),
+  }));
 
   return [...known, ...unknown];
+}
+
+/** A fact as printed: numbers in the platform's locale with the unit, text as is, "Sin datos" when unreadable. */
+function factText(value: string | number | undefined, unit: string | null | undefined): string {
+  if (value === undefined) return NO_READING;
+
+  return typeof value === 'number' ? formatValue(value, unit) : value;
 }
 
 /** The parcel's readable columns no indicator in the metadata claims, ignoring case. */
@@ -270,8 +255,6 @@ function toCard(indicator: Indicator, value: string | number): IndicatorCard | n
       return categoryCard(indicator, type.categories, typed);
     case 'range':
       return rangeCard(indicator, Number(typed));
-    case 'numeric':
-      return numericCard(indicator, Number(typed));
     default:
       return null;
   }
@@ -279,8 +262,8 @@ function toCard(indicator: Indicator, value: string | number): IndicatorCard | n
 
 /**
  * Categorical indicator: the value names one of the ordered categories, by label or by
- * its index (the sample encodes classes as codes). The ruler places it among them,
- * first at 0 and last at 100.
+ * its index (the sample encodes classes as codes). Each category is a band of the ruler;
+ * the reading sits in the middle of its own. One category alone is no scale.
  */
 function categoryCard(
   indicator: Indicator,
@@ -291,12 +274,20 @@ function categoryCard(
 
   if (index === undefined) return null;
 
-  return {
+  const card: IndicatorCard = {
     id: indicator.id,
     label: indicator.name,
     level: capitalise(categories[index]),
-    position: categories.length > 1 ? (index / (categories.length - 1)) * 100 : undefined,
   };
+
+  if (categories.length > 1) {
+    card.scale = {
+      classes: categoryClasses(categories),
+      position: ((index + 0.5) / categories.length) * 100,
+    };
+  }
+
+  return card;
 }
 
 function classIndex(value: string | number, categories: string[]): number | undefined {
@@ -313,23 +304,19 @@ function classIndex(value: string | number, categories: string[]): number | unde
 
 /**
  * Bounded number (`data_quality` 0–100 %, a disease index 1–3): placed on the range and
- * classed by `levelOf`, the value itself as caption.
+ * read in the three classes of `RANGE_CLASSES`. The figure is the class, not the number:
+ * the design prints no value under the ruler.
  */
 function rangeCard(indicator: Indicator, value: number): IndicatorCard {
   const position = scalePosition(value, indicator);
+  const { label } = RANGE_CLASSES[classIndexAt(position, RANGE_CLASSES.length)];
 
   return {
     id: indicator.id,
     label: indicator.name,
-    level: levelOf(position),
-    position,
-    caption: formatValue(value, indicator.unit),
+    level: label,
+    scale: { classes: RANGE_CLASSES, position },
   };
-}
-
-/** Open number (`Pro_soja` t/ha): no scale to class it on, so the value is the figure. */
-function numericCard(indicator: Indicator, value: number): IndicatorCard {
-  return { id: indicator.id, label: indicator.name, level: formatValue(value, indicator.unit) };
 }
 
 /** Where a number sits on the indicator's range as 0–100. */

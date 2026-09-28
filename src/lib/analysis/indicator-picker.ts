@@ -1,3 +1,4 @@
+import { isAreaIndicator } from '@/lib/analysis/area';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
 import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
@@ -9,10 +10,10 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /**
  * What the picker offers: the measured indicators only. The general-info facts (station,
- * crop, phenology) are always on the page and never in the list.
+ * crop, phenology) and the area are always on the page and never in the list.
  */
 export function selectableIndicators(indicators: Indicators): Indicators {
-  return indicators.filter((indicator) => !isGeneralInfo(indicator));
+  return indicators.filter((indicator) => !isGeneralInfo(indicator) && !isAreaIndicator(indicator));
 }
 
 /** The ids shown: the user's selection, else the indicators the API flags `default`, else all. */
