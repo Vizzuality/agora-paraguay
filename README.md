@@ -128,7 +128,7 @@ Every domain has the same three files; the one fixture left sits behind its doma
 ```
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
-├── auth/                   POST /api/auth/login/ (+csrf) — real; GET /api/auth/me/ parked (TODO(auth-me))
+├── auth/                   POST /api/auth/login/ (+csrf), POST /api/auth/admin/users/create/ (admin) — real; GET /api/auth/me/ parked (TODO(auth-me))
 ├── parcels/                POST /api/parcels/filter-parcels/
 ├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); GET /relay/indicators?riesgo= (indicator list, via our server route)
 ├── relay/                  Server-only: reopens GET /api/parcels/indicators/ with the { riesgo } JSON body a browser cannot send
