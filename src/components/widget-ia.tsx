@@ -8,7 +8,6 @@ import { errorReason } from '@/lib/api/http';
 import { cn } from '@/lib/utils';
 
 type WidgetIaProps = {
-  /** The analysed parcels the summary is written over (the hero's tabs). */
   parcels: string[];
   className?: string;
 };
