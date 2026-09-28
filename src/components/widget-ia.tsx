@@ -12,10 +12,6 @@ type WidgetIaProps = {
   className?: string;
 };
 
-/**
- * The AI summary tile (Figma 5538:6975): a click asks the API for an LLM-written summary
- * of the analysed parcels and shows it under the tile. Generating again replaces it.
- */
 export function WidgetIa({ parcels, className }: WidgetIaProps) {
   const mutation = useMutation(analysisMutations.summary());
 
