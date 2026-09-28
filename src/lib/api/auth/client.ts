@@ -1,11 +1,15 @@
 import { API_URL, csrfToken, postJson } from '@/lib/api/http';
 
 import {
+  createdUserSchema,
+  createUserRequestSchema,
   credentialsSchema,
   csrfResponseSchema,
   loginResponseSchema,
   sessionSchema,
   setPasswordSchema,
+  type CreatedUser,
+  type CreateUserRequest,
   type Credentials,
   type Session,
   type SetPasswordRequest,
@@ -85,6 +89,20 @@ export async function login(credentials: Credentials): Promise<Session> {
   const { username } = loginResponseSchema.parse(body);
 
   return sessionSchema.parse({ username: username ?? parsed.username });
+}
+
+/**
+ * `POST /api/auth/admin/users/create/`: an administrator creates an account and gets its
+ * one-time password setup link back. Needs an admin session; anyone else gets the API's
+ * refusal as an `ApiError`. CSRF is `postJson`'s business.
+ */
+export async function createUser(request: CreateUserRequest): Promise<CreatedUser> {
+  const body = await postJson(
+    '/api/auth/admin/users/create/',
+    createUserRequestSchema.parse(request),
+  );
+
+  return createdUserSchema.parse(body);
 }
 
 /**

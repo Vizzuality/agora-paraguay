@@ -91,3 +91,34 @@ export const sessionSchema = z.object({
 });
 
 export type Session = z.infer<typeof sessionSchema>;
+
+/**
+ * `POST /api/auth/admin/users/create/` — an administrator creates an account, inactive
+ * until its password is set through the one-time link the answer carries. The spec
+ * excerpt shows only the answer; the body is assumed to be the user's writable fields.
+ */
+export const createUserRequestSchema = z.object({
+  username: z.string().trim().min(1),
+  email: z.email(),
+  first_name: z.string().trim().optional(),
+  last_name: z.string().trim().optional(),
+});
+
+export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
+
+export const createdUserSchema = z.looseObject({
+  user: z.looseObject({
+    id: z.number().int(),
+    username: z.string().min(1),
+    email: z.string(),
+    first_name: z.string(),
+    last_name: z.string(),
+    is_active: z.boolean(),
+    is_staff: z.boolean(),
+  }),
+  reset_link: z.url(),
+  token: z.string().min(1),
+  expires_at: z.iso.datetime(),
+});
+
+export type CreatedUser = z.infer<typeof createdUserSchema>;
