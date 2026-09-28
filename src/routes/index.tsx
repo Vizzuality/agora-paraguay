@@ -3,7 +3,6 @@ import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import { TempCreateUserButton } from '@/components/auth/temp-create-user-button';
 import { MapView } from '@/components/map';
 import { MapLoading } from '@/components/map/map-loading';
 import { NavBar } from '@/components/sidebar/nav-bar';
@@ -63,10 +62,6 @@ function Panel() {
 
       <ClientOnly fallback={<SelectionBlockLayout step={1} />}>
         <SelectionBlock />
-      </ClientOnly>
-
-      <ClientOnly>
-        <TempCreateUserButton />
       </ClientOnly>
     </aside>
   );
