@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { runAnalysis } from '@/lib/api/analysis/client';
+import { generateSummary, runAnalysis } from '@/lib/api/analysis/client';
 import {
   analysisPath,
   analysisRequestSchema,
@@ -134,6 +134,57 @@ describe('runAnalysis', () => {
 
   it('rejects a malformed request before touching the network', async () => {
     await expect(runAnalysis('public', { ...request, parcels: [] })).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('generateSummary', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('POSTs the parcels with the CSRF token and returns the summary', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ summary: 'Las parcelas presentan riesgo alto de roya.' }),
+    );
+
+    await expect(
+      generateSummary({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
+    ).resolves.toEqual({ summary: 'Las parcelas presentan riesgo alto de roya.' });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/parcels/analysis/summary/');
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { 'X-CSRFToken': 'abc' },
+      body: JSON.stringify({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
+    });
+  });
+
+  it('keeps fields the answer adds beyond summary', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ summary: 'Texto.', model: 'gpt' }));
+
+    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).resolves.toMatchObject({
+      model: 'gpt',
+    });
+  });
+
+  it('rejects an answer without a summary', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ status: 'success' }));
+
+    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toThrow(ZodError);
+  });
+
+  it('rejects an empty parcel list before touching the network', async () => {
+    await expect(generateSummary({ parcels: [] })).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

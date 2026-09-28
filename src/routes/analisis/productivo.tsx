@@ -5,6 +5,7 @@ import { AnalysisHeader } from '@/components/analysis-header';
 import { LoginGate } from '@/components/auth/login-gate';
 import { WidgetGrid } from '@/components/widget-grid';
 import { WidgetIa } from '@/components/widget-ia';
+import { analysedParcelIdsAtom } from '@/store/analysis';
 import { sessionAtom } from '@/store/auth';
 
 /**
@@ -41,13 +42,14 @@ function ProductivoHeader() {
 
 function ProductivoGate() {
   const session = useAtomValue(sessionAtom);
+  const parcelIds = useAtomValue(analysedParcelIdsAtom);
 
   if (!session) return <LoginGate />;
 
   return (
     <div className="flex flex-col gap-4">
       <WidgetGrid />
-      <WidgetIa />
+      <WidgetIa parcels={parcelIds} />
     </div>
   );
 }

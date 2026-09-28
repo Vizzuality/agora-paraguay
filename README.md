@@ -132,7 +132,7 @@ src/lib/api/
 ├── parcels/                POST /api/parcels/filter-parcels/
 ├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); GET /relay/indicators?riesgo= (indicator list, via our server route)
 ├── relay/                  Server-only: reopens GET /api/parcels/indicators/ with the { riesgo } JSON body a browser cannot send
-└── analysis/               POST /api/parcels/analysis/{diseases|production}/
+└── analysis/               POST /api/parcels/analysis/{diseases|production}/; POST /api/parcels/analysis/summary/ (LLM summary)
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
     ├── client.ts           The ONLY module in the domain that knows the endpoint
     └── queries.ts          queryOptions factories — what components import

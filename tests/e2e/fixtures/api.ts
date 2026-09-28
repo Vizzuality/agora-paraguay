@@ -151,6 +151,22 @@ export async function stubAnalysisApi(page: Page) {
       }),
   );
 
+  // The AI summary: echoes the parcels it was asked about, so a spec can tell the
+  // request carried the analysed selection.
+  await page.route(
+    (url) => url.pathname === '/api/parcels/analysis/summary/',
+    (route) => {
+      const { parcels } = route.request().postDataJSON() as { parcels: string[] };
+
+      return route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          summary: `Resumen de ${parcels.length} parcelas: ${parcels.join(', ')}.`,
+        }),
+      });
+    },
+  );
+
   // The analysis run (`parcels` + `indicators`).
   await page.route(
     (url) =>

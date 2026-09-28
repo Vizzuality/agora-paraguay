@@ -112,3 +112,18 @@ export const analysisResponseSchema = z.looseObject({
 });
 
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
+
+/*
+ * The AI summary: `POST /api/parcels/analysis/summary/` writes a text over the selected
+ * parcels with an LLM. Same CSRF and session rules as the analysis runs.
+ */
+export const SUMMARY_PATH = '/api/parcels/analysis/summary/';
+
+export const summaryRequestSchema = z.object({ parcels: idListSchema });
+
+export type SummaryRequest = z.infer<typeof summaryRequestSchema>;
+
+/** Only `summary` is contractual; anything else the API adds passes through. */
+export const summaryResponseSchema = z.looseObject({ summary: z.string().min(1) });
+
+export type SummaryResponse = z.infer<typeof summaryResponseSchema>;
