@@ -471,10 +471,30 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
 
   // Generar resumen POSTs the analysed parcels to the summary endpoint (stubbed to echo
-  // them) and shows the text it gets back; the button then offers to generate again.
+  // them). The answer is held back so the generating state can be seen: the button reads
+  // Generando and the description gives way to a placeholder.
+  let releaseSummary!: () => void;
+  const summaryHeld = new Promise<void>((resolve) => {
+    releaseSummary = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === '/api/parcels/analysis/summary/',
+    async (route) => {
+      await summaryHeld;
+      await route.fallback();
+    },
+  );
+
+  const description = page.getByText('Puede añadir al informe un resumen');
+  await expect(description).toBeVisible();
   await page.getByRole('button', { name: 'Generar resumen' }).click();
+  await expect(page.getByRole('button', { name: 'Generando' })).toBeDisabled();
+  await expect(description).toBeHidden();
+
+  // Once it lands the text replaces the description and the button offers a retry.
+  releaseSummary();
   await expect(page.getByRole('heading', { name: 'Resumen de 2 parcelas' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Generar de nuevo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
 
   // While the session is active the user button is a no-op.
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
