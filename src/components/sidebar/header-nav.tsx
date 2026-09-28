@@ -43,8 +43,6 @@ export function HeaderNav() {
 
 /** A tab is a link to its riesgo's route; the router marks the matching one (`aria-current="page"`). */
 function RiskTab({ to, children }: Readonly<{ to: LinkProps['to']; children: React.ReactNode }>) {
-  // Not `activeProps`: the router joins its className with the base one as plain strings,
-  // so `cn` could not resolve the two text colours.
   const matchRoute = useMatchRoute();
   const active = matchRoute({ to }) !== false;
 
