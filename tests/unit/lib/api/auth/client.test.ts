@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { login } from '@/lib/api/auth/client';
+import { createUser, login } from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -134,6 +134,87 @@ describe('login', () => {
 
   it('rejects malformed credentials before touching the network', async () => {
     await expect(login({ identifier: '', password: 'b' })).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('createUser', () => {
+  const created = {
+    user: {
+      id: 7,
+      username: 'newuser',
+      email: 'newuser@example.com',
+      first_name: 'New',
+      last_name: 'User',
+      is_active: false,
+      is_staff: false,
+    },
+    reset_link: 'https://frontend/reset-password/550e8400-e29b-41d4-a716-446655440000',
+    token: '550e8400-e29b-41d4-a716-446655440000',
+    expires_at: '2026-09-22T10:30:00Z',
+  };
+
+  it('POSTs the new user with the CSRF token and returns the setup link', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=from-cookie' });
+    fetchMock.mockResolvedValueOnce(json(created, 201));
+
+    const request = {
+      username: 'newuser',
+      email: 'newuser@example.com',
+      first_name: 'New',
+      last_name: 'User',
+    };
+
+    await expect(createUser(request)).resolves.toEqual(created);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/auth/admin/users/create/');
+    expect(init).toMatchObject({
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'from-cookie' },
+      body: JSON.stringify(request),
+    });
+  });
+
+  it('keeps fields the answer adds beyond the contract', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockResolvedValueOnce(json({ ...created, user: { ...created.user, role: 'x' } }));
+
+    await expect(
+      createUser({ username: 'newuser', email: 'newuser@example.com' }),
+    ).resolves.toMatchObject({
+      user: { role: 'x' },
+    });
+  });
+
+  it('surfaces the refusal a non-admin session gets, with the API reason', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockResolvedValueOnce(json({ detail: 'Administrator only.' }, 403));
+
+    await expect(
+      createUser({ username: 'newuser', email: 'newuser@example.com' }),
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 403,
+      detail: 'Administrator only.',
+    });
+  });
+
+  it('rejects an answer without the setup link', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockResolvedValueOnce(json({ user: created.user }));
+
+    await expect(createUser({ username: 'newuser', email: 'newuser@example.com' })).rejects.toThrow(
+      ZodError,
+    );
+  });
+
+  it('rejects a malformed email before touching the network', async () => {
+    await expect(createUser({ username: 'newuser', email: 'not-an-email' })).rejects.toThrow(
+      ZodError,
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
