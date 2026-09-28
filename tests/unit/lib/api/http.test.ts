@@ -8,6 +8,7 @@ import {
   errorReason,
   getJson,
   postJson,
+  postText,
 } from '@/lib/api/http';
 
 describe('cookieValue', () => {
@@ -179,5 +180,41 @@ describe('getJson / postJson', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBeNull();
+  });
+});
+
+describe('postText', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('POSTs JSON with the CSRF header and hands the body back untouched', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('# Hola\n\n{not json}', { status: 200 }));
+
+    await expect(postText('/api/prose/', { a: 1 })).resolves.toBe('# Hola\n\n{not json}');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'abc' },
+      body: '{"a":1}',
+    });
+  });
+
+  it('turns a non-2xx into an ApiError with the reason, like postJson', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ detail: 'nope' }, { status: 502 }));
+
+    await expect(postText('/api/prose/', {})).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 502,
+      detail: 'nope',
+    });
   });
 });

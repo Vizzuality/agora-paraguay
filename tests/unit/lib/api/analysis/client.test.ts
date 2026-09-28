@@ -151,14 +151,17 @@ describe('generateSummary', () => {
     vi.unstubAllGlobals();
   });
 
-  it('POSTs the parcels with the CSRF token and returns the summary', async () => {
+  it('POSTs the parcels with the CSRF token and returns the Markdown as it came', async () => {
     fetchMock.mockResolvedValueOnce(
-      Response.json({ summary: 'Las parcelas presentan riesgo alto de roya.' }),
+      new Response('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.', {
+        status: 200,
+        headers: { 'Content-Type': 'text/markdown' },
+      }),
     );
 
     await expect(
       generateSummary({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
-    ).resolves.toEqual({ summary: 'Las parcelas presentan riesgo alto de roya.' });
+    ).resolves.toBe('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.');
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toBe('/api/parcels/analysis/summary/');
@@ -169,18 +172,20 @@ describe('generateSummary', () => {
     });
   });
 
-  it('keeps fields the answer adds beyond summary', async () => {
-    fetchMock.mockResolvedValueOnce(Response.json({ summary: 'Texto.', model: 'gpt' }));
-
-    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).resolves.toMatchObject({
-      model: 'gpt',
-    });
-  });
-
-  it('rejects an answer without a summary', async () => {
-    fetchMock.mockResolvedValueOnce(Response.json({ status: 'success' }));
+  it('rejects a blank answer', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('  \n', { status: 200 }));
 
     await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toThrow(ZodError);
+  });
+
+  it('surfaces a refusal as an ApiError with the API reason', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ detail: 'LLM unavailable' }, { status: 503 }));
+
+    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 503,
+      detail: 'LLM unavailable',
+    });
   });
 
   it('rejects an empty parcel list before touching the network', async () => {

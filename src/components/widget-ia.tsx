@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { ListPlus } from 'lucide-react';
+import Markdown from 'react-markdown';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -52,9 +53,12 @@ export function WidgetIa({ parcels, className }: WidgetIaProps) {
       )}
 
       {mutation.isSuccess && (
-        <p aria-live="polite" className="text-sm whitespace-pre-line">
-          {mutation.data.summary}
-        </p>
+        <div
+          aria-live="polite"
+          className="flex flex-col gap-2 text-sm [&_:is(h1,h2,h3,h4)]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_strong]:font-semibold [&_ul]:list-disc"
+        >
+          <Markdown>{mutation.data}</Markdown>
+        </div>
       )}
     </Card>
   );
