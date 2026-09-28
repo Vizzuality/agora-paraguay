@@ -175,7 +175,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
-  await expect(page.getByLabel('Usuario')).toBeVisible();
+  await expect(page.getByLabel('Usuario o email')).toBeVisible();
   await expect(page.getByLabel('Contraseña')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
 
@@ -192,7 +192,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
 
   // Stubbed login (`stubAuth`): any credentials open the private indicators in place.
-  await page.getByLabel('Usuario').fill('analista');
+  await page.getByLabel('Usuario o email').fill('analista');
   await page.getByLabel('Contraseña').fill('cualquiera');
   await page.getByRole('button', { name: 'Acceder' }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
@@ -423,7 +423,7 @@ test('swaps the login card for the reset-password card and back', async ({ page 
   // …and its link brings the login card back.
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
-  await expect(page.getByLabel('Usuario')).toBeVisible();
+  await expect(page.getByLabel('Usuario o email')).toBeVisible();
 });
 
 test('logs in from the header dialog', async ({ page }) => {
@@ -456,7 +456,7 @@ test('logs in from the header dialog', async ({ page }) => {
 
   // Logging in through the dialog closes it…
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await dialog.getByLabel('Usuario').fill('analista');
+  await dialog.getByLabel('Usuario o email').fill('analista');
   await dialog.getByLabel('Contraseña').fill('cualquiera');
   await dialog.getByRole('button', { name: 'Acceder' }).click();
   await expect(dialog).toBeHidden();

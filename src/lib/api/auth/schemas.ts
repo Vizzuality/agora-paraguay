@@ -4,11 +4,11 @@ import { passwordErrors } from '@/lib/auth/password';
 
 /**
  * Auth contract, against the Django session endpoints (`/api/auth/csrf/` then
- * `/api/auth/login/`, plus `/api/auth/me/`). Django identifies users by `username`,
- * not email.
+ * `/api/auth/login/`, plus `/api/auth/me/`). The login body carries `identifier`, which
+ * the API resolves as a username or an email.
  */
 export const credentialsSchema = z.object({
-  username: z.string().trim().min(1),
+  identifier: z.string().trim().min(1),
   password: z.string().min(1),
 });
 
