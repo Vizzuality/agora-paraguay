@@ -170,10 +170,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   // Analizar lands on riesgo sanitario, which is public: no login gate.
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
-  // The risk tabs live in the URL, not the store: switching updates ?riesgo.
+  // The risk tabs live in the URL, not the store: each is its own route under /analisis.
   // Riesgo productivo is private, gated behind the login card (Figma node 5180:11125).
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
-  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByLabel('Usuario')).toBeVisible();
   await expect(page.getByLabel('Contraseña')).toBeVisible();
@@ -181,14 +181,14 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
 
   // Back on the public tab the gate goes away again.
   await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
-  await expect(page).toHaveURL(/riesgo=sanitario/);
+  await expect(page).toHaveURL(/\/analisis\/sanitario/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
   // The footer repeats the brand and the three destinations (Figma node 5180:11421).
   const footer = page.getByRole('contentinfo');
   await expect(footer.getByRole('link', { name: 'Inicio' })).toBeVisible();
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
-  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
 
   // Stubbed login (`stubAuth`): any credentials open the private indicators in place.
@@ -196,7 +196,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await page.getByLabel('Contraseña').fill('cualquiera');
   await page.getByRole('button', { name: 'Acceder' }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
-  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page).toHaveURL(/\/analisis\/productivo/);
 
   // Going back remounts the map; the selection survives, so the panel resumes on step 2
   // and the parcels are painted again from the cached answer.
@@ -414,7 +414,7 @@ test('swaps the login card for the reset-password card and back', async ({ page 
   await page.getByRole('button', { name: 'Solicitar' }).click();
   await expect(page.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
   await expect(page.getByText('Si la dirección ana@example.org está registrada')).toBeVisible();
-  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page).toHaveURL(/\/analisis\/productivo/);
 
   // "Enviar otra solicitud" returns to the form…
   await page.getByRole('button', { name: 'Enviar otra solicitud' }).click();
@@ -464,7 +464,7 @@ test('logs in from the header dialog', async ({ page }) => {
   // …and unlocks riesgo productivo: no in-page gate, the private title shows.
   const navbar = page.getByRole('banner');
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
-  await expect(page).toHaveURL(/riesgo=productivo/);
+  await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
 
