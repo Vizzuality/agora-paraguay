@@ -106,6 +106,16 @@ export async function createUser(request: CreateUserRequest): Promise<CreatedUse
 }
 
 /**
+ * `POST /api/auth/logout/`: Django ends the session behind the cookie. Not in the API
+ * spec yet — the path and the empty body follow the Django convention until the backend
+ * confirms (AGP-42). A refusal (anonymous, 401/403) or an outage is an `ApiError`; the
+ * caller decides what a failed logout means for the client session.
+ */
+export async function logout(): Promise<void> {
+  await postJson('/api/auth/logout/', {});
+}
+
+/**
  * TODO(auth-password): parked — no route or form calls this yet, and its tests went with
  * the dead-code sweep. Kept on purpose for the reset flow.
  *

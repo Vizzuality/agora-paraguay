@@ -426,6 +426,46 @@ test('swaps the login card for the reset-password card and back', async ({ page 
   await expect(page.getByLabel('Usuario o email')).toBeVisible();
 });
 
+test('closes the session from the user menu', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  // Sign in through the header dialog (stubbed: any credentials).
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  await dialog.getByLabel('Usuario o email').fill('analista');
+  await dialog.getByLabel('Contraseña').fill('cualquiera');
+  await dialog.getByRole('button', { name: 'Acceder' }).click();
+  await expect(dialog).toBeHidden();
+
+  // Signed in, the user button opens the account menu instead (Figma node 5653:1665):
+  // password reset is listed but out of scope, so it stays disabled.
+  const navbar = page.getByRole('banner');
+  await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Cuenta' }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitem', { name: 'Restablecer contraseña' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+
+  // Cerrar sesión POSTs to the logout endpoint and brings the login gate back.
+  const logoutRequest = page.waitForRequest(
+    (request) => request.url().includes('/api/auth/logout/') && request.method() === 'POST',
+  );
+  await menu.getByRole('menuitem', { name: 'Cerrar sesión' }).click();
+  await logoutRequest;
+  await expect(menu).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeHidden();
+});
+
 test('logs in from the header dialog', async ({ page }) => {
   const { draw, analyze } = controls(page);
 

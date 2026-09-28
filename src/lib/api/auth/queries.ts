@@ -1,6 +1,6 @@
 import { mutationOptions } from '@tanstack/react-query';
 
-import { createUser, login } from './client';
+import { createUser, login, logout } from './client';
 import type { CreateUserRequest, Credentials } from './schemas';
 
 /*
@@ -25,6 +25,12 @@ export const authMutations = {
     mutationOptions({
       mutationKey: ['auth', 'login'] as const,
       mutationFn: (credentials: Credentials) => login(credentials),
+    }),
+  /** Ends the Django session; the client session (`sessionAtom`) is the caller's to clear. */
+  logout: () =>
+    mutationOptions({
+      mutationKey: ['auth', 'logout'] as const,
+      mutationFn: () => logout(),
     }),
   /** Admin only: creates an account and returns its one-time password setup link. */
   createUser: () =>

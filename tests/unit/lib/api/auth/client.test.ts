@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { createUser, login } from '@/lib/api/auth/client';
+import { createUser, login, logout } from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -216,6 +216,42 @@ describe('createUser', () => {
       ZodError,
     );
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('logout', () => {
+  it('POSTs to the logout endpoint with the session cookie and the CSRF token', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=from-cookie' });
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(logout()).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/auth/logout/');
+    expect(init).toMatchObject({
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'from-cookie' },
+    });
+  });
+
+  it('surfaces a refusal as an ApiError with the status', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockResolvedValueOnce(json({ detail: 'Not authenticated.' }, 403));
+
+    await expect(logout()).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 403,
+      detail: 'Not authenticated.',
+    });
+  });
+
+  it('surfaces an outage as an ApiError without a status', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    await expect(logout()).rejects.toMatchObject({ name: 'ApiError', status: null });
   });
 });
 
