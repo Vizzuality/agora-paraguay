@@ -10,7 +10,7 @@ export async function stubAuth(page: Page) {
     route.fulfill({ contentType: 'application/json', body: JSON.stringify({ csrfToken: 'e2e' }) }),
   );
   await page.route('**/api/auth/login/', async (route) => {
-    const { username } = route.request().postDataJSON() as { username: string };
+    const { identifier: username } = route.request().postDataJSON() as { identifier: string };
 
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ username }) });
   });

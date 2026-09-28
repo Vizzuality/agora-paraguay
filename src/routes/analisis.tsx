@@ -1,51 +1,23 @@
-import {
-  ClientOnly,
-  createFileRoute,
-  useNavigate,
-  type SearchSchemaInput,
-} from '@tanstack/react-router';
+import { ClientOnly, createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
-import { Upload } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 
-import { AnalysisHero } from '@/components/analysis-hero';
-import { LoginGate } from '@/components/auth/login-gate';
 import { Footer } from '@/components/footer';
-import { GeneralInfoCard } from '@/components/general-info-card';
-import { IndicatorPicker } from '@/components/indicator-picker';
-import { RiskClassCard } from '@/components/risk-class-card';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
-import { Button } from '@/components/ui/button';
-import { WidgetIa } from '@/components/widget-ia';
-import { combinedParcel, generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
-import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
-import { useAnalysis } from '@/lib/analysis/use-analysis';
-import {
-  activeParcelIdAtom,
-  analysedParcelIdsAtom,
-  selectedIndicatorIdsAtom,
-} from '@/store/analysis';
-import { sessionAtom } from '@/store/auth';
 import { drawPolygonsAtom } from '@/store/draw';
 
-/** The analysis tabs. URL state, not store state: a shared link lands on the same tab. */
-export type RiesgoTab = 'sanitario' | 'productivo';
-
+/**
+ * Layout of the analysis pages: the nav with the risk tabs, the footer, and the guard
+ * that sends an empty selection back to `/`. Each riesgo is a child route
+ * (`/analisis/sanitario`, `/analisis/productivo`) rendered in the outlet, so a shared
+ * link lands on the same tab and the two pages grow apart without branching here.
+ */
 export const Route = createFileRoute('/analisis')({
-  // `SearchSchemaInput` keeps the param optional for links and navigate calls
-  // (`analyze-button.tsx` navigates here without one); anything unknown falls back
-  // to the default tab instead of leaking into the page.
-  validateSearch: (search: { riesgo?: string } & SearchSchemaInput): { riesgo: RiesgoTab } => ({
-    riesgo: search.riesgo === 'productivo' ? 'productivo' : 'sanitario',
-  }),
-  component: AnalysisPage,
+  component: AnalysisLayout,
 });
 
-/** Placeholder for the analysis results page — content arrives with the real API. */
-function AnalysisPage() {
-  const { riesgo } = Route.useSearch();
-
+function AnalysisLayout() {
   return (
     // The nav and footer live outside <main> on purpose: header/footer only get
     // their banner/contentinfo landmark roles when they are not descendants of
@@ -63,155 +35,11 @@ function AnalysisPage() {
       </NavBar>
 
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
-        {/* Sanitario is public; productivo shows the hero and title only with a
-            session (the login screen design has neither above the gate). */}
-        <ClientOnly>
-          {riesgo === 'sanitario' ? (
-            <>
-              <SelectionHero riesgo="sanitario" />
-              <TitleRow riesgo="sanitario" />
-            </>
-          ) : (
-            <ProductivoHero />
-          )}
-        </ClientOnly>
-
-        {riesgo === 'sanitario' ? (
-          <ClientOnly fallback={<WidgetGrid />}>
-            <SanitarioWidgets />
-          </ClientOnly>
-        ) : (
-          <ClientOnly fallback={<LoginGate />}>
-            <ProductivoGate />
-          </ClientOnly>
-        )}
+        <Outlet />
       </main>
 
       <Footer />
     </div>
-  );
-}
-
-/**
- * The hero with one tab per parcel Analizar submitted, labelled by its cadastral id. Tabs
- * come from that snapshot, not the analysis answer, so they show before the POST resolves.
- * Parcels carry no link back to the drawn or uploaded area, so the areas' names do not
- * appear here.
- */
-function SelectionHero({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
-  const parcelIds = useAtomValue(analysedParcelIdsAtom);
-
-  return <AnalysisHero riesgo={riesgo} parcels={parcelIds} />;
-}
-
-function TitleRow({ riesgo }: Readonly<{ riesgo: RiesgoTab }>) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <h1 className="text-[66px] font-thin tracking-[0.408px]">
-        {riesgo === 'sanitario' ? 'Riesgo sanitario' : 'Riesgo productivo'}
-      </h1>
-
-      <div className="flex items-center gap-4">
-        <IndicatorPicker riesgo={riesgo} />
-        <Button className="h-11 rounded-2xl px-8 font-normal">
-          <Upload aria-hidden />
-          Exportar informe
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-/** Hero for the private tab: only a logged-in analyst sees the parameters. */
-function ProductivoHero() {
-  const session = useAtomValue(sessionAtom);
-
-  if (!session) return null;
-
-  return (
-    <>
-      <SelectionHero riesgo="productivo" />
-      <TitleRow riesgo="productivo" />
-    </>
-  );
-}
-
-/**
- * Riesgo productivo needs an account: login gate until a session exists. Behind it, the
- * (still empty) widget grid and the AI summary tile under it.
- */
-function ProductivoGate() {
-  const session = useAtomValue(sessionAtom);
-
-  if (!session) return <LoginGate />;
-
-  return (
-    <div className="flex flex-col gap-4">
-      <WidgetGrid />
-      <WidgetIa />
-    </div>
-  );
-}
-
-/**
- * Riesgo sanitario: the active parcel tab's indicators — its text facts in the
- * general-info card, then one risk card per selected measured indicator. Cards are per
- * parcel; the Todas tab shows the same cards over the parcels combined
- * (`combinedParcel`). The active parcel is the hero's open tab (`activeParcelIdAtom`);
- * the answer is matched by id, since the backend need not echo the parcels in request
- * order. Changing the picker or the hero filters re-runs the analysis (`useAnalysis`);
- * the previous cards stay until the new answer lands.
- */
-function SanitarioWidgets() {
-  const { analysis, indicators, parcelIds } = useAnalysis('sanitario');
-  const activeId = useAtomValue(activeParcelIdAtom);
-  const selected = useAtomValue(selectedIndicatorIdsAtom);
-
-  const answered = analysis.data?.indicators ?? [];
-  const parcel =
-    activeId === null
-      ? combinedParcel(
-          answered.filter((entry) => parcelIds.includes(String(entry.parcel_id))),
-          indicators,
-        )
-      : answered.find((entry) => String(entry.parcel_id) === activeId);
-  // General info is always on; the cards are the selected measured indicators (the API's
-  // defaults until the user touches Personalizar indicadores).
-  const info = generalInfo(parcel, indicators);
-  const shown = indicators
-    ? visibleIndicators(selectableIndicators(indicators), selected)
-    : undefined;
-  const cards = indicatorCards(parcel, shown);
-
-  return (
-    <div className="flex flex-col gap-4">
-      {analysis.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          El análisis falló: {analysis.error.message}
-        </p>
-      )}
-      {analysis.isFetching && !analysis.data && (
-        <p aria-live="polite" className="text-sm text-muted-foreground">
-          Analizando…
-        </p>
-      )}
-      {info.length > 0 && <GeneralInfoCard items={info} />}
-      <WidgetGrid>
-        {cards.map((card) => (
-          <RiskClassCard key={card.id} {...card} />
-        ))}
-      </WidgetGrid>
-    </div>
-  );
-}
-
-/**
- * The indicator cards, as many as are selected — no empty frames. Auto-fill columns keep a
- * card the same width whether it has company or not.
- */
-function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {
-  return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">{children}</div>
   );
 }
 

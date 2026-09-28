@@ -27,7 +27,7 @@ describe('login', () => {
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(json({ username: 'analista' }));
 
-    const session = await login({ username: 'analista', password: 'secreta' });
+    const session = await login({ identifier: 'analista', password: 'secreta' });
 
     expect(session).toEqual({ username: 'analista' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -42,7 +42,7 @@ describe('login', () => {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'abc' },
-      body: JSON.stringify({ username: 'analista', password: 'secreta' }),
+      body: JSON.stringify({ identifier: 'analista', password: 'secreta' }),
     });
   });
 
@@ -52,7 +52,7 @@ describe('login', () => {
       .mockResolvedValueOnce(json({ detail: 'CSRF cookie set.' }))
       .mockResolvedValueOnce(json({}));
 
-    await login({ username: 'analista', password: 'x' });
+    await login({ identifier: 'analista', password: 'x' });
 
     expect(fetchMock.mock.calls[1][1]).toMatchObject({
       headers: expect.objectContaining({ 'X-CSRFToken': 'from-cookie' }),
@@ -63,7 +63,7 @@ describe('login', () => {
     vi.stubGlobal('document', { cookie: '' });
     fetchMock.mockResolvedValueOnce(json({ detail: 'CSRF cookie set.' }));
 
-    await expect(login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+    await expect(login({ identifier: 'a', password: 'b' })).rejects.toMatchObject({
       reason: 'unavailable',
       status: 200,
     });
@@ -75,7 +75,7 @@ describe('login', () => {
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(new Response('', { status: 200 }));
 
-    await expect(login({ username: 'analista', password: 'x' })).resolves.toEqual({
+    await expect(login({ identifier: 'analista', password: 'x' })).resolves.toEqual({
       username: 'analista',
     });
   });
@@ -85,7 +85,7 @@ describe('login', () => {
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(json({ detail: 'Invalid credentials' }, 401));
 
-    await expect(login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+    await expect(login({ identifier: 'a', password: 'b' })).rejects.toMatchObject({
       name: 'LoginError',
       reason: 'credentials',
       status: 401,
@@ -97,7 +97,7 @@ describe('login', () => {
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(json({ non_field_errors: ['Unable to log in'] }, 400));
 
-    await expect(login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+    await expect(login({ identifier: 'a', password: 'b' })).rejects.toMatchObject({
       reason: 'credentials',
     });
   });
@@ -107,7 +107,7 @@ describe('login', () => {
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(new Response('boom', { status: 503 }));
 
-    await expect(login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+    await expect(login({ identifier: 'a', password: 'b' })).rejects.toMatchObject({
       reason: 'unavailable',
       status: 503,
     });
@@ -116,7 +116,7 @@ describe('login', () => {
   it('reports the backend as unavailable when the CSRF step fails', async () => {
     fetchMock.mockResolvedValueOnce(new Response('', { status: 502 }));
 
-    await expect(login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+    await expect(login({ identifier: 'a', password: 'b' })).rejects.toMatchObject({
       reason: 'unavailable',
       status: 502,
     });
@@ -126,14 +126,14 @@ describe('login', () => {
   it('reports the backend as unavailable when fetch itself rejects', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
-    await expect(login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+    await expect(login({ identifier: 'a', password: 'b' })).rejects.toMatchObject({
       reason: 'unavailable',
       status: null,
     });
   });
 
   it('rejects malformed credentials before touching the network', async () => {
-    await expect(login({ username: '', password: 'b' })).rejects.toThrow(ZodError);
+    await expect(login({ identifier: '', password: 'b' })).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
