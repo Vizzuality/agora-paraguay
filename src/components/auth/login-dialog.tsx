@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useMutation } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { User } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { authMutations } from '@/lib/api/auth/queries';
-import { sessionAtom } from '@/store/auth';
+import type { Session } from '@/lib/api/auth/schemas';
+import { useSession, useSessionActions } from '@/lib/auth/use-session';
 
 export function UserButton(props: React.ComponentProps<typeof Button>) {
   return (
@@ -32,9 +33,9 @@ export function UserButton(props: React.ComponentProps<typeof Button>) {
 
 /** The header's user button: the login popover while anonymous, the account menu once signed in. */
 export function LoginDialog() {
-  const session = useAtomValue(sessionAtom);
+  const session = useSession();
 
-  return session ? <UserMenu /> : <LoginPopover />;
+  return session ? <UserMenu session={session} /> : <LoginPopover />;
 }
 
 function LoginPopover() {
@@ -93,19 +94,15 @@ function LoginPopover() {
 /**
  * The signed-in user's menu (Figma node 5653:1665). Restablecer contraseña is listed
  * but always disabled: resetting the password from inside a session is out of scope.
+ * Staff get Administrar usuarios in between.
  */
-function UserMenu() {
-  const setSession = useSetAtom(sessionAtom);
-  const queryClient = useQueryClient();
+function UserMenu({ session }: Readonly<{ session: Session }>) {
+  const { clear } = useSessionActions();
   const mutation = useMutation({
     ...authMutations.logout(),
     // Success or failure, the client session ends: the cookie is HttpOnly, so nothing
-    // more is possible from here — and the private answers must not outlive the identity
-    // that fetched them.
-    onSettled: () => {
-      queryClient.removeQueries({ queryKey: ['analysis', 'private'] });
-      setSession(null);
-    },
+    // more is possible from here.
+    onSettled: clear,
   });
 
   return (
@@ -117,6 +114,11 @@ function UserMenu() {
         <DropdownMenuItem disabled className="data-[disabled]:opacity-20">
           Restablecer contraseña
         </DropdownMenuItem>
+        {session.isStaff && (
+          <DropdownMenuItem asChild>
+            <Link to="/usuarios">Administrar usuarios</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem disabled={mutation.isPending} onSelect={() => mutation.mutate()}>
           Cerrar sesión
         </DropdownMenuItem>

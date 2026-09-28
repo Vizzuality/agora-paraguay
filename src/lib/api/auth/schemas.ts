@@ -28,14 +28,21 @@ export const csrfResponseSchema = z.looseObject({ csrfToken: z.string().min(1).o
 export const loginResponseSchema = z.looseObject({ username: z.string().min(1).optional() });
 
 /**
- * `GET /api/auth/me/` — whether the session cookie is still valid. The body is not
- * fixed by the spec beyond that question, so both shapes a Django view would plausibly
- * answer with are accepted: an explicit `authenticated` flag, or the user's fields.
+ * `GET /api/auth/me/` — the user behind the session cookie. Anonymous is a 400 with
+ * `isAuthenticated: false` and nothing else, hence every field optional.
  */
 export const meResponseSchema = z.looseObject({
-  authenticated: z.boolean().optional(),
+  id: z.number().optional(),
   username: z.string().min(1).optional(),
+  email: z.string().optional(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_staff: z.boolean().optional(),
+  isAuthenticated: z.boolean().optional(),
 });
+
+export type MeResponse = z.infer<typeof meResponseSchema>;
 
 /**
  * Setting a password goes through `POST /api/auth/password/reset/` in both cases the
@@ -85,12 +92,32 @@ export const setPasswordSchema = z
 
 export type SetPasswordRequest = z.infer<typeof setPasswordSchema>;
 
-/** The session carries only what the UI needs to show an identified state. */
+/**
+ * The identified user, in app vocabulary. `isStaff` opens the administration
+ * (Administrar usuarios); the names are for the header/session UI.
+ */
 export const sessionSchema = z.object({
   username: z.string().min(1),
+  email: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  isStaff: z.boolean().default(false),
 });
 
 export type Session = z.infer<typeof sessionSchema>;
+
+/** The `/me` answer as a session, or `null` when it names nobody or says so itself. */
+export function toSession(me: MeResponse): Session | null {
+  if (me.isAuthenticated === false || me.username === undefined) return null;
+
+  return sessionSchema.parse({
+    username: me.username,
+    email: me.email,
+    firstName: me.first_name,
+    lastName: me.last_name,
+    isStaff: me.is_staff ?? false,
+  });
+}
 
 /**
  * `POST /api/auth/admin/users/create/` — an administrator creates an account, inactive

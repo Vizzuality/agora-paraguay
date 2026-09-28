@@ -453,6 +453,8 @@ test('closes the session from the user menu', async ({ page }) => {
     'aria-disabled',
     'true',
   );
+  // Not staff: no administration entry.
+  await expect(menu.getByRole('menuitem', { name: 'Administrar usuarios' })).toHaveCount(0);
 
   // Cerrar sesión POSTs to the logout endpoint and brings the login gate back.
   const logoutRequest = page.waitForRequest(
@@ -464,6 +466,34 @@ test('closes the session from the user menu', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeHidden();
+});
+
+test('staff reach Administrar usuarios from the user menu', async ({ page }) => {
+  // Registered after the beforeEach stub, so it answers first: `/me` says staff.
+  await stubAuth(page, { staff: true });
+
+  const { draw, analyze } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  await dialog.getByLabel('Usuario o email').fill('admin');
+  await dialog.getByLabel('Contraseña').fill('cualquiera');
+  await dialog.getByRole('button', { name: 'Acceder' }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.getByRole('button', { name: 'Cuenta' }).click();
+  await page.getByRole('menuitem', { name: 'Administrar usuarios' }).click();
+
+  // The placeholder admin page: header, footer and the title.
+  await expect(page).toHaveURL(/\/usuarios$/);
+  await expect(page.getByRole('heading', { name: 'Página de administración' })).toBeVisible();
+  await expect(page.getByRole('banner')).toBeVisible();
+  await expect(page.getByRole('contentinfo')).toBeVisible();
 });
 
 test('logs in from the header dialog', async ({ page }) => {

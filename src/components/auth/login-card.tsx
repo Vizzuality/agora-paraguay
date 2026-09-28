@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query';
-import { useSetAtom } from 'jotai';
 import { useId } from 'react';
 
 import { AuthCard, AuthLinkButton } from '@/components/auth/auth-card';
@@ -15,14 +14,16 @@ import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-la
 import { Input } from '@/components/ui/input';
 import { LoginError } from '@/lib/api/auth/client';
 import { authMutations } from '@/lib/api/auth/queries';
-import { sessionAtom } from '@/store/auth';
+import { useSessionActions } from '@/lib/auth/use-session';
 
 /**
- * Submits the credentials to the Django login (`authMutations.login`) and stores the
- * resulting session in `sessionAtom`. The real session is Django's HttpOnly cookie,
- * which the browser sends on its own but scripts cannot read, so the atom is the UI's
- * only record of who is signed in: the header dialog and the riesgo productivo tab
- * read it to swap the login gate for the identified state.
+ * Submits the credentials to the Django login (`authMutations.login`), then asks `/me`
+ * who the cookie now identifies (`useSessionActions().refresh`). The real session is
+ * Django's HttpOnly cookie, which the browser sends on its own but scripts cannot read,
+ * so that query is the UI's only record of who is signed in: the header dialog and the
+ * riesgo productivo tab read it to swap the login gate for the identified state. The
+ * button stays on Accediendo until `/me` has answered, so the host closes on a settled
+ * state.
  *
  * "Restablecer contraseña" only reports up (`onReset`): the host decides how to show
  * `ResetPasswordCard` — the gate swaps cards, the header popover swaps its content.
@@ -32,15 +33,15 @@ export function LoginCard({
   onSuccess,
   onReset,
 }: Readonly<{ className?: string; onSuccess?: () => void; onReset: () => void }>) {
-  const setSession = useSetAtom(sessionAtom);
+  const { refresh } = useSessionActions();
 
   const fieldId = useId();
   // Ties the failure message to both inputs (aria-describedby) so it is read in context.
   const errorId = `${fieldId}-error`;
   const mutation = useMutation({
     ...authMutations.login(),
-    onSuccess: (session) => {
-      setSession(session);
+    onSuccess: async () => {
+      await refresh();
       onSuccess?.();
     },
   });
