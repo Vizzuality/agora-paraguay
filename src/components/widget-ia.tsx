@@ -16,7 +16,7 @@ type WidgetIaProps = Readonly<{
 
 /** What sits under the title: placeholder while generating, the summary once it lands. */
 function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?: string }>) {
-  if (status === 'pending') return <SkeletonParagraph length="paragraph" />;
+  if (status === 'pending') return <SkeletonParagraph lines={6} />;
 
   if (status === 'success') {
     return (
