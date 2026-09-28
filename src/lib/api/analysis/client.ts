@@ -1,12 +1,17 @@
-import { postJson } from '@/lib/api/http';
+import { postJson, postText } from '@/lib/api/http';
 
 import {
   analysisPath,
   analysisRequestSchema,
   analysisResponseSchema,
+  SUMMARY_PATH,
+  summaryRequestSchema,
+  summaryResponseSchema,
   type AnalysisRequest,
   type AnalysisResponse,
   type AnalysisVisibility,
+  type SummaryRequest,
+  type SummaryResponse,
 } from './schemas';
 
 /**
@@ -20,4 +25,11 @@ export async function runAnalysis(
   const parsed = analysisRequestSchema.parse(request);
 
   return analysisResponseSchema.parse(await postJson(analysisPath(visibility), parsed));
+}
+
+/** POSTs the selected parcels and gets back the LLM-written summary of their analysis, as Markdown. */
+export async function generateSummary(request: SummaryRequest): Promise<SummaryResponse> {
+  const parsed = summaryRequestSchema.parse(request);
+
+  return summaryResponseSchema.parse(await postText(SUMMARY_PATH, parsed));
 }

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { runAnalysis } from '@/lib/api/analysis/client';
+import { generateSummary, runAnalysis } from '@/lib/api/analysis/client';
 import {
   analysisPath,
   analysisRequestSchema,
@@ -134,6 +134,62 @@ describe('runAnalysis', () => {
 
   it('rejects a malformed request before touching the network', async () => {
     await expect(runAnalysis('public', { ...request, parcels: [] })).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('generateSummary', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('POSTs the parcels with the CSRF token and returns the Markdown as it came', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.', {
+        status: 200,
+        headers: { 'Content-Type': 'text/markdown' },
+      }),
+    );
+
+    await expect(
+      generateSummary({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
+    ).resolves.toBe('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/parcels/analysis/summary/');
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { 'X-CSRFToken': 'abc' },
+      body: JSON.stringify({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
+    });
+  });
+
+  it('rejects a blank answer', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('  \n', { status: 200 }));
+
+    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toThrow(ZodError);
+  });
+
+  it('surfaces a refusal as an ApiError with the API reason', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ detail: 'LLM unavailable' }, { status: 503 }));
+
+    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 503,
+      detail: 'LLM unavailable',
+    });
+  });
+
+  it('rejects an empty parcel list before touching the network', async () => {
+    await expect(generateSummary({ parcels: [] })).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

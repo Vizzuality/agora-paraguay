@@ -123,12 +123,8 @@ function detailOf(text: string): string | null {
   return null;
 }
 
-/**
- * Sends the request with the session cookie and returns the JSON body (`null` when
- * empty). Callers parse the result through their Zod schema — this layer returns
- * `unknown` on purpose so no contract check can be skipped.
- */
-async function send(path: string, init: RequestInit): Promise<unknown> {
+/** Sends the request with the session cookie and returns the raw body; non-2xx is an `ApiError`. */
+async function sendText(path: string, init: RequestInit): Promise<string> {
   let response: Response;
 
   try {
@@ -143,6 +139,16 @@ async function send(path: string, init: RequestInit): Promise<unknown> {
   const text = await response.text();
 
   if (!response.ok) throw new ApiError(path, response.status, detailOf(text));
+
+  return text;
+}
+
+/**
+ * `sendText`, parsed as JSON (`null` when empty). Callers parse the result through their
+ * Zod schema — this layer returns `unknown` on purpose so no contract check can be skipped.
+ */
+async function send(path: string, init: RequestInit): Promise<unknown> {
+  const text = await sendText(path, init);
 
   return text ? JSON.parse(text) : null;
 }
@@ -159,16 +165,26 @@ export function getJson(
   return send(query ? `${path}?${query}` : path, { method: 'GET' });
 }
 
-/** POST a JSON body. Django rejects any POST without the CSRF header, anonymous ones included. */
-export async function postJson(path: string, body: unknown): Promise<unknown> {
+/** A JSON POST's init, with the CSRF header Django demands of every POST, anonymous ones included. */
+async function postInit(body: unknown): Promise<RequestInit> {
   const token = await ensureCsrfToken();
 
-  return send(path, {
+  return {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(token === null ? {} : { 'X-CSRFToken': token }),
     },
     body: JSON.stringify(body),
-  });
+  };
+}
+
+/** POST a JSON body and read a JSON answer. */
+export async function postJson(path: string, body: unknown): Promise<unknown> {
+  return send(path, await postInit(body));
+}
+
+/** POST a JSON body and read the answer as text — for endpoints that write prose, not JSON. */
+export async function postText(path: string, body: unknown): Promise<string> {
+  return sendText(path, await postInit(body));
 }

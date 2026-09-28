@@ -151,6 +151,20 @@ export async function stubAnalysisApi(page: Page) {
       }),
   );
 
+  // The AI summary answers Markdown, not JSON. Echoes the parcels it was asked about,
+  // so a spec can tell the request carried the analysed selection.
+  await page.route(
+    (url) => url.pathname === '/api/parcels/analysis/summary/',
+    (route) => {
+      const { parcels } = route.request().postDataJSON() as { parcels: string[] };
+
+      return route.fulfill({
+        contentType: 'text/markdown',
+        body: `## Resumen de ${parcels.length} parcelas\n\n- ${parcels.join('\n- ')}`,
+      });
+    },
+  );
+
   // The analysis run (`parcels` + `indicators`).
   await page.route(
     (url) =>
