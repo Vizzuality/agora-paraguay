@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 
@@ -33,7 +33,9 @@ export const parcelQueries = {
       staleTime: Infinity,
       // A geometry change (a vertex drag, a restore after /analisis) re-keys the query;
       // the parcels already on the map stay painted until the new answer lands instead
-      // of vanishing for the round trip.
-      placeholderData: keepPreviousData,
+      // of vanishing for the round trip. Not when the geometry is gone (Reiniciar): the
+      // disabled query would otherwise keep handing the old parcels to a layer that is
+      // still mounted, and they would stay on the map.
+      placeholderData: (previous) => (polygons.length > 0 ? previous : undefined),
     }),
 };

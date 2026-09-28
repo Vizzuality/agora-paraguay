@@ -12,15 +12,17 @@ import { rejectAreasAtom } from '@/store/selection';
  * panel back to step 1 with the backend's reason. An answer with parcels but none
  * selected is not this case — the user can still click one.
  *
- * `isSuccess` excludes the placeholder shown for a re-keyed query. Mounted from
- * `DrawLayer`, next to the other Terra Draw side effects.
+ * Only a real answer counts: a re-keyed query (an upload right after a rejected drawing)
+ * shows the previous answer as placeholder, and TanStack reports that as `success` too,
+ * so `isPlaceholderData` is what keeps the old rejection from hitting the new areas.
+ * Mounted from `DrawLayer`, next to the other Terra Draw side effects.
  */
 export function useRejectUncoveredAreas() {
   const polygons = useAtomValue(drawPolygonsAtom);
   const reject = useSetAtom(rejectAreasAtom);
-  const { data, isSuccess } = useQuery(parcelQueries.filtered(polygons));
+  const { data, isSuccess, isPlaceholderData } = useQuery(parcelQueries.filtered(polygons));
 
-  const uncovered = isSuccess && data.results.length === 0;
+  const uncovered = isSuccess && !isPlaceholderData && data.results.length === 0;
   const message = data?.message ?? '';
 
   useEffect(() => {
