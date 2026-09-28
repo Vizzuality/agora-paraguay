@@ -47,7 +47,7 @@ export function WidgetIa({ parcels, className }: WidgetIaProps) {
       )}
     >
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex max-w-150 grow flex-col gap-2" aria-busy={mutation.isPending}>
+        <div className="flex flex-col gap-2 sm:w-3/4" aria-busy={mutation.isPending}>
           <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
 
           <SummaryBody status={mutation.status} text={mutation.data} />
