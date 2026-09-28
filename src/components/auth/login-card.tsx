@@ -60,7 +60,7 @@ export function LoginCard({
             return typeof value === 'string' ? value : '';
           };
 
-          mutation.mutate({ username: text('username'), password: text('password') });
+          mutation.mutate({ identifier: text('identifier'), password: text('password') });
         }}
       >
         <CardHeader className="gap-1.5 px-10">
@@ -76,11 +76,10 @@ export function LoginCard({
         <CardContent className="flex flex-col gap-4 px-10">
           {/* Floating labels: the label is the placeholder, hence `placeholder=" "`. */}
           <div className="relative">
-            {/* Django identifies users by username (see `credentialsSchema`); the design's
-                email field waits on the login-by-email decision with the API team. */}
+            {/* One field, username or email: the API resolves `identifier` either way. */}
             <Input
-              id={`${fieldId}-username`}
-              name="username"
+              id={`${fieldId}-identifier`}
+              name="identifier"
               type="text"
               required
               autoComplete="username"
@@ -89,7 +88,7 @@ export function LoginCard({
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
             />
-            <FloatingLabel htmlFor={`${fieldId}-username`}>Usuario</FloatingLabel>
+            <FloatingLabel htmlFor={`${fieldId}-identifier`}>Usuario o email</FloatingLabel>
           </div>
           <div className="relative">
             <Input

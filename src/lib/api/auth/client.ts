@@ -88,7 +88,7 @@ export async function login(credentials: Credentials): Promise<Session> {
   const body: unknown = await response.text().then((text) => (text ? JSON.parse(text) : {}));
   const { username } = loginResponseSchema.parse(body);
 
-  return sessionSchema.parse({ username: username ?? parsed.username });
+  return sessionSchema.parse({ username: username ?? parsed.identifier });
 }
 
 /**

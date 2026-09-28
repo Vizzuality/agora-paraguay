@@ -25,6 +25,9 @@ export default defineConfig(({ mode }) => {
   const API_PROXY_HEADERS = { origin: API_PROXY_TARGET, referer: `${API_PROXY_TARGET}/` };
 
   return {
+    // The server route `/relay/indicators` calls the API itself (see
+    // `src/lib/api/relay/indicators.ts`) and needs the same target the proxy has.
+    define: { __API_PROXY_TARGET__: JSON.stringify(API_PROXY_TARGET) },
     server: {
       port: 3000,
       proxy: {
