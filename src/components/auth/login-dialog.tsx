@@ -43,7 +43,6 @@ function LoginPopover() {
 
   return (
     <Popover
-      modal
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
@@ -54,13 +53,28 @@ function LoginPopover() {
       <PopoverTrigger asChild>
         <UserButton />
       </PopoverTrigger>
-      {open && <div aria-hidden className="fixed inset-0 z-40 animate-in bg-black/50 fade-in-0" />}
+      {open && (
+        <div
+          aria-hidden
+          data-slot="login-backdrop"
+          className="fixed inset-0 z-40 animate-in bg-black/50 fade-in-0"
+        />
+      )}
       <PopoverContent
         align="end"
         sideOffset={20}
         // Radix gives the content role="dialog"; the label names it for AT.
         aria-label="Iniciar sesión"
         className="w-[411px] rounded-3xl border-0 p-0 shadow-lg"
+        // Not modal, and only the backdrop dismisses: a modal popover disables pointer
+        // events on the page and closes on any pointer-down or focus outside its content —
+        // which is what a password manager's inline suggestion is, so it could never be
+        // picked. Escape still closes.
+        onInteractOutside={(event) => {
+          const target = event.target instanceof Element ? event.target : null;
+
+          if (!target?.closest('[data-slot="login-backdrop"]')) event.preventDefault();
+        }}
       >
         {view === 'login' ? (
           <LoginCard
