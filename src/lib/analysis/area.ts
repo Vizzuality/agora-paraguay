@@ -47,7 +47,7 @@ export function parcelArea(
   };
 }
 
-/** "17,5 ha": the figure in the platform's locale, one decimal at most, the unit when there is one. */
+/** The figure in the platform's locale, one decimal at most, the unit when there is one. */
 export function formatArea({ value, unit }: ParcelArea): string {
   const number = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 }).format(value);
 

@@ -19,6 +19,10 @@ const BODY_CLASS: Record<CategoryTone, string> = {
 };
 
 /**
+ * TODO(charts): move this to the charts library once the API settles and the widgets are
+ * clarified — Recharts per the repo decision, TanStack Charts if it has left pre-alpha by
+ * then. Hand-rolled bars for now, because the design is a handful of rectangles.
+ *
  * Widget tile counting the analysed parcels per category (Figma Widget03 on productivo):
  * the indicator's name, one column per category with the count over a bar sized to the
  * fullest column and coloured by the class (`categoryTone`), a baseline and the category
