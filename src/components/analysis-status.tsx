@@ -8,7 +8,7 @@ type AnalysisStatusProps = Pick<ReturnType<typeof useAnalysis>, 'analysis' | 'in
  * analysis failing, and the first run in flight. Nothing when all is well. Alerts for
  * failures, a polite live region for the wait.
  */
-export function AnalysisStatus({ analysis, indicatorsError }: AnalysisStatusProps) {
+export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisStatusProps>) {
   return (
     <>
       {indicatorsError && (

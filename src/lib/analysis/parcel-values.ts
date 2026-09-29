@@ -59,12 +59,13 @@ export function parcelValueTiles(
 
     const max = Math.max(...readings.map((reading) => reading.value));
     const type = indicator.indicator_type;
-    const position = (value: number) =>
-      type.type === 'range' && type.max > type.min
-        ? ((value - type.min) / (type.max - type.min)) * 100
-        : max > 0
-          ? (value / max) * 100
-          : 0;
+    const position = (value: number) => {
+      if (type.type === 'range' && type.max > type.min) {
+        return ((value - type.min) / (type.max - type.min)) * 100;
+      }
+
+      return max > 0 ? (value / max) * 100 : 0;
+    };
     const rows = readings.map((reading) => ({
       ...reading,
       text: formatFigure(reading.value),
