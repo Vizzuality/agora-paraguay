@@ -172,8 +172,9 @@ function HeroDate({
         onChange={(event) => onChange(event.target.value)}
         className={cn(FLOATING_FIELD_CLASS, 'border')}
       />
-      <FloatingLabel htmlFor={id} adornment={<InfoTip description={description} subject={label} />}>
+      <FloatingLabel htmlFor={id}>
         {label}
+        <InfoTip description={description} subject={label} />
       </FloatingLabel>
     </div>
   );
@@ -428,11 +429,9 @@ function HeroSelect({
         <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
           <SelectValue placeholder=" " />
         </SelectTrigger>
-        <FloatingLabel
-          htmlFor={id}
-          adornment={<InfoTip description={description} subject={label} />}
-        >
+        <FloatingLabel htmlFor={id}>
           {label}
+          <InfoTip description={description} subject={label} />
         </FloatingLabel>
         <SelectContent>
           {options.map((option) => (

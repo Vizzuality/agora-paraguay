@@ -9,11 +9,6 @@ type InfoTipProps = {
   className?: string;
 };
 
-/**
- * The circled "i" next to a widget title or a hero label (Figma 5686:5734) that opens the
- * indicator's or filter's description from the metadata. A popover, not a tooltip: it
- * opens on click and keyboard alike, so it works on touch and reads as a dialog.
- */
 export function InfoTip({ description, subject, className }: InfoTipProps) {
   if (!description) return null;
 
