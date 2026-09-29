@@ -24,6 +24,16 @@ describe('activeParcelIdAtom', () => {
     expect(store.get(activeParcelIdAtom)).toBeNull();
   });
 
+  it('is the only analysed parcel, with no Todas to fall back on', () => {
+    const store = createStore();
+    store.set(analysedParcelIdsAtom, PARCELS.slice(0, 1));
+
+    expect(store.get(activeParcelIdAtom)).toBe('D07D21P00000002');
+
+    store.set(activeParcelTabAtom, null);
+    expect(store.get(activeParcelIdAtom)).toBe('D07D21P00000002');
+  });
+
   it('falls back to Todas when a re-analysis drops the open parcel', () => {
     const store = createStore();
     store.set(analysedParcelIdsAtom, PARCELS);

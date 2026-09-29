@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { ArrowLeft, ArrowRight, List } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { MiniMap } from '@/components/map/mini-map';
@@ -193,21 +193,25 @@ function MiniMapThumbnail() {
  * A fieldset names the group; its legend, absolutely positioned, stops being a "rendered
  * legend" and becomes the same border chip the floating labels use.
  *
- * Todas — the whole selection — comes first, then one tab per analysed parcel. Three ways
- * to open a tab: clicking it, picking it in the list dropdown, or clicking its parcel on
- * the mini map (`selectAnalysedParcelAtom`). The last two may target a tab out of view, so
- * the strip scrolls to bring it to the leading edge; a direct click never scrolls, since
- * the tab is already under the pointer.
+ * Todas — the whole selection — comes first, then one tab per analysed parcel; a single
+ * parcel has nothing to combine, so it stands alone without Todas. Three ways to open a
+ * tab: clicking it, picking it in the dropdown, or clicking its parcel on the mini map
+ * (`selectAnalysedParcelAtom`). The last two may target a tab out of view, so the strip
+ * scrolls to bring it to the leading edge; a direct click never scrolls, since the tab
+ * is already under the pointer. Layout per Figma 5540:7991.
  */
 const ALL_TAB = 'Todas';
 
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   const activeId = useAtomValue(activeParcelIdAtom);
   const setActiveTab = useSetAtom(activeParcelTabAtom);
-  const tabs = [ALL_TAB, ...parcels];
-  // Index 0 is Todas (`activeId === null`); a parcel's index is its position plus one.
-  const activeIndex = activeId === null ? 0 : parcels.indexOf(activeId) + 1;
-  const setActiveIndex = (index: number) => setActiveTab(index === 0 ? null : parcels[index - 1]);
+  const hasAllTab = parcels.length > 1;
+  const tabs = hasAllTab ? [ALL_TAB, ...parcels] : parcels;
+  // With Todas at index 0 (`activeId === null`), a parcel's index is its position plus one.
+  const offset = hasAllTab ? 1 : 0;
+  const activeIndex = activeId === null ? 0 : parcels.indexOf(activeId) + offset;
+  const setActiveIndex = (index: number) =>
+    setActiveTab(hasAllTab && index === 0 ? null : parcels[index - offset]);
 
   const stripRef = useRef<HTMLDivElement>(null);
   // Where the strip is heading while a smooth scroll is in flight, so a second arrow
@@ -319,9 +323,20 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atStart}
         onClick={() => scroll('left')}
         aria-label="Parcelas anteriores"
-        className="size-8 rounded-full"
+        className="size-8 rounded-full disabled:opacity-30"
       >
         <ArrowLeft />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        disabled={atEnd}
+        onClick={() => scroll('right')}
+        aria-label="Parcelas siguientes"
+        className="size-8 rounded-full disabled:opacity-30"
+      >
+        <ArrowRight />
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -332,7 +347,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
             aria-label="Ver lista de parcelas"
             className="size-8 rounded-full"
           >
-            <List />
+            <ChevronDown />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -349,17 +364,6 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        disabled={atEnd}
-        onClick={() => scroll('right')}
-        aria-label="Parcelas siguientes"
-        className="size-8 rounded-full"
-      >
-        <ArrowRight />
-      </Button>
     </fieldset>
   );
 }

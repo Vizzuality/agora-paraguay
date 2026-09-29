@@ -332,6 +332,49 @@ test('Selección de parcelas starts a new selection with an empty map', async ({
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
 });
 
+test('a single analysed parcel stands alone, without Todas', async ({ page }) => {
+  const { draw, analyze } = controls(page);
+
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await expect(analyze).toBeVisible();
+
+  // The camera eased onto the drawing; the stubbed parcels split its bbox down the
+  // middle, so a click on the left of the canvas flips the west one off.
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  await page.waitForTimeout(FIT_ANIMATION);
+  const bothSelected = await yellowPixelCount(page);
+  const canvas = mapCanvas(page);
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Map canvas has no bounding box');
+  await canvas.click({ position: { x: box.width * 0.3, y: box.height * 0.5 } });
+  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothSelected * 0.75);
+
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+
+  // One tab, already open; the dropdown lists that one parcel and nothing else.
+  const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await expect(tabs).toHaveText([EAST_PARCEL_ID]);
+  await expect(tabs.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
+  await page.getByRole('button', { name: 'Ver lista de parcelas' }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitemradio')).toHaveText([EAST_PARCEL_ID]);
+  await expect(menu.getByRole('menuitemradio', { name: EAST_PARCEL_ID })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.keyboard.press('Escape');
+
+  // Its own values, not a combination: index 1 reads "Sin riesgo", its area alone.
+  const card = page
+    .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
+    .locator('..')
+    .locator('..');
+  await expect(card.locator('[data-slot="risk-level"]')).toHaveText('Sin riesgo');
+  await expect(page.getByText('7,3 ha')).toBeVisible();
+});
+
 test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
   const { draw, analyze } = controls(page);
 
