@@ -3,7 +3,6 @@ import { useAtomValue } from 'jotai';
 import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
-import { ZoomControl } from '@/components/map/zoom-control';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { collapseAttribution } from '@/lib/map/attribution';
@@ -26,8 +25,8 @@ const AREA_COLOR = '#F1FF28';
  * analysed parcel under Todas — and the rest outlined; clicking an analysed parcel opens
  * its tab. The parcels stand in for the drawn areas as on the main map; the areas
  * themselves only paint while no parcels exist. Framed by the combined bounds on mount,
- * re-framed on the open tab's parcel(s) when it changes, the user's in between: pan, zoom
- * and the zoom buttons work as on the main map. The camera is not written to the URL —
+ * re-framed on the open tab's parcel(s) when it changes, the user's in between: pan and
+ * scroll-zoom work as on the main map, without the zoom buttons. The camera is not written to the URL —
  * that is the main map's, and this one is gone with the page.
  */
 export function MiniMap() {
@@ -56,7 +55,6 @@ export function MiniMap() {
       style={{ width: '100%', height: '100%' }}
     >
       <AttributionControl compact position="bottom-left" />
-      <ZoomControl />
       <FilteredParcelsLayer
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
       />

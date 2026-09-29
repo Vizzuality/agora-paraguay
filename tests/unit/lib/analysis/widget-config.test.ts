@@ -4,17 +4,22 @@ import {
   categoryClasses,
   classIndexAt,
   RANGE_CLASSES,
-  WIDGET_BY_TYPE,
+  widgetKindOf,
 } from '@/lib/analysis/widget-config';
 
-describe('WIDGET_BY_TYPE', () => {
-  it('sends classed values to the risk tile, text and open numbers to general info', () => {
-    expect(WIDGET_BY_TYPE).toEqual({
-      range: 'risk-class',
-      category: 'risk-class',
-      numeric: 'general-info',
-      text: 'general-info',
-    });
+describe('widgetKindOf', () => {
+  it('sanitario: classed values get the risk tile, text and open numbers are general info', () => {
+    expect(widgetKindOf('sanitario', 'range')).toBe('risk-class');
+    expect(widgetKindOf('sanitario', 'category')).toBe('risk-class');
+    expect(widgetKindOf('sanitario', 'text')).toBe('general-info');
+    expect(widgetKindOf('sanitario', 'numeric')).toBe('general-info');
+  });
+
+  it('productivo: numbers and ranges list the parcels, categories count them', () => {
+    expect(widgetKindOf('productivo', 'numeric')).toBe('parcel-values');
+    expect(widgetKindOf('productivo', 'category')).toBe('category-count');
+    expect(widgetKindOf('productivo', 'range')).toBe('parcel-values');
+    expect(widgetKindOf('productivo', 'text')).toBe('general-info');
   });
 });
 

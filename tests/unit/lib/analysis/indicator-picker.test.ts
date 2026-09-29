@@ -32,6 +32,19 @@ describe('selectableIndicators', () => {
 
     expect(selectableIndicators(withTypes).map((i) => i.id)).toEqual(['asian_rust', 'ITR']);
   });
+
+  it('offers the open numbers on productivo, where they are tiles, the area still left out', () => {
+    const productivo: Indicators = [
+      { id: 'Pro_soja', name: 'Producción', indicator_type: { type: 'numeric' } },
+      { id: 'area', name: 'Área', unit: 'ha', indicator_type: { type: 'numeric' } },
+      { id: 'ITR', name: 'ITR', indicator_type: { type: 'category', categories: ['a', 'b'] } },
+    ];
+
+    expect(selectableIndicators(productivo, 'productivo').map((i) => i.id)).toEqual([
+      'Pro_soja',
+      'ITR',
+    ]);
+  });
 });
 
 describe('visibleIndicatorIds', () => {

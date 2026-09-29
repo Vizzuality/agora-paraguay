@@ -41,6 +41,12 @@ const AREA_INDICATOR = {
 /** West 10.2 ha + east 7.3 ha: 17.5 ha under Todas. */
 export const PARCEL_AREAS: Record<string, number> = { D07D21P00000002: 10.2, D07D23P00000008: 7.3 };
 
+/** Base soy production per parcel (t/ha), for the productivo values tile: west, then east. */
+export const PARCEL_PRODUCTION: Record<string, number> = {
+  D07D21P00000002: 3.55,
+  D07D23P00000008: 3.81,
+};
+
 export const SANITARIO_INDICATORS = [
   // The backend echoes the crop filter into the list as is — a filter, not an indicator.
   HERO_FILTERS[0],
@@ -58,8 +64,22 @@ export const SANITARIO_INDICATORS = [
 export const WEST_PARCEL_ID = 'D07D21P00000002';
 export const EAST_PARCEL_ID = 'D07D23P00000008';
 
+// No area here, as in the live list: the thumbnail reads it from the sanitario analysis.
 export const PRODUCTIVO_INDICATORS = [
-  AREA_INDICATOR,
+  {
+    id: 'Resiliencia',
+    name: 'Proxy de resiliencia operativa',
+    unit: null,
+    default: true,
+    indicator_type: { type: 'category', categories: ['Alta', 'Media', 'Baja'] },
+  },
+  {
+    id: 'Pro_arroz',
+    name: 'Producción base histórica de arroz',
+    unit: 't/ha',
+    default: true,
+    indicator_type: { type: 'numeric' },
+  },
   {
     id: 'Pro_soja',
     name: 'Producción base histórica de soja',
@@ -195,6 +215,11 @@ export async function stubAnalysisApi(page: Page) {
           crop_type: 'Soja',
           area: PARCEL_AREAS[parcelId],
           Asian_rust: rust,
+          Pro_soja: PARCEL_PRODUCTION[parcelId],
+          // The selection is soy: the arroz indicator does not apply, the backend says NA.
+          Pro_arroz: 'NA',
+          // Both parcels Media: the resilience tile counts 2 under Media.
+          Resiliencia: 'Media',
         };
 
         return {

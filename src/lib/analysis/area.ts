@@ -1,4 +1,5 @@
-import { NOT_AVAILABLE, type AnalysisParcel } from '@/lib/api/analysis/schemas';
+import { numberOf } from '@/lib/analysis/readings';
+import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /*
@@ -33,7 +34,7 @@ export function parcelArea(
   const shown =
     activeId === null ? parcels : parcels.filter((p) => String(p.parcel_id) === activeId);
   const readings = shown.flatMap((parcel) => {
-    const value = areaOf(parcel, indicator.id);
+    const value = numberOf(parcel, indicator.id);
 
     return value === undefined ? [] : [value];
   });
@@ -46,22 +47,7 @@ export function parcelArea(
   };
 }
 
-/** The parcel's number under the area column, whatever its casing; `undefined` when absent or not a number. */
-function areaOf(parcel: AnalysisParcel, id: string): number | undefined {
-  const wanted = id.toLowerCase();
-  const column = Object.keys(parcel.properties).find((key) => key.toLowerCase() === wanted);
-  const value = column === undefined ? undefined : parcel.properties[column];
-
-  if (value === null || value === undefined || value === '' || value === NOT_AVAILABLE) {
-    return undefined;
-  }
-
-  const number = typeof value === 'number' ? value : Number(value);
-
-  return Number.isNaN(number) ? undefined : number;
-}
-
-/** "17,5 ha": the figure in the platform's locale, one decimal at most, the unit when there is one. */
+/** The figure in the platform's locale, one decimal at most, the unit when there is one. */
 export function formatArea({ value, unit }: ParcelArea): string {
   const number = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 }).format(value);
 

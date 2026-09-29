@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { ArrowLeft, ArrowRight, List } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
@@ -26,24 +25,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatArea } from '@/lib/analysis/area';
-import { resolveFilterSelection } from '@/lib/analysis/filters';
+import { CROP_FILTER_ID, orderHeroFilters } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
   scrollEdges,
   scrollLeftForTab,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
-import { visibilityOf } from '@/lib/analysis/request';
+import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { useParcelArea } from '@/lib/analysis/use-parcel-area';
-import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
-import {
-  activeParcelIdAtom,
-  activeParcelTabAtom,
-  analysisFiltersAtom,
-  setAnalysisFilterAtom,
-} from '@/store/analysis';
+import { activeParcelIdAtom, activeParcelTabAtom, setAnalysisFilterAtom } from '@/store/analysis';
 
 /**
  * The analysed parcels as tabs, and the filters the API offers for that side of the
@@ -52,7 +45,7 @@ import {
 export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
-      <MiniMapThumbnail riesgo={riesgo} />
+      <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <ParcelTabs parcels={parcels} />
@@ -71,12 +64,12 @@ export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; par
  * does not use.
  */
 function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
-  const { data: filters, error } = useQuery(
-    metadataQueries.filters({ visibility: visibilityOf(riesgo) }),
-  );
-  const selected = useAtomValue(analysisFiltersAtom);
+  const {
+    filters: { data: filters, error },
+    resolvedFilters,
+  } = useHeroFilters(riesgo);
   const setFilter = useSetAtom(setAnalysisFilterAtom);
-  const resolved = filters ? resolveFilterSelection(selected, filters) : {};
+  const resolved = resolvedFilters ?? {};
 
   if (error) {
     return (
@@ -89,12 +82,14 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-6">
       {filters ? (
-        filters.map((filter) => (
+        orderHeroFilters(filters).map((filter) => (
           <HeroField
             key={filter.id}
             filter={filter}
             value={resolved[filter.id] ?? ''}
             onChange={(value) => setFilter({ id: filter.id, value })}
+            // The crop closes the grid on a row of its own.
+            className={filter.id === CROP_FILTER_ID ? 'col-span-2' : undefined}
           />
         ))
       ) : (
@@ -113,16 +108,30 @@ function HeroField({
   filter,
   value,
   onChange,
-}: Readonly<{ filter: Filter; value: string; onChange: (value: string) => void }>) {
+  className,
+}: Readonly<{
+  filter: Filter;
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}>) {
   const field = filter.field_type;
 
   switch (field.type) {
     case 'category':
       return (
-        <HeroSelect label={filter.name} options={field.options} value={value} onChange={onChange} />
+        <HeroSelect
+          label={filter.name}
+          options={field.options}
+          value={value}
+          onChange={onChange}
+          className={className}
+        />
       );
     case 'date':
-      return <HeroDate label={filter.name} value={value} onChange={onChange} />;
+      return (
+        <HeroDate label={filter.name} value={value} onChange={onChange} className={className} />
+      );
   }
 }
 
@@ -134,11 +143,17 @@ function HeroDate({
   label,
   value,
   onChange,
-}: Readonly<{ label: string; value: string; onChange: (value: string) => void }>) {
+  className,
+}: Readonly<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}>) {
   const id = useId();
 
   return (
-    <div className="relative">
+    <div className={cn('relative', className)}>
       <input
         id={id}
         type="date"
@@ -153,10 +168,11 @@ function HeroDate({
 
 /**
  * Satellite mini map in the thumbnail slot, the open tab's area over it: the parcel's,
- * or the selection summed under Todas. Nothing until the analysis has answered it.
+ * or the selection summed under Todas. Nothing until the analysis has answered it. The
+ * same on both pages (`useParcelArea`).
  */
-function MiniMapThumbnail({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
-  const area = useParcelArea(riesgo);
+function MiniMapThumbnail() {
+  const area = useParcelArea();
 
   return (
     <div className="relative h-64 min-w-0 flex-1 overflow-hidden rounded-md bg-muted lg:h-[335px]">
@@ -358,17 +374,19 @@ function HeroSelect({
   options,
   value,
   onChange,
+  className,
 }: Readonly<{
   label: string;
   options: AnalysisOption[];
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }>) {
   const id = useId();
   const loading = options.length === 0;
 
   return (
-    <div className="relative">
+    <div className={cn('relative', className)}>
       <Select value={value} onValueChange={onChange} disabled={loading}>
         {/* The label is the placeholder, so the value slot stays blank while empty. The
             trigger sizes itself through `data-size`, which outranks the shared `h-12`:

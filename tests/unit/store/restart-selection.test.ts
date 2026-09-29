@@ -49,7 +49,11 @@ function storeAfterAnalysis() {
   store.set(startAnalysisAtom, ['D07D21P00000002', 'D07D23P00000008']);
   store.set(activeParcelTabAtom, 'D07D23P00000008');
   store.set(setAnalysisFilterAtom, { id: 'crop_type', value: 'soy' });
-  store.set(selectedIndicatorIdsAtom, { indicators: INDICATORS, id: 'asian_rust' });
+  store.set(selectedIndicatorIdsAtom, {
+    riesgo: 'sanitario',
+    indicators: INDICATORS,
+    id: 'asian_rust',
+  });
   store.set(drawStateAtom, { type: 'unbound' });
 
   return store;
@@ -63,7 +67,7 @@ describe('restartSelectionAtom', () => {
     expect(store.get(drawPolygonsAtom)).toHaveLength(1);
     expect(store.get(modeAtom)).toBe('analysis');
     expect(store.get(toggledParcelIdsAtom)).toEqual(['D07D23P00000008']);
-    expect(store.get(selectedIndicatorIdsAtom)).not.toBeNull();
+    expect(store.get(selectedIndicatorIdsAtom).sanitario).not.toBeNull();
 
     store.set(restartSelectionAtom);
 
@@ -74,7 +78,7 @@ describe('restartSelectionAtom', () => {
     expect(store.get(analysedParcelIdsAtom)).toEqual([]);
     expect(store.get(activeParcelIdAtom)).toBeNull();
     expect(store.get(analysisFiltersAtom)).toEqual({});
-    expect(store.get(selectedIndicatorIdsAtom)).toBeNull();
+    expect(store.get(selectedIndicatorIdsAtom)).toEqual({ sanitario: null, productivo: null });
   });
 
   it('leaves nothing for the next map to restore', () => {

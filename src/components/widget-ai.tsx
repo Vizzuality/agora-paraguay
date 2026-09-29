@@ -9,7 +9,7 @@ import { analysisMutations } from '@/lib/api/analysis/queries';
 import { errorReason } from '@/lib/api/http';
 import { cn } from '@/lib/utils';
 
-type WidgetIaProps = Readonly<{
+type WidgetAIProps = Readonly<{
   parcels: string[];
   className?: string;
 }>;
@@ -36,7 +36,7 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
   );
 }
 
-export function WidgetIa({ parcels, className }: WidgetIaProps) {
+export function WidgetAI({ parcels, className }: WidgetAIProps) {
   const mutation = useMutation(analysisMutations.summary());
 
   return (

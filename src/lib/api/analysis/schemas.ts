@@ -68,16 +68,28 @@ export const NOT_AVAILABLE = 'NA';
 /** A category reading: one of the ordered labels, or its index (the sample encodes classes as codes). */
 const categoryReadingSchema = z.union([z.string().min(1), z.int().nonnegative()]);
 
+/** A number, as one or as digits in a string — the production answer writes `"2.49"`. */
+const numberReadingSchema = z.union([
+  z.number(),
+  z
+    .string()
+    .trim()
+    .regex(/^-?\d+(\.\d+)?$/)
+    .transform(Number),
+]);
+
 /**
  * What a parcel's reading of an indicator must be, by its `indicator_type.type`: a number
- * for `numeric` and `range`, text for `text`, a label or class code for `category`. "NA"
- * and blanks are the absence of a reading and are filtered out before this runs.
+ * (or digits in a string) for `numeric` and `range`, text for `text`, a label or class
+ * code for `category`. "NA" and blanks are the absence of a reading and are filtered out
+ * before this runs.
  */
 export function indicatorReadingSchema(type: IndicatorType): z.ZodType<string | number> {
   switch (type.type) {
     case 'numeric':
+    case 'number':
     case 'range':
-      return z.number();
+      return numberReadingSchema;
     case 'text':
       return z.string();
     case 'category':

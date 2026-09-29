@@ -68,7 +68,7 @@ const categoryIndicatorTypeSchema = z.looseObject({
 });
 
 /** Free text (`weather_station`, `phenology_stage`) and open numbers (`Pro_soja` t/ha). */
-const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric']) });
+const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric', 'number']) });
 
 /**
  * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in

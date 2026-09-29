@@ -158,10 +158,11 @@ describe('indicatorCards', () => {
       });
     });
 
-    it('reads a number delivered as a string as no reading: the type says number', () => {
-      expect(indicatorCards(parcel({ data_quality: '92' }), [dataQuality])[0].level).toBe(
-        'Sin datos',
-      );
+    it('reads a number delivered as digits in a string — the production answer writes "92"', () => {
+      expect(indicatorCards(parcel({ data_quality: '92' }), [dataQuality])[0]).toMatchObject({
+        level: 'Severo',
+        scale: { position: 92 },
+      });
     });
 
     it('spreads a 1–3 disease index over the ruler: 1 at 0, 2 at 50, 3 at 100', () => {
@@ -173,7 +174,7 @@ describe('indicatorCards', () => {
     });
 
     it('reads a non-numeric range value as no reading', () => {
-      expect(indicatorCards(parcel({ data_quality: 'n/a' }), [dataQuality])[0].level).toBe(
+      expect(indicatorCards(parcel({ data_quality: 'alto' }), [dataQuality])[0].level).toBe(
         'Sin datos',
       );
     });
@@ -204,6 +205,11 @@ describe('indicatorCards', () => {
           position: 62.5,
         },
       });
+    });
+
+    it('matches a label by stem: the answer says "Positivo" for the definition\'s "Positiva"', () => {
+      expect(indicatorCards(parcel({ ITR_soja: 'Positivo' }), [itr])[0].level).toBe('Positiva');
+      expect(indicatorCards(parcel({ ITR_soja: 'ALERTA' }), [itr])[0].level).toBe('Alerta');
     });
 
     it('reads a class code as an index into the categories', () => {
@@ -280,8 +286,8 @@ describe('generalInfo', () => {
     ]);
   });
 
-  it('reads a numeric indicator that is not a number as "Sin datos"', () => {
-    expect(generalInfo(parcel({ Pro_soja: '2.774' }), [production])[0].value).toBe('Sin datos');
+  it('reads a numeric indicator that is not a number as "Sin datos", digits in a string being a number', () => {
+    expect(generalInfo(parcel({ Pro_soja: '2.774' }), [production])[0].value).toBe('2,77 t/ha');
     expect(generalInfo(parcel({ Pro_soja: 'alto' }), [production])[0].value).toBe('Sin datos');
   });
 
