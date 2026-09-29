@@ -1,6 +1,5 @@
 import type * as React from 'react';
 
-import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 /**
@@ -14,6 +13,9 @@ import { cn } from '@/lib/utils';
  * `:placeholder-shown` — give inputs `placeholder=" "` so the label is the placeholder.
  * `bg-card` masks the border it sits on — pass `bg-background` when the field is not
  * inside a card.
+ *
+ * The chip is a wrapper around the `<label>` so an `adornment` (the info icon, Figma
+ * 5538:6944) can sit beside the text: a button may not live inside a label.
  */
 export const FLOATING_FIELD_CLASS =
   'peer h-12 w-full rounded-2xl border-muted-foreground bg-transparent px-4 py-3 text-base shadow-none focus-visible:border-primary md:text-base';
@@ -22,18 +24,27 @@ export const FLOATING_FIELD_CLASS =
 export const FLOATING_CHIP_CLASS =
   'pointer-events-none absolute top-0 left-3 -translate-y-1/2 bg-card px-1 py-0.5 text-xs leading-3 font-normal text-muted-foreground uppercase';
 
-export function FloatingLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
+type FloatingLabelProps = React.ComponentProps<'label'> & {
+  /** Rendered after the text, inside the chip. */
+  adornment?: React.ReactNode;
+};
+
+export function FloatingLabel({ className, adornment, children, ...props }: FloatingLabelProps) {
   return (
-    <Label
+    <div
       data-slot="floating-label"
       className={cn(
         FLOATING_CHIP_CLASS,
-        'transition-all duration-150 motion-reduce:transition-none',
+        'flex items-center gap-2 transition-all duration-150 motion-reduce:transition-none',
         // Resting: empty, closed and unfocused → sits in the field like a placeholder.
         'field-empty:top-1/2 field-empty:left-4 field-empty:bg-transparent field-empty:px-0 field-empty:text-base field-empty:leading-6 field-empty:normal-case',
         className,
       )}
-      {...props}
-    />
+    >
+      <label className="select-none" {...props}>
+        {children}
+      </label>
+      {adornment}
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
+import { parcelLabel } from '@/lib/analysis/parcel-label';
 import { numberOf } from '@/lib/analysis/readings';
 import { widgetKindOf } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
@@ -13,7 +14,7 @@ import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 export type ParcelValueRow = {
   parcelId: string;
-  /** The parcel's id, as the hero's tab shows it. */
+  /** "Parcela N", as the hero's tab shows it (`parcelLabel`). */
   label: string;
   value: number;
   /** The figure as printed: platform locale, two decimals at most. */
@@ -25,6 +26,8 @@ export type ParcelValueRow = {
 export type ParcelValuesTile = {
   id: string;
   label: string;
+  /** The metadata's description, behind the title's info icon. */
+  description?: string;
   unit: string | null;
   rows: ParcelValueRow[];
 };
@@ -52,7 +55,9 @@ export function parcelValueTiles(
       const parcel = byId.get(parcelId);
       const value = parcel === undefined ? undefined : numberOf(parcel, indicator.id);
 
-      return value === undefined ? [] : [{ parcelId, label: parcelId, value }];
+      return value === undefined
+        ? []
+        : [{ parcelId, label: parcelLabel(parcelId, parcelIds), value }];
     });
 
     if (readings.length === 0) return [];
@@ -72,7 +77,15 @@ export function parcelValueTiles(
       position: Math.min(100, Math.max(0, position(reading.value))),
     }));
 
-    return [{ id: indicator.id, label: indicator.name, unit: indicator.unit ?? null, rows }];
+    return [
+      {
+        id: indicator.id,
+        label: indicator.name,
+        description: indicator.description,
+        unit: indicator.unit ?? null,
+        rows,
+      },
+    ];
   });
 }
 

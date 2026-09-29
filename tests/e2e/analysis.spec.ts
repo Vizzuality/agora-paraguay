@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { EAST_PARCEL_ID, stubAnalysisApi, WEST_PARCEL_ID } from './fixtures/api';
+import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 
@@ -138,10 +138,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
   await expect(page.getByRole('button', { name: 'Acercar' })).toHaveCount(0);
 
-  // Todas first, then one hero tab per parcel the (stubbed) analysis answered, labelled
-  // by its id; the page lands on Todas.
+  // Todas first, then one hero tab per parcel the (stubbed) analysis answered, numbered
+  // in submission order rather than by cadastral id; the page lands on Todas.
   const areas = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(areas).toHaveText(['Todas', WEST_PARCEL_ID, EAST_PARCEL_ID]);
+  await expect(areas).toHaveText(['Todas', 'Parcela 1', 'Parcela 2']);
   await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
   // Under Todas the risk card combines the parcels: disease indices 3 and 1 average to
@@ -332,6 +332,39 @@ test('Selección de parcelas starts a new selection with an empty map', async ({
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
 });
 
+test('opens the metadata description from the info icon on hero fields and cards', async ({
+  page,
+}) => {
+  await analyzeFirstPolygon(page);
+
+  // Only what the metadata describes gets an icon, named after its subject: the crop
+  // filter (in the hero and, echoed as a text indicator, in the general-info card) and
+  // the rust indicator. The dates and the area carry no description: no icon.
+  const infoButtons = page.getByRole('button', { name: /^Más información sobre / });
+  await expect(infoButtons).toHaveCount(3);
+  await expect(
+    page.getByRole('button', { name: 'Más información sobre Fecha de siembra' }),
+  ).toHaveCount(0);
+
+  // The hero select's icon sits in its floating label and opens the filter's description.
+  const cropField = page.getByRole('combobox', { name: 'Tipo de cultivo' }).locator('..');
+  await cropField.getByRole('button', { name: 'Más información sobre Tipo de cultivo' }).click();
+  const popover = page.getByRole('dialog');
+  await expect(popover).toContainText('Cultivo a evaluar.');
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+
+  // The risk card's icon opens the indicator's, and the keyboard reaches it too.
+  const rustInfo = page.getByRole('button', {
+    name: 'Más información sobre Phakopsora pachyrhizi',
+  });
+  await rustInfo.focus();
+  await page.keyboard.press('Enter');
+  await expect(popover).toContainText('Enfermedad favorecida por humedad elevada');
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+});
+
 test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
   const { draw, analyze } = controls(page);
 
@@ -350,8 +383,8 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
 
   const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   const allTab = tabs.filter({ hasText: 'Todas' }).getByRole('button');
-  const westTab = tabs.filter({ hasText: WEST_PARCEL_ID }).getByRole('button');
-  const eastTab = tabs.filter({ hasText: EAST_PARCEL_ID }).getByRole('button');
+  const westTab = tabs.filter({ hasText: 'Parcela 1' }).getByRole('button');
+  const eastTab = tabs.filter({ hasText: 'Parcela 2' }).getByRole('button');
   const card = page
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
@@ -369,16 +402,12 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   // the open one marked. Picking a parcel opens its tab and swaps the cards to its values.
   await page.getByRole('button', { name: 'Ver lista de parcelas' }).click();
   const menu = page.getByRole('menu');
-  await expect(menu.getByRole('menuitemradio')).toHaveText([
-    'Todas',
-    WEST_PARCEL_ID,
-    EAST_PARCEL_ID,
-  ]);
+  await expect(menu.getByRole('menuitemradio')).toHaveText(['Todas', 'Parcela 1', 'Parcela 2']);
   await expect(menu.getByRole('menuitemradio', { name: 'Todas' })).toHaveAttribute(
     'aria-checked',
     'true',
   );
-  await menu.getByRole('menuitemradio', { name: EAST_PARCEL_ID }).click();
+  await menu.getByRole('menuitemradio', { name: 'Parcela 2' }).click();
   await expect(menu).toBeHidden();
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
   await expect(allTab).not.toHaveAttribute('aria-current', 'true');
@@ -542,8 +571,8 @@ test('logs in from the header dialog', async ({ page }) => {
     .locator('..')
     .locator('..');
   await expect(production.getByRole('listitem')).toHaveText([
-    new RegExp(`${WEST_PARCEL_ID}.*3,55`),
-    new RegExp(`${EAST_PARCEL_ID}.*3,81`),
+    /^Parcela 1.*3,55$/,
+    /^Parcela 2.*3,81$/,
   ]);
   const resilience = page
     .getByRole('heading', { name: 'Proxy de resiliencia operativa' })

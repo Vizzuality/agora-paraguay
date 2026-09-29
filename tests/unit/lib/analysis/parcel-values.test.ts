@@ -33,7 +33,7 @@ const parcels = [
 ];
 
 describe('parcelValueTiles', () => {
-  it('lists the parcels in the submitted order by id, the track relative to the largest', () => {
+  it('lists the parcels in the submitted order as Parcela N, the track relative to the largest', () => {
     const [tile] = parcelValueTiles(parcels, ['A', 'B'], [production], 'productivo');
 
     expect(tile).toMatchObject({
@@ -42,15 +42,33 @@ describe('parcelValueTiles', () => {
       unit: 't/ha',
     });
     expect(tile.rows).toEqual([
-      { parcelId: 'A', label: 'A', value: 3.55, text: '3,55', position: (3.55 / 3.81) * 100 },
-      { parcelId: 'B', label: 'B', value: 3.81, text: '3,81', position: 100 },
+      {
+        parcelId: 'A',
+        label: 'Parcela 1',
+        value: 3.55,
+        text: '3,55',
+        position: (3.55 / 3.81) * 100,
+      },
+      { parcelId: 'B', label: 'Parcela 2', value: 3.81, text: '3,81', position: 100 },
     ]);
   });
 
-  it('skips a parcel with no reading but keeps the others their numbers', () => {
+  it('skips a parcel with no reading but keeps the others their numbers and numbering', () => {
     const [tile] = parcelValueTiles(parcels, ['A', 'C', 'B'], [production], 'productivo');
 
-    expect(tile.rows.map((row) => row.label)).toEqual(['A', 'B']);
+    // C is the second parcel: B stays Parcela 3 even though its row comes second.
+    expect(tile.rows.map((row) => row.label)).toEqual(['Parcela 1', 'Parcela 3']);
+  });
+
+  it('carries the indicator description for the title info icon', () => {
+    const [tile] = parcelValueTiles(
+      parcels,
+      ['A'],
+      [{ ...production, description: 'Rendimiento medio histórico.' }],
+      'productivo',
+    );
+
+    expect(tile.description).toBe('Rendimiento medio histórico.');
   });
 
   it('makes no tile for an indicator no parcel answered, nor for the area, nor for a classed one', () => {

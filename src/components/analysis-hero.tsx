@@ -2,6 +2,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
+import { InfoTip } from '@/components/info-tip';
 import { MiniMap } from '@/components/map/mini-map';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { formatArea } from '@/lib/analysis/area';
 import { CROP_FILTER_ID, orderHeroFilters } from '@/lib/analysis/filters';
+import { parcelLabel } from '@/lib/analysis/parcel-label';
 import {
   nextScrollLeft,
   scrollEdges,
@@ -122,6 +124,7 @@ function HeroField({
       return (
         <HeroSelect
           label={filter.name}
+          description={filter.description}
           options={field.options}
           value={value}
           onChange={onChange}
@@ -130,7 +133,13 @@ function HeroField({
       );
     case 'date':
       return (
-        <HeroDate label={filter.name} value={value} onChange={onChange} className={className} />
+        <HeroDate
+          label={filter.name}
+          description={filter.description}
+          value={value}
+          onChange={onChange}
+          className={className}
+        />
       );
   }
 }
@@ -141,11 +150,13 @@ function HeroField({
  */
 function HeroDate({
   label,
+  description,
   value,
   onChange,
   className,
 }: Readonly<{
   label: string;
+  description?: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -161,7 +172,9 @@ function HeroDate({
         onChange={(event) => onChange(event.target.value)}
         className={cn(FLOATING_FIELD_CLASS, 'border')}
       />
-      <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
+      <FloatingLabel htmlFor={id} adornment={<InfoTip description={description} subject={label} />}>
+        {label}
+      </FloatingLabel>
     </div>
   );
 }
@@ -201,6 +214,11 @@ function MiniMapThumbnail() {
  * is already under the pointer. Layout per Figma 5540:7991.
  */
 const ALL_TAB = 'Todas';
+
+/** Tabs are keyed by parcel id; users read "Parcela N" (`parcelLabel`), Todas as is. */
+function tabLabel(tab: string, parcels: string[]): string {
+  return tab === ALL_TAB ? tab : parcelLabel(tab, parcels);
+}
 
 function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   const activeId = useAtomValue(activeParcelIdAtom);
@@ -279,7 +297,15 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   return (
     <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1">
       <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
-      <div className="relative min-w-0 flex-1">
+      {/* Clipped on the fieldset's own radius, so a tab scrolled under the rounded
+          corner does not show its underline outside the border. */}
+      <div className="relative min-w-0 flex-1 overflow-hidden rounded-l-2xl">
+        {!atStart && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-linear-to-r from-card to-transparent"
+          />
+        )}
         <ScrollArea viewportRef={stripRef}>
           {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
           <ul className="flex gap-5 px-4">
@@ -299,7 +325,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
                       : 'text-accent-foreground',
                   )}
                 >
-                  {tab}
+                  {tabLabel(tab, parcels)}
                 </button>
               </li>
             ))}
@@ -311,7 +337,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         {!atEnd && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-card to-transparent"
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l from-card to-transparent"
           />
         )}
       </div>
@@ -360,7 +386,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
           >
             {tabs.map((tab, index) => (
               <DropdownMenuRadioItem key={tab} value={String(index)}>
-                {tab}
+                {tabLabel(tab, parcels)}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
@@ -377,12 +403,14 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
  */
 function HeroSelect({
   label,
+  description,
   options,
   value,
   onChange,
   className,
 }: Readonly<{
   label: string;
+  description?: string;
   options: AnalysisOption[];
   value: string;
   onChange: (value: string) => void;
@@ -400,7 +428,12 @@ function HeroSelect({
         <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
           <SelectValue placeholder=" " />
         </SelectTrigger>
-        <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
+        <FloatingLabel
+          htmlFor={id}
+          adornment={<InfoTip description={description} subject={label} />}
+        >
+          {label}
+        </FloatingLabel>
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>

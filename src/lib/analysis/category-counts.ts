@@ -47,6 +47,8 @@ export function categoryTone(label: string): CategoryTone {
 export type CategoryCountTile = {
   id: string;
   label: string;
+  /** The metadata's description, behind the title's info icon. */
+  description?: string;
   columns: CategoryColumn[];
 };
 
@@ -113,6 +115,8 @@ export function categoryCountTiles(
       };
     });
 
-    return [{ id: indicator.id, label: indicator.name, columns }];
+    return [
+      { id: indicator.id, label: indicator.name, description: indicator.description, columns },
+    ];
   });
 }

@@ -108,6 +108,8 @@ export type IndicatorCard = {
   id: string;
   /** The indicator's name from the metadata. */
   label: string;
+  /** The metadata's description, behind the title's info icon. */
+  description?: string;
   /** The figure: the class ("Sin riesgo", "Moderado", "Severo"), the category, or the number. */
   level: string;
   /** The ruler, or `undefined` when the value has no scale to sit on (an open number). */
@@ -118,6 +120,8 @@ export type IndicatorCard = {
 export type GeneralInfoRow = {
   id: string;
   label: string;
+  /** The metadata's description, behind the label's info icon. */
+  description?: string;
   value: string;
 };
 
@@ -170,7 +174,12 @@ export function indicatorCards(
     if (value === undefined) return [];
 
     return [
-      toCard(indicator, value) ?? { id: indicator.id, label: indicator.name, level: NO_READING },
+      toCard(indicator, value) ?? {
+        id: indicator.id,
+        label: indicator.name,
+        description: indicator.description,
+        level: NO_READING,
+      },
     ];
   });
 }
@@ -196,7 +205,14 @@ export function generalInfo(
 
     const typed = typedReading(indicator, value);
 
-    return [{ id: indicator.id, label: indicator.name, value: factText(typed, indicator.unit) }];
+    return [
+      {
+        id: indicator.id,
+        label: indicator.name,
+        description: indicator.description,
+        value: factText(typed, indicator.unit),
+      },
+    ];
   });
 
   const unknown = unknownColumns(parcel, indicators).map(([column, value]) => ({
@@ -263,6 +279,7 @@ function categoryCard(
   const card: IndicatorCard = {
     id: indicator.id,
     label: indicator.name,
+    description: indicator.description,
     level: capitalise(categories[index]),
   };
 
@@ -314,6 +331,7 @@ function rangeCard(indicator: Indicator, value: number): IndicatorCard {
   return {
     id: indicator.id,
     label: indicator.name,
+    description: indicator.description,
     level: label,
     scale: { classes: RANGE_CLASSES, position },
   };
