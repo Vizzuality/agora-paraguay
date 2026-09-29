@@ -37,8 +37,6 @@ export function RiskClassCard({
         className,
       )}
     >
-      {/* The title row stays flat (heading, icon, action as siblings): the e2e suite
-          reaches the card from its heading's grandparent. */}
       <div className="flex items-start gap-2">
         <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
         <InfoTip

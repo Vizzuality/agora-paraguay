@@ -42,7 +42,6 @@ export function CategoryCountCard({
         className,
       )}
     >
-      {/* Same title grid as `ParcelValuesCard`: heading, icon, caption under both. */}
       <div className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1">
         <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
         <InfoTip
