@@ -23,12 +23,11 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  * Shared by the main map and the hero mini map; the main map mounts it only once Terra
  * Draw is bound (see `MapView`), the mini map has no Terra Draw and mounts it outright.
  *
- * Which parcels paint at all: every one the API answered by default (the main map, where
- * the user picks among them), or only `parcelIds` when given (the mini map passes the
- * analysed ones, so the neighbours left out of Analizar are gone with the main map).
- * Which paint yellow: the selection after the user's flips by default, or exactly
- * `highlightedIds` when given (the mini map passes the active tab's parcel, so the hero
- * shows one parcel at a time).
+ * Two optional filters, both defaulting to the main map's behaviour:
+ * - `parcelIds`: which parcels paint. Default: every one the API answered. The mini map
+ *   passes the analysed ids, so unselected neighbours do not follow into the hero.
+ * - `highlightedIds`: which of those paint yellow. Default: the selection after the
+ *   user's flips. The mini map passes the open tab's parcel.
  */
 export function FilteredParcelsLayer({
   parcelIds,
