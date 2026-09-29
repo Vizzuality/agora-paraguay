@@ -276,17 +276,30 @@ function categoryCard(
   return card;
 }
 
-/** The category a reading names — by label, ignoring case, or by its index (the sample encodes classes as codes). */
+/**
+ * The category a reading names — by label, or by its index (the sample encodes classes
+ * as codes). Labels match by stem: the answer writes "Positivo" and "Medio" where the
+ * definition says "Positiva" and "Media", so case, accents and a final gender vowel are
+ * ignored ("Muy alto" is "Muy alta").
+ */
 export function categoryIndex(value: string | number, categories: string[]): number | undefined {
   const code = typeof value === 'number' ? value : Number(value);
 
   if (Number.isInteger(code)) return code >= 0 && code < categories.length ? code : undefined;
 
-  const index = categories.findIndex(
-    (category) => category.toLowerCase() === String(value).trim().toLowerCase(),
-  );
+  const wanted = categoryStem(String(value));
+  const index = categories.findIndex((category) => categoryStem(category) === wanted);
 
   return index === -1 ? undefined : index;
+}
+
+function categoryStem(label: string): string {
+  return label
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[oa]$/, '');
 }
 
 /**

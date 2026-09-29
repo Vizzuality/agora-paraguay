@@ -88,11 +88,13 @@ describe('indicatorReadingSchema', () => {
   const accepts = (type: Parameters<typeof indicatorReadingSchema>[0], value: unknown) =>
     indicatorReadingSchema(type).safeParse(value).success;
 
-  it('wants a number for numeric and range — not a numeric string', () => {
+  it('wants a number for numeric and range — as one, or as digits in a string; never words', () => {
     expect(accepts({ type: 'numeric' }, 2.77)).toBe(true);
-    expect(accepts({ type: 'numeric' }, '2.77')).toBe(false);
+    expect(accepts({ type: 'numeric' }, '2.77')).toBe(true);
+    expect(accepts({ type: 'numeric' }, 'alto')).toBe(false);
     expect(accepts({ type: 'range', min: 1, max: 3 }, 2)).toBe(true);
-    expect(accepts({ type: 'range', min: 1, max: 3 }, '2')).toBe(false);
+    expect(accepts({ type: 'range', min: 1, max: 3 }, ' 2 ')).toBe(true);
+    expect(accepts({ type: 'range', min: 1, max: 3 }, '2,5')).toBe(false);
   });
 
   it('wants text for text, and a label or class code for category', () => {

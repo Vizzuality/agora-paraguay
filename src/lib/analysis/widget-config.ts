@@ -18,18 +18,20 @@ export type WidgetKind = 'risk-class' | 'general-info' | 'parcel-values' | 'cate
 /**
  * Sanitario reads one parcel at a time: classed values (a bounded range, an ordered
  * category) get the risk-class tile with the ruler, everything else is a fact for the
- * general-info card. Productivo reads the whole selection: an open number (t/ha) lists
- * every parcel (Figma Widget01), a category counts the parcels in each class (Widget03).
+ * general-info card. Productivo reads the whole selection: an open number (t/ha) and a
+ * bounded one (IEP 0–100 %) list every parcel (Figma Widget01), a category counts the
+ * parcels in each class (Widget03).
  */
 export function widgetKindOf(riesgo: Riesgo, type: IndicatorType['type']): WidgetKind {
   switch (type) {
     case 'range':
-      return 'risk-class';
+      return riesgo === 'productivo' ? 'parcel-values' : 'risk-class';
     case 'category':
       return riesgo === 'productivo' ? 'category-count' : 'risk-class';
     case 'text':
       return 'general-info';
     case 'numeric':
+    case 'number':
       return riesgo === 'productivo' ? 'parcel-values' : 'general-info';
   }
 }

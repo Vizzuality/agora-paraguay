@@ -63,6 +63,26 @@ describe('parcelValueTiles', () => {
     expect(parcelValueTiles(parcels, ['A'], undefined, 'productivo')).toEqual([]);
   });
 
+  it('fills a range on its own scale, not relative to the parcels, and reads digits in strings', () => {
+    const iep: Indicator = {
+      id: 'IEP_H5_soja',
+      name: 'IEP',
+      unit: '%',
+      indicator_type: { type: 'range', min: 0, max: 100 },
+    };
+    const [tile] = parcelValueTiles(
+      [parcel('A', { IEP_H5_soja: '74' }), parcel('B', { IEP_H5_soja: 67 })],
+      ['A', 'B'],
+      [iep],
+      'productivo',
+    );
+
+    expect(tile.rows.map((row) => [row.text, row.position])).toEqual([
+      ['74', 74],
+      ['67', 67],
+    ]);
+  });
+
   it('fills nothing when every value is zero or below', () => {
     const [tile] = parcelValueTiles(
       [parcel('A', { pro_soja: 0 })],

@@ -6,8 +6,9 @@ import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The per-parcel value tile (Figma Widget01): one indicator, one row per analysed parcel
- * with its figure and a track filled relative to the largest parcel. Riesgo productivo's
- * open numbers (t/ha) read this way; sanitario's are facts. Pure, node-tested.
+ * with its figure and a track — filled on the indicator's own scale when it has one (a
+ * range, IEP 0–100 %), else relative to the largest parcel (an open number, t/ha). Riesgo
+ * productivo reads its numbers this way; sanitario's are facts. Pure, node-tested.
  */
 
 export type ParcelValueRow = {
@@ -17,7 +18,7 @@ export type ParcelValueRow = {
   value: number;
   /** The figure as printed: platform locale, two decimals at most. */
   text: string;
-  /** 0–100: the track filled, relative to the tile's largest value. */
+  /** 0–100: the track filled — on the range's scale, or relative to the tile's largest value. */
   position: number;
 };
 
@@ -57,10 +58,17 @@ export function parcelValueTiles(
     if (readings.length === 0) return [];
 
     const max = Math.max(...readings.map((reading) => reading.value));
+    const type = indicator.indicator_type;
+    const position = (value: number) =>
+      type.type === 'range' && type.max > type.min
+        ? ((value - type.min) / (type.max - type.min)) * 100
+        : max > 0
+          ? (value / max) * 100
+          : 0;
     const rows = readings.map((reading) => ({
       ...reading,
       text: formatFigure(reading.value),
-      position: max > 0 ? Math.max(0, (reading.value / max) * 100) : 0,
+      position: Math.min(100, Math.max(0, position(reading.value))),
     }));
 
     return [{ id: indicator.id, label: indicator.name, unit: indicator.unit ?? null, rows }];

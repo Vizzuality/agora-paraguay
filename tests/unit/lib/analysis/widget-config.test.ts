@@ -15,10 +15,10 @@ describe('widgetKindOf', () => {
     expect(widgetKindOf('sanitario', 'numeric')).toBe('general-info');
   });
 
-  it('productivo: open numbers list the parcels, categories count them, ranges keep the risk tile', () => {
+  it('productivo: numbers and ranges list the parcels, categories count them', () => {
     expect(widgetKindOf('productivo', 'numeric')).toBe('parcel-values');
     expect(widgetKindOf('productivo', 'category')).toBe('category-count');
-    expect(widgetKindOf('productivo', 'range')).toBe('risk-class');
+    expect(widgetKindOf('productivo', 'range')).toBe('parcel-values');
     expect(widgetKindOf('productivo', 'text')).toBe('general-info');
   });
 });

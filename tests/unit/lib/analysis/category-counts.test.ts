@@ -20,12 +20,12 @@ function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisP
 }
 
 describe('categoryAxis', () => {
-  it('reads worst to best and never shows NA', () => {
-    expect(categoryAxis(['Alta', 'Media', 'Baja'])).toEqual(['Baja', 'Media', 'Alta']);
+  it('keeps the categories in the order the indicator defines them, NA left out', () => {
+    expect(categoryAxis(['Alta', 'Media', 'Baja'])).toEqual(['Alta', 'Media', 'Baja']);
     expect(categoryAxis(['Positiva', 'Estable', 'Alerta', 'NA'])).toEqual([
-      'Alerta',
-      'Estable',
       'Positiva',
+      'Estable',
+      'Alerta',
     ]);
   });
 });
@@ -64,28 +64,43 @@ describe('categoryCountTiles', () => {
       id: 'Resiliencia',
       label: 'Proxy de resiliencia operativa',
       columns: [
-        { label: 'Baja', count: 0, height: 0, tone: 'low' },
-        { label: 'Media', count: 2, height: 100, tone: 'mid' },
         { label: 'Alta', count: 1, height: 50, tone: 'high' },
+        { label: 'Media', count: 2, height: 100, tone: 'mid' },
+        { label: 'Baja', count: 0, height: 0, tone: 'low' },
       ],
     });
+  });
+
+  it('counts "Medio" under "Media": labels match by stem', () => {
+    const [tile] = categoryCountTiles(
+      [parcel('A', { resiliencia: 'Medio' }), parcel('B', { resiliencia: 'medio' })],
+      ['A', 'B'],
+      [resilience],
+      'productivo',
+    );
+
+    expect(tile.columns.map((column) => [column.label, column.count])).toEqual([
+      ['Alta', 0],
+      ['Media', 2],
+      ['Baja', 0],
+    ]);
   });
 
   it('reads a class code as an index and leaves NA readings out of every column', () => {
     const [tile] = categoryCountTiles(parcels, ['A', 'B', 'C'], [itr], 'productivo');
 
     expect(tile.columns).toEqual([
-      { label: 'Alerta', count: 0, height: 0, tone: 'high' },
-      { label: 'Estable', count: 0, height: 0, tone: 'mid' },
       { label: 'Positiva', count: 2, height: 100, tone: 'mid' },
+      { label: 'Estable', count: 0, height: 0, tone: 'mid' },
+      { label: 'Alerta', count: 0, height: 0, tone: 'high' },
     ]);
   });
 
   it('keeps the tile, nothing counted, when every parcel reads NA — the crop it does not apply to', () => {
     const empty = [
-      { label: 'Alerta', count: 0, height: 0, tone: 'high' },
-      { label: 'Estable', count: 0, height: 0, tone: 'mid' },
       { label: 'Positiva', count: 0, height: 0, tone: 'mid' },
+      { label: 'Estable', count: 0, height: 0, tone: 'mid' },
+      { label: 'Alerta', count: 0, height: 0, tone: 'high' },
     ];
 
     expect(categoryCountTiles(parcels, ['C'], [itr], 'productivo')[0].columns).toEqual(empty);

@@ -7,7 +7,8 @@ import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The category-count tile (Figma Widget03 on productivo): one indicator, one column per
- * category with how many analysed parcels fall in it. Pure, node-tested.
+ * category the indicator defines, with how many analysed parcels fall in it. Pure,
+ * node-tested.
  */
 
 /**
@@ -50,12 +51,12 @@ export type CategoryCountTile = {
 };
 
 /**
- * The categories as the tile lays them out: the API lists them best first ("Alta, Media,
- * Baja"; "Positiva, Estable, Alerta, NA"), the design reads left to right worst to best
- * and never shows NA. So: NA dropped, order reversed.
+ * The categories as the tile lays them out: the indicator's own, in the order it defines
+ * them ("Alta, Media, Baja"). "NA" is not a column: a parcel answering it has no reading,
+ * so nothing could ever be counted there.
  */
 export function categoryAxis(categories: readonly string[]): string[] {
-  return categories.filter((category) => category !== NA_CATEGORY).reverse();
+  return categories.filter((category) => category !== NA_CATEGORY);
 }
 
 /**
