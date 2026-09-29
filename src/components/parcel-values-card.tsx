@@ -1,3 +1,4 @@
+import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
 import type { ParcelValuesTile } from '@/lib/analysis/parcel-values';
 import { cn } from '@/lib/utils';
@@ -10,7 +11,13 @@ type ParcelValuesCardProps = Omit<ParcelValuesTile, 'id'> & { className?: string
  * indicator's scale or relative to the largest parcel, and the figure. Same light surface
  * as `RiskClassCard`.
  */
-export function ParcelValuesCard({ label, unit, rows, className }: ParcelValuesCardProps) {
+export function ParcelValuesCard({
+  label,
+  description,
+  unit,
+  rows,
+  className,
+}: ParcelValuesCardProps) {
   return (
     <Card
       className={cn(
@@ -18,10 +25,17 @@ export function ParcelValuesCard({ label, unit, rows, className }: ParcelValuesC
         className,
       )}
     >
-      <div className="flex flex-col">
+      <div className="grid grid-cols-[auto_1fr] items-start gap-x-2">
         <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
+        <InfoTip
+          description={description}
+          subject={label}
+          className="mt-0.5 text-accent-foreground"
+        />
         {unit && (
-          <p className="text-[12px] leading-[17.4px] text-muted-foreground opacity-70">{unit}</p>
+          <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
+            {unit}
+          </p>
         )}
       </div>
 

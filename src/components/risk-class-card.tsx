@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
 import type { IndicatorCard, RiskScale } from '@/lib/analysis/indicator-cards';
 import { rulerBands } from '@/lib/analysis/risk-ruler';
@@ -21,7 +22,14 @@ type RiskClassCardProps = Omit<IndicatorCard, 'id'> & {
  * Light surface (`bg-card`), unlike `StatCard`'s navy `bg-widget` — the two are
  * different tiles in the design, not variants of one.
  */
-export function RiskClassCard({ label, level, scale, action, className }: RiskClassCardProps) {
+export function RiskClassCard({
+  label,
+  description,
+  level,
+  scale,
+  action,
+  className,
+}: RiskClassCardProps) {
   return (
     <Card
       className={cn(
@@ -29,9 +37,14 @@ export function RiskClassCard({ label, level, scale, action, className }: RiskCl
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start gap-2">
         <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
-        {action}
+        <InfoTip
+          description={description}
+          subject={label}
+          className="mt-0.5 text-accent-foreground"
+        />
+        {action && <div className="ml-auto">{action}</div>}
       </div>
 
       <div className="flex flex-col gap-1">

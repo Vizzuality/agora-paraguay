@@ -1,3 +1,4 @@
+import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
 import type { CategoryCountTile, CategoryTone } from '@/lib/analysis/category-counts';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,12 @@ const BODY_CLASS: Record<CategoryTone, string> = {
  * fullest column and coloured by the class (`categoryTone`), a baseline and the category
  * names. Empty categories keep their slot.
  */
-export function CategoryCountCard({ label, columns, className }: CategoryCountCardProps) {
+export function CategoryCountCard({
+  label,
+  description,
+  columns,
+  className,
+}: CategoryCountCardProps) {
   return (
     <Card
       className={cn(
@@ -36,9 +42,14 @@ export function CategoryCountCard({ label, columns, className }: CategoryCountCa
         className,
       )}
     >
-      <div className="flex flex-col gap-1">
+      <div className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1">
         <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
-        <p className="text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
+        <InfoTip
+          description={description}
+          subject={label}
+          className="mt-0.5 text-accent-foreground"
+        />
+        <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
           Número de parcelas
         </p>
       </div>

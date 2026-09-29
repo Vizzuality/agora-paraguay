@@ -9,6 +9,7 @@ import { WidgetGrid } from '@/components/widget-grid';
 import { combinedParcel, generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
+import { useDescribe } from '@/lib/analysis/use-describe';
 import { activeParcelIdAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
 
 /** Riesgo sanitario is public: hero, title row and the cards, no gate. */
@@ -42,6 +43,7 @@ function SanitarioWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis('sanitario');
   const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom).sanitario;
+  const describe = useDescribe('sanitario');
 
   const answered = analysis.data?.indicators ?? [];
   const parcel =
@@ -53,11 +55,17 @@ function SanitarioWidgets() {
       : answered.find((entry) => String(entry.parcel_id) === activeId);
   // General info is always on; the cards are the selected measured indicators (the API's
   // defaults until the user touches Personalizar indicadores).
-  const info = generalInfo(parcel, indicators, 'sanitario');
+  const info = generalInfo(parcel, indicators, 'sanitario').map((row) => ({
+    ...row,
+    description: describe(row.description),
+  }));
   const shown = indicators
     ? visibleIndicators(selectableIndicators(indicators, 'sanitario'), selected)
     : undefined;
-  const cards = indicatorCards(parcel, shown, 'sanitario');
+  const cards = indicatorCards(parcel, shown, 'sanitario').map((card) => ({
+    ...card,
+    description: describe(card.description),
+  }));
 
   return (
     <div className="flex flex-col gap-4">

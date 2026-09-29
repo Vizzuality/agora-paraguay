@@ -1,9 +1,12 @@
+import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export type GeneralInfoItem = {
   id: string;
   label: string;
+  /** The metadata's description, behind the label's info icon. */
+  description?: string;
   value: string;
 };
 
@@ -31,7 +34,14 @@ export function GeneralInfoCard({ items, className }: GeneralInfoCardProps) {
       <dl className="flex flex-col gap-3">
         {items.map((item) => (
           <div key={item.id} className="flex flex-col gap-0.5">
-            <dt className="text-[12px] leading-[17.4px] text-muted-foreground">{item.label}</dt>
+            <dt className="flex items-center gap-2 text-[12px] leading-[17.4px] text-muted-foreground">
+              {item.label}
+              <InfoTip
+                description={item.description}
+                subject={item.label}
+                className="text-accent-foreground"
+              />
+            </dt>
             <dd className="text-[16px] leading-[20.3px] font-medium">{item.value}</dd>
           </div>
         ))}
