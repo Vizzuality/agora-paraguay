@@ -25,8 +25,6 @@ export function ParcelValuesCard({
         className,
       )}
     >
-      {/* A grid rather than nested rows: title and icon side by side, the unit under
-          both, with the heading kept a direct child (the e2e suite climbs from it). */}
       <div className="grid grid-cols-[auto_1fr] items-start gap-x-2">
         <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
         <InfoTip
