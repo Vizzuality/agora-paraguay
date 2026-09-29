@@ -20,11 +20,12 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 const AREA_COLOR = '#F1FF28';
 
 /**
- * Satellite map for the analysis hero, showing what the main map showed: the parcels
- * `filter-parcels` answered (the same layer), with the open tab's parcel in yellow — every
- * analysed parcel under Todas — and the rest outlined; clicking an analysed parcel opens
- * its tab. The parcels stand in for the drawn areas as on the main map; the areas
- * themselves only paint while no parcels exist. Framed by the combined bounds on mount,
+ * Satellite map for the analysis hero, showing what Analizar submitted: the analysed
+ * parcels only (the main map's layer, restricted — the neighbours the user left out stay
+ * behind), with the open tab's parcel in yellow — every one under Todas — and the rest
+ * outlined; clicking one opens its tab. The parcels stand in for the drawn areas as on
+ * the main map; the areas themselves only paint while no parcels exist. Framed by the
+ * analysed parcels' combined bounds on mount,
  * re-framed on the open tab's parcel(s) when it changes, the user's in between: pan and
  * scroll-zoom work as on the main map, without the zoom buttons. The camera is not written to the URL —
  * that is the main map's, and this one is gone with the page.
@@ -37,7 +38,9 @@ export function MiniMap() {
 
   const bounds = featuresBounds([
     ...areas,
-    ...(parcels?.results.flatMap((parcel) => parcel.geometry.features) ?? []),
+    ...(parcels?.results
+      .filter((parcel) => analysedIds.includes(parcel.parcel_id))
+      .flatMap((parcel) => parcel.geometry.features) ?? []),
   ]);
 
   return (
@@ -56,6 +59,7 @@ export function MiniMap() {
     >
       <AttributionControl compact position="bottom-left" />
       <FilteredParcelsLayer
+        parcelIds={analysedIds}
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
       />
       <MiniMapBehaviour />

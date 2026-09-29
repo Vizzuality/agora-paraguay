@@ -62,12 +62,17 @@ export const activeParcelTabAtom = atomWithReset<string | null>(null);
 /**
  * The analysed parcel the open tab points at, `null` for Todas. Re-analysing a smaller
  * selection can leave a tab pointing at a parcel that is no longer analysed: that reads as
- * Todas — the one fallback every reader (tabs, cards, mini map) shares.
+ * Todas — the one fallback every reader (tabs, cards, mini map) shares. A single analysed
+ * parcel has no Todas to stand apart from: it is the open tab whatever the tab atom says.
  */
 export const activeParcelIdAtom = atom((get) => {
+  const analysed = get(analysedParcelIdsBaseAtom);
+
+  if (analysed.length === 1) return analysed[0];
+
   const parcelId = get(activeParcelTabAtom);
 
-  return parcelId !== null && get(analysedParcelIdsBaseAtom).includes(parcelId) ? parcelId : null;
+  return parcelId !== null && analysed.includes(parcelId) ? parcelId : null;
 });
 
 /**

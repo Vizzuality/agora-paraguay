@@ -23,21 +23,30 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  * Shared by the main map and the hero mini map; the main map mounts it only once Terra
  * Draw is bound (see `MapView`), the mini map has no Terra Draw and mounts it outright.
  *
- * Which parcels paint yellow: the selection after the user's flips by default (the main
- * map), or exactly `highlightedIds` when given (the mini map passes the active tab's
- * parcel, so the hero shows one parcel at a time).
+ * Two optional filters, both defaulting to the main map's behaviour:
+ * - `parcelIds`: which parcels paint. Default: every one the API answered. The mini map
+ *   passes the analysed ids, so unselected neighbours do not follow into the hero.
+ * - `highlightedIds`: which of those paint yellow. Default: the selection after the
+ *   user's flips. The mini map passes the open tab's parcel.
  */
-export function FilteredParcelsLayer({ highlightedIds }: Readonly<{ highlightedIds?: string[] }>) {
+export function FilteredParcelsLayer({
+  parcelIds,
+  highlightedIds,
+}: Readonly<{ parcelIds?: string[]; highlightedIds?: string[] }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
 
   if (!data) return null;
 
+  const shown =
+    parcelIds === undefined
+      ? data.results
+      : data.results.filter((parcel) => parcelIds.includes(parcel.parcel_id));
   const parcels =
     highlightedIds === undefined
-      ? applyToggles(data.results, toggled)
-      : data.results.map((parcel) => ({
+      ? applyToggles(shown, toggled)
+      : shown.map((parcel) => ({
           ...parcel,
           selected: highlightedIds.includes(parcel.parcel_id),
         }));
