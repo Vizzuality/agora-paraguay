@@ -11,6 +11,7 @@ export const metadataQueries = {
       staleTime: 5 * 60 * 1000,
     }),
 
+  /** The riesgo's indicators, asked once: the list does not depend on the hero filters. */
   indicators: (params: IndicatorsParams) =>
     queryOptions({
       queryKey: ['metadata', 'indicators', params] as const,

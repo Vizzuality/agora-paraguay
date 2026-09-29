@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
 import { Check, Search, SquarePen } from 'lucide-react';
 import { useId, useState } from 'react';
@@ -10,8 +9,8 @@ import {
   selectableIndicators,
   visibleIndicatorIds,
 } from '@/lib/analysis/indicator-picker';
+import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
 import { errorReason } from '@/lib/api/http';
-import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import { selectedIndicatorIdsAtom } from '@/store/analysis';
@@ -27,7 +26,7 @@ type IndicatorPickerProps = {
  * `<ClientOnly>` (it reads the analysis atoms).
  */
 export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
-  const { data: indicators, error } = useQuery(metadataQueries.indicators({ riesgo }));
+  const { indicators, indicatorsError: error } = useApplicableIndicators(riesgo);
 
   return (
     <Popover>
@@ -44,7 +43,7 @@ export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
         className="w-auto min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
       >
         {indicators ? (
-          <IndicatorChecklist indicators={selectableIndicators(indicators)} />
+          <IndicatorChecklist indicators={selectableIndicators(indicators, riesgo)} />
         ) : error ? (
           <p role="alert" className="px-3 py-2.5 text-sm text-destructive">
             No se pudieron cargar los indicadores: {errorReason(error)}

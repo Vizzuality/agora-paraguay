@@ -1,6 +1,6 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
-import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * Personalizar indicadores: which indicators the analysis page shows. Pure, node-tested.
@@ -10,10 +10,16 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /**
  * What the picker offers: the measured indicators only. The general-info facts (station,
- * crop, phenology) and the area are always on the page and never in the list.
+ * crop, phenology — and on sanitario the station's numbers) and the area are always on
+ * the page and never in the list.
  */
-export function selectableIndicators(indicators: Indicators): Indicators {
-  return indicators.filter((indicator) => !isGeneralInfo(indicator) && !isAreaIndicator(indicator));
+export function selectableIndicators(
+  indicators: Indicators,
+  riesgo: Riesgo = 'sanitario',
+): Indicators {
+  return indicators.filter(
+    (indicator) => !isGeneralInfo(indicator, riesgo) && !isAreaIndicator(indicator),
+  );
 }
 
 /** The ids shown: the user's selection, else the indicators the API flags `default`, else all. */

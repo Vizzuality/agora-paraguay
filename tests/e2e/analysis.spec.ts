@@ -530,6 +530,40 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
 
+  // The productivo analysis runs once every filter has a value. Its tiles read the whole
+  // selection: the base production lists both parcels (Figma Widget01), the resilience
+  // proxy counts them per class (Widget03), and the thumbnail prints the summed area.
+  // Soja is picked: the indicators follow the crop.
+  await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
+  await page.getByRole('option', { name: 'Soja' }).click();
+  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
+  const production = page
+    .getByRole('heading', { name: 'Producción base histórica de soja' })
+    .locator('..')
+    .locator('..');
+  await expect(production.getByRole('listitem')).toHaveText([/P\.1.*3,55/, /P\.2.*3,81/]);
+  const resilience = page
+    .getByRole('heading', { name: 'Proxy de resiliencia operativa' })
+    .locator('..')
+    .locator('..');
+  await expect(resilience.getByRole('listitem').filter({ hasText: /^2$/ })).toHaveCount(1);
+  await expect(page.getByText('17,5 ha')).toBeVisible();
+
+  // The arroz indicator is bound to the other crop (and came back "NA" besides): no tile,
+  // and the picker does not offer it.
+  await expect(
+    page.getByRole('heading', { name: 'Producción base histórica de arroz' }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Personalizar indicadores' }).click();
+  const checklist = page.getByRole('list', { name: 'Indicadores' });
+  await expect(
+    checklist.getByRole('checkbox', { name: 'Producción base histórica de soja' }),
+  ).toBeVisible();
+  await expect(
+    checklist.getByRole('checkbox', { name: 'Producción base histórica de arroz' }),
+  ).toHaveCount(0);
+  await page.keyboard.press('Escape');
+
   await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
 
   // Generar resumen POSTs the analysed parcels to the summary endpoint (stubbed to echo

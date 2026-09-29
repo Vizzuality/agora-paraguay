@@ -515,14 +515,14 @@ function AnalysisCardsDemo() {
     ? toAnalysisRequest(
         ['D07D21P00000001'],
         { crop_type: 'soy', date: '2026-09-17' },
-        requestedIndicatorIds(indicators, null),
+        requestedIndicatorIds(indicators, null, 'sanitario'),
       )
     : null;
   const { data: analysis } = useQuery(analysisQueries.result('public', request));
 
   const parcel = analysis?.indicators[0];
-  const info = generalInfo(parcel, indicators);
-  const cards = indicatorCards(parcel, indicators);
+  const info = generalInfo(parcel, indicators, 'sanitario');
+  const cards = indicatorCards(parcel, indicators, 'sanitario');
 
   return (
     <>

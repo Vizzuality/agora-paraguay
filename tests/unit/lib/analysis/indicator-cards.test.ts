@@ -173,7 +173,7 @@ describe('indicatorCards', () => {
     });
 
     it('reads a non-numeric range value as no reading', () => {
-      expect(indicatorCards(parcel({ data_quality: 'n/a' }), [dataQuality])[0].level).toBe(
+      expect(indicatorCards(parcel({ data_quality: 'alto' }), [dataQuality])[0].level).toBe(
         'Sin datos',
       );
     });

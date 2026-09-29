@@ -1,4 +1,4 @@
-import type { IndicatorType } from '@/lib/api/metadata/schemas';
+import type { IndicatorType, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * What each indicator type renders as, and how a classed one is read. The analysis
@@ -12,19 +12,27 @@ export type RiskTone = 'low' | 'medium' | 'high';
 /** One class an indicator is read in: the word the tile prints and the band it sits on. */
 export type RiskClass = { label: string; tone: RiskTone };
 
-/** Which tile an indicator type renders in. */
-export type WidgetKind = 'risk-class' | 'general-info';
+/** Which tile an indicator renders in. */
+export type WidgetKind = 'risk-class' | 'general-info' | 'parcel-values' | 'category-count';
 
 /**
- * Classed values (a bounded range, an ordered category) get the risk-class tile with the
- * ruler; text and open numbers are facts for the general-info card.
+ * Sanitario reads one parcel at a time: classed values (a bounded range, an ordered
+ * category) get the risk-class tile with the ruler, everything else is a fact for the
+ * general-info card. Productivo reads the whole selection: an open number (t/ha) lists
+ * every parcel (Figma Widget01), a category counts the parcels in each class (Widget03).
  */
-export const WIDGET_BY_TYPE: Record<IndicatorType['type'], WidgetKind> = {
-  range: 'risk-class',
-  category: 'risk-class',
-  numeric: 'general-info',
-  text: 'general-info',
-};
+export function widgetKindOf(riesgo: Riesgo, type: IndicatorType['type']): WidgetKind {
+  switch (type) {
+    case 'range':
+      return 'risk-class';
+    case 'category':
+      return riesgo === 'productivo' ? 'category-count' : 'risk-class';
+    case 'text':
+      return 'general-info';
+    case 'numeric':
+      return riesgo === 'productivo' ? 'parcel-values' : 'general-info';
+  }
+}
 
 /**
  * How a range indicator (disease index 1–3, data quality 0–100 %) is read: three equal

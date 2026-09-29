@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EMPTY_ANALYSIS_FILTERS,
   listNames,
+  orderHeroFilters,
   resolveFilterSelection,
   unresolvedFilters,
 } from '@/lib/analysis/filters';
@@ -78,6 +79,41 @@ describe('unresolvedFilters', () => {
     const resolved = resolveFilterSelection({ sowing_date: '2026-05-01' }, FILTERS);
 
     expect(unresolvedFilters(resolved, FILTERS)).toEqual([]);
+  });
+});
+
+describe('orderHeroFilters', () => {
+  const date: Filters[number] = { id: 'date', name: 'Fecha', field_type: { type: 'date' } };
+  const sowing: Filters[number] = {
+    id: 'sowing_date',
+    name: 'Fecha de siembra',
+    field_type: { type: 'date' },
+  };
+  const crop: Filters[number] = {
+    id: 'crop_type',
+    name: 'Tipo de cultivo',
+    field_type: { type: 'category', options: [] },
+  };
+  const other: Filters[number] = {
+    id: 'cycle',
+    name: 'Ciclo',
+    field_type: { type: 'category', options: [] },
+  };
+
+  it('puts the date first, the sowing date second and the crop last, whatever the API order', () => {
+    expect(orderHeroFilters([crop, sowing, date]).map((f) => f.id)).toEqual([
+      'date',
+      'sowing_date',
+      'crop_type',
+    ]);
+  });
+
+  it('keeps anything else after the known three, in the API order', () => {
+    expect(orderHeroFilters([other, crop, date]).map((f) => f.id)).toEqual([
+      'date',
+      'crop_type',
+      'cycle',
+    ]);
   });
 });
 

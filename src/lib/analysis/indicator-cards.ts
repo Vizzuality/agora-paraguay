@@ -1,17 +1,17 @@
 import {
   indicatorReadingSchema,
-  NOT_AVAILABLE,
   type AnalysisParcel,
   type ParcelValue,
 } from '@/lib/api/analysis/schemas';
-import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 import { isAreaIndicator } from './area';
+import { asReading, isNoReading, readingOf } from './readings';
 import {
   categoryClasses,
   classIndexAt,
   RANGE_CLASSES,
-  WIDGET_BY_TYPE,
+  widgetKindOf,
   type RiskClass,
 } from './widget-config';
 
@@ -54,11 +54,9 @@ export function combinedParcel(
 
   for (const column of columns) {
     const readings = parcels.flatMap((parcel) => {
-      const value = parcel.properties[column];
+      const reading = asReading(parcel.properties[column]);
 
-      return value === null || value === undefined || value === '' || value === NOT_AVAILABLE
-        ? []
-        : [value];
+      return reading === undefined ? [] : [reading];
     });
 
     if (readings.length === 0) continue;
@@ -123,24 +121,17 @@ export type GeneralInfoRow = {
   value: string;
 };
 
-/** Text and open-number indicators: nothing to class, so they read as plain facts. */
-export function isGeneralInfo(indicator: Indicator): boolean {
-  return WIDGET_BY_TYPE[indicator.indicator_type.type] === 'general-info';
+/**
+ * Facts, not risks: text always, open numbers on sanitario (`widgetKindOf`). The riesgo
+ * defaults to sanitario, the page where the general-info card lives.
+ */
+export function isGeneralInfo(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
+  return widgetKindOf(riesgo, indicator.indicator_type.type) === 'general-info';
 }
 
-/**
- * The parcel's value for the indicator, or `undefined` when it has no reading. The exact
- * id first; failing that, the column that matches it ignoring case — the backend answers
- * `Asian_rust` to a request for `asian_rust`.
- */
-function readingOf(parcel: AnalysisParcel, indicator: Indicator): string | number | undefined {
-  const value = parcel.properties[indicator.id] ?? columnIgnoringCase(parcel, indicator.id);
-
-  if (value === null || value === undefined || value === '' || value === NOT_AVAILABLE) {
-    return undefined;
-  }
-
-  return value;
+/** Classed indicators (range, category): the ones that get a risk card. */
+export function isRiskClass(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
+  return widgetKindOf(riesgo, indicator.indicator_type.type) === 'risk-class';
 }
 
 /**
@@ -152,13 +143,6 @@ function typedReading(indicator: Indicator, value: string | number): string | nu
   const parsed = indicatorReadingSchema(indicator.indicator_type).safeParse(value);
 
   return parsed.success ? parsed.data : undefined;
-}
-
-function columnIgnoringCase(parcel: AnalysisParcel, id: string): ParcelValue | undefined {
-  const wanted = id.toLowerCase();
-  const key = Object.keys(parcel.properties).find((column) => column.toLowerCase() === wanted);
-
-  return key === undefined ? undefined : parcel.properties[key];
 }
 
 /** The figure when the parcel's reading exists but the metadata cannot place it. */
@@ -173,14 +157,15 @@ export const NO_READING = 'Sin datos';
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
+  riesgo: Riesgo = 'sanitario',
 ): IndicatorCard[] {
   if (!parcel || !indicators) return [];
 
   return indicators.flatMap((indicator) => {
     // The area is the thumbnail's figure (`area.ts`), not a card.
-    if (isGeneralInfo(indicator) || isAreaIndicator(indicator)) return [];
+    if (!isRiskClass(indicator, riesgo) || isAreaIndicator(indicator)) return [];
 
-    const value = readingOf(parcel, indicator);
+    const value = readingOf(parcel, indicator.id);
 
     if (value === undefined) return [];
 
@@ -198,13 +183,14 @@ export function indicatorCards(
 export function generalInfo(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
+  riesgo: Riesgo = 'sanitario',
 ): GeneralInfoRow[] {
   if (!parcel || !indicators) return [];
 
   const known = indicators.flatMap((indicator) => {
-    if (!isGeneralInfo(indicator) || isAreaIndicator(indicator)) return [];
+    if (!isGeneralInfo(indicator, riesgo) || isAreaIndicator(indicator)) return [];
 
-    const value = readingOf(parcel, indicator);
+    const value = readingOf(parcel, indicator.id);
 
     if (value === undefined) return [];
 
@@ -238,7 +224,7 @@ function unknownColumns(
 
   return Object.entries(parcel.properties).flatMap(([column, value]) => {
     if (claimed.has(column.toLowerCase())) return [];
-    if (value === null || value === '' || value === NOT_AVAILABLE) return [];
+    if (isNoReading(value)) return [];
 
     return [[column, value] as [string, string | number]];
   });
@@ -270,7 +256,7 @@ function categoryCard(
   categories: string[],
   value: string | number,
 ): IndicatorCard | null {
-  const index = classIndex(value, categories);
+  const index = categoryIndex(value, categories);
 
   if (index === undefined) return null;
 
@@ -290,7 +276,8 @@ function categoryCard(
   return card;
 }
 
-function classIndex(value: string | number, categories: string[]): number | undefined {
+/** The category a reading names — by label, ignoring case, or by its index (the sample encodes classes as codes). */
+export function categoryIndex(value: string | number, categories: string[]): number | undefined {
   const code = typeof value === 'number' ? value : Number(value);
 
   if (Number.isInteger(code)) return code >= 0 && code < categories.length ? code : undefined;

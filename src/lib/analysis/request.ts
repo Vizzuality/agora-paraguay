@@ -21,13 +21,17 @@ export function visibilityOf(riesgo: Riesgo): AnalysisVisibility {
  * on the page) plus the measured ones the picker shows — the user's selection, else the
  * API's defaults. Metadata order.
  */
-export function requestedIndicatorIds(indicators: Indicators, selected: string[] | null): string[] {
-  const visible = new Set(visibleIndicatorIds(selectableIndicators(indicators), selected));
+export function requestedIndicatorIds(
+  indicators: Indicators,
+  selected: string[] | null,
+  riesgo: Riesgo = 'sanitario',
+): string[] {
+  const visible = new Set(visibleIndicatorIds(selectableIndicators(indicators, riesgo), selected));
 
   return indicators
     .filter(
       (indicator) =>
-        isGeneralInfo(indicator) || isAreaIndicator(indicator) || visible.has(indicator.id),
+        isGeneralInfo(indicator, riesgo) || isAreaIndicator(indicator) || visible.has(indicator.id),
     )
     .map((indicator) => indicator.id);
 }

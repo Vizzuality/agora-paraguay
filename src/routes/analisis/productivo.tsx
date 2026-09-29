@@ -2,11 +2,17 @@ import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 
 import { AnalysisHeader } from '@/components/analysis-header';
+import { AnalysisStatus } from '@/components/analysis-status';
 import { LoginGate } from '@/components/auth/login-gate';
+import { CategoryCountCard } from '@/components/category-count-card';
+import { ParcelValuesCard } from '@/components/parcel-values-card';
+import { WidgetAI } from '@/components/widget-ai';
 import { WidgetGrid } from '@/components/widget-grid';
-import { WidgetIa } from '@/components/widget-ia';
+import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
+import { productivoTiles } from '@/lib/analysis/productivo-tiles';
+import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
 import { useSession } from '@/lib/auth/use-session';
-import { analysedParcelIdsAtom } from '@/store/analysis';
+import { analysedParcelIdsAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
 
 /**
  * Riesgo productivo needs an account: login gate until a session exists, with neither
@@ -48,8 +54,42 @@ function ProductivoGate() {
 
   return (
     <div className="flex flex-col gap-4">
-      <WidgetGrid />
-      <WidgetIa parcels={parcelIds} />
+      <WidgetAI parcels={parcelIds} />
+      <ProductivoWidgets />
+    </div>
+  );
+}
+
+/**
+ * The productivo tiles read the whole selection, not the hero's open tab: an open number
+ * lists every parcel (Figma Widget01), a category counts them per class (Widget03). In
+ * metadata order, restricted to what the picker shows and to what applies to the crop
+ * (`useApplicableIndicators`). The range indicators (IEP, ProInf, Puntuación) have their
+ * own design, not built yet.
+ */
+function ProductivoWidgets() {
+  const { analysis, indicators, indicatorsError, parcelIds, pending } =
+    useApplicableIndicators('productivo');
+  const selected = useAtomValue(selectedIndicatorIdsAtom);
+
+  const shown = indicators
+    ? visibleIndicators(selectableIndicators(indicators, 'productivo'), selected)
+    : undefined;
+  const answered = analysis.data?.indicators ?? [];
+  const tiles = productivoTiles(answered, parcelIds, shown);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} pending={pending} />
+      <WidgetGrid>
+        {tiles.map((tile) =>
+          tile.kind === 'parcel-values' ? (
+            <ParcelValuesCard key={tile.id} {...tile} />
+          ) : (
+            <CategoryCountCard key={tile.id} {...tile} />
+          ),
+        )}
+      </WidgetGrid>
     </div>
   );
 }

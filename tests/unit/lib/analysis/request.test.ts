@@ -80,6 +80,29 @@ describe('requestedIndicatorIds', () => {
       'brown_spot',
     ]);
   });
+
+  it('on productivo an open number is a pick like any other, the area still always asked', () => {
+    const area: Indicator = {
+      id: 'area',
+      name: 'Área',
+      unit: 'ha',
+      indicator_type: { type: 'numeric' },
+    };
+    const yieldT: Indicator = {
+      id: 'Pro_soja',
+      name: 'Producción',
+      indicator_type: { type: 'numeric' },
+    };
+
+    expect(requestedIndicatorIds([area, yieldT, rust], ['asian_rust'], 'productivo')).toEqual([
+      'area',
+      'asian_rust',
+    ]);
+    expect(requestedIndicatorIds([area, yieldT, rust], ['Pro_soja'], 'productivo')).toEqual([
+      'area',
+      'Pro_soja',
+    ]);
+  });
 });
 
 describe('toAnalysisRequest', () => {

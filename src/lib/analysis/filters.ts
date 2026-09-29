@@ -1,4 +1,4 @@
-import type { Filters } from '@/lib/api/metadata/schemas';
+import type { Filter, Filters } from '@/lib/api/metadata/schemas';
 
 /**
  * The analysis hero fields: one per filter `GET /api/parcels/filters/` returns, keyed by
@@ -9,6 +9,26 @@ import type { Filters } from '@/lib/api/metadata/schemas';
 export type AnalysisFilterSelection = Record<string, string>;
 
 export const EMPTY_ANALYSIS_FILTERS: AnalysisFilterSelection = {};
+
+/** The hero filter whose value the indicator list is asked for: the crop. */
+export const CROP_FILTER_ID = 'crop_type';
+
+/** How the hero lays the filters out: the date, the sowing date, then the crop. */
+const HERO_FILTER_ORDER = ['date', 'sowing_date', CROP_FILTER_ID];
+
+/**
+ * The filters in the hero's order rather than the API's: the two dates first, the crop
+ * last (it takes the whole row). Anything the API adds beyond those follows, in its order.
+ */
+export function orderHeroFilters(filters: Filters): Filters {
+  const rank = (filter: Filter) => {
+    const index = HERO_FILTER_ORDER.indexOf(filter.id);
+
+    return index === -1 ? HERO_FILTER_ORDER.length : index;
+  };
+
+  return [...filters].sort((a, b) => rank(a) - rank(b));
+}
 
 /**
  * Every filter resolved to what the hero displays and Analizar sends. A category keeps a

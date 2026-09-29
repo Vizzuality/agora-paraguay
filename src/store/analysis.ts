@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 import { atomWithReset, RESET } from 'jotai/utils';
 
 import { EMPTY_ANALYSIS_FILTERS, type AnalysisFilterSelection } from '@/lib/analysis/filters';
-import { selectableIndicators, toggleIndicatorId } from '@/lib/analysis/indicator-picker';
+import { toggleIndicatorId } from '@/lib/analysis/indicator-picker';
 import type { Indicators } from '@/lib/api/metadata/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
@@ -127,11 +127,8 @@ export const selectedIndicatorIdsAtom = atom(
   (get, set, update: { indicators: Indicators; id: string }) => {
     set(
       selectedIndicatorIdsBaseAtom,
-      toggleIndicatorId(
-        selectableIndicators(update.indicators),
-        get(selectedIndicatorIdsBaseAtom),
-        update.id,
-      ),
+      // `indicators` is the picker's selectable list for its riesgo, already filtered.
+      toggleIndicatorId(update.indicators, get(selectedIndicatorIdsBaseAtom), update.id),
     );
   },
 );
