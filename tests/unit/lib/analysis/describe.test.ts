@@ -41,6 +41,16 @@ describe('describeWithFilters', () => {
     );
   });
 
+  it('names the request filter group "los filtros"', () => {
+    expect(
+      describeWithFilters(
+        "Previas a {'id': 'date'} proporcionada en disease_filters; production_filters idem.",
+        filters,
+        { date: '2026-09-17' },
+      ),
+    ).toBe('Previas a 17/09/2026 proporcionada en los filtros; los filtros idem.');
+  });
+
   it('accepts double quotes and spacing, and leaves plain text alone', () => {
     expect(describeWithFilters('Hasta { "id" : "date" }.', filters, { date: '2026-01-02' })).toBe(
       'Hasta 02/01/2026.',
