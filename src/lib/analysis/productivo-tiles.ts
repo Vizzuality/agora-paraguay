@@ -19,7 +19,7 @@ export function productivoTiles(
   const counts = new Map(
     categoryCountTiles(parcels, parcelIds, indicators, 'productivo').map((tile) => [tile.id, tile]),
   );
-
+  console.log('values', values, counts, parcels);
   return (indicators ?? []).flatMap((indicator): ProductivoTile[] => {
     const value = values.get(indicator.id);
     if (value) return [{ kind: 'parcel-values' as const, ...value }];

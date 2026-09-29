@@ -30,11 +30,19 @@ export function orderHeroFilters(filters: Filters): Filters {
   return [...filters].sort((a, b) => rank(a) - rank(b));
 }
 
+/** Today as the date inputs write it, `YYYY-MM-DD`, in the user's own calendar day. */
+export function todayIso(now: Date = new Date()): string {
+  const pad = (part: number) => String(part).padStart(2, '0');
+
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 /**
  * Every filter resolved to what the hero displays and Analizar sends. A category keeps a
  * pick still among its options, else takes the first one; a date keeps whatever was typed,
- * else the API's default. A filter with nothing to show (no options, no default) is left
- * out, so the request omits it. Runs on every render against whatever the query returned.
+ * else the API's default, else today — so every date always has a value and the analysis
+ * never waits on one. A category with no options is left out, so the request omits it.
+ * Runs on every render against whatever the query returned.
  */
 export function resolveFilterSelection(
   selected: AnalysisFilterSelection,
@@ -55,7 +63,7 @@ export function resolveFilterSelection(
         break;
       }
       case 'date': {
-        const value = pick ?? field.default ?? '';
+        const value = pick ?? field.default ?? todayIso();
 
         if (value !== '') resolved[filter.id] = value;
         break;
@@ -64,18 +72,4 @@ export function resolveFilterSelection(
   }
 
   return resolved;
-}
-
-/**
- * The filters still without a value after `resolveFilterSelection` — a date with no
- * default the user has not typed yet. The backend requires every filter it lists, so the
- * analysis waits for these instead of POSTing into a 400.
- */
-export function unresolvedFilters(resolved: Record<string, string>, filters: Filters): Filters {
-  return filters.filter((filter) => !(filter.id in resolved));
-}
-
-/** Names as Spanish prose: "Fecha de siembra", "Fecha de siembra y Fecha", "A, B y C". */
-export function listNames(names: string[]): string {
-  return new Intl.ListFormat('es', { type: 'conjunction' }).format(names);
 }

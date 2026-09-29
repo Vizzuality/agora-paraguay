@@ -68,7 +68,7 @@ function ProductivoGate() {
  * own design, not built yet.
  */
 function ProductivoWidgets() {
-  const { analysis, indicators, indicatorsError, parcelIds, pending } =
+  const { analysis, indicators, indicatorsError, parcelIds } =
     useApplicableIndicators('productivo');
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
@@ -80,7 +80,7 @@ function ProductivoWidgets() {
 
   return (
     <div className="flex flex-col gap-4">
-      <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} pending={pending} />
+      <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
       <WidgetGrid>
         {tiles.map((tile) =>
           tile.kind === 'parcel-values' ? (

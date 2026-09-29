@@ -15,6 +15,14 @@ const FIRST_POLYGON = [
 /** MapLibre's default `fitBounds` ease, with slack: clicks mid-flight hit the wrong spot. */
 const FIT_ANIMATION = 800;
 
+/** Today as the hero's date inputs write it — the default of a date filter the API leaves blank. */
+const TODAY = (() => {
+  const now = new Date();
+  const pad = (part: number) => String(part).padStart(2, '0');
+
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+})();
+
 function controls(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
@@ -88,52 +96,47 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
-  expect(analysisBodies).toHaveLength(0);
 
   // The hero renders one field per filter the public side returned, named after it: a
   // dropdown for the category with its first option preselected, a date input per date
-  // (empty without a default, the API's default otherwise).
+  // (the API's default, else today).
   const cultivo = page.getByRole('combobox', { name: 'Tipo de cultivo' });
   await expect(cultivo).toBeEnabled();
   await expect(cultivo).toHaveText('Arroz');
   await expect(page.getByRole('combobox')).toHaveCount(1);
-  await expect(page.getByLabel('Fecha de siembra')).toHaveValue('');
+  await expect(page.getByLabel('Fecha de siembra')).toHaveValue(TODAY);
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
   expect(filtersRequests).toBe(1);
 
-  // The backend requires every filter, so nothing is POSTed while the sowing date is
-  // empty: the page asks for it instead of failing with a 400.
-  await expect(
-    page.getByText('Completa Fecha de siembra para ejecutar el análisis.'),
-  ).toBeVisible();
-  expect(analysisBodies).toHaveLength(0);
+  // Every filter has a value, so the analysis runs at once — one POST, with the API's
+  // default crop, today as the sowing date and the default indicators.
+  await expect.poll(() => analysisBodies.length).toBe(1);
+  expect(analysisBodies[0]).toMatchObject({ crop_type: 'rice', sowing_date: TODAY });
+  expect(analysisBodies[0].indicators).toContain('asian_rust');
 
-  // Typing it runs the analysis — one POST, with the API's default crop, the typed date
-  // and the default indicators.
+  // Typing a sowing date re-runs it with that date.
   await page.getByLabel('Fecha de siembra').fill('2026-05-01');
   await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-05-01');
-  await expect(page.getByText('Completa Fecha de siembra para ejecutar el análisis.')).toBeHidden();
-  await expect.poll(() => analysisBodies.length).toBe(1);
-  expect(analysisBodies[0]).toMatchObject({ crop_type: 'rice', sowing_date: '2026-05-01' });
-  expect(analysisBodies[0].indicators).toContain('asian_rust');
+  await expect.poll(() => analysisBodies.length).toBe(2);
+  expect(analysisBodies[1]).toMatchObject({ sowing_date: '2026-05-01' });
 
   // Picking another crop re-runs it with the new filter.
   await cultivo.click();
   await page.getByRole('option', { name: 'Soja' }).click();
   await expect(cultivo).toHaveText('Soja');
-  await expect.poll(() => analysisBodies.length).toBe(2);
-  expect(analysisBodies[1]).toMatchObject({ crop_type: 'soy' });
+  await expect.poll(() => analysisBodies.length).toBe(3);
+  expect(analysisBodies[2]).toMatchObject({ crop_type: 'soy' });
 
   // So does changing the defaulted date: the value is part of the query key.
   await page.getByLabel('Fecha', { exact: true }).fill('2026-09-10');
-  await expect.poll(() => analysisBodies.length).toBe(3);
-  expect(analysisBodies[2]).toMatchObject({ date: '2026-09-10', sowing_date: '2026-05-01' });
+  await expect.poll(() => analysisBodies.length).toBe(4);
+  expect(analysisBodies[3]).toMatchObject({ date: '2026-09-10', sowing_date: '2026-05-01' });
 
   // The hero mini map paints the selected parcel over the (stubbed) satellite basemap —
-  // the same layer as the main map, without Terra Draw — and is interactive.
+  // the same layer as the main map, without Terra Draw and without the zoom buttons.
   await expect(mapCanvas(page)).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
-  await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Acercar' })).toHaveCount(0);
 
   // Todas first, then one hero tab per parcel the (stubbed) analysis answered, labelled
   // by its id; the page lands on Todas.
@@ -344,8 +347,6 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await drawPolygon(page, FIRST_POLYGON);
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
-  // The sowing date has no default and the backend requires it: nothing runs until typed.
-  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
 
   const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   const allTab = tabs.filter({ hasText: 'Todas' }).getByRole('button');
@@ -536,7 +537,6 @@ test('logs in from the header dialog', async ({ page }) => {
   // Soja is picked: the indicators follow the crop.
   await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Soja' }).click();
-  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')

@@ -39,7 +39,7 @@ function SanitarioPage() {
  * re-runs the analysis (`useAnalysis`); the previous cards stay until the new answer lands.
  */
 function SanitarioWidgets() {
-  const { analysis, indicators, indicatorsError, parcelIds, pending } = useAnalysis('sanitario');
+  const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis('sanitario');
   const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom);
 
@@ -61,7 +61,7 @@ function SanitarioWidgets() {
 
   return (
     <div className="flex flex-col gap-4">
-      <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} pending={pending} />
+      <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
       {info.length > 0 && <GeneralInfoCard items={info} />}
       <WidgetGrid>
         {cards.map((card) => (

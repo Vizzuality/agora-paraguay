@@ -11,7 +11,7 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
  * request. Reads atoms, so callers render inside `<ClientOnly>`.
  */
 export function useApplicableIndicators(riesgo: Riesgo) {
-  const { analysis, indicators, indicatorsError, parcelIds, pending } = useAnalysis(riesgo);
+  const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis(riesgo);
   const { resolvedFilters } = useHeroFilters(riesgo);
   const applicable = applicableIndicators(
     indicators,
@@ -21,5 +21,5 @@ export function useApplicableIndicators(riesgo: Riesgo) {
     resolvedFilters?.[CROP_FILTER_ID],
   );
 
-  return { analysis, indicators: applicable, indicatorsError, parcelIds, pending };
+  return { analysis, indicators: applicable, indicatorsError, parcelIds };
 }

@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   EMPTY_ANALYSIS_FILTERS,
-  listNames,
   orderHeroFilters,
   resolveFilterSelection,
-  unresolvedFilters,
+  todayIso,
 } from '@/lib/analysis/filters';
 import type { Filters } from '@/lib/api/metadata/schemas';
 
@@ -27,9 +26,10 @@ const FILTERS: Filters = [
 ];
 
 describe('resolveFilterSelection', () => {
-  it('defaults a category to its first option and a date to the API default', () => {
+  it('defaults a category to its first option, a date to the API default, else to today', () => {
     expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toEqual({
       crop_type: 'rice',
+      sowing_date: todayIso(),
       date: '2026-09-17',
     });
   });
@@ -48,13 +48,13 @@ describe('resolveFilterSelection', () => {
     expect(resolveFilterSelection({ cultivo: 'soja' }, FILTERS)).not.toHaveProperty('cultivo');
   });
 
-  it('leaves out a category with no options and a date without default or pick', () => {
+  it('leaves out a category with no options; a date without default or pick is today', () => {
     const filters: Filters = [
       { id: 'empty', name: 'Vacío', field_type: { type: 'category', options: [] } },
       { id: 'when', name: 'Cuándo', field_type: { type: 'date' } },
     ];
 
-    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({});
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({ when: todayIso() });
   });
 
   it('drops a date the user cleared back to empty', () => {
@@ -66,19 +66,10 @@ describe('resolveFilterSelection', () => {
   });
 });
 
-describe('unresolvedFilters', () => {
-  it('names the filters the resolution left out — the sowing date until it is typed', () => {
-    const resolved = resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS);
-
-    expect(unresolvedFilters(resolved, FILTERS).map((filter) => filter.id)).toEqual([
-      'sowing_date',
-    ]);
-  });
-
-  it('is empty once every filter has a value', () => {
-    const resolved = resolveFilterSelection({ sowing_date: '2026-05-01' }, FILTERS);
-
-    expect(unresolvedFilters(resolved, FILTERS)).toEqual([]);
+describe('todayIso', () => {
+  it('writes the local calendar day as the date inputs do', () => {
+    expect(todayIso(new Date(2026, 8, 5, 23, 30))).toBe('2026-09-05');
+    expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
 
@@ -114,13 +105,5 @@ describe('orderHeroFilters', () => {
       'crop_type',
       'cycle',
     ]);
-  });
-});
-
-describe('listNames', () => {
-  it('joins names as Spanish prose', () => {
-    expect(listNames(['Fecha de siembra'])).toBe('Fecha de siembra');
-    expect(listNames(['Fecha de siembra', 'Fecha'])).toBe('Fecha de siembra y Fecha');
-    expect(listNames(['A', 'B', 'C'])).toBe('A, B y C');
   });
 });
