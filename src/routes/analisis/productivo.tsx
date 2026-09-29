@@ -11,6 +11,7 @@ import { WidgetGrid } from '@/components/widget-grid';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { productivoTiles } from '@/lib/analysis/productivo-tiles';
 import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
+import { useDescribe } from '@/lib/analysis/use-describe';
 import { useSession } from '@/lib/auth/use-session';
 import { analysedParcelIdsAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
 
@@ -71,12 +72,16 @@ function ProductivoWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } =
     useApplicableIndicators('productivo');
   const selected = useAtomValue(selectedIndicatorIdsAtom).productivo;
+  const describe = useDescribe('productivo');
 
   const shown = indicators
     ? visibleIndicators(selectableIndicators(indicators, 'productivo'), selected)
     : undefined;
   const answered = analysis.data?.indicators ?? [];
-  const tiles = productivoTiles(answered, parcelIds, shown);
+  const tiles = productivoTiles(answered, parcelIds, shown).map((tile) => ({
+    ...tile,
+    description: describe(tile.description),
+  }));
 
   return (
     <div className="flex flex-col gap-4">

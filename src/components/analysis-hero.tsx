@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatArea } from '@/lib/analysis/area';
+import { describeWithFilters } from '@/lib/analysis/describe';
 import { CROP_FILTER_ID, orderHeroFilters } from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import {
@@ -88,6 +89,9 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
           <HeroField
             key={filter.id}
             filter={filter}
+            description={
+              filter.description && describeWithFilters(filter.description, filters, resolved)
+            }
             value={resolved[filter.id] ?? ''}
             onChange={(value) => setFilter({ id: filter.id, value })}
             // The crop closes the grid on a row of its own.
@@ -108,11 +112,14 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 /** The control a filter's `field_type` calls for. */
 function HeroField({
   filter,
+  description,
   value,
   onChange,
   className,
 }: Readonly<{
   filter: Filter;
+  /** `filter.description` with its filter references resolved (`describeWithFilters`). */
+  description?: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -124,7 +131,7 @@ function HeroField({
       return (
         <HeroSelect
           label={filter.name}
-          description={filter.description}
+          description={description}
           options={field.options}
           value={value}
           onChange={onChange}
@@ -135,7 +142,7 @@ function HeroField({
       return (
         <HeroDate
           label={filter.name}
-          description={filter.description}
+          description={description}
           value={value}
           onChange={onChange}
           className={className}

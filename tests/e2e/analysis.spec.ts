@@ -354,13 +354,15 @@ test('opens the metadata description from the info icon on hero fields and cards
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
 
-  // The risk card's icon opens the indicator's, and the keyboard reaches it too.
+  // The risk card's icon opens the indicator's, and the keyboard reaches it too. Its
+  // `{'id': 'date'}` reference reads as the hero's date, dd/mm/yyyy.
   const rustInfo = page.getByRole('button', {
     name: 'Más información sobre Phakopsora pachyrhizi',
   });
   await rustInfo.focus();
   await page.keyboard.press('Enter');
   await expect(popover).toContainText('Enfermedad favorecida por humedad elevada');
+  await expect(popover).toContainText('previas a 17/09/2026.');
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
 });

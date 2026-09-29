@@ -54,7 +54,9 @@ export const SANITARIO_INDICATORS = [
   {
     id: 'asian_rust',
     name: 'Phakopsora pachyrhizi',
-    description: 'Enfermedad favorecida por humedad elevada y altas temperaturas.',
+    // A filter reference as the live API writes it: shown as the filter's current value.
+    description:
+      "Enfermedad favorecida por humedad elevada y altas temperaturas en las 72 horas previas a {'id': 'date'}.",
     default: true,
     indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
   },
