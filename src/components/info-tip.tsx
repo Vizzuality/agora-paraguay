@@ -9,7 +9,7 @@ type InfoTipProps = {
   className?: string;
 };
 
-export function InfoTip({ description, subject, className }: InfoTipProps) {
+export function InfoTip({ description, subject, className }: Readonly<InfoTipProps>) {
   if (!description) return null;
 
   return (
