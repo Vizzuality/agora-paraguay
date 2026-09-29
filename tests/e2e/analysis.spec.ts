@@ -142,13 +142,13 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
   // Under Todas the risk card combines the parcels: disease indices 3 and 1 average to
-  // 2, the middle of the 1–3 range — the class as figure, the combined value as caption.
+  // 2, the middle of the 1–3 range — the class as the figure (Figma Widget03).
   const card = page
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
     .locator('..');
-  await expect(card).toContainText('Medio');
-  await expect(card).toContainText('2');
+  const level = card.locator('[data-slot="risk-level"]');
+  await expect(level).toHaveText('Moderado');
 
   // Its text facts (crop, station, phenology) share one general-info card instead.
   const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
@@ -355,10 +355,13 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
     .locator('..');
+  const level = card.locator('[data-slot="risk-level"]');
+  // The thumbnail prints the open tab's area: the parcels summed under Todas.
 
-  // Lands on Todas: the combined index (3 and 1 → 2) reads "Medio".
+  // Lands on Todas: the combined index (3 and 1 → 2) reads "Moderado".
   await expect(allTab).toHaveAttribute('aria-current', 'true');
-  await expect(card).toContainText('Medio');
+  await expect(level).toHaveText('Moderado');
+  await expect(page.getByText('17,5 ha')).toBeVisible();
   await expect.poll(() => analysisRuns.length).toBe(1);
 
   // The list button opens a single-choice menu — Todas, then the analysed parcels — with
@@ -378,13 +381,14 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await expect(menu).toBeHidden();
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
   await expect(allTab).not.toHaveAttribute('aria-current', 'true');
-  await expect(card).toContainText('Bajo');
+  await expect(level).toHaveText('Sin riesgo');
+  await expect(page.getByText('7,3 ha')).toBeVisible();
 
   // Back to Todas from the strip: both parcels paint again, the frame fits them both.
   // The two stubbed parcels split the drawn bbox down the middle and are taller than
   // wide, so fitted they fill the canvas height and sit centred horizontally.
   await allTab.click();
-  await expect(card).toContainText('Medio');
+  await expect(level).toHaveText('Moderado');
   const canvas = mapCanvas(page);
   await expect(canvas).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
@@ -399,7 +403,8 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   // paints, and the frame fits it — narrower than both, so less yellow on screen.
   await canvas.click({ position: { x: centre.x - offset, y: centre.y } });
   await expect(westTab).toHaveAttribute('aria-current', 'true');
-  await expect(card).toContainText('Alto');
+  await expect(level).toHaveText('Severo');
+  await expect(page.getByText('10,2 ha')).toBeVisible();
   await page.waitForTimeout(FIT_ANIMATION);
   await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
 
@@ -408,7 +413,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   // already in hand.
   await canvas.click({ position: { x: centre.x + offset, y: centre.y } });
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
-  await expect(card).toContainText('Bajo');
+  await expect(level).toHaveText('Sin riesgo');
   expect(analysisRuns).toHaveLength(1);
 });
 

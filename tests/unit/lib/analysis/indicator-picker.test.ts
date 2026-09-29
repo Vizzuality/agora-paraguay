@@ -20,11 +20,13 @@ const indicators: Indicators = [
 ];
 
 describe('selectableIndicators', () => {
-  it('leaves out the general-info facts: text indicators', () => {
+  it('leaves out the general-info facts (text, open numbers) and the area', () => {
     const withTypes: Indicators = [
       { id: 'asian_rust', name: 'Roya', indicator_type: range },
       { id: 'crop_type', name: 'Cultivo', indicator_type: text },
       { id: 'weather_station', name: 'Estación', indicator_type: text },
+      { id: 'Pro_soja', name: 'Producción', indicator_type: { type: 'numeric' } },
+      { id: 'area', name: 'Área', unit: 'ha', indicator_type: { type: 'numeric' } },
       { id: 'ITR', name: 'ITR', indicator_type: { type: 'category', categories: ['a', 'b'] } },
     ];
 

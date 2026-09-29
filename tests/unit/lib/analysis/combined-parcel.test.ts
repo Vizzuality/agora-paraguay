@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { COMBINED_PARCEL_ID, combinedParcel, indicatorCards } from '@/lib/analysis/indicator-cards';
+import { RANGE_CLASSES } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
@@ -108,14 +109,18 @@ describe('combinedParcel', () => {
     expect(combined?.properties).toEqual({ yield: 15, station: 'Norte, Sur' });
   });
 
-  it('feeds the same cards a single parcel does — a 3 and a 1 read as Medio', () => {
+  it('feeds the same cards a single parcel does — a 3 and a 1 read as Moderado', () => {
     const combined = combinedParcel(
       [parcel('A', { Asian_rust: 3 }), parcel('B', { Asian_rust: 1 })],
       INDICATORS,
     );
 
     expect(indicatorCards(combined, INDICATORS)).toEqual([
-      expect.objectContaining({ id: 'asian_rust', level: 'Medio', caption: '2' }),
+      expect.objectContaining({
+        id: 'asian_rust',
+        level: 'Moderado',
+        scale: { classes: RANGE_CLASSES, position: 50 },
+      }),
     ]);
   });
 });

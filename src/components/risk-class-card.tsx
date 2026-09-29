@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 
 import { Card } from '@/components/ui/card';
-import { toneOf, type IndicatorCard, type RiskTone } from '@/lib/analysis/indicator-cards';
-import { rulerSegments } from '@/lib/analysis/risk-ruler';
+import type { IndicatorCard, RiskScale } from '@/lib/analysis/indicator-cards';
+import { rulerBands } from '@/lib/analysis/risk-ruler';
+import type { RiskTone } from '@/lib/analysis/widget-config';
 import { cn } from '@/lib/utils';
 
 /** What `indicatorCards()` produces, minus the id the list keys on. */
@@ -13,24 +14,18 @@ type RiskClassCardProps = Omit<IndicatorCard, 'id'> & {
 };
 
 /**
- * Widget tile for a classed indicator: a label, the class as the large figure, a ruler
- * marking where the class falls on the scale, and a caption qualifying it.
+ * Widget tile for a classed indicator (Figma Widget03): a label, the class as the large
+ * figure, and a ruler of one band per class with the marker inside the class the reading
+ * falls in, the class names under the bands.
  *
  * Light surface (`bg-card`), unlike `StatCard`'s navy `bg-widget` — the two are
  * different tiles in the design, not variants of one.
  */
-export function RiskClassCard({
-  label,
-  level,
-  position,
-  caption,
-  action,
-  className,
-}: RiskClassCardProps) {
+export function RiskClassCard({ label, level, scale, action, className }: RiskClassCardProps) {
   return (
     <Card
       className={cn(
-        'min-h-[254px] justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-[4px]',
+        'min-h-[254px] justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
         className,
       )}
     >
@@ -40,40 +35,76 @@ export function RiskClassCard({
       </div>
 
       <div className="flex flex-col gap-1">
-        <p className="text-[66px] leading-normal font-extralight tracking-[0.408px]">{level}</p>
-        {position !== undefined && <RiskRuler position={position} />}
-        {caption && <p className="text-[12px] leading-[17.4px] text-muted-foreground">{caption}</p>}
+        <p
+          data-slot="risk-level"
+          className="text-[66px] leading-normal font-extralight tracking-[0.408px]"
+        >
+          {level}
+        </p>
+        {scale && <RiskRuler {...scale} />}
       </div>
     </Card>
   );
 }
 
-/** Track and marker colour per class: blue, orange, red (`--risk-*` in globals.css). */
-const TONE_CLASS: Record<RiskTone, string> = {
+/** Track colour per band: the outer classes in their hue at half strength, the middle a faint grey. */
+const TRACK_CLASS: Record<RiskTone, string> = {
+  low: 'bg-risk-low opacity-50',
+  medium: 'bg-muted-foreground opacity-20',
+  high: 'bg-risk-high opacity-50',
+};
+
+/** The marker takes its band's hue at full strength. */
+const MARKER_CLASS: Record<RiskTone, string> = {
   low: 'bg-risk-low',
-  medium: 'bg-risk-medium',
+  medium: 'bg-muted-foreground',
   high: 'bg-risk-high',
 };
 
 /**
- * Presentational: the class is printed right above it, so exposing the ruler would
- * announce the same reading twice (same reasoning as `Meter`).
+ * Presentational: the class is printed right above it, so exposing the ruler and its
+ * labels would announce the same reading twice (same reasoning as `Meter`).
  */
-function RiskRuler({ position }: Readonly<{ position: number }>) {
-  const { before, after } = rulerSegments(position);
-  const tone = TONE_CLASS[toneOf(position)];
+function RiskRuler({ classes, position }: Readonly<RiskScale>) {
+  const bands = rulerBands(position, classes);
 
   return (
-    <div aria-hidden className="flex w-full items-center gap-[2px] p-px">
-      <span
-        className={cn('h-2 min-w-0 rounded-[2px] opacity-50', tone)}
-        style={{ flexGrow: before }}
-      />
-      <span className={cn('h-6 w-1 shrink-0 rounded-[2px]', tone)} />
-      <span
-        className="h-2 min-w-0 rounded-[2px] bg-muted-foreground opacity-20"
-        style={{ flexGrow: after }}
-      />
+    <div aria-hidden className="flex flex-col gap-1">
+      <div className="flex w-full items-center gap-[2px] p-px">
+        {bands.map((band) =>
+          band.marker ? (
+            <div key={band.label} className="flex min-w-0 flex-1 items-center gap-[2px]">
+              <span
+                className={cn('h-2 min-w-0 rounded-[2px]', TRACK_CLASS[band.tone])}
+                style={{ flexGrow: band.marker.before }}
+              />
+              <span className={cn('h-6 w-1 shrink-0 rounded-[2px]', MARKER_CLASS[band.tone])} />
+              <span
+                className={cn('h-2 min-w-0 rounded-[2px]', TRACK_CLASS[band.tone])}
+                style={{ flexGrow: band.marker.after }}
+              />
+            </div>
+          ) : (
+            <span
+              key={band.label}
+              className={cn('h-2 min-w-0 flex-1 rounded-[2px]', TRACK_CLASS[band.tone])}
+            />
+          ),
+        )}
+      </div>
+      <div className="flex w-full text-center text-[12px] leading-[17.4px] opacity-70">
+        {bands.map((band) => (
+          <span
+            key={band.label}
+            className={cn(
+              'min-w-0 flex-1',
+              band.reached ? 'font-bold text-foreground' : 'text-muted-foreground',
+            )}
+          >
+            {band.label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

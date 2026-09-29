@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { formatArea } from '@/lib/analysis/area';
 import { resolveFilterSelection } from '@/lib/analysis/filters';
 import {
   nextScrollLeft,
@@ -33,6 +34,7 @@ import {
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
 import { visibilityOf } from '@/lib/analysis/request';
+import { useParcelArea } from '@/lib/analysis/use-parcel-area';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
@@ -50,7 +52,7 @@ import {
 export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
   return (
     <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
-      <MiniMapThumbnail />
+      <MiniMapThumbnail riesgo={riesgo} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <ParcelTabs parcels={parcels} />
@@ -149,14 +151,23 @@ function HeroDate({
   );
 }
 
-/** Satellite mini map in the thumbnail slot. The area figure arrives with the API. */
-function MiniMapThumbnail() {
+/**
+ * Satellite mini map in the thumbnail slot, the open tab's area over it: the parcel's,
+ * or the selection summed under Todas. Nothing until the analysis has answered it.
+ */
+function MiniMapThumbnail({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
+  const area = useParcelArea(riesgo);
+
   return (
     <div className="relative h-64 min-w-0 flex-1 overflow-hidden rounded-md bg-muted lg:h-[335px]">
       <MiniMap />
-      <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
-        <span className="text-[36px] font-light tracking-[0.408px] text-white">17.5 ha</span>
-      </div>
+      {area && (
+        <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
+          <span className="text-[36px] font-light tracking-[0.408px] text-white">
+            {formatArea(area)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

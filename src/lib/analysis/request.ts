@@ -1,3 +1,4 @@
+import { isAreaIndicator } from '@/lib/analysis/area';
 import type { AnalysisFilterSelection } from '@/lib/analysis/filters';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicatorIds } from '@/lib/analysis/indicator-picker';
@@ -16,15 +17,18 @@ export function visibilityOf(riesgo: Riesgo): AnalysisVisibility {
 }
 
 /**
- * The indicator ids to ask the analysis for: the general-info facts (always on the page)
- * plus the measured ones the picker shows — the user's selection, else the API's
- * defaults. Metadata order.
+ * The indicator ids to ask the analysis for: the general-info facts and the area (always
+ * on the page) plus the measured ones the picker shows — the user's selection, else the
+ * API's defaults. Metadata order.
  */
 export function requestedIndicatorIds(indicators: Indicators, selected: string[] | null): string[] {
   const visible = new Set(visibleIndicatorIds(selectableIndicators(indicators), selected));
 
   return indicators
-    .filter((indicator) => isGeneralInfo(indicator) || visible.has(indicator.id))
+    .filter(
+      (indicator) =>
+        isGeneralInfo(indicator) || isAreaIndicator(indicator) || visible.has(indicator.id),
+    )
     .map((indicator) => indicator.id);
 }
 

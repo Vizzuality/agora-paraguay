@@ -14,7 +14,7 @@ const SELECTION: AnalysisFilterSelection = {
 
 /** A measured indicator with no default flag. */
 function indicator(id: string): Indicator {
-  return { id, name: id, indicator_type: { type: 'numeric' } };
+  return { id, name: id, indicator_type: { type: 'range', min: 0, max: 1 } };
 }
 
 describe('visibilityOf', () => {
@@ -59,6 +59,26 @@ describe('requestedIndicatorIds', () => {
 
   it('asks for every measured indicator when the API flags no default', () => {
     expect(requestedIndicatorIds([indicator('a'), indicator('b')], null)).toEqual(['a', 'b']);
+  });
+
+  it('always asks for the area and the open numbers: facts, not picks', () => {
+    const area: Indicator = {
+      id: 'area',
+      name: 'Área',
+      unit: 'ha',
+      indicator_type: { type: 'numeric' },
+    };
+    const yieldT: Indicator = {
+      id: 'Pro_soja',
+      name: 'Producción',
+      indicator_type: { type: 'numeric' },
+    };
+
+    expect(requestedIndicatorIds([area, yieldT, rust, spot], ['brown_spot'])).toEqual([
+      'area',
+      'Pro_soja',
+      'brown_spot',
+    ]);
   });
 });
 
