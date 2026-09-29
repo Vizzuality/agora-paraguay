@@ -33,7 +33,6 @@ export function InfoTip({ description, subject, className }: InfoTipProps) {
   );
 }
 
-/** The Figma "Abstract / info-circled" glyph as drawn, inked in the current text colour. */
 function InfoCircledIcon() {
   return (
     <svg
