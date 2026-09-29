@@ -178,9 +178,9 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await list.getByText('Phakopsora pachyrhizi').click();
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).not.toBeChecked();
   await page.keyboard.press('Escape');
-  await expect.poll(() => analysisBodies.length).toBe(4);
-  expect(analysisBodies[3].indicators).not.toContain('asian_rust');
-  expect(analysisBodies[3].indicators).toContain('crop_type');
+  await expect.poll(() => analysisBodies.length).toBe(5);
+  expect(analysisBodies[4].indicators).not.toContain('asian_rust');
+  expect(analysisBodies[4].indicators).toContain('crop_type');
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Información general' })).toBeVisible();
 
