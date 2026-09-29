@@ -18,7 +18,7 @@ import { analysedParcelIdsAtom, selectedIndicatorIdsAtom } from '@/store/analysi
 export function useAnalysis(riesgo: Riesgo) {
   const visibility = visibilityOf(riesgo);
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
-  const selectedIndicators = useAtomValue(selectedIndicatorIdsAtom);
+  const selectedIndicators = useAtomValue(selectedIndicatorIdsAtom)[riesgo];
 
   const { resolvedFilters } = useHeroFilters(riesgo);
   const indicators = useIndicators(riesgo);

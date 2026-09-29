@@ -70,7 +70,7 @@ function ProductivoGate() {
 function ProductivoWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } =
     useApplicableIndicators('productivo');
-  const selected = useAtomValue(selectedIndicatorIdsAtom);
+  const selected = useAtomValue(selectedIndicatorIdsAtom).productivo;
 
   const shown = indicators
     ? visibleIndicators(selectableIndicators(indicators, 'productivo'), selected)

@@ -41,7 +41,7 @@ function SanitarioPage() {
 function SanitarioWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis('sanitario');
   const activeId = useAtomValue(activeParcelIdAtom);
-  const selected = useAtomValue(selectedIndicatorIdsAtom);
+  const selected = useAtomValue(selectedIndicatorIdsAtom).sanitario;
 
   const answered = analysis.data?.indicators ?? [];
   const parcel =

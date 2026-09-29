@@ -11,12 +11,12 @@ import {
 } from '@/lib/analysis/indicator-picker';
 import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
 import { errorReason } from '@/lib/api/http';
-import type { Indicators } from '@/lib/api/metadata/schemas';
+import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import { selectedIndicatorIdsAtom } from '@/store/analysis';
 
 type IndicatorPickerProps = {
-  riesgo: 'sanitario' | 'productivo';
+  riesgo: Riesgo;
 };
 
 /**
@@ -43,7 +43,10 @@ export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
         className="w-auto min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
       >
         {indicators ? (
-          <IndicatorChecklist indicators={selectableIndicators(indicators, riesgo)} />
+          <IndicatorChecklist
+            riesgo={riesgo}
+            indicators={selectableIndicators(indicators, riesgo)}
+          />
         ) : error ? (
           <p role="alert" className="px-3 py-2.5 text-sm text-destructive">
             No se pudieron cargar los indicadores: {errorReason(error)}
@@ -58,8 +61,12 @@ export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
   );
 }
 
-function IndicatorChecklist({ indicators }: Readonly<{ indicators: Indicators }>) {
-  const [selected, toggle] = useAtom(selectedIndicatorIdsAtom);
+function IndicatorChecklist({
+  riesgo,
+  indicators,
+}: Readonly<{ riesgo: Riesgo; indicators: Indicators }>) {
+  const [selection, toggle] = useAtom(selectedIndicatorIdsAtom);
+  const selected = selection[riesgo];
   const [query, setQuery] = useState('');
   const listId = useId();
 
@@ -98,7 +105,7 @@ function IndicatorChecklist({ indicators }: Readonly<{ indicators: Indicators }>
                   type="checkbox"
                   className="sr-only"
                   checked={checked}
-                  onChange={() => toggle({ indicators, id: indicator.id })}
+                  onChange={() => toggle({ riesgo, indicators, id: indicator.id })}
                 />
                 <Check aria-hidden className={cn('size-4 shrink-0', !checked && 'invisible')} />
                 <span className="min-w-0 flex-1 wrap-break-word">{indicator.name}</span>

@@ -3,7 +3,7 @@ import { atomWithReset, RESET } from 'jotai/utils';
 
 import { EMPTY_ANALYSIS_FILTERS, type AnalysisFilterSelection } from '@/lib/analysis/filters';
 import { toggleIndicatorId } from '@/lib/analysis/indicator-picker';
-import type { Indicators } from '@/lib/api/metadata/schemas';
+import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 
@@ -115,20 +115,27 @@ export const resetAnalysisAtom = atom(null, (_get, set) => {
 });
 
 /**
- * Personalizar indicadores: the indicator ids the analysis page shows, or `null` while the
- * user has not touched the list (the API's `default` flags apply — `visibleIndicatorIds`).
- * One list for the whole analysis, like the filters above. Reads the list; writes toggle
- * one id, so the raw list is never set from a component.
+ * Personalizar indicadores: the indicator ids each analysis page shows, or `null` while
+ * the user has not touched that page's list (the API's `default` flags apply —
+ * `visibleIndicatorIds`). One list per riesgo: the two pages list different indicators,
+ * so a pick on one must not filter the other. Reads the record; writes toggle one id on
+ * one riesgo, so the raw lists are never set from a component.
  */
-const selectedIndicatorIdsBaseAtom = atomWithReset<string[] | null>(null);
+export type IndicatorSelection = Record<Riesgo, string[] | null>;
+
+const NO_SELECTION: IndicatorSelection = { sanitario: null, productivo: null };
+
+const selectedIndicatorIdsBaseAtom = atomWithReset<IndicatorSelection>(NO_SELECTION);
 
 export const selectedIndicatorIdsAtom = atom(
   (get) => get(selectedIndicatorIdsBaseAtom),
-  (get, set, update: { indicators: Indicators; id: string }) => {
-    set(
-      selectedIndicatorIdsBaseAtom,
+  (get, set, update: { riesgo: Riesgo; indicators: Indicators; id: string }) => {
+    const current = get(selectedIndicatorIdsBaseAtom);
+
+    set(selectedIndicatorIdsBaseAtom, {
+      ...current,
       // `indicators` is the picker's selectable list for its riesgo, already filtered.
-      toggleIndicatorId(update.indicators, get(selectedIndicatorIdsBaseAtom), update.id),
-    );
+      [update.riesgo]: toggleIndicatorId(update.indicators, current[update.riesgo], update.id),
+    });
   },
 );
