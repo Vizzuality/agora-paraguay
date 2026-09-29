@@ -344,8 +344,10 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
             type="button"
             variant="ghost"
             size="icon"
+            // Nothing to choose from with a single tab.
+            disabled={tabs.length === 1}
             aria-label="Ver lista de parcelas"
-            className="size-8 rounded-full"
+            className="size-8 rounded-full disabled:opacity-30"
           >
             <ChevronDown />
           </Button>

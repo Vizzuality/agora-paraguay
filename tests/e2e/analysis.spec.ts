@@ -353,18 +353,11 @@ test('a single analysed parcel stands alone, without Todas', async ({ page }) =>
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
 
-  // One tab, already open; the dropdown lists that one parcel and nothing else.
+  // One tab, already open; with nothing else to pick, the list button is disabled.
   const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await expect(tabs).toHaveText([EAST_PARCEL_ID]);
   await expect(tabs.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
-  await page.getByRole('button', { name: 'Ver lista de parcelas' }).click();
-  const menu = page.getByRole('menu');
-  await expect(menu.getByRole('menuitemradio')).toHaveText([EAST_PARCEL_ID]);
-  await expect(menu.getByRole('menuitemradio', { name: EAST_PARCEL_ID })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
-  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Ver lista de parcelas' })).toBeDisabled();
 
   // Its own values, not a combination: index 1 reads "Sin riesgo", its area alone.
   const card = page
