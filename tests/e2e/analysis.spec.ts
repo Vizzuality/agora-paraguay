@@ -541,7 +541,10 @@ test('logs in from the header dialog', async ({ page }) => {
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')
     .locator('..');
-  await expect(production.getByRole('listitem')).toHaveText([/P\.1.*3,55/, /P\.2.*3,81/]);
+  await expect(production.getByRole('listitem')).toHaveText([
+    new RegExp(`${WEST_PARCEL_ID}.*3,55`),
+    new RegExp(`${EAST_PARCEL_ID}.*3,81`),
+  ]);
   const resilience = page
     .getByRole('heading', { name: 'Proxy de resiliencia operativa' })
     .locator('..')

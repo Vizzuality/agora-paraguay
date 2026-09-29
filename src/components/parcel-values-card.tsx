@@ -6,8 +6,9 @@ type ParcelValuesCardProps = Omit<ParcelValuesTile, 'id'> & { className?: string
 
 /**
  * Widget tile for an open number over the analysed parcels (Figma Widget01): the
- * indicator's name and unit, then one row per parcel — its tab number, a track filled
- * relative to the largest parcel, and the figure. Same light surface as `RiskClassCard`.
+ * indicator's name and unit, then one row per parcel — its id, a track filled on the
+ * indicator's scale or relative to the largest parcel, and the figure. Same light surface
+ * as `RiskClassCard`.
  */
 export function ParcelValuesCard({ label, unit, rows, className }: ParcelValuesCardProps) {
   return (
@@ -27,7 +28,7 @@ export function ParcelValuesCard({ label, unit, rows, className }: ParcelValuesC
       <ul className="flex flex-col">
         {rows.map((row) => (
           <li key={row.parcelId} className="flex items-center gap-1">
-            <span className="w-6 shrink-0 text-[12px] leading-[17.4px] font-semibold tabular-nums">
+            <span className="shrink-0 text-[12px] leading-[17.4px] font-semibold tabular-nums">
               {row.label}
             </span>
             {/* Presentational: the figure beside it already says the value (see `Meter`). */}

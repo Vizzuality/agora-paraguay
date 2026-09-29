@@ -33,7 +33,7 @@ const parcels = [
 ];
 
 describe('parcelValueTiles', () => {
-  it('lists the parcels in the submitted order as P.n, the track relative to the largest', () => {
+  it('lists the parcels in the submitted order by id, the track relative to the largest', () => {
     const [tile] = parcelValueTiles(parcels, ['A', 'B'], [production], 'productivo');
 
     expect(tile).toMatchObject({
@@ -42,15 +42,15 @@ describe('parcelValueTiles', () => {
       unit: 't/ha',
     });
     expect(tile.rows).toEqual([
-      { parcelId: 'A', label: 'P.1', value: 3.55, text: '3,55', position: (3.55 / 3.81) * 100 },
-      { parcelId: 'B', label: 'P.2', value: 3.81, text: '3,81', position: 100 },
+      { parcelId: 'A', label: 'A', value: 3.55, text: '3,55', position: (3.55 / 3.81) * 100 },
+      { parcelId: 'B', label: 'B', value: 3.81, text: '3,81', position: 100 },
     ]);
   });
 
   it('skips a parcel with no reading but keeps the others their numbers', () => {
     const [tile] = parcelValueTiles(parcels, ['A', 'C', 'B'], [production], 'productivo');
 
-    expect(tile.rows.map((row) => row.label)).toEqual(['P.1', 'P.3']);
+    expect(tile.rows.map((row) => row.label)).toEqual(['A', 'B']);
   });
 
   it('makes no tile for an indicator no parcel answered, nor for the area, nor for a classed one', () => {

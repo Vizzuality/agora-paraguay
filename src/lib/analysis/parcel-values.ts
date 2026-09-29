@@ -13,7 +13,7 @@ import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 export type ParcelValueRow = {
   parcelId: string;
-  /** "P.1", "P.2", … in the order Analizar submitted the parcels — the hero's tab order. */
+  /** The parcel's id, as the hero's tab shows it. */
   label: string;
   value: number;
   /** The figure as printed: platform locale, two decimals at most. */
@@ -48,11 +48,11 @@ export function parcelValueTiles(
     if (widgetKindOf(riesgo, indicator.indicator_type.type) !== 'parcel-values') return [];
     if (isAreaIndicator(indicator)) return [];
 
-    const readings = parcelIds.flatMap((parcelId, index) => {
+    const readings = parcelIds.flatMap((parcelId) => {
       const parcel = byId.get(parcelId);
       const value = parcel === undefined ? undefined : numberOf(parcel, indicator.id);
 
-      return value === undefined ? [] : [{ parcelId, label: `P.${index + 1}`, value }];
+      return value === undefined ? [] : [{ parcelId, label: parcelId, value }];
     });
 
     if (readings.length === 0) return [];
