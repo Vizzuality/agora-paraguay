@@ -1,6 +1,7 @@
 import { API_URL, ApiError, csrfToken, getJson, postJson } from '@/lib/api/http';
 
 import {
+  adminUsersSchema,
   createdUserSchema,
   createUserRequestSchema,
   credentialsSchema,
@@ -10,6 +11,7 @@ import {
   meResponseSchema,
   setPasswordSchema,
   toSession,
+  type AdminUser,
   type CreatedUser,
   type CreateUserRequest,
   type Credentials,
@@ -91,6 +93,15 @@ export async function login(credentials: Credentials): Promise<Session> {
   const { username } = loginResponseSchema.parse(body);
 
   return sessionSchema.parse({ username: username ?? parsed.identifier });
+}
+
+/**
+ * `GET /api/auth/admin/users/`: every account, ordered by username. Needs an admin
+ * session; anyone else gets the API's 403 as an `ApiError`, and the caller decides
+ * whether that means "log in" or "not for you".
+ */
+export async function listUsers(): Promise<AdminUser[]> {
+  return adminUsersSchema.parse(await getJson('/api/auth/admin/users/'));
 }
 
 /**

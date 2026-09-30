@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { createUser, fetchMe, login, logout } from '@/lib/api/auth/client';
+import { createUser, fetchMe, listUsers, login, logout } from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -136,6 +136,67 @@ describe('login', () => {
   it('rejects malformed credentials before touching the network', async () => {
     await expect(login({ identifier: '', password: 'b' })).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('listUsers', () => {
+  const users = [
+    {
+      id: 1,
+      username: 'test',
+      email: 'test@gmv.com',
+      first_name: '',
+      last_name: '',
+      is_active: true,
+      is_staff: true,
+    },
+    {
+      id: 7,
+      username: 'zoe',
+      email: 'zoe@example.com',
+      first_name: 'Zoe',
+      last_name: 'Pérez',
+      is_active: false,
+      is_staff: false,
+    },
+  ];
+
+  it('GETs the admin list with the session cookie and returns the users as answered', async () => {
+    fetchMock.mockResolvedValueOnce(json(users));
+
+    await expect(listUsers()).resolves.toEqual(users);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/auth/admin/users/');
+    expect(init).toMatchObject({ method: 'GET', credentials: 'include' });
+  });
+
+  it('keeps fields the answer adds beyond the contract, and accepts an empty list', async () => {
+    fetchMock.mockResolvedValueOnce(json([{ ...users[0], last_login: '2026-09-30T08:00:00Z' }]));
+
+    const [first] = await listUsers();
+    expect(first).toMatchObject({ username: 'test', last_login: '2026-09-30T08:00:00Z' });
+
+    fetchMock.mockResolvedValueOnce(json([]));
+    await expect(listUsers()).resolves.toEqual([]);
+  });
+
+  it("surfaces the 403 a non-administrator gets as an ApiError with the API's reason", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json({ detail: 'You do not have permission to perform this action.' }, 403),
+    );
+
+    await expect(listUsers()).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 403,
+      detail: 'You do not have permission to perform this action.',
+    });
+  });
+
+  it('rejects an answer that is not a list of users', async () => {
+    fetchMock.mockResolvedValueOnce(json({ results: users }));
+
+    await expect(listUsers()).rejects.toThrow(ZodError);
   });
 });
 
