@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
+import { AddUserButton, CreateUserDialog } from '@/components/admin/create-user-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -16,12 +18,33 @@ import { ApiError, errorReason } from '@/lib/api/http';
 const SKELETON_ROWS = 5;
 
 /**
- * Every account, as the administration page shows them (Figma 5565:988): username and
- * email in a card, one row per user in the order the API answers (by username). The row
- * actions and Añadir usuario from the design come with their own endpoints and tickets.
- * Renders inside the staff gate, so a 403 here means the session ended, not a wrong door.
+ * The administration page's body (Figma 5565:988): Añadir usuario above and below the
+ * account list, one dialog behind both buttons. Renders inside the staff gate.
  */
-export function UsersTable() {
+export function UsersPanel() {
+  const [creating, setCreating] = useState(false);
+  const addButton = (
+    <div className="flex justify-end">
+      <AddUserButton onClick={() => setCreating(true)} />
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-14">
+      {addButton}
+      <UsersTable />
+      {addButton}
+      <CreateUserDialog open={creating} onOpenChange={setCreating} />
+    </div>
+  );
+}
+
+/**
+ * Every account: username and email in a card, one row per user in the order the API
+ * answers (by username). The row actions from the design come with their own endpoints
+ * and tickets. A 403 behind the staff gate means the session ended, not a wrong door.
+ */
+function UsersTable() {
   const users = useQuery(authQueries.users());
 
   if (users.isError) {

@@ -29,8 +29,23 @@ export const ADMIN_USERS = [
   },
 ];
 
-/** Stubs the admin user list: the two accounts above, or a 403 for a session without staff rights. */
-export async function stubAdminUsers(page: Page, { forbidden = false } = {}) {
+type AdminUserRow = (typeof ADMIN_USERS)[number];
+
+/**
+ * Stubs the admin endpoints: the list answers the accounts (the two above to start, or
+ * a 403 for a session without staff rights) and create appends to them and returns the
+ * one-time link, as the API does — so a created user shows up on the next list. Pass
+ * `createFailure` to have create answer that instead.
+ */
+export async function stubAdminUsers(
+  page: Page,
+  {
+    forbidden = false,
+    createFailure,
+  }: { forbidden?: boolean; createFailure?: { status: number; body: unknown } } = {},
+) {
+  const users: AdminUserRow[] = [...ADMIN_USERS];
+
   await page.route('**/api/auth/admin/users/', (route) =>
     forbidden
       ? route.fulfill({
@@ -38,9 +53,50 @@ export async function stubAdminUsers(page: Page, { forbidden = false } = {}) {
           contentType: 'application/json',
           body: JSON.stringify({ detail: 'You do not have permission to perform this action.' }),
         })
-      : route.fulfill({ contentType: 'application/json', body: JSON.stringify(ADMIN_USERS) }),
+      : route.fulfill({ contentType: 'application/json', body: JSON.stringify(users) }),
   );
+  await page.route('**/api/auth/admin/users/create/', async (route) => {
+    if (createFailure) {
+      await route.fulfill({
+        status: createFailure.status,
+        contentType: 'application/json',
+        body: JSON.stringify(createFailure.body),
+      });
+
+      return;
+    }
+
+    const request = route.request().postDataJSON() as { username: string; email: string };
+    const user: AdminUserRow = {
+      id: users.length + 1,
+      username: request.username,
+      email: request.email,
+      first_name: '',
+      last_name: '',
+      is_active: false,
+      is_staff: false,
+    };
+
+    users.push(user);
+    users.sort((a, b) => a.username.localeCompare(b.username));
+
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        user,
+        reset_link: `http://localhost:3000/restablecer-contrasena/${RESET_TOKEN}`,
+        token: RESET_TOKEN,
+        expires_at: '2026-10-07T10:30:00Z',
+      }),
+    });
+  });
+
+  return users;
 }
+
+/** The token the stubbed create answers with; the link points at our own reset page. */
+export const RESET_TOKEN = '550e8400-e29b-41d4-a716-446655440000';
 
 export async function stubAuth(page: Page, { staff = false }: { staff?: boolean } = {}) {
   let username: string | null = null;

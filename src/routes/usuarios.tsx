@@ -1,6 +1,6 @@
 import { ClientOnly, createFileRoute, Navigate } from '@tanstack/react-router';
 
-import { UsersTable } from '@/components/admin/users-table';
+import { UsersPanel } from '@/components/admin/users-table';
 import { LoginGate } from '@/components/auth/login-gate';
 import { Footer } from '@/components/footer';
 import { HeaderNav } from '@/components/sidebar/header-nav';
@@ -43,7 +43,7 @@ function StaffGate() {
     <>
       {/* The design has no visible title; the heading names the page for screen readers. */}
       <h1 className="sr-only">Administrar usuarios</h1>
-      <UsersTable />
+      <UsersPanel />
     </>
   );
 }
