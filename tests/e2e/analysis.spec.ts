@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
-import { stubAuth } from './fixtures/auth';
+import { ADMIN_USERS, stubAdminUsers, stubAuth } from './fixtures/auth';
 import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
@@ -516,17 +516,28 @@ test('closes the session from the user menu', async ({ page }) => {
 test('staff reach Administrar usuarios from the user menu', async ({ page }) => {
   // Registered after the beforeEach stub, so it answers first: `/me` says staff.
   await stubAuth(page, { staff: true });
+  await stubAdminUsers(page);
   await analyzeFirstPolygon(page);
   await loginFromHeader(page, 'admin');
 
   await page.getByRole('button', { name: 'Cuenta' }).click();
   await page.getByRole('menuitem', { name: 'Administrar usuarios' }).click();
 
-  // The placeholder admin page: header, footer and the title.
+  // The admin page: header, footer and the account list, one row per user.
   await expect(page).toHaveURL(/\/usuarios$/);
-  await expect(page.getByRole('heading', { name: 'Página de administración' })).toBeVisible();
   await expect(page.getByRole('banner')).toBeVisible();
   await expect(page.getByRole('contentinfo')).toBeVisible();
+
+  const table = page.getByRole('table');
+
+  await expect(table.getByRole('columnheader', { name: 'Nombre de usuario' })).toBeVisible();
+  await expect(table.getByRole('columnheader', { name: 'Email' })).toBeVisible();
+
+  for (const user of ADMIN_USERS) {
+    const row = table.getByRole('row', { name: new RegExp(user.username) });
+
+    await expect(row.getByRole('cell', { name: user.email })).toBeVisible();
+  }
 });
 
 test('logs in from the header dialog', async ({ page }) => {

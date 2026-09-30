@@ -7,6 +7,41 @@ import type { Page } from '@playwright/test';
  * Signing in for real is a manual check: no test account lives in the repo or its
  * environment.
  */
+/** Two accounts as `GET /api/auth/admin/users/` lists them, by username. */
+export const ADMIN_USERS = [
+  {
+    id: 1,
+    username: 'admin',
+    email: 'admin@example.com',
+    first_name: 'Ana',
+    last_name: 'Lista',
+    is_active: true,
+    is_staff: true,
+  },
+  {
+    id: 2,
+    username: 'analista',
+    email: 'analista@example.com',
+    first_name: '',
+    last_name: '',
+    is_active: true,
+    is_staff: false,
+  },
+];
+
+/** Stubs the admin user list: the two accounts above, or a 403 for a session without staff rights. */
+export async function stubAdminUsers(page: Page, { forbidden = false } = {}) {
+  await page.route('**/api/auth/admin/users/', (route) =>
+    forbidden
+      ? route.fulfill({
+          status: 403,
+          contentType: 'application/json',
+          body: JSON.stringify({ detail: 'You do not have permission to perform this action.' }),
+        })
+      : route.fulfill({ contentType: 'application/json', body: JSON.stringify(ADMIN_USERS) }),
+  );
+}
+
 export async function stubAuth(page: Page, { staff = false }: { staff?: boolean } = {}) {
   let username: string | null = null;
 
