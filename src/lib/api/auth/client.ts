@@ -1,4 +1,4 @@
-import { API_URL, ApiError, csrfToken, getJson, postJson } from '@/lib/api/http';
+import { API_URL, ApiError, csrfToken, deleteJson, getJson, postJson } from '@/lib/api/http';
 
 import {
   adminUsersSchema,
@@ -116,6 +116,15 @@ export async function createUser(request: CreateUserRequest): Promise<CreatedUse
   );
 
   return createdUserSchema.parse(body);
+}
+
+/**
+ * `DELETE /api/auth/admin/users/{id}/delete/`: an administrator removes an account. 204
+ * on success. The API refuses the administrator's own account with a 400 and an unknown
+ * id with a 404 — both reach the caller as an `ApiError` carrying the API's `detail`.
+ */
+export async function deleteUser(id: number): Promise<void> {
+  await deleteJson(`/api/auth/admin/users/${id}/delete/`);
 }
 
 /**

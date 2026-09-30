@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { AddUserButton, CreateUserDialog } from '@/components/admin/create-user-dialog';
+import { UserActionsMenu } from '@/components/admin/user-actions-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -40,9 +41,9 @@ export function UsersPanel() {
 }
 
 /**
- * Every account: username and email in a card, one row per user in the order the API
- * answers (by username). The row actions from the design come with their own endpoints
- * and tickets. A 403 behind the staff gate means the session ended, not a wrong door.
+ * Every account: username, email and the row's actions menu in a card, one row per user
+ * in the order the API answers (by username). A 403 behind the staff gate means the
+ * session ended, not a wrong door.
  */
 function UsersTable() {
   const users = useQuery(authQueries.users());
@@ -68,6 +69,9 @@ function UsersTable() {
             <TableHead className="h-12 text-base font-normal text-foreground uppercase">
               Email
             </TableHead>
+            <TableHead className="h-12 w-0">
+              <span className="sr-only">Acciones</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody aria-busy={users.isPending || undefined}>
@@ -80,11 +84,14 @@ function UsersTable() {
                 <TableCell className="h-14">
                   <Skeleton className="h-4 w-56" />
                 </TableCell>
+                <TableCell className="h-14 w-0 py-3">
+                  <Skeleton className="size-8 rounded-2xl" />
+                </TableCell>
               </TableRow>
             ))}
           {users.data?.length === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={2} className="h-14 text-muted-foreground">
+              <TableCell colSpan={3} className="h-14 text-muted-foreground">
                 No hay usuarios.
               </TableCell>
             </TableRow>
@@ -93,6 +100,9 @@ function UsersTable() {
             <TableRow key={user.id} className="hover:bg-transparent">
               <TableCell className="h-14 font-semibold">{user.username}</TableCell>
               <TableCell className="h-14">{user.email}</TableCell>
+              <TableCell className="h-14 w-0 py-3 text-right">
+                <UserActionsMenu user={user} />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -34,15 +34,21 @@ type AdminUserRow = (typeof ADMIN_USERS)[number];
 /**
  * Stubs the admin endpoints: the list answers the accounts (the two above to start, or
  * a 403 for a session without staff rights) and create appends to them and returns the
- * one-time link, as the API does — so a created user shows up on the next list. Pass
- * `createFailure` to have create answer that instead.
+ * one-time link, as the API does — so a created user shows up on the next list, and
+ * delete removes one from them. Pass `createFailure` / `deleteFailure` to have those
+ * endpoints answer that instead.
  */
 export async function stubAdminUsers(
   page: Page,
   {
     forbidden = false,
     createFailure,
-  }: { forbidden?: boolean; createFailure?: { status: number; body: unknown } } = {},
+    deleteFailure,
+  }: {
+    forbidden?: boolean;
+    createFailure?: { status: number; body: unknown };
+    deleteFailure?: { status: number; body: unknown };
+  } = {},
 ) {
   const users: AdminUserRow[] = [...ADMIN_USERS];
 
@@ -90,6 +96,35 @@ export async function stubAdminUsers(
         expires_at: '2026-10-07T10:30:00Z',
       }),
     });
+  });
+
+  await page.route('**/api/auth/admin/users/*/delete/', async (route) => {
+    if (deleteFailure) {
+      await route.fulfill({
+        status: deleteFailure.status,
+        contentType: 'application/json',
+        body: JSON.stringify(deleteFailure.body),
+      });
+
+      return;
+    }
+
+    const id = Number(/users\/(\d+)\/delete\/$/.exec(route.request().url())?.[1]);
+    const index = users.findIndex((user) => user.id === id);
+
+    if (index === -1) {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Not found.' }),
+      });
+
+      return;
+    }
+
+    users.splice(index, 1);
+
+    await route.fulfill({ status: 204 });
   });
 
   return users;

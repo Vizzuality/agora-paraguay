@@ -5,6 +5,7 @@ import {
   cookieValue,
   CSRF_PATH,
   csrfToken,
+  deleteJson,
   errorReason,
   getJson,
   postJson,
@@ -214,6 +215,45 @@ describe('postText', () => {
     await expect(postText('/api/prose/', {})).rejects.toMatchObject({
       name: 'ApiError',
       status: 502,
+      detail: 'nope',
+    });
+  });
+});
+
+describe('deleteJson', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('DELETEs with the session cookie and the CSRF header, no body, and resolves null on a 204', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(deleteJson('/api/things/7/delete/')).resolves.toBeNull();
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/things/7/delete/');
+    expect(init).toMatchObject({
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'X-CSRFToken': 'abc' },
+    });
+    expect(init).not.toHaveProperty('body');
+  });
+
+  it('turns a refusal into an ApiError with the reason', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ detail: 'nope' }, { status: 400 }));
+
+    await expect(deleteJson('/api/things/7/delete/')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 400,
       detail: 'nope',
     });
   });

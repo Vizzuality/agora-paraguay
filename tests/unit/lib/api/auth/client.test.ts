@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { createUser, fetchMe, listUsers, login, logout } from '@/lib/api/auth/client';
+import { createUser, deleteUser, fetchMe, listUsers, login, logout } from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -278,6 +278,42 @@ describe('createUser', () => {
       ZodError,
     );
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteUser', () => {
+  it('DELETEs the account by id with the session cookie and the CSRF token', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=from-cookie' });
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(deleteUser(7)).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/auth/admin/users/7/delete/');
+    expect(init).toMatchObject({
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'X-CSRFToken': 'from-cookie' },
+    });
+  });
+
+  it("surfaces the refusal to delete one's own account with the API reason", async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockResolvedValueOnce(json({ detail: 'No puedes eliminar tu propia cuenta.' }, 400));
+
+    await expect(deleteUser(1)).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 400,
+      detail: 'No puedes eliminar tu propia cuenta.',
+    });
+  });
+
+  it('surfaces an unknown account as an ApiError 404', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=t' });
+    fetchMock.mockResolvedValueOnce(json({ detail: 'Not found.' }, 404));
+
+    await expect(deleteUser(99)).rejects.toMatchObject({ name: 'ApiError', status: 404 });
   });
 });
 

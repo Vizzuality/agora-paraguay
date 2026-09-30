@@ -1,6 +1,6 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { createUser, fetchMe, listUsers, login, logout } from './client';
+import { createUser, deleteUser, fetchMe, listUsers, login, logout } from './client';
 import type { CreateUserRequest, Credentials } from './schemas';
 
 export const authQueries = {
@@ -46,5 +46,11 @@ export const authMutations = {
     mutationOptions({
       mutationKey: ['auth', 'admin', 'users', 'create'] as const,
       mutationFn: (request: CreateUserRequest) => createUser(request),
+    }),
+  /** Admin only: removes an account. The caller invalidates `authQueries.users()`. */
+  deleteUser: () =>
+    mutationOptions({
+      mutationKey: ['auth', 'admin', 'users', 'delete'] as const,
+      mutationFn: (id: number) => deleteUser(id),
     }),
 };

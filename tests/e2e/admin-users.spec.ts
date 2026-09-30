@@ -77,3 +77,72 @@ test('Cancelar closes the form, and the API refusal is quoted on it', async ({ p
   await expect(dialog(page).getByRole('alert')).toHaveText('Ya existe un usuario con ese nombre.');
   await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + ADMIN_USERS.length);
 });
+
+/** The row's three-dots menu, opened. */
+async function openActions(page: Page, username: string) {
+  await page.getByRole('button', { name: `Acciones de ${username}` }).click();
+
+  return page.getByRole('menu');
+}
+
+test('the row menu deletes an account after confirming; the list drops it', async ({ page }) => {
+  await stubAdminUsers(page);
+  await page.goto('/usuarios');
+  await loginAtGate(page);
+
+  const menu = await openActions(page, 'analista');
+
+  await expect(menu.getByRole('menuitem')).toHaveText(['Restablecer contraseña', 'Borrar cuenta']);
+  await menu.getByRole('menuitem', { name: 'Borrar cuenta' }).click();
+
+  const confirm = page.getByRole('alertdialog', { name: '¿Borrar la cuenta de analista?' });
+
+  await expect(confirm).toBeVisible();
+  await confirm.getByRole('button', { name: 'Borrar' }).click();
+  await expect(confirm).toBeHidden();
+
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + ADMIN_USERS.length - 1);
+  await expect(page.getByRole('row', { name: /analista/ })).toHaveCount(0);
+});
+
+test('Cancelar keeps the account, and the API refusal is quoted in the confirm dialog', async ({
+  page,
+}) => {
+  await stubAdminUsers(page, {
+    deleteFailure: { status: 400, body: { detail: 'No puedes eliminar tu propia cuenta.' } },
+  });
+  await page.goto('/usuarios');
+  await loginAtGate(page);
+
+  const confirm = page.getByRole('alertdialog', { name: '¿Borrar la cuenta de admin?' });
+
+  await (await openActions(page, 'admin')).getByRole('menuitem', { name: 'Borrar cuenta' }).click();
+  await confirm.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(confirm).toBeHidden();
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + ADMIN_USERS.length);
+
+  await (await openActions(page, 'admin')).getByRole('menuitem', { name: 'Borrar cuenta' }).click();
+  await confirm.getByRole('button', { name: 'Borrar' }).click();
+
+  await expect(confirm.getByRole('alert')).toHaveText('No puedes eliminar tu propia cuenta.');
+  await expect(confirm).toBeVisible();
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + ADMIN_USERS.length);
+});
+
+test('Restablecer contraseña logs the stub until the endpoint exists', async ({ page }) => {
+  await stubAdminUsers(page);
+  const logged: string[] = [];
+
+  page.on('console', (message) => {
+    if (message.type() === 'info') logged.push(message.text());
+  });
+
+  await page.goto('/usuarios');
+  await loginAtGate(page);
+
+  const menu = await openActions(page, 'analista');
+
+  await menu.getByRole('menuitem', { name: 'Restablecer contraseña' }).click();
+  await expect(menu).toBeHidden();
+  await expect.poll(() => logged.some((text) => /analista/.test(text))).toBe(true);
+});
