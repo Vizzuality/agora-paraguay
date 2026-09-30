@@ -1,7 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { createUser, deleteUser, fetchMe, getUsers, login, logout } from '@/lib/api/auth/client';
+import {
+  checkResetToken,
+  confirmResetPassword,
+  createUser,
+  deleteUser,
+  fetchMe,
+  getUsers,
+  login,
+  logout,
+} from '@/lib/api/auth/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -419,5 +428,97 @@ describe('fetchMe', () => {
     fetchMock.mockResolvedValueOnce(new Response('boom', { status: 503 }));
 
     await expect(fetchMe()).rejects.toMatchObject({ name: 'ApiError', status: 503 });
+  });
+});
+
+/** A well-formed reset token, as the backend issues them (UUID v4). */
+const TOKEN = '3f2c1a0e-9b7d-4c6a-8e5f-1234567890ab';
+
+describe('checkResetToken', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', { cookie: '' });
+  });
+
+  it('GETs the check endpoint for the token and returns whether the link is still good', async () => {
+    fetchMock.mockResolvedValueOnce(json({ valid: true }));
+
+    await expect(checkResetToken(TOKEN)).resolves.toBe(true);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe(`/api/auth/reset-password/check/${TOKEN}/`);
+    expect(init).toMatchObject({ method: 'GET', credentials: 'include' });
+  });
+
+  it('reports a spent or unknown link as not valid, from the 200 the endpoint answers with', async () => {
+    fetchMock.mockResolvedValueOnce(json({ valid: false }));
+
+    await expect(checkResetToken(TOKEN)).resolves.toBe(false);
+  });
+
+  it('refuses a token that is not a UUID before touching the network', async () => {
+    await expect(checkResetToken('not-a-token')).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('propagates an outage as an ApiError, so the page can tell "expired" from "unknown"', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 503 }));
+
+    await expect(checkResetToken(TOKEN)).rejects.toMatchObject({ name: 'ApiError', status: 503 });
+  });
+});
+
+describe('confirmResetPassword', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+  });
+
+  it('POSTs the token with the new password, CSRF header included', async () => {
+    fetchMock.mockResolvedValueOnce(json({ detail: 'Password reset successfully.' }));
+
+    await expect(
+      confirmResetPassword({ token: TOKEN, new_password: 'Chaco-2026!' }),
+    ).resolves.toBeUndefined();
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe('/api/auth/reset-password/confirm/');
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'abc' },
+      body: JSON.stringify({ token: TOKEN, new_password: 'Chaco-2026!' }),
+    });
+  });
+
+  it('rejects a weak password client-side, before touching the network', async () => {
+    await expect(confirmResetPassword({ token: TOKEN, new_password: '1234' })).rejects.toThrow(
+      ZodError,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed token before touching the network', async () => {
+    await expect(
+      confirmResetPassword({ token: 'nope', new_password: 'Chaco-2026!' }),
+    ).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a spent link as an ApiError 400 quoting the backend', async () => {
+    fetchMock.mockResolvedValueOnce(json({ detail: 'Enlace inválido o expirado.' }, 400));
+
+    await expect(
+      confirmResetPassword({ token: TOKEN, new_password: 'Chaco-2026!' }),
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 400,
+      detail: 'Enlace inválido o expirado.',
+    });
+  });
+
+  it("surfaces the server's own validators (the common-password list) as the reason", async () => {
+    fetchMock.mockResolvedValueOnce(json({ new_password: ['This password is too common.'] }, 400));
+
+    await expect(
+      confirmResetPassword({ token: TOKEN, new_password: 'password123' }),
+    ).rejects.toMatchObject({ status: 400, detail: 'This password is too common.' });
   });
 });

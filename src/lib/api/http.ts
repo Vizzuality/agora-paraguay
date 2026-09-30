@@ -104,18 +104,36 @@ export function errorReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** The human-readable reason in an error body, if the JSON carries one under `message` or `detail`. */
+/** A reason as Django writes it — a string, or a list of them — as one string, else `null`. */
+function reasonOf(value: unknown): string | null {
+  const parts = (Array.isArray(value) ? value : [value]).filter(
+    (part): part is string => typeof part === 'string' && part.trim() !== '',
+  );
+
+  return parts.length === 0 ? null : parts.join(' ');
+}
+
+/**
+ * The human-readable reason in an error body: `message` or `detail` when the JSON carries
+ * one, else the reasons of a DRF field-error body (`{ new_password: ['Too common.'] }`),
+ * which is how Django's validators answer. Field names are left out — the form knows
+ * which field it sent.
+ */
 function detailOf(text: string): string | null {
   try {
     const body: unknown = JSON.parse(text);
 
-    if (typeof body !== 'object' || body === null) return null;
+    if (typeof body !== 'object' || body === null || Array.isArray(body)) return null;
+
+    const record = body as Record<string, unknown>;
 
     for (const key of ['message', 'detail'] as const) {
-      const value = (body as Record<string, unknown>)[key];
+      const reason = reasonOf(record[key]);
 
-      if (typeof value === 'string' && value.trim() !== '') return value;
+      if (reason !== null) return reason;
     }
+
+    return reasonOf(Object.values(record).flatMap((value) => (Array.isArray(value) ? value : [])));
   } catch {
     // Not JSON: nothing to quote.
   }

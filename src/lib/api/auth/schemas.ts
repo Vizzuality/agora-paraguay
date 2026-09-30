@@ -44,52 +44,37 @@ export const meResponseSchema = z.looseObject({
 export type MeResponse = z.infer<typeof meResponseSchema>;
 
 /**
- * Setting a password goes through `POST /api/auth/password/reset/` in both cases the
- * platform has — there is no reset mail (no SMTP):
+ * Password reset, as the backend serves it (there is no reset mail — an administrator
+ * generates the link, `POST /api/auth/admin/users/{id}/generate-reset-link/`, and hands
+ * it to the user; the link points at our `/restablecer-contrasena/{token}` page):
  *
- *  - An admin creates the account without a password and hands the user a one-time
- *    link, `/configurar-cuenta?uid=…&token=…`. The page posts those two with the
- *    password. A forgotten password is the same flow, with a new link from the admin.
- *  - A logged-in user changing their password posts the password alone; the session
- *    cookie identifies them.
+ *  - `GET /api/auth/reset-password/check/{token}/` → `{ valid }`, always 200. Whether the
+ *    page shows the form or "link expired".
+ *  - `POST /api/auth/reset-password/confirm/` with `{ token, new_password }` → 200
+ *    `{ detail }`; 400 `{ detail: 'Enlace inválido o expirado.' }` for a bad token, 400
+ *    `{ new_password: [...] }` for Django's validators. Anonymous: no session needed.
  */
-export const ACCOUNT_SETUP_PATH = '/configurar-cuenta';
+export const resetTokenSchema = z.uuid();
 
-/** The one-time link's search parameters, for the route to validate. */
-export const accountSetupSearchSchema = z.object({
-  uid: z.string().min(1),
-  token: z.string().min(1),
-});
-
-export type AccountSetupSearch = z.infer<typeof accountSetupSearchSchema>;
+export const resetTokenCheckSchema = z.looseObject({ valid: z.boolean() });
 
 /**
- * Runs the client-side half of Django's `AUTH_PASSWORD_VALIDATORS` (length, numeric).
- * Similarity needs the user's attributes, which only the logged-in form knows — it
- * calls `passwordErrors(password, { email })` itself; the server checks all of
- * them, plus the common-password list, and answers 400.
+ * The client-side half of Django's `AUTH_PASSWORD_VALIDATORS` (length, numeric) runs in
+ * the parse; similarity needs the user's attributes, which the reset page does not have.
+ * The server checks all of them, plus the common-password list, and answers 400.
  */
-export const setPasswordSchema = z
+export const resetPasswordConfirmSchema = z
   .object({
-    uid: z.string().min(1).optional(),
-    token: z.string().min(1).optional(),
-    password: z.string().min(1),
+    token: resetTokenSchema,
+    new_password: z.string().min(1),
   })
   .superRefine((body, context) => {
-    if ((body.uid === undefined) !== (body.token === undefined)) {
-      context.addIssue({
-        code: 'custom',
-        path: ['token'],
-        message: 'A one-time link carries both uid and token.',
-      });
-    }
-
-    for (const error of passwordErrors(body.password)) {
-      context.addIssue({ code: 'custom', path: ['password'], message: error.message });
+    for (const error of passwordErrors(body.new_password)) {
+      context.addIssue({ code: 'custom', path: ['new_password'], message: error.message });
     }
   });
 
-export type SetPasswordRequest = z.infer<typeof setPasswordSchema>;
+export type ResetPasswordConfirmRequest = z.infer<typeof resetPasswordConfirmSchema>;
 
 /**
  * The identified user, in app vocabulary: the email is the account. `isStaff` opens the
