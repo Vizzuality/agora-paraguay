@@ -580,7 +580,7 @@ test('logs in from the header dialog', async ({ page }) => {
     .getByRole('heading', { name: 'Proxy de resiliencia operativa' })
     .locator('..')
     .locator('..');
-  await expect(resilience.getByRole('listitem').filter({ hasText: /^2$/ })).toHaveCount(1);
+  await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
 
   // The arroz indicator is bound to the other crop (and came back "NA" besides): no tile,

@@ -8,10 +8,12 @@ import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 import { isAreaIndicator } from './area';
 import { asReading, isNoReading, readingOf } from './readings';
 import {
+  categoryAxis,
   categoryClasses,
   classIndexAt,
   RANGE_CLASSES,
   widgetKindOf,
+  type ParcelScope,
   type RiskClass,
 } from './widget-config';
 
@@ -101,8 +103,12 @@ function distinctList(readings: (string | number)[]): string {
   return [...new Set(readings.map((value) => String(value).trim()))].join(', ');
 }
 
-/** The ruler under a classed figure: the classes it is read in and where the reading sits, 0–100. */
-export type RiskScale = { classes: readonly RiskClass[]; position: number };
+/**
+ * The ruler under a classed figure: the classes it is read in and where the reading sits,
+ * 0–100. `value` is the number printed over the marker when the marker sits at the exact
+ * reading rather than in the middle of a class (the "Categorical and numerical" design).
+ */
+export type RiskScale = { classes: readonly RiskClass[]; position: number; value?: string };
 
 export type IndicatorCard = {
   id: string;
@@ -130,12 +136,17 @@ export type GeneralInfoRow = {
  * defaults to sanitario, the page where the general-info card lives.
  */
 export function isGeneralInfo(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
-  return widgetKindOf(riesgo, indicator.indicator_type.type) === 'general-info';
+  // A fact is a fact under any scope; the scope only moves the classed types.
+  return widgetKindOf(riesgo, indicator.indicator_type.type, 'individual') === 'general-info';
 }
 
-/** Classed indicators (range, category): the ones that get a risk card. */
-export function isRiskClass(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
-  return widgetKindOf(riesgo, indicator.indicator_type.type) === 'risk-class';
+/** Classed indicators (a range, a category read for one parcel): the ones that get a risk card. */
+export function isRiskClass(
+  indicator: Indicator,
+  riesgo: Riesgo = 'sanitario',
+  scope: ParcelScope = 'individual',
+): boolean {
+  return widgetKindOf(riesgo, indicator.indicator_type.type, scope) === 'risk-class';
 }
 
 /**
@@ -156,18 +167,20 @@ export const NO_READING = 'Sin datos';
  * One risk card per classed indicator the response carries (range, category), in
  * metadata order. The response decides what is shown: an indicator the backend did not
  * answer (missing column, blank, null, "NA") gets no card, however it was requested. A
- * reading the metadata cannot place still shows, as "Sin datos".
+ * reading the metadata cannot place still shows, as "Sin datos". Under the `multiple`
+ * scope a category is counted per class instead (`categoryCountTiles`), so it gets no card.
  */
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
   riesgo: Riesgo = 'sanitario',
+  scope: ParcelScope = 'individual',
 ): IndicatorCard[] {
   if (!parcel || !indicators) return [];
 
   return indicators.flatMap((indicator) => {
     // The area is the thumbnail's figure (`area.ts`), not a card.
-    if (!isRiskClass(indicator, riesgo) || isAreaIndicator(indicator)) return [];
+    if (!isRiskClass(indicator, riesgo, scope) || isAreaIndicator(indicator)) return [];
 
     const value = readingOf(parcel, indicator.id);
 
@@ -264,8 +277,8 @@ function toCard(indicator: Indicator, value: string | number): IndicatorCard | n
 
 /**
  * Categorical indicator: the value names one of the ordered categories, by label or by
- * its index (the sample encodes classes as codes). Each category is a band of the ruler;
- * the reading sits in the middle of its own. One category alone is no scale.
+ * its index (the sample encodes classes as codes). Each category but NA is a band of the
+ * ruler; the reading sits in the middle of its own. A reading of NA names no class.
  */
 function categoryCard(
   indicator: Indicator,
@@ -276,21 +289,21 @@ function categoryCard(
 
   if (index === undefined) return null;
 
-  const card: IndicatorCard = {
+  const axis = categoryAxis(categories);
+  const band = axis.indexOf(categories[index]);
+
+  if (band === -1) return null;
+
+  return {
     id: indicator.id,
     label: indicator.name,
     description: indicator.description,
-    level: capitalise(categories[index]),
-  };
-
-  if (categories.length > 1) {
-    card.scale = {
+    level: capitalise(axis[band]),
+    scale: {
       classes: categoryClasses(categories),
-      position: ((index + 0.5) / categories.length) * 100,
-    };
-  }
-
-  return card;
+      position: ((band + 0.5) / axis.length) * 100,
+    },
+  };
 }
 
 /**
@@ -320,26 +333,58 @@ function categoryStem(label: string): string {
 }
 
 /**
- * Bounded number (`data_quality` 0–100 %, a disease index 1–3): placed on the range and
- * read in the three classes of `RANGE_CLASSES`. The figure is the class, not the number:
- * the design prints no value under the ruler.
+ * Bounded number (`data_quality` 0–100 %, a disease index 0–3), read in the classes of
+ * `RANGE_CLASSES`; the figure is the class. On a short range (max up to 10) an integer
+ * reading is one of a handful of values, so the marker centres in the class it falls in
+ * (the "Categorical individual" design): 1 in Sin riesgo, 2 in Moderado, 3 in Severo. Any
+ * other reading — a decimal, or a number on a long range — puts the marker at the exact
+ * spot and prints the number over it (the "Categorical and numerical individual" design).
  */
 function rangeCard(indicator: Indicator, value: number): IndicatorCard {
-  const position = scalePosition(value, indicator);
-  const { label } = RANGE_CLASSES[classIndexAt(position, RANGE_CLASSES.length)];
+  const range = indicator.indicator_type.type === 'range' ? indicator.indicator_type : undefined;
+  const classes = RANGE_CLASSES;
+  const band = integerBand(value, range, classes.length);
+  const scale: RiskScale =
+    band === undefined
+      ? {
+          classes,
+          position: scalePosition(value, range),
+          value: formatValue(value, undefined),
+        }
+      : { classes, position: ((band + 0.5) / classes.length) * 100 };
+  const { label } = classes[classIndexAt(scale.position, classes.length)];
 
   return {
     id: indicator.id,
     label: indicator.name,
     description: indicator.description,
     level: label,
-    scale: { classes: RANGE_CLASSES, position },
+    scale,
   };
 }
 
-/** Where a number sits on the indicator's range as 0–100. */
-function scalePosition(value: number, indicator: Indicator): number {
-  const range = indicator.indicator_type.type === 'range' ? indicator.indicator_type : undefined;
+type Range = { min: number; max: number };
+
+/** A range this short reads as a handful of values rather than a continuum. */
+const SHORT_RANGE_MAX = 10;
+
+/**
+ * The class an integer reading of a short range falls in, `undefined` when the reading
+ * is a decimal or the range is long. The classes split the range in equal bins whose
+ * upper edge belongs to them (0–3 in three: (0,1], (1,2], (2,3]); the minimum itself and
+ * anything out of range go to the outer classes.
+ */
+function integerBand(value: number, range: Range | undefined, count: number): number | undefined {
+  if (!range || range.max > SHORT_RANGE_MAX || !Number.isInteger(value)) return undefined;
+  if (range.max === range.min) return 0;
+
+  const band = Math.ceil(((value - range.min) / (range.max - range.min)) * count) - 1;
+
+  return Math.min(count - 1, Math.max(0, band));
+}
+
+/** Where a number sits on the indicator's range as 0–100; the range defaults to 0–100. */
+function scalePosition(value: number, range: Range | undefined): number {
   const min = range?.min ?? 0;
   const max = range?.max ?? 100;
 

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { CategoryCountCard } from '@/components/category-count-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { RiskClassCard } from '@/components/risk-class-card';
 import { StatCard } from '@/components/stat-card';
@@ -410,7 +411,17 @@ function UiKitPage() {
                 caption="Dentro del área dibujada"
                 action={<Switch defaultChecked aria-label="Mostrar capa" />}
               />
+              {/* The categorical multiple widget sample: hover a column for its tooltip. */}
               <ClientOnly>
+                <CategoryCountCard
+                  label="Categorical multiple"
+                  description="Parcelas analizadas por clase."
+                  columns={[
+                    { label: 'Alerta', count: 0, tone: 'high' },
+                    { label: 'Estable', count: 1, tone: 'low' },
+                    { label: 'Positiva', count: 4, tone: 'mid' },
+                  ]}
+                />
                 <AnalysisCardsDemo />
               </ClientOnly>
             </div>

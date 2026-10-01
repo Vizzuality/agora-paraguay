@@ -6,7 +6,7 @@ import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The per-parcel value tile (Figma Widget01): one indicator, one row per analysed parcel
+ * The per-parcel value tile: one indicator, one row per analysed parcel
  * with its figure and a track — filled on the indicator's own scale when it has one (a
  * range, IEP 0–100 %), else relative to the largest parcel (an open number, t/ha). Riesgo
  * productivo reads its numbers this way; sanitario's are facts. Pure, node-tested.
@@ -48,7 +48,10 @@ export function parcelValueTiles(
   const byId = new Map(parcels.map((parcel) => [String(parcel.parcel_id), parcel]));
 
   return indicators.flatMap((indicator) => {
-    if (widgetKindOf(riesgo, indicator.indicator_type.type) !== 'parcel-values') return [];
+    // A list of parcels is the multiple view by nature; the scope moves no number anyway.
+    if (widgetKindOf(riesgo, indicator.indicator_type.type, 'multiple') !== 'parcel-values') {
+      return [];
+    }
     if (isAreaIndicator(indicator)) return [];
 
     const readings = parcelIds.flatMap((parcelId) => {

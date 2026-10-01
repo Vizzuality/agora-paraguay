@@ -147,14 +147,14 @@ describe('indicatorCards', () => {
   });
 
   describe('range indicators', () => {
-    it('places the value on the range, read in the three range classes, no caption', () => {
+    it('places the value at its exact spot on a range with more values than classes, printing it', () => {
       const [card] = indicatorCards(parcel({ data_quality: 92 }), [dataQuality]);
 
       expect(card).toEqual({
         id: 'data_quality',
         label: 'Calidad del dato',
         level: 'Severo',
-        scale: { classes: RANGE_CLASSES, position: 92 },
+        scale: { classes: RANGE_CLASSES, position: 92, value: '92' },
       });
     });
 
@@ -165,12 +165,43 @@ describe('indicatorCards', () => {
       });
     });
 
-    it('spreads a 1–3 disease index over the ruler: 1 at 0, 2 at 50, 3 at 100', () => {
+    it('centres an integer of a 0–3 index in the class it falls in, nothing printed', () => {
+      const index: Indicator = { ...asianRust, indicator_type: { type: 'range', min: 0, max: 3 } };
+      const cards = [1, 2, 3].map(
+        (value) => indicatorCards(parcel({ asian_rust: value }), [index])[0],
+      );
+
+      expect(cards.map((card) => card.level)).toEqual(['Sin riesgo', 'Moderado', 'Severo']);
+      expect(cards[0].scale?.position).toBeCloseTo(50 / 3);
+      expect(cards[1].scale?.position).toBeCloseTo(50);
+      expect(cards[2].scale?.position).toBeCloseTo(250 / 3);
+      expect(cards.every((card) => card.scale?.value === undefined)).toBe(true);
+    });
+
+    it('centres a 1–3 index the same way, the minimum in the first class', () => {
       const positions = [1, 2, 3].map(
         (value) => indicatorCards(parcel({ asian_rust: value }), [asianRust])[0].scale?.position,
       );
 
-      expect(positions).toEqual([0, 50, 100]);
+      expect(positions[0]).toBeCloseTo(50 / 3);
+      expect(positions[1]).toBeCloseTo(50);
+      expect(positions[2]).toBeCloseTo(250 / 3);
+    });
+
+    it('puts a decimal of a short range at its exact spot and prints it in the platform locale', () => {
+      const [card] = indicatorCards(parcel({ asian_rust: 1.5 }), [asianRust]);
+
+      expect(card.scale).toEqual({ classes: RANGE_CLASSES, position: 25, value: '1,5' });
+      expect(card.level).toBe('Sin riesgo');
+    });
+
+    it('clamps an integer outside a short range to the outer classes', () => {
+      expect(indicatorCards(parcel({ asian_rust: 7 }), [asianRust])[0].scale?.position).toBeCloseTo(
+        250 / 3,
+      );
+      expect(
+        indicatorCards(parcel({ asian_rust: -2 }), [asianRust])[0].scale?.position,
+      ).toBeCloseTo(50 / 3);
     });
 
     it('reads a non-numeric range value as no reading', () => {
@@ -182,7 +213,14 @@ describe('indicatorCards', () => {
     it('collapses a degenerate range to the left edge', () => {
       const flat: Indicator = { ...dataQuality, indicator_type: { type: 'range', min: 5, max: 5 } };
 
-      expect(indicatorCards(parcel({ data_quality: 5 }), [flat])[0].scale?.position).toBe(0);
+      // An integer on a short flat range centres in the first class; a decimal sits at the edge.
+      expect(indicatorCards(parcel({ data_quality: 5 }), [flat])[0].scale?.position).toBeCloseTo(
+        50 / 3,
+      );
+      expect(indicatorCards(parcel({ data_quality: 5.5 }), [flat])[0].scale).toMatchObject({
+        position: 0,
+        value: '5,5',
+      });
     });
   });
 
@@ -190,7 +228,7 @@ describe('indicatorCards', () => {
     it('reads the label, case-insensitively, and places it among the ordered categories', () => {
       const [card] = indicatorCards(parcel({ ITR_soja: 'alerta' }), [itr]);
 
-      // Four bands of 25: the third one's middle.
+      // NA is no band: three bands of a third, the last one's middle.
       expect(card).toEqual({
         id: 'ITR_soja',
         label: 'ITR soja',
@@ -199,12 +237,15 @@ describe('indicatorCards', () => {
           classes: [
             { label: 'Positiva', tone: 'low' },
             { label: 'Estable', tone: 'medium' },
-            { label: 'Alerta', tone: 'medium' },
-            { label: 'NA', tone: 'high' },
+            { label: 'Alerta', tone: 'high' },
           ],
-          position: 62.5,
+          position: (2.5 / 3) * 100,
         },
       });
+    });
+
+    it('reads a code pointing at NA as no reading: the indicator does not apply', () => {
+      expect(indicatorCards(parcel({ ITR_soja: 3 }), [itr])[0].level).toBe('Sin datos');
     });
 
     it('matches a label by stem: the answer says "Positivo" for the definition\'s "Positiva"', () => {
@@ -221,13 +262,27 @@ describe('indicatorCards', () => {
       expect(indicatorCards(parcel({ ITR_soja: 9 }), [itr])[0].level).toBe('Sin datos');
     });
 
-    it('has no ruler with a single category', () => {
+    it('gets no card under the multiple scope — counted per class instead — while a range keeps its own', () => {
+      const cards = indicatorCards(
+        parcel({ ITR_soja: 'Alerta', asian_rust: 2 }),
+        [itr, asianRust],
+        'sanitario',
+        'multiple',
+      );
+
+      expect(cards.map((card) => card.id)).toEqual(['asian_rust']);
+    });
+
+    it('rules a single category as one orange band, the marker in its middle', () => {
       const single: Indicator = {
         ...itr,
         indicator_type: { type: 'category', categories: ['presente'] },
       };
 
-      expect(indicatorCards(parcel({ ITR_soja: 0 }), [single])[0].scale).toBeUndefined();
+      expect(indicatorCards(parcel({ ITR_soja: 0 }), [single])[0].scale).toEqual({
+        classes: [{ label: 'presente', tone: 'elevated' }],
+        position: 50,
+      });
     });
   });
 
@@ -250,7 +305,8 @@ describe('indicatorCards', () => {
     const rust = (parcel: AnalysisParcel) =>
       indicatorCards(parcel, sanitarioIndicators).find((card) => card.id === 'asian_rust');
 
-    expect(rust(first)).toMatchObject({ level: 'Severo', scale: { position: 100 } });
+    expect(rust(first)).toMatchObject({ level: 'Severo' });
+    expect(rust(first)?.scale?.position).toBeCloseTo(250 / 3);
     expect(rust(third)).toMatchObject({ level: 'Moderado', scale: { position: 50 } });
   });
 });

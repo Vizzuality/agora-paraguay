@@ -57,18 +57,30 @@ describe('categoryCountTiles', () => {
     parcel('D', { resiliencia: 'NA' }),
   ];
 
-  it('counts the submitted parcels per category, every category kept, bars relative to the fullest', () => {
-    const [tile] = categoryCountTiles(parcels, ['A', 'B', 'C', 'D'], [resilience], 'productivo');
+  it('counts the submitted parcels per category, every category kept', () => {
+    const [tile] = categoryCountTiles(
+      parcels,
+      ['A', 'B', 'C', 'D'],
+      [resilience],
+      'productivo',
+      'multiple',
+    );
 
     expect(tile).toEqual({
       id: 'Resiliencia',
       label: 'Proxy de resiliencia operativa',
       columns: [
-        { label: 'Alta', count: 1, height: 50, tone: 'high' },
-        { label: 'Media', count: 2, height: 100, tone: 'mid' },
-        { label: 'Baja', count: 0, height: 0, tone: 'low' },
+        { label: 'Alta', count: 1, tone: 'high' },
+        { label: 'Media', count: 2, tone: 'mid' },
+        { label: 'Baja', count: 0, tone: 'low' },
       ],
     });
+  });
+
+  it('counts on sanitario too: the scope decides, not the riesgo', () => {
+    const [tile] = categoryCountTiles(parcels, ['A', 'B'], [resilience], 'sanitario', 'multiple');
+
+    expect(tile.columns.map((column) => column.count)).toEqual([0, 2, 0]);
   });
 
   it('counts "Medio" under "Media": labels match by stem', () => {
@@ -77,6 +89,7 @@ describe('categoryCountTiles', () => {
       ['A', 'B'],
       [resilience],
       'productivo',
+      'multiple',
     );
 
     expect(tile.columns.map((column) => [column.label, column.count])).toEqual([
@@ -87,32 +100,39 @@ describe('categoryCountTiles', () => {
   });
 
   it('reads a class code as an index and leaves NA readings out of every column', () => {
-    const [tile] = categoryCountTiles(parcels, ['A', 'B', 'C'], [itr], 'productivo');
+    const [tile] = categoryCountTiles(parcels, ['A', 'B', 'C'], [itr], 'productivo', 'multiple');
 
     expect(tile.columns).toEqual([
-      { label: 'Positiva', count: 2, height: 100, tone: 'mid' },
-      { label: 'Estable', count: 0, height: 0, tone: 'mid' },
-      { label: 'Alerta', count: 0, height: 0, tone: 'high' },
+      { label: 'Positiva', count: 2, tone: 'mid' },
+      { label: 'Estable', count: 0, tone: 'mid' },
+      { label: 'Alerta', count: 0, tone: 'high' },
     ]);
   });
 
   it('keeps the tile, nothing counted, when every parcel reads NA — the crop it does not apply to', () => {
     const empty = [
-      { label: 'Positiva', count: 0, height: 0, tone: 'mid' },
-      { label: 'Estable', count: 0, height: 0, tone: 'mid' },
-      { label: 'Alerta', count: 0, height: 0, tone: 'high' },
+      { label: 'Positiva', count: 0, tone: 'mid' },
+      { label: 'Estable', count: 0, tone: 'mid' },
+      { label: 'Alerta', count: 0, tone: 'high' },
     ];
 
-    expect(categoryCountTiles(parcels, ['C'], [itr], 'productivo')[0].columns).toEqual(empty);
+    expect(categoryCountTiles(parcels, ['C'], [itr], 'productivo', 'multiple')[0].columns).toEqual(
+      empty,
+    );
     expect(
-      categoryCountTiles([parcel('E', { ITR_soja: 3 })], ['E'], [itr], 'productivo')[0].columns,
+      categoryCountTiles([parcel('E', { ITR_soja: 3 })], ['E'], [itr], 'productivo', 'multiple')[0]
+        .columns,
     ).toEqual(empty);
   });
 
-  it('makes no tile when the answer has no column for it, on sanitario, or without metadata', () => {
-    expect(categoryCountTiles(parcels, ['D'], [itr], 'productivo')).toEqual([]);
-    expect(categoryCountTiles(parcels, ['missing'], [resilience], 'productivo')).toEqual([]);
-    expect(categoryCountTiles(parcels, ['A'], [resilience], 'sanitario')).toEqual([]);
-    expect(categoryCountTiles(parcels, ['A'], undefined, 'productivo')).toEqual([]);
+  it('makes no tile when the answer has no column for it, for one parcel, or without metadata', () => {
+    expect(categoryCountTiles(parcels, ['D'], [itr], 'productivo', 'multiple')).toEqual([]);
+    expect(
+      categoryCountTiles(parcels, ['missing'], [resilience], 'productivo', 'multiple'),
+    ).toEqual([]);
+    expect(categoryCountTiles(parcels, ['A'], [resilience], 'productivo', 'individual')).toEqual(
+      [],
+    );
+    expect(categoryCountTiles(parcels, ['A'], undefined, 'productivo', 'multiple')).toEqual([]);
   });
 });
