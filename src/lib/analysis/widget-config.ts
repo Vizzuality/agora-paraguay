@@ -15,26 +15,42 @@ export type RiskTone = 'low' | 'medium' | 'elevated' | 'high';
 /** One class an indicator is read in: the word the widget prints and the band it sits on. */
 export type RiskClass = { label: string; tone: RiskTone };
 
-/** What an indicator's widget renders: the class ruler, a fact, a row per parcel, or a bar chart. */
-export type WidgetKind = 'ruler' | 'fact' | 'parcel-list' | 'bar-chart';
+/**
+ * What an indicator's widget renders: the class ruler, a fact, a row per parcel, the
+ * parcels counted per class as bars, or their values binned over the range as a histogram.
+ */
+export type WidgetKind = 'ruler' | 'fact' | 'parcel-list' | 'bar-chart' | 'histogram';
 
 /** How many parcels a widget reads: one (a parcel tab) or the whole selection (Todas). */
 export type ParcelScope = 'individual' | 'multiple';
 
+/** A range this short reads as a handful of values rather than a continuum. */
+export const SHORT_RANGE_MAX = 10;
+
+/** Whether the range is a handful of values (a 1–3 disease index) rather than a continuum (0–100 %). */
+export function isShortRange(range: { min: number; max: number }): boolean {
+  return range.max <= SHORT_RANGE_MAX;
+}
+
 /**
- * A category is read per scope, whatever the riesgo (the "Categorical individual" and
- * "Categorical multiple" designs): one parcel gets its class on the ruler, several get the
- * parcels counted per class. The other types still follow the riesgo: sanitario reads a
- * bounded range on the ruler and everything else as a fact; productivo lists every
- * parcel's number — text is a fact on both.
+ * A classed indicator is read per scope: one parcel gets its class on the ruler, several
+ * get counted per class (the "Categorical multiple" design) — a category always, a range
+ * on sanitario when it is short. A long range over several parcels bins their values
+ * along the scale instead (the "Categorical and numerical multiple" design): counting a
+ * 0–100 % quality in three classes would hide where the parcels sit. The other types
+ * follow the riesgo: sanitario reads text and open numbers as facts; productivo lists
+ * every parcel's number, ranges included — text is a fact on both.
  */
 export function widgetFor(
-  type: IndicatorType['type'],
+  type: IndicatorType,
   { riesgo, scope }: { riesgo: Riesgo; scope: ParcelScope },
 ): WidgetKind {
-  switch (type) {
+  switch (type.type) {
     case 'range':
-      return riesgo === 'productivo' ? 'parcel-list' : 'ruler';
+      if (riesgo === 'productivo') return 'parcel-list';
+      if (scope === 'individual') return 'ruler';
+
+      return isShortRange(type) ? 'bar-chart' : 'histogram';
     case 'category':
       return scope === 'multiple' ? 'bar-chart' : 'ruler';
     case 'text':

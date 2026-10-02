@@ -144,14 +144,19 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(areas).toHaveText(['Todas', 'Parcela 1', 'Parcela 2']);
   await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
-  // Under Todas the risk card combines the parcels: disease indices 3 and 1 average to
-  // 2, the middle of the 1–3 range — the class as the figure (Figma Widget03).
+  // Under Todas the disease card counts the parcels per class rather than averaging them
+  // (the "Categorical multiple" design): indices 3 and 1 put one parcel in Severo and one
+  // in Sin riesgo. The counts are listed for assistive tech under the chart.
   const card = page
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
     .locator('..');
-  const level = card.locator('[data-slot="risk-level"]');
-  await expect(level).toHaveText('Moderado');
+  await expect(card).toContainText('Número de parcelas');
+  await expect(card.getByRole('listitem')).toHaveText([
+    'Sin riesgo: 1',
+    'Moderado: 0',
+    'Severo: 1',
+  ]);
 
   // Its text facts (crop, station, phenology) share one general-info card instead.
   const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
@@ -392,11 +397,13 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
     .locator('..')
     .locator('..');
   const level = card.locator('[data-slot="risk-level"]');
+  const counts = card.getByRole('listitem');
   // The thumbnail prints the open tab's area: the parcels summed under Todas.
 
-  // Lands on Todas: the combined index (3 and 1 → 2) reads "Moderado".
+  // Lands on Todas: the parcels counted per class (indices 3 and 1), no single figure.
   await expect(allTab).toHaveAttribute('aria-current', 'true');
-  await expect(level).toHaveText('Moderado');
+  await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
+  await expect(level).toHaveCount(0);
   await expect(page.getByText('17,5 ha')).toBeVisible();
   await expect.poll(() => analysisRuns.length).toBe(1);
 
@@ -420,7 +427,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   // The two stubbed parcels split the drawn bbox down the middle and are taller than
   // wide, so fitted they fill the canvas height and sit centred horizontally.
   await allTab.click();
-  await expect(level).toHaveText('Moderado');
+  await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
   const canvas = mapCanvas(page);
   await expect(canvas).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);

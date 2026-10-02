@@ -11,6 +11,7 @@ import {
   categoryAxis,
   categoryClasses,
   classIndexAt,
+  isShortRange,
   RANGE_CLASSES,
   widgetFor,
   type ParcelScope,
@@ -137,7 +138,7 @@ export type GeneralInfoRow = {
  */
 export function isGeneralInfo(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
   // A fact is a fact under any scope; the scope only moves the classed types.
-  return widgetFor(indicator.indicator_type.type, { riesgo, scope: 'individual' }) === 'fact';
+  return widgetFor(indicator.indicator_type, { riesgo, scope: 'individual' }) === 'fact';
 }
 
 /** Classed indicators (a range, a category read for one parcel): the ones that get a risk card. */
@@ -146,7 +147,7 @@ export function isRiskClass(
   riesgo: Riesgo = 'sanitario',
   scope: ParcelScope = 'individual',
 ): boolean {
-  return widgetFor(indicator.indicator_type.type, { riesgo, scope }) === 'ruler';
+  return widgetFor(indicator.indicator_type, { riesgo, scope }) === 'ruler';
 }
 
 /**
@@ -168,7 +169,8 @@ export const NO_READING = 'Sin datos';
  * metadata order. The response decides what is shown: an indicator the backend did not
  * answer (missing column, blank, null, "NA") gets no card, however it was requested. A
  * reading the metadata cannot place still shows, as "Sin datos". Under the `multiple`
- * scope a category is counted per class instead (`categoryCountWidgets`), so it gets no card.
+ * scope a category or a short range is counted per class instead (`categoryCountWidgets`)
+ * and a long range is binned (`valueHistogramWidgets`), so neither gets a card.
  */
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
@@ -352,7 +354,7 @@ function rangeCard(indicator: Indicator, value: number): IndicatorCard {
           value: formatValue(value, undefined),
         }
       : { classes, position: ((band + 0.5) / classes.length) * 100 };
-  const { label } = classes[classIndexAt(scale.position, classes.length)];
+  const { label } = classes[rangeClassIndex(value, range)];
 
   return {
     id: indicator.id,
@@ -365,8 +367,17 @@ function rangeCard(indicator: Indicator, value: number): IndicatorCard {
 
 type Range = { min: number; max: number };
 
-/** A range this short reads as a handful of values rather than a continuum. */
-const SHORT_RANGE_MAX = 10;
+/**
+ * The class (`RANGE_CLASSES`) a number on the range reads as: an integer on a short range
+ * by its bin (`integerBand`), anything else by where it sits on the scale. The same
+ * reading the ruler prints, so counting parcels per class agrees with each parcel's card.
+ */
+export function rangeClassIndex(value: number, range: Range | undefined): number {
+  return (
+    integerBand(value, range, RANGE_CLASSES.length) ??
+    classIndexAt(scalePosition(value, range), RANGE_CLASSES.length)
+  );
+}
 
 /**
  * The class an integer reading of a short range falls in, `undefined` when the reading
@@ -375,7 +386,7 @@ const SHORT_RANGE_MAX = 10;
  * anything out of range go to the outer classes.
  */
 function integerBand(value: number, range: Range | undefined, count: number): number | undefined {
-  if (!range || range.max > SHORT_RANGE_MAX || !Number.isInteger(value)) return undefined;
+  if (!range || !isShortRange(range) || !Number.isInteger(value)) return undefined;
   if (range.max === range.min) return 0;
 
   const band = Math.ceil(((value - range.min) / (range.max - range.min)) * count) - 1;

@@ -35,8 +35,9 @@ function SanitarioPage() {
 /**
  * The active parcel tab's indicators — its text facts in the general-info card, then one
  * widget per selected measured indicator. Cards are per parcel; the Todas tab reads the
- * whole selection (`multiple` scope): a range over the parcels combined
- * (`combinedParcel`), a category counted per class. The active parcel is the hero's open
+ * whole selection (`multiple` scope): a category or a short range counted per class, a
+ * long range binned over its scale, the text facts over the parcels combined
+ * (`combinedParcel`). The active parcel is the hero's open
  * tab (`activeParcelIdAtom`); the answer is matched by id, since the backend need not
  * echo the parcels in request order. Changing the picker or the hero filters re-runs the
  * analysis (`useAnalysis`); the previous cards stay until the new answer lands.

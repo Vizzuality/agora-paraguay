@@ -5,29 +5,57 @@ import {
   categoryClasses,
   classIndexAt,
   classTones,
+  isShortRange,
   RANGE_CLASSES,
   widgetFor,
 } from '@/lib/analysis/widget-config';
+import type { IndicatorType } from '@/lib/api/metadata/schemas';
+
+const index: IndicatorType = { type: 'range', min: 1, max: 3 };
+const quality: IndicatorType = { type: 'range', min: 0, max: 100 };
+const category: IndicatorType = { type: 'category', categories: ['Alta', 'Media', 'Baja'] };
+const text: IndicatorType = { type: 'text' };
+const numeric: IndicatorType = { type: 'numeric' };
 
 describe('widgetFor', () => {
-  it('sanitario: a range gets the risk widget, text and open numbers are general info', () => {
-    expect(widgetFor('range', { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
-    expect(widgetFor('range', { riesgo: 'sanitario', scope: 'multiple' })).toBe('ruler');
-    expect(widgetFor('text', { riesgo: 'sanitario', scope: 'individual' })).toBe('fact');
-    expect(widgetFor('numeric', { riesgo: 'sanitario', scope: 'multiple' })).toBe('fact');
+  it('sanitario, one parcel: a range gets the ruler, text and open numbers are general info', () => {
+    expect(widgetFor(index, { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor(quality, { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor(text, { riesgo: 'sanitario', scope: 'individual' })).toBe('fact');
+    expect(widgetFor(numeric, { riesgo: 'sanitario', scope: 'multiple' })).toBe('fact');
   });
 
-  it('productivo: numbers and ranges list the parcels, text is general info', () => {
-    expect(widgetFor('numeric', { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
-    expect(widgetFor('range', { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
-    expect(widgetFor('text', { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
+  it('sanitario, Todas: a short range counts the parcels per class, a long one bins their values', () => {
+    expect(widgetFor(index, { riesgo: 'sanitario', scope: 'multiple' })).toBe('bar-chart');
+    expect(
+      widgetFor({ type: 'range', min: 0, max: 10 }, { riesgo: 'sanitario', scope: 'multiple' }),
+    ).toBe('bar-chart');
+    expect(widgetFor(quality, { riesgo: 'sanitario', scope: 'multiple' })).toBe('histogram');
+    expect(
+      widgetFor({ type: 'range', min: 0, max: 11 }, { riesgo: 'sanitario', scope: 'multiple' }),
+    ).toBe('histogram');
+  });
+
+  it('productivo: numbers and ranges list the parcels under any scope, text is general info', () => {
+    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
+    expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
+    expect(widgetFor(quality, { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
+    expect(widgetFor(text, { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
   });
 
   it('a category follows the scope on both riesgos: one parcel on the ruler, several counted', () => {
-    expect(widgetFor('category', { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
-    expect(widgetFor('category', { riesgo: 'productivo', scope: 'individual' })).toBe('ruler');
-    expect(widgetFor('category', { riesgo: 'sanitario', scope: 'multiple' })).toBe('bar-chart');
-    expect(widgetFor('category', { riesgo: 'productivo', scope: 'multiple' })).toBe('bar-chart');
+    expect(widgetFor(category, { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor(category, { riesgo: 'productivo', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor(category, { riesgo: 'sanitario', scope: 'multiple' })).toBe('bar-chart');
+    expect(widgetFor(category, { riesgo: 'productivo', scope: 'multiple' })).toBe('bar-chart');
+  });
+});
+
+describe('isShortRange', () => {
+  it('reads up to the design cut of 10 as a handful of values', () => {
+    expect(isShortRange({ min: 1, max: 3 })).toBe(true);
+    expect(isShortRange({ min: 0, max: 10 })).toBe(true);
+    expect(isShortRange({ min: 0, max: 100 })).toBe(false);
   });
 });
 

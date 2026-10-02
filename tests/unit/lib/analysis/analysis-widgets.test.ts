@@ -21,11 +21,23 @@ const rust: Indicator = {
   name: 'Phakopsora pachyrhizi',
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
 };
+const quality: Indicator = {
+  id: 'data_quality',
+  name: 'Calidad del dato',
+  unit: '%',
+  indicator_type: { type: 'range', min: 0, max: 100 },
+};
 const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
 
 const parcels: AnalysisParcel[] = [
-  { parcel_id: 'A', properties: { Resiliencia: 'Media', Pro_soja: 3.5, asian_rust: 3 } },
-  { parcel_id: 'B', properties: { Resiliencia: 'Alta', Pro_soja: 3.8, asian_rust: 1 } },
+  {
+    parcel_id: 'A',
+    properties: { Resiliencia: 'Media', Pro_soja: 3.5, asian_rust: 3, data_quality: 12 },
+  },
+  {
+    parcel_id: 'B',
+    properties: { Resiliencia: 'Alta', Pro_soja: 3.8, asian_rust: 1, data_quality: 87 },
+  },
 ];
 
 describe('analysisWidgets', () => {
@@ -62,21 +74,28 @@ describe('analysisWidgets', () => {
     expect(widgets[0]).toMatchObject({ level: 'Alta' });
   });
 
-  it('sanitario, Todas: the range reads the parcels combined, the category counts them', () => {
+  it('sanitario, Todas: the short range and the category count the parcels, the long range bins them', () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
-      indicators: [rust, resilience, crop],
+      indicators: [rust, resilience, quality, crop],
       riesgo: 'sanitario',
       scope: 'multiple',
-      parcel: combinedParcel(parcels, [rust, resilience]),
+      parcel: combinedParcel(parcels, [rust, resilience, quality]),
     });
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
-      ['ruler', 'asian_rust'],
+      ['bar-chart', 'asian_rust'],
       ['bar-chart', 'Resiliencia'],
+      ['histogram', 'data_quality'],
     ]);
-    expect(widgets[0]).toMatchObject({ level: 'Moderado' });
+    expect(widgets[0]).toMatchObject({
+      columns: [
+        { label: 'Sin riesgo', count: 1 },
+        { label: 'Moderado', count: 0 },
+        { label: 'Severo', count: 1 },
+      ],
+    });
     expect(widgets[1]).toMatchObject({
       columns: [
         { label: 'Alta', count: 1 },
@@ -84,13 +103,22 @@ describe('analysisWidgets', () => {
         { label: 'Baja', count: 0 },
       ],
     });
+    expect(widgets[2]).toMatchObject({ min: 0, max: 100 });
+    expect(
+      (widgets[2] as Extract<(typeof widgets)[number], { kind: 'histogram' }>).bins.flatMap(
+        (bin, index) => (bin.count > 0 ? [[index, bin.count]] : []),
+      ),
+    ).toEqual([
+      [2, 1],
+      [17, 1],
+    ]);
   });
 
-  it('sanitario, one parcel tab: both classed readings sit on the ruler', () => {
+  it('sanitario, one parcel tab: every classed reading sits on the ruler', () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
-      indicators: [rust, resilience],
+      indicators: [rust, resilience, quality],
       riesgo: 'sanitario',
       scope: 'individual',
       parcel: parcels[0],
@@ -99,7 +127,9 @@ describe('analysisWidgets', () => {
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
       ['ruler', 'asian_rust'],
       ['ruler', 'Resiliencia'],
+      ['ruler', 'data_quality'],
     ]);
+    expect(widgets[0]).toMatchObject({ level: 'Severo' });
   });
 
   it('is empty without metadata', () => {

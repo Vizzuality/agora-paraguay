@@ -49,7 +49,7 @@ export function parcelValueWidgets(
 
   return indicators.flatMap((indicator) => {
     // A list of parcels is the multiple view by nature; the scope moves no number anyway.
-    if (widgetFor(indicator.indicator_type.type, { riesgo, scope: 'multiple' }) !== 'parcel-list') {
+    if (widgetFor(indicator.indicator_type, { riesgo, scope: 'multiple' }) !== 'parcel-list') {
       return [];
     }
     if (isAreaIndicator(indicator)) return [];
