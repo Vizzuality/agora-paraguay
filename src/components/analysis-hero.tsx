@@ -43,7 +43,7 @@ import { activeParcelIdAtom, activeParcelTabAtom, setAnalysisFilterAtom } from '
 
 /**
  * The analysed parcels as tabs, and the filters the API offers for that side of the
- * analysis: `riesgo` picks the `visibility` the filters are asked for.
+ * analysis: the filters are asked for that `riesgo`.
  */
 export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
   return (

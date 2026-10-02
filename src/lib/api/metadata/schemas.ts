@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /*
- * Metadata contract: `GET /api/parcels/filters/?visibility={public|private}` and
+ * Metadata contract: `GET /api/parcels/filters/?riesgo={sanitario|productivo}` and
  * `GET /api/parcels/indicators?riesgo={sanitario|productivo}`. The indicator attributes
  * are still "to be defined" in the spec, so that schema lets extra fields through
  * (`looseObject`); the filters follow the live response.
@@ -43,11 +43,14 @@ export const filtersSchema = z.array(filterSchema);
 
 export type Filters = z.infer<typeof filtersSchema>;
 
-/** Which side of the analysis a request is for: riesgo sanitario is public, productivo private. */
-export type FiltersParams = { visibility: 'public' | 'private' };
-
 /** The two analysis tabs; each is one side of `/api/parcels/analysis/{diseases|production}/`. */
 export type Riesgo = 'sanitario' | 'productivo';
+
+/**
+ * Which riesgo the filters are asked for: sanitario is the public side, productivo the
+ * private one. Left out, the client asks for sanitario.
+ */
+export type FiltersParams = { riesgo?: Riesgo };
 
 /** What the indicator list is asked for: the riesgo, as a query parameter. */
 export type IndicatorsParams = { riesgo: Riesgo };
