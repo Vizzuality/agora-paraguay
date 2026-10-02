@@ -27,7 +27,7 @@ export const HERO_FILTERS = [
 ];
 
 /**
- * The indicator lists `GET /api/parcels/indicators?riesgo=` answers, with the ids the
+ * The indicator lists `GET /api/parcels/indicators?riesgo={sanitario|productivo}` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
  */
 /** The parcel area, answered as one more column; the thumbnail prints it, never a card. */
