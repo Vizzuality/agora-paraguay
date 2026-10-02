@@ -16,12 +16,12 @@ type StatCardProps = {
 };
 
 /**
- * Widget tile: a label, one large number, and a caption qualifying it.
+ * Widget: a label, one large number, and a caption qualifying it.
  *
  * Geometry follows the AGORA design (Figma node 46:7042) — 24px radius and padding,
  * the label pinned to the top and the number to the bottom. The fixed minimum height
  * is what creates the gap between them; without it `justify-between` has nothing to
- * distribute and the tile collapses to its content.
+ * distribute and the widget collapses to its content.
  *
  * The value uses the font's proportional figures rather than tabular ones. Tabular
  * gives every digit the width of a zero, which reads loose at display sizes; it is

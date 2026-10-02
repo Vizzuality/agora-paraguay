@@ -41,7 +41,7 @@ const AREA_INDICATOR = {
 /** West 10.2 ha + east 7.3 ha: 17.5 ha under Todas. */
 export const PARCEL_AREAS: Record<string, number> = { D07D21P00000002: 10.2, D07D23P00000008: 7.3 };
 
-/** Base soy production per parcel (t/ha), for the productivo values tile: west, then east. */
+/** Base soy production per parcel (t/ha), for the productivo values widget: west, then east. */
 export const PARCEL_PRODUCTION: Record<string, number> = {
   D07D21P00000002: 3.55,
   D07D23P00000008: 3.81,
@@ -219,7 +219,7 @@ export async function stubAnalysisApi(page: Page) {
           Pro_soja: PARCEL_PRODUCTION[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',
-          // Both parcels Media: the resilience tile counts 2 under Media.
+          // Both parcels Media: the resilience widget counts 2 under Media.
           Resiliencia: 'Media',
         };
 

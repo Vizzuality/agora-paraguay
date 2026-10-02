@@ -6,7 +6,7 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
 
 /**
  * The riesgo's indicators that apply to the analysed selection, for the picker and the
- * tiles: the fetched list, minus the other crop's and what the analysis answered "NA"
+ * widgets: the fetched list, minus the other crop's and what the analysis answered "NA"
  * for every parcel (`applicableIndicators`). Same queries the page runs, so no extra
  * request. Reads atoms, so callers render inside `<ClientOnly>`.
  */

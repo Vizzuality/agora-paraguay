@@ -5,7 +5,7 @@ import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 /*
  * TODO(api-filters): remove this file, its hook (`use-applicable-indicators.ts`) and its
  * tests once the API applies the filters itself — listing only the crop's indicators and
- * answering only those. The tiles and the picker then read the list as it comes.
+ * answering only those. The widgets and the picker then read the list as it comes.
  *
  * Riesgo productivo lists every indicator for every crop (`Pro_soja`, `Pro_arroz`, …)
  * and the analysis answers them all whatever the crop. Which ones apply is the hero's

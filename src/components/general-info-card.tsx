@@ -17,7 +17,7 @@ type GeneralInfoCardProps = {
 };
 
 /**
- * Widget tile for the parcel's context — station, crop, phenology — as one list of
+ * Widget for the parcel's context — station, crop, phenology — as one list of
  * facts. Same light surface as `RiskClassCard`; these are not risks, so no figure and
  * no ruler.
  */
