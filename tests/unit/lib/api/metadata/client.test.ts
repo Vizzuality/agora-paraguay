@@ -38,23 +38,33 @@ describe('fetchFilters', () => {
     { id: 'date', name: 'Fecha', field_type: { type: 'date', default: '2026-09-17' } },
   ];
 
-  it('GETs /api/parcels/filters/ for the visibility asked and accepts categories and dates', async () => {
+  it('GETs /api/parcels/filters/ for the riesgo asked and accepts categories and dates', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
 
-    await expect(fetchFilters({ visibility: 'private' })).resolves.toEqual(filters);
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?visibility=private');
+    await expect(fetchFilters({ riesgo: 'productivo' })).resolves.toEqual(filters);
+    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?riesgo=productivo');
+  });
+
+  it('asks for sanitario, the public side, when no riesgo is given', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(filters));
+    await fetchFilters();
+    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?riesgo=sanitario');
+
+    fetchMock.mockResolvedValueOnce(Response.json(filters));
+    await fetchFilters({});
+    expect(String(fetchMock.mock.calls[1][0])).toBe('/api/parcels/filters/?riesgo=sanitario');
   });
 
   it('rejects a field type it has no control for, and a non-ISO date default', async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json([{ id: 'x', name: 'X', field_type: { type: 'range', min: 0, max: 1 } }]),
     );
-    await expect(fetchFilters({ visibility: 'public' })).rejects.toThrow(ZodError);
+    await expect(fetchFilters({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);
 
     fetchMock.mockResolvedValueOnce(
       Response.json([{ id: 'd', name: 'D', field_type: { type: 'date', default: '17/09/2026' } }]),
     );
-    await expect(fetchFilters({ visibility: 'public' })).rejects.toThrow(ZodError);
+    await expect(fetchFilters()).rejects.toThrow(ZodError);
   });
 });
 

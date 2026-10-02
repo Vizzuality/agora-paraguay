@@ -11,12 +11,18 @@ import {
 
 /* The only module in `metadata/` that knows the endpoints. Everything here is real. */
 
+/** The riesgo the filters are asked for when none is given: the public side. */
+const DEFAULT_FILTERS_RIESGO = 'sanitario';
+
 /**
- * `GET /api/parcels/filters/?visibility={public|private}` — the filters of that side of
- * the analysis and their values.
+ * `GET /api/parcels/filters/?riesgo={sanitario|productivo}` — the filters of that side of
+ * the analysis and their values. `riesgo` is mandatory on the wire; sanitario (public)
+ * unless asked otherwise.
  */
-export async function fetchFilters(params: FiltersParams): Promise<Filters> {
-  return filtersSchema.parse(await getJson('/api/parcels/filters/', params));
+export async function fetchFilters({
+  riesgo = DEFAULT_FILTERS_RIESGO,
+}: FiltersParams = {}): Promise<Filters> {
+  return filtersSchema.parse(await getJson('/api/parcels/filters/', { riesgo }));
 }
 
 /** `GET /api/parcels/indicators?riesgo={sanitario|productivo}` — the indicators of a riesgo and their metadata. */
