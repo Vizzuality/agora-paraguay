@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 /*
  * Metadata contract: `GET /api/parcels/filters/?visibility={public|private}` and
- * `GET /api/parcels/indicators/` with `{ riesgo }`, reached through `/relay/indicators` (see
- * `client.ts`). The indicator attributes
+ * `GET /api/parcels/indicators/?riesgo={sanitario|productivo}`. The indicator attributes
  * are still "to be defined" in the spec, so that schema lets extra fields through
  * (`looseObject`); the filters follow the live response.
  */
@@ -50,7 +49,7 @@ export type FiltersParams = { visibility: 'public' | 'private' };
 /** The two analysis tabs; each is one side of `/api/parcels/analysis/{diseases|production}/`. */
 export type Riesgo = 'sanitario' | 'productivo';
 
-/** What the indicator list is asked for: the riesgo. A query parameter to the relay, a JSON body to the API. */
+/** What the indicator list is asked for: the riesgo, as a query parameter. */
 export type IndicatorsParams = { riesgo: Riesgo };
 
 const rangeIndicatorTypeSchema = z.looseObject({

@@ -5,7 +5,7 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
 
 /**
  * TODO(api-filters): once the API filters the list itself, key this query by the hero
- * filters (`useHeroFilters`, the crop at least) and pass them through the relay, so the
+ * filters (`useHeroFilters`, the crop at least) and pass them as query parameters, so the
  * list follows them like the analysis does — and drop `applicable-indicators.ts`.
  *
  * The riesgo's indicator list, asked once per riesgo and shared by the page, the picker
