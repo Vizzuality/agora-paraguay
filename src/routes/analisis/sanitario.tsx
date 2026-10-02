@@ -3,10 +3,11 @@ import { useAtomValue } from 'jotai';
 
 import { AnalysisHeader } from '@/components/analysis-header';
 import { AnalysisStatus } from '@/components/analysis-status';
+import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
-import { RiskClassCard } from '@/components/risk-class-card';
 import { WidgetGrid } from '@/components/widget-grid';
-import { combinedParcel, generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
+import { analysisWidgets } from '@/lib/analysis/analysis-widgets';
+import { combinedParcel, generalInfo } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
 import { useDescribe } from '@/lib/analysis/use-describe';
@@ -33,11 +34,12 @@ function SanitarioPage() {
 
 /**
  * The active parcel tab's indicators — its text facts in the general-info card, then one
- * risk card per selected measured indicator. Cards are per parcel; the Todas tab shows
- * the same cards over the parcels combined (`combinedParcel`). The active parcel is the
- * hero's open tab (`activeParcelIdAtom`); the answer is matched by id, since the backend
- * need not echo the parcels in request order. Changing the picker or the hero filters
- * re-runs the analysis (`useAnalysis`); the previous cards stay until the new answer lands.
+ * widget per selected measured indicator. Cards are per parcel; the Todas tab reads the
+ * whole selection (`multiple` scope): a range over the parcels combined
+ * (`combinedParcel`), a category counted per class. The active parcel is the hero's open
+ * tab (`activeParcelIdAtom`); the answer is matched by id, since the backend need not
+ * echo the parcels in request order. Changing the picker or the hero filters re-runs the
+ * analysis (`useAnalysis`); the previous cards stay until the new answer lands.
  */
 function SanitarioWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis('sanitario');
@@ -46,6 +48,7 @@ function SanitarioWidgets() {
   const describe = useDescribe('sanitario');
 
   const answered = analysis.data?.indicators ?? [];
+  const scope = activeId === null ? 'multiple' : 'individual';
   const parcel =
     activeId === null
       ? combinedParcel(
@@ -62,18 +65,22 @@ function SanitarioWidgets() {
   const shown = indicators
     ? visibleIndicators(selectableIndicators(indicators, 'sanitario'), selected)
     : undefined;
-  const cards = indicatorCards(parcel, shown, 'sanitario').map((card) => ({
-    ...card,
-    description: describe(card.description),
-  }));
+  const widgets = analysisWidgets({
+    parcels: answered,
+    parcelIds,
+    indicators: shown,
+    riesgo: 'sanitario',
+    scope,
+    parcel,
+  }).map((widget) => ({ ...widget, description: describe(widget.description) }));
 
   return (
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
       {info.length > 0 && <GeneralInfoCard items={info} />}
       <WidgetGrid>
-        {cards.map((card) => (
-          <RiskClassCard key={card.id} {...card} />
+        {widgets.map((widget) => (
+          <AnalysisWidgetCard key={widget.id} widget={widget} />
         ))}
       </WidgetGrid>
     </div>

@@ -1,12 +1,12 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import { numberOf } from '@/lib/analysis/readings';
-import { widgetKindOf } from '@/lib/analysis/widget-config';
+import { widgetFor } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The per-parcel value tile (Figma Widget01): one indicator, one row per analysed parcel
+ * The per-parcel value widget: one indicator, one row per analysed parcel
  * with its figure and a track — filled on the indicator's own scale when it has one (a
  * range, IEP 0–100 %), else relative to the largest parcel (an open number, t/ha). Riesgo
  * productivo reads its numbers this way; sanitario's are facts. Pure, node-tested.
@@ -19,11 +19,11 @@ export type ParcelValueRow = {
   value: number;
   /** The figure as printed: platform locale, two decimals at most. */
   text: string;
-  /** 0–100: the track filled — on the range's scale, or relative to the tile's largest value. */
+  /** 0–100: the track filled — on the range's scale, or relative to the widget's largest value. */
   position: number;
 };
 
-export type ParcelValuesTile = {
+export type ParcelValuesWidget = {
   id: string;
   label: string;
   /** The metadata's description, behind the title's info icon. */
@@ -33,22 +33,25 @@ export type ParcelValuesTile = {
 };
 
 /**
- * One tile per indicator that renders as parcel values, in metadata order, restricted to
+ * One widget per indicator that renders as parcel values, in metadata order, restricted to
  * the parcels Analizar submitted, in their order. A parcel with no reading has no row; an
- * indicator no parcel answered has no tile.
+ * indicator no parcel answered has no widget.
  */
-export function parcelValueTiles(
+export function parcelValueWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
   riesgo: Riesgo,
-): ParcelValuesTile[] {
+): ParcelValuesWidget[] {
   if (!indicators) return [];
 
   const byId = new Map(parcels.map((parcel) => [String(parcel.parcel_id), parcel]));
 
   return indicators.flatMap((indicator) => {
-    if (widgetKindOf(riesgo, indicator.indicator_type.type) !== 'parcel-values') return [];
+    // A list of parcels is the multiple view by nature; the scope moves no number anyway.
+    if (widgetFor(indicator.indicator_type.type, { riesgo, scope: 'multiple' }) !== 'parcel-list') {
+      return [];
+    }
     if (isAreaIndicator(indicator)) return [];
 
     const readings = parcelIds.flatMap((parcelId) => {

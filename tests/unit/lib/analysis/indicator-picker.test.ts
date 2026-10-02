@@ -33,7 +33,7 @@ describe('selectableIndicators', () => {
     expect(selectableIndicators(withTypes).map((i) => i.id)).toEqual(['asian_rust', 'ITR']);
   });
 
-  it('offers the open numbers on productivo, where they are tiles, the area still left out', () => {
+  it('offers the open numbers on productivo, where they are widgets, the area still left out', () => {
     const productivo: Indicators = [
       { id: 'Pro_soja', name: 'Producción', indicator_type: { type: 'numeric' } },
       { id: 'area', name: 'Área', unit: 'ha', indicator_type: { type: 'numeric' } },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parcelValueTiles } from '@/lib/analysis/parcel-values';
+import { parcelValueWidgets } from '@/lib/analysis/parcel-values';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
@@ -32,16 +32,16 @@ const parcels = [
   parcel('C', { pro_soja: 'NA' }),
 ];
 
-describe('parcelValueTiles', () => {
+describe('parcelValueWidgets', () => {
   it('lists the parcels in the submitted order as Parcela N, the track relative to the largest', () => {
-    const [tile] = parcelValueTiles(parcels, ['A', 'B'], [production], 'productivo');
+    const [widget] = parcelValueWidgets(parcels, ['A', 'B'], [production], 'productivo');
 
-    expect(tile).toMatchObject({
+    expect(widget).toMatchObject({
       id: 'Pro_soja',
       label: 'Producción base histórica de soja',
       unit: 't/ha',
     });
-    expect(tile.rows).toEqual([
+    expect(widget.rows).toEqual([
       {
         parcelId: 'A',
         label: 'Parcela 1',
@@ -54,31 +54,31 @@ describe('parcelValueTiles', () => {
   });
 
   it('skips a parcel with no reading but keeps the others their numbers and numbering', () => {
-    const [tile] = parcelValueTiles(parcels, ['A', 'C', 'B'], [production], 'productivo');
+    const [widget] = parcelValueWidgets(parcels, ['A', 'C', 'B'], [production], 'productivo');
 
     // C is the second parcel: B stays Parcela 3 even though its row comes second.
-    expect(tile.rows.map((row) => row.label)).toEqual(['Parcela 1', 'Parcela 3']);
+    expect(widget.rows.map((row) => row.label)).toEqual(['Parcela 1', 'Parcela 3']);
   });
 
   it('carries the indicator description for the title info icon', () => {
-    const [tile] = parcelValueTiles(
+    const [widget] = parcelValueWidgets(
       parcels,
       ['A'],
       [{ ...production, description: 'Rendimiento medio histórico.' }],
       'productivo',
     );
 
-    expect(tile.description).toBe('Rendimiento medio histórico.');
+    expect(widget.description).toBe('Rendimiento medio histórico.');
   });
 
-  it('makes no tile for an indicator no parcel answered, nor for the area, nor for a classed one', () => {
-    expect(parcelValueTiles(parcels, ['C'], [production], 'productivo')).toEqual([]);
-    expect(parcelValueTiles(parcels, ['A'], [area, rust], 'productivo')).toEqual([]);
+  it('makes no widget for an indicator no parcel answered, nor for the area, nor for a classed one', () => {
+    expect(parcelValueWidgets(parcels, ['C'], [production], 'productivo')).toEqual([]);
+    expect(parcelValueWidgets(parcels, ['A'], [area, rust], 'productivo')).toEqual([]);
   });
 
   it('is empty on sanitario, where open numbers are facts, and without metadata', () => {
-    expect(parcelValueTiles(parcels, ['A'], [production], 'sanitario')).toEqual([]);
-    expect(parcelValueTiles(parcels, ['A'], undefined, 'productivo')).toEqual([]);
+    expect(parcelValueWidgets(parcels, ['A'], [production], 'sanitario')).toEqual([]);
+    expect(parcelValueWidgets(parcels, ['A'], undefined, 'productivo')).toEqual([]);
   });
 
   it('fills a range on its own scale, not relative to the parcels, and reads digits in strings', () => {
@@ -88,27 +88,27 @@ describe('parcelValueTiles', () => {
       unit: '%',
       indicator_type: { type: 'range', min: 0, max: 100 },
     };
-    const [tile] = parcelValueTiles(
+    const [widget] = parcelValueWidgets(
       [parcel('A', { IEP_H5_soja: '74' }), parcel('B', { IEP_H5_soja: 67 })],
       ['A', 'B'],
       [iep],
       'productivo',
     );
 
-    expect(tile.rows.map((row) => [row.text, row.position])).toEqual([
+    expect(widget.rows.map((row) => [row.text, row.position])).toEqual([
       ['74', 74],
       ['67', 67],
     ]);
   });
 
   it('fills nothing when every value is zero or below', () => {
-    const [tile] = parcelValueTiles(
+    const [widget] = parcelValueWidgets(
       [parcel('A', { pro_soja: 0 })],
       ['A'],
       [production],
       'productivo',
     );
 
-    expect(tile.rows[0].position).toBe(0);
+    expect(widget.rows[0].position).toBe(0);
   });
 });

@@ -1,25 +1,33 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  categoryAxis,
   categoryClasses,
   classIndexAt,
+  classTones,
   RANGE_CLASSES,
-  widgetKindOf,
+  widgetFor,
 } from '@/lib/analysis/widget-config';
 
-describe('widgetKindOf', () => {
-  it('sanitario: classed values get the risk tile, text and open numbers are general info', () => {
-    expect(widgetKindOf('sanitario', 'range')).toBe('risk-class');
-    expect(widgetKindOf('sanitario', 'category')).toBe('risk-class');
-    expect(widgetKindOf('sanitario', 'text')).toBe('general-info');
-    expect(widgetKindOf('sanitario', 'numeric')).toBe('general-info');
+describe('widgetFor', () => {
+  it('sanitario: a range gets the risk widget, text and open numbers are general info', () => {
+    expect(widgetFor('range', { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor('range', { riesgo: 'sanitario', scope: 'multiple' })).toBe('ruler');
+    expect(widgetFor('text', { riesgo: 'sanitario', scope: 'individual' })).toBe('fact');
+    expect(widgetFor('numeric', { riesgo: 'sanitario', scope: 'multiple' })).toBe('fact');
   });
 
-  it('productivo: numbers and ranges list the parcels, categories count them', () => {
-    expect(widgetKindOf('productivo', 'numeric')).toBe('parcel-values');
-    expect(widgetKindOf('productivo', 'category')).toBe('category-count');
-    expect(widgetKindOf('productivo', 'range')).toBe('parcel-values');
-    expect(widgetKindOf('productivo', 'text')).toBe('general-info');
+  it('productivo: numbers and ranges list the parcels, text is general info', () => {
+    expect(widgetFor('numeric', { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
+    expect(widgetFor('range', { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
+    expect(widgetFor('text', { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
+  });
+
+  it('a category follows the scope on both riesgos: one parcel on the ruler, several counted', () => {
+    expect(widgetFor('category', { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor('category', { riesgo: 'productivo', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor('category', { riesgo: 'sanitario', scope: 'multiple' })).toBe('bar-chart');
+    expect(widgetFor('category', { riesgo: 'productivo', scope: 'multiple' })).toBe('bar-chart');
   });
 });
 
@@ -56,17 +64,44 @@ describe('classIndexAt', () => {
   });
 });
 
+describe('classTones', () => {
+  it('follows the design scales: four run blue, grey, orange, red; three drop the orange', () => {
+    expect(classTones(4)).toEqual(['low', 'medium', 'elevated', 'high']);
+    expect(classTones(3)).toEqual(['low', 'medium', 'high']);
+  });
+
+  it('faces two classes off blue against red, and paints a lone class orange', () => {
+    expect(classTones(2)).toEqual(['low', 'high']);
+    expect(classTones(1)).toEqual(['elevated']);
+    expect(classTones(0)).toEqual([]);
+  });
+
+  it('keeps the ends for five or more and greys the middle', () => {
+    expect(classTones(5)).toEqual(['low', 'medium', 'medium', 'elevated', 'high']);
+  });
+});
+
 describe('categoryClasses', () => {
-  it('paints the first category blue, the last red, the rest grey', () => {
-    expect(categoryClasses(['Positiva', 'Estable', 'Alerta', 'NA']).map((c) => c.tone)).toEqual([
-      'low',
-      'medium',
-      'medium',
-      'high',
+  it('leaves NA out and colours the rest by their count', () => {
+    expect(categoryClasses(['Positiva', 'Estable', 'Alerta', 'NA'])).toEqual([
+      { label: 'Positiva', tone: 'low' },
+      { label: 'Estable', tone: 'medium' },
+      { label: 'Alerta', tone: 'high' },
     ]);
   });
 
   it('keeps the labels as the metadata writes them', () => {
     expect(categoryClasses(['bajo', 'alto']).map((c) => c.label)).toEqual(['bajo', 'alto']);
+  });
+});
+
+describe('categoryAxis', () => {
+  it('keeps the categories in the order the indicator defines them, NA left out', () => {
+    expect(categoryAxis(['Alta', 'Media', 'Baja'])).toEqual(['Alta', 'Media', 'Baja']);
+    expect(categoryAxis(['Positiva', 'Estable', 'Alerta', 'NA'])).toEqual([
+      'Positiva',
+      'Estable',
+      'Alerta',
+    ]);
   });
 });
