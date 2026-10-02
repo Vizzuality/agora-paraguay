@@ -30,12 +30,7 @@ an https page never calls the plain-http API directly. The default target is a l
 port 8000; set `API_PROXY_TARGET` to reach the shared backend instead: in `.env` locally, in
 the project's build environment on Vercel. It is read at build time, so changing it means
 rebuilding. `VITE_API_URL` remains for a deployment where the browser can reach the API
-directly (https, CORS and cookies configured on the backend). One call never goes through the
-proxy: the indicator list, `GET /api/parcels/indicators/` with `{ riesgo }` as a JSON body,
-which no browser can send on a GET. The page asks our own server route `/relay/indicators?riesgo=`
-(`src/routes/relay/indicators.ts`), which sends that request with Node's `http` and relays the
-answer — so it needs the same-origin setup and the same `API_PROXY_TARGET`, baked in at build
-time too. The e2e specs stub the auth routes
+directly (https, CORS and cookies configured on the backend). The e2e specs stub the auth routes
 (`tests/e2e/fixtures/auth.ts`); signing in against the real backend is a manual check with a
 personal account.
 
@@ -130,8 +125,7 @@ src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
 ├── auth/                   POST /api/auth/login/ (+csrf), POST /api/auth/admin/users/create/ (admin) — real; GET /api/auth/me/ parked (TODO(auth-me))
 ├── parcels/                POST /api/parcels/filter-parcels/
-├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); GET /relay/indicators?riesgo= (indicator list, via our server route)
-├── relay/                  Server-only: reopens GET /api/parcels/indicators/ with the { riesgo } JSON body a browser cannot send
+├── metadata/               GET /api/parcels/filters/?visibility= (hero fields); GET /api/parcels/indicators?riesgo={sanitario|productivo} (indicator list)
 └── analysis/               POST /api/parcels/analysis/{diseases|production}/; POST /api/parcels/analysis/summary/ (LLM summary)
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
     ├── client.ts           The ONLY module in the domain that knows the endpoint
@@ -144,9 +138,7 @@ Rules that keep the swap cheap:
 - Every response is parsed through the Zod schemas, so contract drift surfaces at the boundary
   instead of as `undefined` deep in a component.
 - **Everything talks to the API; there is no mock switch.** The indicator list is
-  `GET /api/parcels/indicators/` with `{ "riesgo": "sanitario" | "productivo" }` as a JSON body.
-  Browsers refuse a body on GET, so the page calls the server route `/relay/indicators?riesgo=`
-  and the server makes that request (`src/lib/api/relay/indicators.ts`).
+  `GET /api/parcels/indicators?riesgo={sanitario|productivo}`.
 - Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
   add fields without breaking the parse; tighten them as the contract settles.
 

@@ -71,13 +71,13 @@ describe('fetchIndicators', () => {
     { id: 'Pro_soja', name: 'Producción', unit: 't/ha', indicator_type: { type: 'numeric' } },
   ];
 
-  it('GETs the relay with the riesgo as a query parameter, no body', async () => {
+  it('GETs /api/parcels/indicators with the riesgo as a query parameter, no body', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(indicators));
 
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(String(url)).toBe('/relay/indicators?riesgo=sanitario');
+    expect(String(url)).toBe('/api/parcels/indicators?riesgo=sanitario');
     expect(init).toMatchObject({ method: 'GET' });
     expect(init?.body).toBeUndefined();
   });
@@ -87,7 +87,7 @@ describe('fetchIndicators', () => {
 
     await expect(fetchIndicators({ riesgo: 'productivo' })).resolves.toEqual([]);
 
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/relay/indicators?riesgo=productivo');
+    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/indicators?riesgo=productivo');
   });
 
   it('reads the live list: a null unit, `number` as numeric, and the echoed crop filter as text', async () => {
