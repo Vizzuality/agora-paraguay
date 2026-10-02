@@ -14,6 +14,16 @@ const itr: Indicator = {
   name: 'ITR soja',
   indicator_type: { type: 'category', categories: ['Positiva', 'Estable', 'Alerta', 'NA'] },
 };
+const rust: Indicator = {
+  id: 'asian_rust',
+  name: 'Phakopsora pachyrhizi',
+  indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
+};
+const quality: Indicator = {
+  id: 'data_quality',
+  name: 'Calidad del dato',
+  indicator_type: { type: 'range', min: 0, max: 100 },
+};
 
 function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisParcel {
   return { parcel_id: id, properties };
@@ -31,20 +41,20 @@ describe('categoryAxis', () => {
 });
 
 describe('categoryTone', () => {
-  it('reads the magnitude word: low grey, high orange, the rest blue', () => {
-    expect(['Bajo', 'Muy baja', 'baja'].map(categoryTone)).toEqual(['low', 'low', 'low']);
+  it("reads the magnitude word: low grey, high orange, the rest blue — the ruler's tones", () => {
+    expect(['Bajo', 'Muy baja', 'baja'].map(categoryTone)).toEqual(['medium', 'medium', 'medium']);
     expect(['Alto', 'Muy alto', 'Alta', 'Alerta'].map(categoryTone)).toEqual([
-      'high',
-      'high',
-      'high',
-      'high',
+      'elevated',
+      'elevated',
+      'elevated',
+      'elevated',
     ]);
     expect(['Medio', 'Media', 'Moderado', 'Estable', 'Positiva'].map(categoryTone)).toEqual([
-      'mid',
-      'mid',
-      'mid',
-      'mid',
-      'mid',
+      'low',
+      'low',
+      'low',
+      'low',
+      'low',
     ]);
   });
 });
@@ -70,9 +80,9 @@ describe('categoryCountWidgets', () => {
       id: 'Resiliencia',
       label: 'Proxy de resiliencia operativa',
       columns: [
-        { label: 'Alta', count: 1, tone: 'high' },
-        { label: 'Media', count: 2, tone: 'mid' },
-        { label: 'Baja', count: 0, tone: 'low' },
+        { label: 'Alta', count: 1, tone: 'elevated' },
+        { label: 'Media', count: 2, tone: 'low' },
+        { label: 'Baja', count: 0, tone: 'medium' },
       ],
     });
   });
@@ -115,17 +125,17 @@ describe('categoryCountWidgets', () => {
     );
 
     expect(widget.columns).toEqual([
-      { label: 'Positiva', count: 2, tone: 'mid' },
-      { label: 'Estable', count: 0, tone: 'mid' },
-      { label: 'Alerta', count: 0, tone: 'high' },
+      { label: 'Positiva', count: 2, tone: 'low' },
+      { label: 'Estable', count: 0, tone: 'low' },
+      { label: 'Alerta', count: 0, tone: 'elevated' },
     ]);
   });
 
   it('keeps the widget, nothing counted, when every parcel reads NA — the crop it does not apply to', () => {
     const empty = [
-      { label: 'Positiva', count: 0, tone: 'mid' },
-      { label: 'Estable', count: 0, tone: 'mid' },
-      { label: 'Alerta', count: 0, tone: 'high' },
+      { label: 'Positiva', count: 0, tone: 'low' },
+      { label: 'Estable', count: 0, tone: 'low' },
+      { label: 'Alerta', count: 0, tone: 'elevated' },
     ];
 
     expect(
@@ -140,6 +150,39 @@ describe('categoryCountWidgets', () => {
         'multiple',
       )[0].columns,
     ).toEqual(empty);
+  });
+
+  it("counts a short range on sanitario under Todas in the ruler's classes, as each parcel's card reads", () => {
+    const [widget] = categoryCountWidgets(
+      [
+        parcel('A', { asian_rust: 3 }),
+        parcel('B', { asian_rust: 1 }),
+        parcel('C', { asian_rust: '1' }),
+        parcel('D', { asian_rust: 1.8 }),
+        parcel('E', { asian_rust: 'NA' }),
+      ],
+      ['A', 'B', 'C', 'D', 'E'],
+      [rust],
+      'sanitario',
+      'multiple',
+    );
+
+    expect(widget).toEqual({
+      id: 'asian_rust',
+      label: 'Phakopsora pachyrhizi',
+      columns: [
+        { label: 'Sin riesgo', count: 2, tone: 'low' },
+        { label: 'Moderado', count: 1, tone: 'medium' },
+        { label: 'Severo', count: 1, tone: 'high' },
+      ],
+    });
+  });
+
+  it('leaves a long range and productivo ranges to other widgets', () => {
+    const answered = [parcel('A', { data_quality: 40, asian_rust: 2 })];
+
+    expect(categoryCountWidgets(answered, ['A'], [quality], 'sanitario', 'multiple')).toEqual([]);
+    expect(categoryCountWidgets(answered, ['A'], [rust], 'productivo', 'multiple')).toEqual([]);
   });
 
   it('makes no widget when the answer has no column for it, for one parcel, or without metadata', () => {

@@ -262,7 +262,7 @@ describe('indicatorCards', () => {
       expect(indicatorCards(parcel({ ITR_soja: 9 }), [itr])[0].level).toBe('Sin datos');
     });
 
-    it('gets no card under the multiple scope — counted per class instead — while a range keeps its own', () => {
+    it('gets no card under the multiple scope, nor does a range: both are counted per class instead', () => {
       const cards = indicatorCards(
         parcel({ ITR_soja: 'Alerta', asian_rust: 2 }),
         [itr, asianRust],
@@ -270,7 +270,7 @@ describe('indicatorCards', () => {
         'multiple',
       );
 
-      expect(cards.map((card) => card.id)).toEqual(['asian_rust']);
+      expect(cards).toEqual([]);
     });
 
     it('rules a single category as one orange band, the marker in its middle', () => {

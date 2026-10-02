@@ -105,8 +105,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ValueHistogramCard } from '@/components/value-histogram-card';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { requestedIndicatorIds, toAnalysisRequest } from '@/lib/analysis/request';
+import { histogramBins } from '@/lib/analysis/value-histogram';
+import { RANGE_CLASSES } from '@/lib/analysis/widget-config';
 import { analysisQueries } from '@/lib/api/analysis/queries';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 
@@ -417,10 +420,25 @@ function UiKitPage() {
                   label="Categorical multiple"
                   description="Parcelas analizadas por clase."
                   columns={[
-                    { label: 'Alerta', count: 0, tone: 'high' },
-                    { label: 'Estable', count: 1, tone: 'low' },
-                    { label: 'Positiva', count: 4, tone: 'mid' },
+                    { label: 'Alerta', count: 0, tone: 'elevated' },
+                    { label: 'Estable', count: 1, tone: 'medium' },
+                    { label: 'Positiva', count: 4, tone: 'low' },
                   ]}
+                />
+                {/* The categorical and numerical multiple widget sample: a long range binned. */}
+                <ValueHistogramCard
+                  label="Categorical and numerical multiple"
+                  description="Parcelas analizadas por valor."
+                  min={0}
+                  max={100}
+                  classes={RANGE_CLASSES}
+                  bins={histogramBins(
+                    [
+                      2, 8, 9, 11, 12, 13, 15, 16, 17, 19, 21, 22, 23, 24, 36, 41, 44, 52, 71, 73,
+                      82, 85, 99,
+                    ],
+                    { min: 0, max: 100 },
+                  )}
                 />
                 <AnalysisCardsDemo />
               </ClientOnly>

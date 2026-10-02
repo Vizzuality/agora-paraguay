@@ -4,11 +4,12 @@ import { scaleBand, scaleLinear } from '@visx/scale';
 import { Bar } from '@visx/shape';
 import { useId } from 'react';
 
+import { TONE_COLOR, TONES } from '@/components/charts/tones';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { CategoryColumn, CategoryTone } from '@/lib/analysis/category-counts';
+import type { CategoryColumn } from '@/lib/analysis/category-counts';
 
 /*
- * The "Categorical multiple" design: a column per category, the count over a bar
+ * The "Categorical multiple" design: a column per class, the count over a bar
  * whose cap is solid and whose body fades into the card, a baseline, the names under.
  * visx primitives over a plain SVG — the card is a handful of rectangles, so no chart
  * component: the scales place them, `ParentSize` gives the width. Hovering a column
@@ -24,15 +25,6 @@ const CAP_HEIGHT = 4;
 const RADIUS = 2;
 /** The space between columns, the same `gap-2` the label row under the chart uses. */
 const COLUMN_GAP = 8;
-
-/** The bar's hue per class; the same tokens the ruler paints with. */
-const TONE_COLOR: Record<CategoryTone, string> = {
-  low: 'var(--muted-foreground)',
-  mid: 'var(--risk-low)',
-  high: 'var(--risk-medium)',
-};
-
-const TONES: CategoryTone[] = ['low', 'mid', 'high'];
 
 type CategoryBarsProps = {
   columns: CategoryColumn[];
