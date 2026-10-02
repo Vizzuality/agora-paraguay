@@ -3,10 +3,10 @@ import { useAtomValue } from 'jotai';
 
 import { AnalysisHeader } from '@/components/analysis-header';
 import { AnalysisStatus } from '@/components/analysis-status';
-import { AnalysisTileCard } from '@/components/analysis-tile';
+import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { WidgetGrid } from '@/components/widget-grid';
-import { analysisTiles } from '@/lib/analysis/analysis-tiles';
+import { analysisWidgets } from '@/lib/analysis/analysis-widgets';
 import { combinedParcel, generalInfo } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
@@ -34,7 +34,7 @@ function SanitarioPage() {
 
 /**
  * The active parcel tab's indicators — its text facts in the general-info card, then one
- * tile per selected measured indicator. Cards are per parcel; the Todas tab reads the
+ * widget per selected measured indicator. Cards are per parcel; the Todas tab reads the
  * whole selection (`multiple` scope): a range over the parcels combined
  * (`combinedParcel`), a category counted per class. The active parcel is the hero's open
  * tab (`activeParcelIdAtom`); the answer is matched by id, since the backend need not
@@ -65,22 +65,22 @@ function SanitarioWidgets() {
   const shown = indicators
     ? visibleIndicators(selectableIndicators(indicators, 'sanitario'), selected)
     : undefined;
-  const tiles = analysisTiles({
+  const widgets = analysisWidgets({
     parcels: answered,
     parcelIds,
     indicators: shown,
     riesgo: 'sanitario',
     scope,
     parcel,
-  }).map((tile) => ({ ...tile, description: describe(tile.description) }));
+  }).map((widget) => ({ ...widget, description: describe(widget.description) }));
 
   return (
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
       {info.length > 0 && <GeneralInfoCard items={info} />}
       <WidgetGrid>
-        {tiles.map((tile) => (
-          <AnalysisTileCard key={tile.id} tile={tile} />
+        {widgets.map((widget) => (
+          <AnalysisWidgetCard key={widget.id} widget={widget} />
         ))}
       </WidgetGrid>
     </div>

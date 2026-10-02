@@ -12,7 +12,7 @@ import {
   categoryClasses,
   classIndexAt,
   RANGE_CLASSES,
-  widgetKindOf,
+  widgetFor,
   type ParcelScope,
   type RiskClass,
 } from './widget-config';
@@ -132,12 +132,12 @@ export type GeneralInfoRow = {
 };
 
 /**
- * Facts, not risks: text always, open numbers on sanitario (`widgetKindOf`). The riesgo
+ * Facts, not risks: text always, open numbers on sanitario (`widgetFor`). The riesgo
  * defaults to sanitario, the page where the general-info card lives.
  */
 export function isGeneralInfo(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
   // A fact is a fact under any scope; the scope only moves the classed types.
-  return widgetKindOf(riesgo, indicator.indicator_type.type, 'individual') === 'general-info';
+  return widgetFor(indicator.indicator_type.type, { riesgo, scope: 'individual' }) === 'fact';
 }
 
 /** Classed indicators (a range, a category read for one parcel): the ones that get a risk card. */
@@ -146,7 +146,7 @@ export function isRiskClass(
   riesgo: Riesgo = 'sanitario',
   scope: ParcelScope = 'individual',
 ): boolean {
-  return widgetKindOf(riesgo, indicator.indicator_type.type, scope) === 'risk-class';
+  return widgetFor(indicator.indicator_type.type, { riesgo, scope }) === 'ruler';
 }
 
 /**
@@ -168,7 +168,7 @@ export const NO_READING = 'Sin datos';
  * metadata order. The response decides what is shown: an indicator the backend did not
  * answer (missing column, blank, null, "NA") gets no card, however it was requested. A
  * reading the metadata cannot place still shows, as "Sin datos". Under the `multiple`
- * scope a category is counted per class instead (`categoryCountTiles`), so it gets no card.
+ * scope a category is counted per class instead (`categoryCountWidgets`), so it gets no card.
  */
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,

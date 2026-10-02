@@ -15,12 +15,12 @@ type RiskClassCardProps = Omit<IndicatorCard, 'id'> & {
 };
 
 /**
- * Widget tile for a classed indicator: a label, the class as the large
+ * Widget for a classed indicator: a label, the class as the large
  * figure, and a ruler of one band per class with the marker inside the class the reading
  * falls in, the class names under the bands.
  *
  * Light surface (`bg-card`), unlike `StatCard`'s navy `bg-widget` — the two are
- * different tiles in the design, not variants of one.
+ * different widgets in the design, not variants of one.
  */
 export function RiskClassCard({
   label,

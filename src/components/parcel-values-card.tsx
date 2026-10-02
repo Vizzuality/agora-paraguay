@@ -1,12 +1,12 @@
 import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
-import type { ParcelValuesTile } from '@/lib/analysis/parcel-values';
+import type { ParcelValuesWidget } from '@/lib/analysis/parcel-values';
 import { cn } from '@/lib/utils';
 
-type ParcelValuesCardProps = Omit<ParcelValuesTile, 'id'> & { className?: string };
+type ParcelValuesCardProps = Omit<ParcelValuesWidget, 'id'> & { className?: string };
 
 /**
- * Widget tile for an open number over the analysed parcels (Figma Widget01): the
+ * Widget for an open number over the analysed parcels (Figma Widget01): the
  * indicator's name and unit, then one row per parcel — its id, a track filled on the
  * indicator's scale or relative to the largest parcel, and the figure. Same light surface
  * as `RiskClassCard`.

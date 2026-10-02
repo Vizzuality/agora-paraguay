@@ -562,7 +562,7 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
 
-  // The productivo analysis runs once every filter has a value. Its tiles read the whole
+  // The productivo analysis runs once every filter has a value. Its widgets read the whole
   // selection: the base production lists both parcels (Figma Widget01), the resilience
   // proxy counts them per class (Widget03), and the thumbnail prints the summed area.
   // Soja is picked: the indicators follow the crop.
@@ -583,7 +583,7 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
 
-  // The arroz indicator is bound to the other crop (and came back "NA" besides): no tile,
+  // The arroz indicator is bound to the other crop (and came back "NA" besides): no widget,
   // and the picker does not offer it.
   await expect(
     page.getByRole('heading', { name: 'Producción base histórica de arroz' }),

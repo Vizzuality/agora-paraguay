@@ -2,7 +2,7 @@ import type { IndicatorType, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * What each indicator type renders as, and how a classed one is read. The analysis
- * answers bare values; the words on the tiles and the bands of the ruler are product
+ * answers bare values; the words on the widgets and the bands of the ruler are product
  * decisions, so they live here rather than in the API layer.
  */
 
@@ -12,37 +12,36 @@ import type { IndicatorType, Riesgo } from '@/lib/api/metadata/schemas';
  */
 export type RiskTone = 'low' | 'medium' | 'elevated' | 'high';
 
-/** One class an indicator is read in: the word the tile prints and the band it sits on. */
+/** One class an indicator is read in: the word the widget prints and the band it sits on. */
 export type RiskClass = { label: string; tone: RiskTone };
 
-/** Which tile an indicator renders in. */
-export type WidgetKind = 'risk-class' | 'general-info' | 'parcel-values' | 'category-count';
+/** What an indicator's widget renders: the class ruler, a fact, a row per parcel, or a bar chart. */
+export type WidgetKind = 'ruler' | 'fact' | 'parcel-list' | 'bar-chart';
 
-/** How many parcels a tile reads: one (a parcel tab) or the whole selection (Todas). */
+/** How many parcels a widget reads: one (a parcel tab) or the whole selection (Todas). */
 export type ParcelScope = 'individual' | 'multiple';
 
 /**
  * A category is read per scope, whatever the riesgo (the "Categorical individual" and
  * "Categorical multiple" designs): one parcel gets its class on the ruler, several get the
  * parcels counted per class. The other types still follow the riesgo: sanitario reads a
- * bounded range on the ruler and everything else as a general-info fact; productivo
- * lists every parcel's number (Widget01) — text is a fact on both.
+ * bounded range on the ruler and everything else as a fact; productivo lists every
+ * parcel's number — text is a fact on both.
  */
-export function widgetKindOf(
-  riesgo: Riesgo,
+export function widgetFor(
   type: IndicatorType['type'],
-  scope: ParcelScope,
+  { riesgo, scope }: { riesgo: Riesgo; scope: ParcelScope },
 ): WidgetKind {
   switch (type) {
     case 'range':
-      return riesgo === 'productivo' ? 'parcel-values' : 'risk-class';
+      return riesgo === 'productivo' ? 'parcel-list' : 'ruler';
     case 'category':
-      return scope === 'multiple' ? 'category-count' : 'risk-class';
+      return scope === 'multiple' ? 'bar-chart' : 'ruler';
     case 'text':
-      return 'general-info';
+      return 'fact';
     case 'numeric':
     case 'number':
-      return riesgo === 'productivo' ? 'parcel-values' : 'general-info';
+      return riesgo === 'productivo' ? 'parcel-list' : 'fact';
   }
 }
 
@@ -60,12 +59,12 @@ export const RANGE_CLASSES: readonly RiskClass[] = [
 /**
  * The backend's "not applicable" class, listed as a category on some indicators (ITR,
  * volatility) and answered where the indicator does not apply to the parcel's crop. It
- * is never a band of the ruler nor a column of the count tile: a parcel reading it has
+ * is never a band of the ruler nor a column of the count widget: a parcel reading it has
  * no reading.
  */
 export const NA_CATEGORY = 'NA';
 
-/** The categories as the tiles lay them out: the indicator's own, in its order, NA left out. */
+/** The categories as the widgets lay them out: the indicator's own, in its order, NA left out. */
 export function categoryAxis(categories: readonly string[]): string[] {
   return categories.filter((category) => category !== NA_CATEGORY);
 }

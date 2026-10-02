@@ -1,16 +1,16 @@
-import { categoryCountTiles, type CategoryCountTile } from '@/lib/analysis/category-counts';
+import { categoryCountWidgets, type CategoryCountWidget } from '@/lib/analysis/category-counts';
 import { indicatorCards, type IndicatorCard } from '@/lib/analysis/indicator-cards';
-import { parcelValueTiles, type ParcelValuesTile } from '@/lib/analysis/parcel-values';
+import { parcelValueWidgets, type ParcelValuesWidget } from '@/lib/analysis/parcel-values';
 import type { ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
-export type AnalysisTile =
-  | ({ kind: 'risk-class' } & IndicatorCard)
-  | ({ kind: 'parcel-values' } & ParcelValuesTile)
-  | ({ kind: 'category-count' } & CategoryCountTile);
+export type AnalysisWidget =
+  | ({ kind: 'ruler' } & IndicatorCard)
+  | ({ kind: 'parcel-list' } & ParcelValuesWidget)
+  | ({ kind: 'bar-chart' } & CategoryCountWidget);
 
-export type AnalysisTilesInput = {
+export type AnalysisWidgetsInput = {
   /** The answer's parcels, matched by id — the backend need not echo them in request order. */
   parcels: AnalysisParcel[];
   /** The parcels Analizar submitted, in submission order. */
@@ -24,42 +24,42 @@ export type AnalysisTilesInput = {
 };
 
 /**
- * Every widget tile the shown indicators produce, in metadata order, whatever its kind:
+ * Every widget the shown indicators produce, in metadata order, whatever its kind:
  * a risk card for a classed reading of one parcel, a list of every parcel's number, a
- * count of the parcels per category. Which kind an indicator takes is `widgetKindOf`'s
+ * count of the parcels per category. Which kind an indicator takes is `widgetFor`'s
  * call, by riesgo and scope; each kind's builder answers only the indicators that are
- * its own, so an indicator lands in at most one tile.
+ * its own, so an indicator lands in at most one widget.
  */
-export function analysisTiles({
+export function analysisWidgets({
   parcels,
   parcelIds,
   indicators,
   riesgo,
   scope,
   parcel,
-}: AnalysisTilesInput): AnalysisTile[] {
+}: AnalysisWidgetsInput): AnalysisWidget[] {
   const cards = new Map(
     indicatorCards(parcel, indicators, riesgo, scope).map((card) => [card.id, card]),
   );
   const values = new Map(
-    parcelValueTiles(parcels, parcelIds, indicators, riesgo).map((tile) => [tile.id, tile]),
+    parcelValueWidgets(parcels, parcelIds, indicators, riesgo).map((widget) => [widget.id, widget]),
   );
   const counts = new Map(
-    categoryCountTiles(parcels, parcelIds, indicators, riesgo, scope).map((tile) => [
-      tile.id,
-      tile,
+    categoryCountWidgets(parcels, parcelIds, indicators, riesgo, scope).map((widget) => [
+      widget.id,
+      widget,
     ]),
   );
 
-  return (indicators ?? []).flatMap((indicator): AnalysisTile[] => {
+  return (indicators ?? []).flatMap((indicator): AnalysisWidget[] => {
     const card = cards.get(indicator.id);
-    if (card) return [{ kind: 'risk-class', ...card }];
+    if (card) return [{ kind: 'ruler', ...card }];
 
     const value = values.get(indicator.id);
-    if (value) return [{ kind: 'parcel-values', ...value }];
+    if (value) return [{ kind: 'parcel-list', ...value }];
 
     const count = counts.get(indicator.id);
-    if (count) return [{ kind: 'category-count', ...count }];
+    if (count) return [{ kind: 'bar-chart', ...count }];
 
     return [];
   });

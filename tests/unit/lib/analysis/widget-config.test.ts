@@ -6,28 +6,28 @@ import {
   classIndexAt,
   classTones,
   RANGE_CLASSES,
-  widgetKindOf,
+  widgetFor,
 } from '@/lib/analysis/widget-config';
 
-describe('widgetKindOf', () => {
-  it('sanitario: a range gets the risk tile, text and open numbers are general info', () => {
-    expect(widgetKindOf('sanitario', 'range', 'individual')).toBe('risk-class');
-    expect(widgetKindOf('sanitario', 'range', 'multiple')).toBe('risk-class');
-    expect(widgetKindOf('sanitario', 'text', 'individual')).toBe('general-info');
-    expect(widgetKindOf('sanitario', 'numeric', 'multiple')).toBe('general-info');
+describe('widgetFor', () => {
+  it('sanitario: a range gets the risk widget, text and open numbers are general info', () => {
+    expect(widgetFor('range', { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor('range', { riesgo: 'sanitario', scope: 'multiple' })).toBe('ruler');
+    expect(widgetFor('text', { riesgo: 'sanitario', scope: 'individual' })).toBe('fact');
+    expect(widgetFor('numeric', { riesgo: 'sanitario', scope: 'multiple' })).toBe('fact');
   });
 
   it('productivo: numbers and ranges list the parcels, text is general info', () => {
-    expect(widgetKindOf('productivo', 'numeric', 'individual')).toBe('parcel-values');
-    expect(widgetKindOf('productivo', 'range', 'multiple')).toBe('parcel-values');
-    expect(widgetKindOf('productivo', 'text', 'multiple')).toBe('general-info');
+    expect(widgetFor('numeric', { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
+    expect(widgetFor('range', { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
+    expect(widgetFor('text', { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
   });
 
   it('a category follows the scope on both riesgos: one parcel on the ruler, several counted', () => {
-    expect(widgetKindOf('sanitario', 'category', 'individual')).toBe('risk-class');
-    expect(widgetKindOf('productivo', 'category', 'individual')).toBe('risk-class');
-    expect(widgetKindOf('sanitario', 'category', 'multiple')).toBe('category-count');
-    expect(widgetKindOf('productivo', 'category', 'multiple')).toBe('category-count');
+    expect(widgetFor('category', { riesgo: 'sanitario', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor('category', { riesgo: 'productivo', scope: 'individual' })).toBe('ruler');
+    expect(widgetFor('category', { riesgo: 'sanitario', scope: 'multiple' })).toBe('bar-chart');
+    expect(widgetFor('category', { riesgo: 'productivo', scope: 'multiple' })).toBe('bar-chart');
   });
 });
 

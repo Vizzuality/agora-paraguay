@@ -1,13 +1,13 @@
 import { CategoryBars } from '@/components/charts/category-bars';
 import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
-import type { CategoryCountTile } from '@/lib/analysis/category-counts';
+import type { CategoryCountWidget } from '@/lib/analysis/category-counts';
 import { cn } from '@/lib/utils';
 
-type CategoryCountCardProps = Omit<CategoryCountTile, 'id'> & { className?: string };
+type CategoryCountCardProps = Omit<CategoryCountWidget, 'id'> & { className?: string };
 
 /**
- * Widget tile counting the analysed parcels per category (the "Categorical multiple"
+ * Widget counting the analysed parcels per category (the "Categorical multiple"
  * design): the indicator's name, one column per category with the count over a bar
  * coloured by the class (`categoryTone`), a baseline and the category names. Empty
  * categories keep their slot. The counts are listed for assistive tech; the chart is

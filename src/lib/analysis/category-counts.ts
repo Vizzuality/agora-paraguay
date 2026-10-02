@@ -4,14 +4,14 @@ import { hasColumn, readingOf } from '@/lib/analysis/readings';
 import {
   categoryAxis,
   NA_CATEGORY,
-  widgetKindOf,
+  widgetFor,
   type ParcelScope,
 } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The category-count tile (the "Categorical multiple" design): one indicator, one
+ * The category-count widget (the "Categorical multiple" design): one indicator, one
  * column per category the indicator defines, with how many analysed parcels fall in it.
  * Pure, node-tested; the bars are scaled by the chart (`CategoryBars`).
  */
@@ -42,7 +42,7 @@ export function categoryTone(label: string): CategoryTone {
   return 'mid';
 }
 
-export type CategoryCountTile = {
+export type CategoryCountWidget = {
   id: string;
   label: string;
   /** The metadata's description, behind the title's info icon. */
@@ -51,19 +51,19 @@ export type CategoryCountTile = {
 };
 
 /**
- * One tile per category indicator the answer carries, in metadata order, over the
+ * One widget per category indicator the answer carries, in metadata order, over the
  * parcels Analizar submitted — only under the `multiple` scope; one parcel reads its
- * class on the ruler instead (`indicatorCards`). A tile always shows every category,
+ * class on the ruler instead (`indicatorCards`). A widget always shows every category,
  * empty ones included — an indicator that does not apply to the crop (every parcel NA)
- * shows with nothing counted. Only an indicator the answer has no column for gets no tile.
+ * shows with nothing counted. Only an indicator the answer has no column for gets no widget.
  */
-export function categoryCountTiles(
+export function categoryCountWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
   riesgo: Riesgo,
   scope: ParcelScope,
-): CategoryCountTile[] {
+): CategoryCountWidget[] {
   if (!indicators) return [];
 
   const byId = new Map(parcels.map((parcel) => [String(parcel.parcel_id), parcel]));
@@ -72,7 +72,7 @@ export function categoryCountTiles(
     const type = indicator.indicator_type;
 
     if (type.type !== 'category' || isAreaIndicator(indicator)) return [];
-    if (widgetKindOf(riesgo, type.type, scope) !== 'category-count') return [];
+    if (widgetFor(type.type, { riesgo, scope }) !== 'bar-chart') return [];
 
     const submitted = parcelIds.flatMap((parcelId) => byId.get(parcelId) ?? []);
 

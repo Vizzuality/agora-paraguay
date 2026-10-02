@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { analysisTiles } from '@/lib/analysis/analysis-tiles';
+import { analysisWidgets } from '@/lib/analysis/analysis-widgets';
 import { combinedParcel } from '@/lib/analysis/indicator-cards';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
@@ -28,9 +28,9 @@ const parcels: AnalysisParcel[] = [
   { parcel_id: 'B', properties: { Resiliencia: 'Alta', Pro_soja: 3.8, asian_rust: 1 } },
 ];
 
-describe('analysisTiles', () => {
+describe('analysisWidgets', () => {
   it('productivo, several parcels: the number lists them, the category counts them, in metadata order', () => {
-    const tiles = analysisTiles({
+    const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
       indicators: [resilience, production, crop],
@@ -39,14 +39,14 @@ describe('analysisTiles', () => {
       parcel: undefined,
     });
 
-    expect(tiles.map((tile) => [tile.kind, tile.id])).toEqual([
-      ['category-count', 'Resiliencia'],
-      ['parcel-values', 'Pro_soja'],
+    expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
+      ['bar-chart', 'Resiliencia'],
+      ['parcel-list', 'Pro_soja'],
     ]);
   });
 
   it('productivo, one parcel: the category reads its class on the ruler', () => {
-    const tiles = analysisTiles({
+    const widgets = analysisWidgets({
       parcels,
       parcelIds: ['B'],
       indicators: [resilience, production],
@@ -55,15 +55,15 @@ describe('analysisTiles', () => {
       parcel: parcels[1],
     });
 
-    expect(tiles.map((tile) => [tile.kind, tile.id])).toEqual([
-      ['risk-class', 'Resiliencia'],
-      ['parcel-values', 'Pro_soja'],
+    expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
+      ['ruler', 'Resiliencia'],
+      ['parcel-list', 'Pro_soja'],
     ]);
-    expect(tiles[0]).toMatchObject({ level: 'Alta' });
+    expect(widgets[0]).toMatchObject({ level: 'Alta' });
   });
 
   it('sanitario, Todas: the range reads the parcels combined, the category counts them', () => {
-    const tiles = analysisTiles({
+    const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
       indicators: [rust, resilience, crop],
@@ -72,12 +72,12 @@ describe('analysisTiles', () => {
       parcel: combinedParcel(parcels, [rust, resilience]),
     });
 
-    expect(tiles.map((tile) => [tile.kind, tile.id])).toEqual([
-      ['risk-class', 'asian_rust'],
-      ['category-count', 'Resiliencia'],
+    expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
+      ['ruler', 'asian_rust'],
+      ['bar-chart', 'Resiliencia'],
     ]);
-    expect(tiles[0]).toMatchObject({ level: 'Moderado' });
-    expect(tiles[1]).toMatchObject({
+    expect(widgets[0]).toMatchObject({ level: 'Moderado' });
+    expect(widgets[1]).toMatchObject({
       columns: [
         { label: 'Alta', count: 1 },
         { label: 'Media', count: 1 },
@@ -87,7 +87,7 @@ describe('analysisTiles', () => {
   });
 
   it('sanitario, one parcel tab: both classed readings sit on the ruler', () => {
-    const tiles = analysisTiles({
+    const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
       indicators: [rust, resilience],
@@ -96,15 +96,15 @@ describe('analysisTiles', () => {
       parcel: parcels[0],
     });
 
-    expect(tiles.map((tile) => [tile.kind, tile.id])).toEqual([
-      ['risk-class', 'asian_rust'],
-      ['risk-class', 'Resiliencia'],
+    expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
+      ['ruler', 'asian_rust'],
+      ['ruler', 'Resiliencia'],
     ]);
   });
 
   it('is empty without metadata', () => {
     expect(
-      analysisTiles({
+      analysisWidgets({
         parcels,
         parcelIds: ['A'],
         indicators: undefined,

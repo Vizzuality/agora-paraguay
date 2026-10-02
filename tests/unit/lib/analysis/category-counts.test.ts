@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { categoryAxis, categoryCountTiles, categoryTone } from '@/lib/analysis/category-counts';
+import { categoryAxis, categoryCountWidgets, categoryTone } from '@/lib/analysis/category-counts';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
@@ -49,7 +49,7 @@ describe('categoryTone', () => {
   });
 });
 
-describe('categoryCountTiles', () => {
+describe('categoryCountWidgets', () => {
   const parcels = [
     parcel('A', { resiliencia: 'Media', ITR_soja: 'Positiva' }),
     parcel('B', { resiliencia: 'media', ITR_soja: 0 }),
@@ -58,7 +58,7 @@ describe('categoryCountTiles', () => {
   ];
 
   it('counts the submitted parcels per category, every category kept', () => {
-    const [tile] = categoryCountTiles(
+    const [widget] = categoryCountWidgets(
       parcels,
       ['A', 'B', 'C', 'D'],
       [resilience],
@@ -66,7 +66,7 @@ describe('categoryCountTiles', () => {
       'multiple',
     );
 
-    expect(tile).toEqual({
+    expect(widget).toEqual({
       id: 'Resiliencia',
       label: 'Proxy de resiliencia operativa',
       columns: [
@@ -78,13 +78,19 @@ describe('categoryCountTiles', () => {
   });
 
   it('counts on sanitario too: the scope decides, not the riesgo', () => {
-    const [tile] = categoryCountTiles(parcels, ['A', 'B'], [resilience], 'sanitario', 'multiple');
+    const [widget] = categoryCountWidgets(
+      parcels,
+      ['A', 'B'],
+      [resilience],
+      'sanitario',
+      'multiple',
+    );
 
-    expect(tile.columns.map((column) => column.count)).toEqual([0, 2, 0]);
+    expect(widget.columns.map((column) => column.count)).toEqual([0, 2, 0]);
   });
 
   it('counts "Medio" under "Media": labels match by stem', () => {
-    const [tile] = categoryCountTiles(
+    const [widget] = categoryCountWidgets(
       [parcel('A', { resiliencia: 'Medio' }), parcel('B', { resiliencia: 'medio' })],
       ['A', 'B'],
       [resilience],
@@ -92,7 +98,7 @@ describe('categoryCountTiles', () => {
       'multiple',
     );
 
-    expect(tile.columns.map((column) => [column.label, column.count])).toEqual([
+    expect(widget.columns.map((column) => [column.label, column.count])).toEqual([
       ['Alta', 0],
       ['Media', 2],
       ['Baja', 0],
@@ -100,39 +106,50 @@ describe('categoryCountTiles', () => {
   });
 
   it('reads a class code as an index and leaves NA readings out of every column', () => {
-    const [tile] = categoryCountTiles(parcels, ['A', 'B', 'C'], [itr], 'productivo', 'multiple');
+    const [widget] = categoryCountWidgets(
+      parcels,
+      ['A', 'B', 'C'],
+      [itr],
+      'productivo',
+      'multiple',
+    );
 
-    expect(tile.columns).toEqual([
+    expect(widget.columns).toEqual([
       { label: 'Positiva', count: 2, tone: 'mid' },
       { label: 'Estable', count: 0, tone: 'mid' },
       { label: 'Alerta', count: 0, tone: 'high' },
     ]);
   });
 
-  it('keeps the tile, nothing counted, when every parcel reads NA — the crop it does not apply to', () => {
+  it('keeps the widget, nothing counted, when every parcel reads NA — the crop it does not apply to', () => {
     const empty = [
       { label: 'Positiva', count: 0, tone: 'mid' },
       { label: 'Estable', count: 0, tone: 'mid' },
       { label: 'Alerta', count: 0, tone: 'high' },
     ];
 
-    expect(categoryCountTiles(parcels, ['C'], [itr], 'productivo', 'multiple')[0].columns).toEqual(
-      empty,
-    );
     expect(
-      categoryCountTiles([parcel('E', { ITR_soja: 3 })], ['E'], [itr], 'productivo', 'multiple')[0]
-        .columns,
+      categoryCountWidgets(parcels, ['C'], [itr], 'productivo', 'multiple')[0].columns,
+    ).toEqual(empty);
+    expect(
+      categoryCountWidgets(
+        [parcel('E', { ITR_soja: 3 })],
+        ['E'],
+        [itr],
+        'productivo',
+        'multiple',
+      )[0].columns,
     ).toEqual(empty);
   });
 
-  it('makes no tile when the answer has no column for it, for one parcel, or without metadata', () => {
-    expect(categoryCountTiles(parcels, ['D'], [itr], 'productivo', 'multiple')).toEqual([]);
+  it('makes no widget when the answer has no column for it, for one parcel, or without metadata', () => {
+    expect(categoryCountWidgets(parcels, ['D'], [itr], 'productivo', 'multiple')).toEqual([]);
     expect(
-      categoryCountTiles(parcels, ['missing'], [resilience], 'productivo', 'multiple'),
+      categoryCountWidgets(parcels, ['missing'], [resilience], 'productivo', 'multiple'),
     ).toEqual([]);
-    expect(categoryCountTiles(parcels, ['A'], [resilience], 'productivo', 'individual')).toEqual(
+    expect(categoryCountWidgets(parcels, ['A'], [resilience], 'productivo', 'individual')).toEqual(
       [],
     );
-    expect(categoryCountTiles(parcels, ['A'], undefined, 'productivo', 'multiple')).toEqual([]);
+    expect(categoryCountWidgets(parcels, ['A'], undefined, 'productivo', 'multiple')).toEqual([]);
   });
 });
