@@ -19,7 +19,7 @@ export async function fetchFilters(params: FiltersParams): Promise<Filters> {
   return filtersSchema.parse(await getJson('/api/parcels/filters/', params));
 }
 
-/** `GET /api/parcels/indicators/?riesgo={sanitario|productivo}` — the indicators of a riesgo and their metadata. */
+/** `GET /api/parcels/indicators?riesgo={sanitario|productivo}` — the indicators of a riesgo and their metadata. */
 export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
   return indicatorsListResponseSchema.parse(await getJson('/api/parcels/indicators/', params));
 }
