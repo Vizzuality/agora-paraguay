@@ -1,6 +1,7 @@
-import { API_URL, ApiError, csrfToken, getJson, postJson } from '@/lib/api/http';
+import { API_URL, ApiError, csrfToken, deleteJson, getJson, postJson } from '@/lib/api/http';
 
 import {
+  adminUsersSchema,
   createdUserSchema,
   createUserRequestSchema,
   credentialsSchema,
@@ -10,6 +11,7 @@ import {
   meResponseSchema,
   setPasswordSchema,
   toSession,
+  type AdminUser,
   type CreatedUser,
   type CreateUserRequest,
   type Credentials,
@@ -94,6 +96,15 @@ export async function login(credentials: Credentials): Promise<Session> {
 }
 
 /**
+ * `GET /api/auth/admin/users/`: every account, ordered by username. Needs an admin
+ * session; anyone else gets the API's 403 as an `ApiError`, and the caller decides
+ * whether that means "log in" or "not for you".
+ */
+export async function listUsers(): Promise<AdminUser[]> {
+  return adminUsersSchema.parse(await getJson('/api/auth/admin/users/'));
+}
+
+/**
  * `POST /api/auth/admin/users/create/`: an administrator creates an account and gets its
  * one-time password setup link back. Needs an admin session; anyone else gets the API's
  * refusal as an `ApiError`. CSRF is `postJson`'s business.
@@ -105,6 +116,15 @@ export async function createUser(request: CreateUserRequest): Promise<CreatedUse
   );
 
   return createdUserSchema.parse(body);
+}
+
+/**
+ * `DELETE /api/auth/admin/users/{id}/delete/`: an administrator removes an account. 204
+ * on success. The API refuses the administrator's own account with a 400 and an unknown
+ * id with a 404 — both reach the caller as an `ApiError` carrying the API's `detail`.
+ */
+export async function deleteUser(id: number): Promise<void> {
+  await deleteJson(`/api/auth/admin/users/${id}/delete/`);
 }
 
 /**

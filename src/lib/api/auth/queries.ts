@@ -1,6 +1,6 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { createUser, fetchMe, login, logout } from './client';
+import { createUser, deleteUser, fetchMe, listUsers, login, logout } from './client';
 import type { CreateUserRequest, Credentials } from './schemas';
 
 export const authQueries = {
@@ -14,6 +14,16 @@ export const authQueries = {
       queryKey: ['auth', 'me'] as const,
       queryFn: fetchMe,
       staleTime: Infinity,
+      retry: false,
+    }),
+  /**
+   * Every account, for the administration page. No retries: a 403 is an answer, not a
+   * hiccup. Mutations that change accounts invalidate `['auth', 'admin', 'users']`.
+   */
+  users: () =>
+    queryOptions({
+      queryKey: ['auth', 'admin', 'users'] as const,
+      queryFn: listUsers,
       retry: false,
     }),
 };
@@ -36,5 +46,11 @@ export const authMutations = {
     mutationOptions({
       mutationKey: ['auth', 'admin', 'users', 'create'] as const,
       mutationFn: (request: CreateUserRequest) => createUser(request),
+    }),
+  /** Admin only: removes an account. The caller invalidates `authQueries.users()`. */
+  deleteUser: () =>
+    mutationOptions({
+      mutationKey: ['auth', 'admin', 'users', 'delete'] as const,
+      mutationFn: (id: number) => deleteUser(id),
     }),
 };

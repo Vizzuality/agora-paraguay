@@ -166,18 +166,25 @@ export function getJson(
   return send(query ? `${path}?${query}` : path, { method: 'GET', headers });
 }
 
-/** A JSON POST's init, with the CSRF header Django demands of every POST, anonymous ones included. */
-async function postInit(body: unknown): Promise<RequestInit> {
+/** The CSRF header Django demands of every mutating request, anonymous ones included. */
+async function csrfHeaders(): Promise<Record<string, string>> {
   const token = await ensureCsrfToken();
 
+  return token === null ? {} : { 'X-CSRFToken': token };
+}
+
+/** A JSON POST's init, CSRF header included. */
+async function postInit(body: unknown): Promise<RequestInit> {
   return {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token === null ? {} : { 'X-CSRFToken': token }),
-    },
+    headers: { 'Content-Type': 'application/json', ...(await csrfHeaders()) },
     body: JSON.stringify(body),
   };
+}
+
+/** DELETE with the CSRF header; a 204 resolves to `null`, anything non-2xx is an `ApiError`. */
+export async function deleteJson(path: string): Promise<unknown> {
+  return send(path, { method: 'DELETE', headers: await csrfHeaders() });
 }
 
 /** POST a JSON body and read a JSON answer. */
