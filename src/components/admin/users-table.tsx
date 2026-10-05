@@ -19,7 +19,7 @@ import { ApiError, errorReason } from '@/lib/api/http';
 const SKELETON_ROWS = 5;
 
 /**
- * The administration page's body (Figma 5565:988): Añadir usuario above and below the
+ * The administration page's body: Añadir usuario above and below the
  * account list, one dialog behind both buttons. Renders inside the staff gate.
  */
 export function UsersPanel() {
