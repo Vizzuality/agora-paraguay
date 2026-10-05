@@ -34,7 +34,7 @@ type CategoryBarsProps = {
  * The count bars with their labels. Presentational: the card lists the counts for
  * assistive tech itself, so the drawing is hidden from it.
  */
-export function CategoryBars({ columns }: CategoryBarsProps) {
+export function CategoryBars({ columns }: Readonly<CategoryBarsProps>) {
   return (
     <div aria-hidden className="flex flex-col">
       <ParentSize debounceTime={50} style={{ height: PLOT_HEIGHT + 1 }}>
@@ -51,7 +51,7 @@ export function CategoryBars({ columns }: CategoryBarsProps) {
   );
 }
 
-function BarsSvg({ width, columns }: CategoryBarsProps & { width: number }) {
+function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: number }>) {
   const gradientId = useId();
   const max = Math.max(0, ...columns.map((column) => column.count));
 

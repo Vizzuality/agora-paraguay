@@ -31,7 +31,7 @@ type ValueHistogramProps = Pick<ValueHistogramWidget, 'min' | 'max' | 'ticks' | 
  * The binned bars with the scale and class names. Presentational: the card lists the
  * counts for assistive tech itself, so the drawing is hidden from it.
  */
-export function ValueHistogram({ min, max, ticks, bins, classes }: ValueHistogramProps) {
+export function ValueHistogram({ min, max, ticks, bins, classes }: Readonly<ValueHistogramProps>) {
   return (
     <div aria-hidden className="flex flex-col">
       <ParentSize debounceTime={50} style={{ height: PLOT_HEIGHT + 1 + TICK_ROW }}>
@@ -60,7 +60,7 @@ function HistogramSvg({
   max,
   ticks,
   bins,
-}: Omit<ValueHistogramProps, 'classes'> & { width: number }) {
+}: Readonly<Omit<ValueHistogramProps, 'classes'> & { width: number }>) {
   const gradientId = useId();
   const most = Math.max(0, ...bins.map((bin) => bin.count));
 
