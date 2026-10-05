@@ -126,7 +126,7 @@ function HistogramSvg({
           key={tick}
           x={xScale(tick)}
           y={PLOT_HEIGHT + 1 + TICK_ROW}
-          textAnchor={index === 0 ? 'start' : index === ticks.length - 1 ? 'end' : 'middle'}
+          textAnchor={tickAnchor(index, ticks.length)}
           dominantBaseline="text-after-edge"
           className="fill-muted-foreground text-[12px] opacity-70"
         >
@@ -155,6 +155,14 @@ function HistogramSvg({
       </TooltipProvider>
     </svg>
   );
+}
+
+/** The ends hug the edges so no label spills out of the card; the rest centre on their tick. */
+function tickAnchor(index: number, count: number): 'start' | 'middle' | 'end' {
+  if (index === 0) return 'start';
+  if (index === count - 1) return 'end';
+
+  return 'middle';
 }
 
 function parcelCount(count: number): string {

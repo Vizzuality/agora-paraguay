@@ -18,11 +18,18 @@ export function tickStep(span: number, count = TICK_TARGET): number {
 
   const raw = span / count;
   const power = Math.floor(Math.log10(raw));
-  const error = raw / 10 ** power;
-  const factor =
-    error >= Math.sqrt(50) ? 10 : error >= Math.sqrt(10) ? 5 : error >= Math.sqrt(2) ? 2 : 1;
+  const factor = niceFactor(raw / 10 ** power);
 
   return factor * 10 ** power;
+}
+
+/** d3's rounding of a raw step's mantissa to 1, 2, 5 or 10, at the geometric midpoints. */
+function niceFactor(error: number): number {
+  if (error >= Math.sqrt(50)) return 10;
+  if (error >= Math.sqrt(10)) return 5;
+  if (error >= Math.sqrt(2)) return 2;
+
+  return 1;
 }
 
 /** Every multiple of the step from `min` to `max`, both ends included when they are multiples. */

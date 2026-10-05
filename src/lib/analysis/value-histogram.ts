@@ -54,6 +54,9 @@ type Range = { min: number; max: number };
 /** How the bins are painted: by the class each sits in, or all in one tone. */
 type Paint = { classes: readonly RiskClass[] } | { tone: RiskTone };
 
+/** The default paint: a range's bins in the ruler's classes. */
+const RANGE_PAINT: Paint = { classes: RANGE_CLASSES };
+
 /**
  * The values binned over the range: `count` equal bins, every one kept so the scale reads
  * whole. A value outside the range lands in the outer bin, as the ruler clamps it.
@@ -61,7 +64,7 @@ type Paint = { classes: readonly RiskClass[] } | { tone: RiskTone };
 export function histogramBins(
   values: number[],
   range: Range,
-  paint: Paint = { classes: RANGE_CLASSES },
+  paint: Paint = RANGE_PAINT,
   count = HISTOGRAM_BINS,
 ): HistogramBin[] {
   const span = range.max - range.min;
