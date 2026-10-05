@@ -5,8 +5,9 @@ import type { FiltersParams, IndicatorsParams } from './schemas';
 
 export const metadataQueries = {
   /**
-   * The hero filters for a riesgo and crop. Picking another crop asks again; the previous
-   * list stands in meanwhile, so the hero keeps its fields and the analysis its request.
+   * The hero filters for a riesgo and crop, one entry per crop (`useHeroFilters` seeds the
+   * default's). Picking another crop asks again; the previous list stands in meanwhile, so
+   * the hero keeps its fields and the analysis its request.
    */
   filters: (params: FiltersParams) =>
     queryOptions({

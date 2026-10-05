@@ -93,12 +93,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
               filter.description && describeWithFilters(filter.description, filters, resolved)
             }
             value={resolved[filter.id] ?? ''}
-            onChange={(value) => {
-              // Re-picking what is already shown changes nothing — and must not: the crop
-              // keys the filters query, so writing the default back would fetch the same
-              // list again.
-              if (value !== resolved[filter.id]) setFilter({ id: filter.id, value });
-            }}
+            onChange={(value) => setFilter({ id: filter.id, value })}
             // The crop closes the grid on a row of its own.
             className={filter.id === CROP_FILTER_ID ? 'col-span-2' : undefined}
           />

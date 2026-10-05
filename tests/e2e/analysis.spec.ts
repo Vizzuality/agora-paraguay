@@ -114,6 +114,13 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(filtersRequests).toBe(1);
   expect(filtersUrls).toEqual(['/api/parcels/filters?riesgo=sanitario']);
 
+  // Picking the crop already shown asks nothing: that answer seeded the default crop's
+  // entry, so only another crop would fetch again.
+  await cultivo.click();
+  await page.getByRole('option', { name: 'Arroz' }).click();
+  await expect(cultivo).toHaveText('Arroz');
+  expect(filtersUrls).toEqual(['/api/parcels/filters?riesgo=sanitario']);
+
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.
   await expect.poll(() => analysisBodies.length).toBe(1);
