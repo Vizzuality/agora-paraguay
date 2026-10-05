@@ -2,7 +2,6 @@ import { useAtom } from 'jotai';
 import { Check, Search, SquarePen } from 'lucide-react';
 import { useId, useState } from 'react';
 
-import { ScrollFades, useScrollFade } from '@/components/scroll-fade';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -73,7 +72,6 @@ function IndicatorChecklist({
 
   const visibleIds = visibleIndicatorIds(indicators, selected);
   const matching = indicators.filter((indicator) => matchesIndicator(indicator, query));
-  const { ref: listRef, edges } = useScrollFade<HTMLUListElement>();
 
   return (
     <>
@@ -90,14 +88,13 @@ function IndicatorChecklist({
         />
       </div>
 
-      {/* Rows beyond the cap scroll, and fade into the surface where they are cut. */}
-      <div className="relative border-t">
-        <ScrollFades {...edges} />
+      {/* Rows beyond the cap scroll, and fade into the surface where they are cut. The
+          border sits on the wrapper so the mask on the list cannot fade it. */}
+      <div className="border-t">
         <ul
-          ref={listRef}
           id={listId}
           aria-label="Indicadores"
-          className="max-h-80 overflow-y-auto px-1 py-1.5"
+          className="max-h-80 overflow-y-auto scroll-fade-y px-1 py-1.5"
         >
           {matching.map((indicator) => {
             const checked = visibleIds.includes(indicator.id);

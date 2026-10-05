@@ -4,7 +4,6 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react';
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
 import * as React from 'react';
 
-import { ScrollFades, useScrollFade } from '@/components/scroll-fade';
 import { cn } from '@/lib/utils';
 
 function DropdownMenu({
@@ -35,8 +34,6 @@ function DropdownMenuContent({
   sideOffset = 4,
   ...props
 }: Readonly<React.ComponentProps<typeof DropdownMenuPrimitive.Content>>) {
-  const { ref, edges } = useScrollFade<HTMLDivElement>();
-
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -48,8 +45,8 @@ function DropdownMenuContent({
         )}
         {...props}
       >
-        <ScrollFades {...edges} />
-        <div ref={ref} className="min-h-0 overflow-x-hidden overflow-y-auto p-1">
+        {/* The scroller is a child so the mask fades rows, not the surface and border. */}
+        <div className="min-h-0 overflow-x-hidden overflow-y-auto scroll-fade-y p-1">
           {children}
         </div>
       </DropdownMenuPrimitive.Content>

@@ -4,7 +4,6 @@ import { CheckIcon, ChevronDownIcon } from 'lucide-react';
 import { Select as SelectPrimitive } from 'radix-ui';
 import * as React from 'react';
 
-import { ScrollFades, useScrollFade } from '@/components/scroll-fade';
 import { cn } from '@/lib/utils';
 
 function Select({ ...props }: Readonly<React.ComponentProps<typeof SelectPrimitive.Root>>) {
@@ -59,8 +58,6 @@ function SelectContent({
   sideOffset = 4,
   ...props
 }: Readonly<React.ComponentProps<typeof SelectPrimitive.Content>>) {
-  const { ref, edges } = useScrollFade<HTMLDivElement>();
-
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -76,11 +73,9 @@ function SelectContent({
         sideOffset={sideOffset}
         {...props}
       >
-        <ScrollFades {...edges} />
         <SelectPrimitive.Viewport
-          ref={ref}
           className={cn(
-            'p-1',
+            'scroll-fade-y p-1',
             position === 'popper' &&
               'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1',
           )}
