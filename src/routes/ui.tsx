@@ -116,7 +116,8 @@ import { metadataQueries } from '@/lib/api/metadata/queries';
 
 export const Route = createFileRoute('/ui')({ component: UiKitPage });
 
-const DEMO_DATES = ['01/01/2015', '01/01/2020', '01/07/2026'];
+// One per year, enough to overflow the list's cap and show the scroll fades.
+const DEMO_DATES = Array.from({ length: 27 }, (_, i) => `01/01/${2000 + i}`);
 
 function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (

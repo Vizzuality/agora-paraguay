@@ -1,3 +1,5 @@
+import { scrollEdges as edges } from '@/lib/scroll-edges';
+
 export type ScrollDirection = 'left' | 'right';
 
 /** The three numbers a horizontal scroller exposes; passed in so the math stays DOM-free. */
@@ -7,12 +9,9 @@ export type ScrollMetrics = {
   scrollWidth: number;
 };
 
-/** Sub-pixel scroll positions never land exactly on the end: allow 1px of slack. */
+/** The horizontal edges of the strip. */
 export function scrollEdges({ scrollLeft, clientWidth, scrollWidth }: ScrollMetrics) {
-  return {
-    atStart: scrollLeft <= 0,
-    atEnd: scrollLeft + clientWidth >= scrollWidth - 1,
-  };
+  return edges(scrollLeft, clientWidth, scrollWidth);
 }
 
 /**

@@ -4,6 +4,7 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react';
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
 import * as React from 'react';
 
+import { ScrollFades, useScrollFade } from '@/components/scroll-fade';
 import { cn } from '@/lib/utils';
 
 function DropdownMenu({
@@ -24,22 +25,34 @@ function DropdownMenuTrigger({
   return <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
 
+/**
+ * Capped at 20rem or whatever room the viewport leaves; the items scroll inside and the
+ * ones cut off by the cap fade into the surface, top and bottom.
+ */
 function DropdownMenuContent({
   className,
+  children,
   sideOffset = 4,
   ...props
 }: Readonly<React.ComponentProps<typeof DropdownMenuPrimitive.Content>>) {
+  const { ref, edges } = useScrollFade<HTMLDivElement>();
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'relative z-50 flex max-h-[min(20rem,var(--radix-dropdown-menu-content-available-height))] min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           className,
         )}
         {...props}
-      />
+      >
+        <ScrollFades {...edges} />
+        <div ref={ref} className="min-h-0 overflow-x-hidden overflow-y-auto p-1">
+          {children}
+        </div>
+      </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
   );
 }
