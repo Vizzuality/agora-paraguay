@@ -35,7 +35,7 @@ export function LoginCard({
   onReset,
 }: Readonly<{
   className?: string;
-  /** Keeps the form from submitting: the server-rendered gate before hydration. */
+  /** Makes the whole form inert, fields included: the server-rendered gate before hydration. */
   disabled?: boolean;
   onSuccess?: () => void;
   onReset: () => void;
@@ -90,6 +90,7 @@ export function LoginCard({
               name="identifier"
               type="text"
               required
+              disabled={disabled}
               autoComplete="username"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
@@ -104,6 +105,7 @@ export function LoginCard({
               name="password"
               type="password"
               required
+              disabled={disabled}
               autoComplete="current-password"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}

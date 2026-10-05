@@ -4,8 +4,8 @@ import { ADMIN_USERS, RESET_TOKEN, stubAdminUsers, stubAuth } from './fixtures/a
 
 /**
  * Signs in through the gate card `/usuarios` shows to an anonymous visitor. The
- * server-rendered card keeps Acceder disabled until hydration, so the click waits for it
- * rather than submitting the form natively.
+ * server-rendered card is disabled until hydration, so the fills and the click wait for
+ * the client's card rather than typing into a form about to be replaced.
  */
 async function loginAtGate(page: Page) {
   await page.getByLabel('Usuario o email').fill('admin');
