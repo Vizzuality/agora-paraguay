@@ -50,7 +50,11 @@ export type Riesgo = 'sanitario' | 'productivo';
  * Which riesgo the filters are asked for: sanitario is the public side, productivo the
  * private one. Left out, the client asks for sanitario.
  */
-export type FiltersParams = { riesgo?: Riesgo };
+export type FiltersParams = {
+  riesgo?: Riesgo;
+  /** The crop the other filters are asked for (`crop_type`'s option value); the API's default when absent. */
+  crop_type?: string;
+};
 
 /** What the indicator list is asked for: the riesgo, as a query parameter. */
 export type IndicatorsParams = { riesgo: Riesgo };

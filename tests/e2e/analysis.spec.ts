@@ -69,10 +69,14 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   // The hero filters belong to /analisis: nothing on / may ask for them. The analysis
   // itself runs there too, once per distinct request.
   let filtersRequests = 0;
+  const filtersUrls: string[] = [];
   const analysisBodies: { indicators: string[]; crop_type?: string }[] = [];
   page.on('request', (request) => {
-    const { pathname } = new URL(request.url());
-    if (pathname === '/api/parcels/filters/') filtersRequests += 1;
+    const { pathname, search } = new URL(request.url());
+    if (pathname === '/api/parcels/filters/') {
+      filtersRequests += 1;
+      filtersUrls.push(pathname + search);
+    }
     if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
       analysisBodies.push(request.postDataJSON() as { indicators: string[]; crop_type?: string });
     }
@@ -106,7 +110,16 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('combobox')).toHaveCount(1);
   await expect(page.getByLabel('Fecha de siembra')).toHaveValue(TODAY);
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
+  // Asked for the riesgo alone: with no crop picked yet, the API's default crop applies.
   expect(filtersRequests).toBe(1);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
+
+  // Picking the crop already shown asks nothing: that answer seeded the default crop's
+  // entry, so only another crop would fetch again.
+  await cultivo.click();
+  await page.getByRole('option', { name: 'Arroz' }).click();
+  await expect(cultivo).toHaveText('Arroz');
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.
@@ -584,9 +597,18 @@ test('logs in from the header dialog', async ({ page }) => {
   // read the whole selection: the base production bins both parcels' values on a 0–4 t/ha
   // scale (the "Numerical multiple" design; 3,55 and 3,81 fall in the 3,4–3,6 and 3,8–4
   // bins), the resilience proxy counts them per class (Widget03), and the thumbnail
-  // prints the summed area. Soja is picked: the indicators follow the crop.
+  // prints the summed area. Soja is picked: the indicators follow the crop, and so do the
+  // filters — the list is asked again for that crop.
+  const filtersUrls: string[] = [];
+  page.on('request', (request) => {
+    const { pathname, search } = new URL(request.url());
+    if (pathname === '/api/parcels/filters/') filtersUrls.push(pathname + search);
+  });
   await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Soja' }).click();
+  await expect
+    .poll(() => filtersUrls)
+    .toContain('/api/parcels/filters/?riesgo=productivo&crop_type=soy');
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')
