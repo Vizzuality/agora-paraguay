@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import type { ExpressionSpecification } from 'maplibre-gl';
-import { Layer, Source } from 'react-map-gl/maplibre';
+import { Layer, Marker, Source } from 'react-map-gl/maplibre';
 
+import { parcelNumber } from '@/lib/analysis/parcel-label';
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { applyToggles } from '@/lib/map/parcel-selection';
+import type { FilteredParcel } from '@/lib/api/parcels/schemas';
+import { labelAnchor } from '@/lib/map/label-anchor';
+import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -63,18 +66,63 @@ export function FilteredParcelsLayer({
 
   if (features.length === 0) return null;
 
+  // The parcels that carry a number, in the order that gives it: the analysed list on
+  // the mini map, else the selection as Analizar will submit it (`ConfirmActions`), so
+  // the number on the map is the "Parcela N" its hero tab will carry.
+  const numbered = parcelIds ?? selectedParcelIds(parcels);
+
   return (
-    <Source id="filtered-parcels" type="geojson" data={{ type: 'FeatureCollection', features }}>
-      <Layer
-        id="filtered-parcels-fill"
-        type="fill"
-        paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
-      />
-      <Layer
-        id="filtered-parcels-outline"
-        type="line"
-        paint={{ 'line-color': COLOR, 'line-width': LINE_WIDTH }}
-      />
-    </Source>
+    <>
+      <Source id="filtered-parcels" type="geojson" data={{ type: 'FeatureCollection', features }}>
+        <Layer
+          id="filtered-parcels-fill"
+          type="fill"
+          paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
+        />
+        <Layer
+          id="filtered-parcels-outline"
+          type="line"
+          paint={{ 'line-color': COLOR, 'line-width': LINE_WIDTH }}
+        />
+      </Source>
+      {parcels.map((parcel) => (
+        <ParcelNumber key={parcel.parcel_id} parcel={parcel} parcelIds={numbered} />
+      ))}
+    </>
+  );
+}
+
+/**
+ * The parcel's number on the map, over its centroid. A DOM marker rather than a symbol
+ * layer: the satellite style has no glyphs, so MapLibre could not draw text. Lets clicks
+ * through to the parcel underneath. Nothing for a parcel outside the numbered list.
+ */
+function ParcelNumber({
+  parcel,
+  parcelIds,
+}: Readonly<{ parcel: FilteredParcel; parcelIds: string[] }>) {
+  const number = parcelNumber(parcel.parcel_id, parcelIds);
+
+  if (number === null) return null;
+
+  const anchor = labelAnchor(parcel.geometry.features.map((feature) => feature.geometry));
+
+  if (anchor === null) return null;
+
+  return (
+    <Marker
+      longitude={anchor[0]}
+      latitude={anchor[1]}
+      anchor="center"
+      style={{ pointerEvents: 'none' }}
+    >
+      <span
+        aria-hidden
+        data-slot="parcel-number"
+        className="flex size-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground shadow-md"
+      >
+        {number}
+      </span>
+    </Marker>
   );
 }

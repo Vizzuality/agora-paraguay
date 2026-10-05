@@ -11,8 +11,8 @@ export function newlyAdded(previous: string[], current: string[]): string[] {
   return current.filter((id) => !seen.has(id));
 }
 
-/** What the bounds helpers read: a Polygon's rings or a MultiPolygon's polygons of rings. */
-type ArealGeometry =
+/** What the geometry helpers read: a Polygon's rings or a MultiPolygon's polygons of rings. */
+export type ArealGeometry =
   | { type: 'Polygon'; coordinates: number[][][] }
   | { type: 'MultiPolygon'; coordinates: number[][][][] };
 

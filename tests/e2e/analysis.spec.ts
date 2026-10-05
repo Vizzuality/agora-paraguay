@@ -96,10 +96,16 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
   const parcelsArea = await yellowPixelCount(page);
 
+  // Each selected parcel wears its number, the one its hero tab will carry.
+  await expect(page.locator('[data-slot=parcel-number]')).toHaveText(['1', '2']);
+
   // Analizar only navigates; nothing was POSTed from /.
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
+
+  // The hero mini map numbers the analysed parcels the same way.
+  await expect(page.locator('[data-slot=parcel-number]')).toHaveText(['1', '2']);
 
   // The hero renders one field per filter the public side returned, named after it: a
   // dropdown for the category with its first option preselected, a date input per date
