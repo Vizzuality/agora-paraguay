@@ -22,7 +22,7 @@ function UsersPage() {
       </NavBar>
 
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
-        <ClientOnly fallback={<LoginGate />}>
+        <ClientOnly fallback={<LoginGate hydrating />}>
           <StaffGate />
         </ClientOnly>
       </main>

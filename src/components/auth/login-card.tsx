@@ -30,9 +30,16 @@ import { useSessionActions } from '@/lib/auth/use-session';
  */
 export function LoginCard({
   className,
+  disabled = false,
   onSuccess,
   onReset,
-}: Readonly<{ className?: string; onSuccess?: () => void; onReset: () => void }>) {
+}: Readonly<{
+  className?: string;
+  /** Keeps the form from submitting: the server-rendered gate before hydration. */
+  disabled?: boolean;
+  onSuccess?: () => void;
+  onReset: () => void;
+}>) {
   const { refresh } = useSessionActions();
 
   const fieldId = useId();
@@ -110,7 +117,7 @@ export function LoginCard({
         <CardFooter className="flex-col gap-6 px-10">
           <Button
             type="submit"
-            disabled={mutation.isPending}
+            disabled={disabled || mutation.isPending}
             className="h-11 w-full rounded-2xl font-normal"
           >
             {mutation.isPending ? 'Accediendo…' : 'Acceder'}

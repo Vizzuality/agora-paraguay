@@ -2,7 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { ADMIN_USERS, RESET_TOKEN, stubAdminUsers, stubAuth } from './fixtures/auth';
 
-/** Signs in through the gate card `/usuarios` shows to an anonymous visitor. */
+/**
+ * Signs in through the gate card `/usuarios` shows to an anonymous visitor. The
+ * server-rendered card keeps Acceder disabled until hydration, so the click waits for it
+ * rather than submitting the form natively.
+ */
 async function loginAtGate(page: Page) {
   await page.getByLabel('Usuario o email').fill('admin');
   await page.getByLabel('Contraseña').fill('cualquiera');
