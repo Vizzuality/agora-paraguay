@@ -17,7 +17,7 @@ export function ParcelValuesCard({
   unit,
   rows,
   className,
-}: ParcelValuesCardProps) {
+}: Readonly<ParcelValuesCardProps>) {
   return (
     <Card
       className={cn(

@@ -23,7 +23,7 @@ export function ValueHistogramCard({
   classes,
   bins,
   className,
-}: ValueHistogramCardProps) {
+}: Readonly<ValueHistogramCardProps>) {
   return (
     <Card
       className={cn(

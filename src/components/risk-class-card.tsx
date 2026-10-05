@@ -29,7 +29,7 @@ export function RiskClassCard({
   scale,
   action,
   className,
-}: RiskClassCardProps) {
+}: Readonly<RiskClassCardProps>) {
   return (
     <Card
       className={cn(

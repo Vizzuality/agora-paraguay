@@ -18,7 +18,7 @@ export function CategoryCountCard({
   description,
   columns,
   className,
-}: CategoryCountCardProps) {
+}: Readonly<CategoryCountCardProps>) {
   return (
     <Card
       className={cn(

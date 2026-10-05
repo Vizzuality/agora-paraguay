@@ -27,7 +27,7 @@ type StatCardProps = {
  * gives every digit the width of a zero, which reads loose at display sizes; it is
  * for columns of numbers that must align, not for a standalone figure.
  */
-export function StatCard({ label, value, caption, action, className }: StatCardProps) {
+export function StatCard({ label, value, caption, action, className }: Readonly<StatCardProps>) {
   return (
     <Card
       className={cn(
