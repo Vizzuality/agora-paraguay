@@ -45,6 +45,18 @@ describe('fetchFilters', () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?riesgo=productivo');
   });
 
+  it('passes the crop as crop_type when given, and leaves it off the query otherwise', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(filters));
+    await fetchFilters({ riesgo: 'productivo', crop_type: 'soy' });
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      '/api/parcels/filters/?riesgo=productivo&crop_type=soy',
+    );
+
+    fetchMock.mockResolvedValueOnce(Response.json(filters));
+    await fetchFilters({ riesgo: 'productivo', crop_type: undefined });
+    expect(String(fetchMock.mock.calls[1][0])).toBe('/api/parcels/filters/?riesgo=productivo');
+  });
+
   it('asks for sanitario, the public side, when no riesgo is given', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters();
