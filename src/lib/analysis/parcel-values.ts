@@ -6,10 +6,11 @@ import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The per-parcel value widget: one indicator, one row per analysed parcel
- * with its figure and a track — filled on the indicator's own scale when it has one (a
- * range, IEP 0–100 %), else relative to the largest parcel (an open number, t/ha). Riesgo
- * productivo reads its numbers this way; sanitario's are facts. Pure, node-tested.
+ * The per-parcel value widget: one indicator, one row per analysed parcel with its figure
+ * and a track — filled on the indicator's own scale when it has one (a range, IEP
+ * 0–100 %), else relative to the largest parcel. Riesgo productivo reads its ranges this
+ * way (`widgetFor`); its open numbers have the gauge and the histogram, sanitario's are
+ * facts. Pure, node-tested.
  */
 
 export type ParcelValueRow = {

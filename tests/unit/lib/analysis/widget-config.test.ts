@@ -36,11 +36,19 @@ describe('widgetFor', () => {
     ).toBe('histogram');
   });
 
-  it('productivo: numbers and ranges list the parcels under any scope, text is general info', () => {
-    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
+  it('productivo: ranges list the parcels under any scope, text is general info', () => {
     expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
     expect(widgetFor(quality, { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
+    expect(widgetFor(quality, { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
     expect(widgetFor(text, { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
+  });
+
+  it("productivo: an open number is one parcel's gauge or, under Todas, the set's histogram", () => {
+    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual' })).toBe('gauge');
+    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
+    expect(widgetFor({ type: 'number' }, { riesgo: 'productivo', scope: 'multiple' })).toBe(
+      'histogram',
+    );
   });
 
   it('a category follows the scope on both riesgos: one parcel on the ruler, several counted', () => {

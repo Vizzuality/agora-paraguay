@@ -1,4 +1,5 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
+import { formatNumber, linearTicks, numberScale } from '@/lib/analysis/number-scale';
 import { hasColumn, numberOf } from '@/lib/analysis/readings';
 import {
   classIndexAt,
@@ -12,10 +13,12 @@ import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The value-histogram widget (the "Categorical and numerical multiple" design): one long
- * range indicator (0–100 %), its scale cut in equal bins, each bin as tall as the number of
- * analysed parcels whose value falls in it, painted by the class the bin sits in. The class
- * names run under the scale in equal thirds, as on the ruler. Pure, node-tested; the chart
+ * The value-histogram widget: one indicator's scale cut in equal bins, each bin as tall as
+ * the number of analysed parcels whose value falls in it. A long range (0–100 %) paints a
+ * bin by the class it sits in and names the classes under the scale in equal thirds, as on
+ * the ruler (the "Categorical and numerical multiple" design); an open number (t/ha) has
+ * no classes, runs from zero to a round figure above the largest value and paints every
+ * bin orange (the "Numerical multiple" design). Pure, node-tested; the chart
  * (`ValueHistogram`) places the bins.
  */
 
@@ -36,13 +39,20 @@ export type ValueHistogramWidget = {
   label: string;
   /** The metadata's description, behind the title's info icon. */
   description?: string;
+  unit: string | null;
   min: number;
   max: number;
-  classes: readonly RiskClass[];
+  /** The scale's tick values, printed under the baseline. */
+  ticks: number[];
+  /** The classes named under the scale; none for an open number. */
+  classes?: readonly RiskClass[];
   bins: HistogramBin[];
 };
 
 type Range = { min: number; max: number };
+
+/** How the bins are painted: by the class each sits in, or all in one tone. */
+type Paint = { classes: readonly RiskClass[] } | { tone: RiskTone };
 
 /**
  * The values binned over the range: `count` equal bins, every one kept so the scale reads
@@ -51,8 +61,8 @@ type Range = { min: number; max: number };
 export function histogramBins(
   values: number[],
   range: Range,
+  paint: Paint = { classes: RANGE_CLASSES },
   count = HISTOGRAM_BINS,
-  classes: readonly RiskClass[] = RANGE_CLASSES,
 ): HistogramBin[] {
   const span = range.max - range.min;
   const width = span / count;
@@ -71,15 +81,20 @@ export function histogramBins(
       from: range.min + index * width,
       to: index === count - 1 ? range.max : range.min + (index + 1) * width,
       count: binCount,
-      tone: classes[classIndexAt(middle, classes.length)].tone,
+      tone:
+        'tone' in paint
+          ? paint.tone
+          : paint.classes[classIndexAt(middle, paint.classes.length)].tone,
     };
   });
 }
 
 /**
  * One widget per indicator that bins under this riesgo and scope (`widgetFor`), in
- * metadata order, over the parcels Analizar submitted. Every bin is kept, empty ones
- * included; only an indicator the answer has no column for gets no widget.
+ * metadata order, over the parcels Analizar submitted. A range is binned over its own
+ * scale in its classes; an open number over `numberScale` of the values, in one tone.
+ * Every bin is kept, empty ones included; only an indicator the answer has no column for
+ * gets no widget.
  */
 export function valueHistogramWidgets(
   parcels: AnalysisParcel[],
@@ -95,7 +110,7 @@ export function valueHistogramWidgets(
   return indicators.flatMap((indicator) => {
     const type = indicator.indicator_type;
 
-    if (type.type !== 'range' || isAreaIndicator(indicator)) return [];
+    if (isAreaIndicator(indicator)) return [];
     if (widgetFor(type, { riesgo, scope }) !== 'histogram') return [];
 
     const submitted = parcelIds.flatMap((parcelId) => byId.get(parcelId) ?? []);
@@ -103,26 +118,33 @@ export function valueHistogramWidgets(
     if (!submitted.some((parcel) => hasColumn(parcel, indicator.id))) return [];
 
     const values = submitted.flatMap((parcel) => numberOf(parcel, indicator.id) ?? []);
+    const widget = {
+      id: indicator.id,
+      label: indicator.name,
+      description: indicator.description,
+      unit: indicator.unit ?? null,
+    };
 
-    return [
-      {
-        id: indicator.id,
-        label: indicator.name,
-        description: indicator.description,
-        min: type.min,
-        max: type.max,
-        classes: RANGE_CLASSES,
-        bins: histogramBins(values, type),
-      },
-    ];
+    if (type.type === 'range') {
+      return [
+        {
+          ...widget,
+          min: type.min,
+          max: type.max,
+          ticks: linearTicks(type.min, type.max),
+          classes: RANGE_CLASSES,
+          bins: histogramBins(values, type),
+        },
+      ];
+    }
+
+    const scale = numberScale(values);
+
+    return [{ ...widget, ...scale, bins: histogramBins(values, scale, { tone: 'elevated' }) }];
   });
 }
 
 /** A bin's edges as printed: "15 – 20", platform locale, two decimals at most. */
 export function binLabel(bin: Pick<HistogramBin, 'from' | 'to'>): string {
-  return `${formatEdge(bin.from)} – ${formatEdge(bin.to)}`;
-}
-
-function formatEdge(value: number): string {
-  return new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(value);
+  return `${formatNumber(bin.from)} – ${formatNumber(bin.to)}`;
 }

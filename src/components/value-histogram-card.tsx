@@ -7,16 +7,19 @@ import { cn } from '@/lib/utils';
 type ValueHistogramCardProps = Omit<ValueHistogramWidget, 'id'> & { className?: string };
 
 /**
- * Widget binning the analysed parcels' values over a long range (the "Categorical and
- * numerical multiple" design): the indicator's name, then the histogram with the scale and
- * the class names under it. The occupied bins are listed for assistive tech; the chart is
- * decoration over that list.
+ * Widget binning the analysed parcels' values over a scale: a long range in its classes
+ * (the "Categorical and numerical multiple" design) or an open number with its unit (the
+ * "Numerical multiple" design) — the indicator's name, then the histogram with the scale
+ * and, for a range, the class names under it. The occupied bins are listed for assistive
+ * tech; the chart is decoration over that list.
  */
 export function ValueHistogramCard({
   label,
   description,
+  unit,
   min,
   max,
+  ticks,
   classes,
   bins,
   className,
@@ -36,7 +39,7 @@ export function ValueHistogramCard({
           className="mt-0.5 text-accent-foreground"
         />
         <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
-          Número de parcelas
+          {unit ?? 'Número de parcelas'}
         </p>
       </div>
 
@@ -49,7 +52,7 @@ export function ValueHistogramCard({
             </li>
           ))}
       </ul>
-      <ValueHistogram min={min} max={max} bins={bins} classes={classes} />
+      <ValueHistogram min={min} max={max} ticks={ticks} bins={bins} classes={classes} />
     </Card>
   );
 }

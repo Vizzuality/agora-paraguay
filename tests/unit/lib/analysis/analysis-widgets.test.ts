@@ -41,7 +41,7 @@ const parcels: AnalysisParcel[] = [
 ];
 
 describe('analysisWidgets', () => {
-  it('productivo, several parcels: the number lists them, the category counts them, in metadata order', () => {
+  it('productivo, Todas: the category counts the parcels, the number bins them, in metadata order', () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
@@ -53,11 +53,14 @@ describe('analysisWidgets', () => {
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
       ['bar-chart', 'Resiliencia'],
-      ['parcel-list', 'Pro_soja'],
+      ['histogram', 'Pro_soja'],
     ]);
+    // 3.5 and 3.8 t/ha read on 0–4: no classes, the unit as the subtitle.
+    expect(widgets[1]).toMatchObject({ unit: 't/ha', min: 0, max: 4 });
+    expect(widgets[1]).not.toHaveProperty('classes');
   });
 
-  it('productivo, a parcel tab: the category reads its class on the ruler, the list holds that parcel alone', () => {
+  it("productivo, a parcel tab: the category reads its class on the ruler, the number is that parcel's gauge", () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
@@ -69,10 +72,11 @@ describe('analysisWidgets', () => {
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
       ['ruler', 'Resiliencia'],
-      ['parcel-list', 'Pro_soja'],
+      ['gauge', 'Pro_soja'],
     ]);
     expect(widgets[0]).toMatchObject({ level: 'Alta' });
-    expect(widgets[1]).toMatchObject({ rows: [{ label: 'Parcela 2', text: '3,8' }] });
+    // The gauge sits on the scale of the whole set (0–4), not of this parcel alone.
+    expect(widgets[1]).toMatchObject({ text: '3,8', unit: 't/ha', max: 4, position: 95 });
   });
 
   it('sanitario, Todas: the short range and the category count the parcels, the long range bins them', () => {

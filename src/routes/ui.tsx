@@ -15,6 +15,7 @@ import type { ReactNode } from 'react';
 
 import { CategoryCountCard } from '@/components/category-count-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
+import { NumberGaugeCard } from '@/components/number-gauge-card';
 import { RiskClassCard } from '@/components/risk-class-card';
 import { StatCard } from '@/components/stat-card';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
@@ -107,6 +108,7 @@ import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ValueHistogramCard } from '@/components/value-histogram-card';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
+import { linearTicks, numberScale } from '@/lib/analysis/number-scale';
 import { requestedIndicatorIds, toAnalysisRequest } from '@/lib/analysis/request';
 import { histogramBins } from '@/lib/analysis/value-histogram';
 import { RANGE_CLASSES } from '@/lib/analysis/widget-config';
@@ -429,8 +431,10 @@ function UiKitPage() {
                 <ValueHistogramCard
                   label="Categorical and numerical multiple"
                   description="Parcelas analizadas por valor."
+                  unit={null}
                   min={0}
                   max={100}
+                  ticks={linearTicks(0, 100)}
                   classes={RANGE_CLASSES}
                   bins={histogramBins(
                     [
@@ -438,6 +442,30 @@ function UiKitPage() {
                       82, 85, 99,
                     ],
                     { min: 0, max: 100 },
+                  )}
+                />
+                {/* The numerical widgets: one parcel's gauge and the set binned, on one scale. */}
+                <NumberGaugeCard
+                  label="Numerical individual"
+                  description="Rendimiento de la parcela."
+                  unit="t/ha"
+                  value={5.15}
+                  text="5,15"
+                  {...numberScale([5.15, 9.6])}
+                  position={51.5}
+                />
+                <ValueHistogramCard
+                  label="Numerical multiple"
+                  description="Rendimiento de las parcelas."
+                  unit="t/ha"
+                  {...numberScale([5.15, 9.6])}
+                  bins={histogramBins(
+                    [
+                      0.2, 1.1, 1.2, 1.6, 1.7, 1.8, 2.1, 2.2, 2.3, 2.6, 2.7, 3.1, 3.2, 3.3, 4.1,
+                      4.6, 5.15, 6.4, 7.1, 7.6, 8.2, 8.5, 9.6,
+                    ],
+                    numberScale([5.15, 9.6]),
+                    { tone: 'elevated' },
                   )}
                 />
                 <AnalysisCardsDemo />
