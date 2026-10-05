@@ -152,6 +152,70 @@
   --chart-5: oklch(0.645 0.246 16.439);
 }
 
+/*
+  Scroll fades for a vertical scroller: the rows cut off at its top and bottom fade into
+  the surface behind it. Pure CSS. Two scroll-driven animations grow the top mask over the
+  first 2rem of scroll and shrink the bottom one over the last 2rem, so each fade shows only
+  while rows hide behind that edge. A list that does not overflow has no scroll timeline,
+  both lengths stay at 0 and nothing fades. Browsers without scroll-driven animations keep
+  the plain hard cut.
+*/
+@property --scroll-fade-top {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --scroll-fade-bottom {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes scroll-fade-top {
+  from {
+    --scroll-fade-top: 0px;
+  }
+  to {
+    --scroll-fade-top: 2rem;
+  }
+}
+
+@keyframes scroll-fade-bottom {
+  from {
+    --scroll-fade-bottom: 2rem;
+  }
+  to {
+    --scroll-fade-bottom: 0px;
+  }
+}
+
+/* A plain class rather than `@utility`: it takes no variants, and declarations nested
+   straight under `@supports` trip CSS linters that do not know Tailwind's nesting. */
+@layer utilities {
+  @supports (animation-timeline: scroll()) {
+    .scroll-fade-y {
+      mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--scroll-fade-top),
+        black calc(100% - var(--scroll-fade-bottom)),
+        transparent
+      );
+      /* Longhands on purpose: the `animation` shorthand gets expanded at build time with
+         `animation-duration: 0s`, and a zero duration disables a scroll-driven animation.
+         Duration is left at its initial `auto`, which spans the range. */
+      animation-name: scroll-fade-top, scroll-fade-bottom;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(self);
+      animation-range:
+        0 2rem,
+        calc(100% - 2rem) 100%;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
