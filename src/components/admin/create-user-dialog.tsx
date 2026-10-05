@@ -19,7 +19,6 @@ import { ApiError } from '@/lib/api/http';
 import { setupLinkMailto } from '@/lib/auth/setup-link-mail';
 import { cn } from '@/lib/utils';
 
-/** The "Añadir usuario" call to action (Figma 5575:3998): primary, 44 px, icon left. */
 export function AddUserButton({ className, ...props }: React.ComponentProps<typeof Button>) {
   return (
     <Button className={cn('h-11 gap-2.5 rounded-2xl px-8 font-normal', className)} {...props}>
@@ -37,10 +36,10 @@ function failureMessage(error: unknown): string {
 }
 
 /**
- * The create-user card (Figma 5597:5302) as a modal: username and email, Añadir and
- * Cancelar. The account is created inactive; the answer carries the one-time link the
- * administrator hands the user to set a password, which the success view shows, since
- * there is no mail server to send it. Creating refreshes the list behind the dialog.
+ * The create-user card as a modal: username and email, Añadir and Cancelar. The account
+ * is created inactive; the answer carries the one-time link the administrator hands the
+ * user to set a password, which the success view shows, since there is no mail server to
+ * send it. Creating refreshes the list behind the dialog.
  */
 export function CreateUserDialog({
   open,
