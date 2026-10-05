@@ -32,8 +32,8 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  *   user's flips. The mini map passes the open tab's parcel.
  * - `numbered`: whether each parcel wears its "Parcela N" number (`ParcelNumbers`). The
  *   mini map does; the main map, where the parcels are still being picked, does not.
- * - `dotted`: whether the highlighted parcels carry the design's dot texture over the
- *   yellow (Figma 5538:6934). The mini map does.
+ * - `dotted`: whether every shown parcel carries the design's dot texture over its fill
+ *   (Figma 5538:6934). The mini map does.
  */
 export function FilteredParcelsLayer({
   parcelIds,
@@ -94,7 +94,6 @@ export function FilteredParcelsLayer({
           <Layer
             id="filtered-parcels-dots"
             type="fill"
-            filter={['get', 'selected']}
             paint={{ 'fill-pattern': DOT_PATTERN_ID }}
           />
         )}

@@ -45,7 +45,9 @@ export function ParcelNumbers({
         aria-hidden
         data-slot="parcel-number"
         className={cn(
-          'rounded-full px-4 py-2 text-xs leading-normal font-semibold whitespace-nowrap text-black',
+          // A circle for one digit, a pill for a merged "1–3". `font-sans` because MapLibre
+          // sets Helvetica on the whole map container and the marker inherits it.
+          'inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2.5 font-sans text-xs font-semibold whitespace-nowrap text-black',
           highlighted ? 'bg-parcel' : 'bg-white',
         )}
       >
