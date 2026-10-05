@@ -1,12 +1,13 @@
 import { ClientOnly, createFileRoute, Navigate } from '@tanstack/react-router';
 
+import { UsersPanel } from '@/components/admin/users-table';
 import { LoginGate } from '@/components/auth/login-gate';
 import { Footer } from '@/components/footer';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { useSession } from '@/lib/auth/use-session';
 
-/** Administrar usuarios, staff only. A placeholder for now: header, footer and a title. */
+/** Administrar usuarios, staff only: the account list (Figma 5565:988) between header and footer. */
 export const Route = createFileRoute('/usuarios')({
   component: UsersPage,
 });
@@ -21,7 +22,7 @@ function UsersPage() {
       </NavBar>
 
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
-        <ClientOnly fallback={<LoginGate />}>
+        <ClientOnly fallback={<LoginGate hydrating />}>
           <StaffGate />
         </ClientOnly>
       </main>
@@ -38,5 +39,11 @@ function StaffGate() {
   if (!session) return <LoginGate />;
   if (!session.isStaff) return <Navigate to="/" replace />;
 
-  return <h1 className="text-4xl font-semibold tracking-[-0.015em]">Página de administración</h1>;
+  return (
+    <>
+      {/* The design has no visible title; the heading names the page for screen readers. */}
+      <h1 className="sr-only">Administrar usuarios</h1>
+      <UsersPanel />
+    </>
+  );
 }

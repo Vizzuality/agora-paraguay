@@ -9,8 +9,13 @@ export type AuthView = 'login' | 'reset';
 /**
  * The private-content gate (Figma 5180:12021): empty widget frames around the login
  * card, or around the reset card once the user asks to reset the password.
+ *
+ * As the server-rendered fallback (`hydrating`) the card is inert, fields and button: a
+ * submit before React takes over would be a native one, reloading the page with the
+ * credentials in the URL, and anything typed into the fallback is lost when the client
+ * gate replaces it. The real gate enables them once the client renders.
  */
-export function LoginGate() {
+export function LoginGate({ hydrating = false }: Readonly<{ hydrating?: boolean }>) {
   const [view, setView] = useState<AuthView>('login');
 
   return (
@@ -18,7 +23,7 @@ export function LoginGate() {
       <div className="flex items-stretch gap-4">
         <WidgetPlaceholder />
         {view === 'login' ? (
-          <LoginCard onReset={() => setView('reset')} />
+          <LoginCard disabled={hydrating} onReset={() => setView('reset')} />
         ) : (
           <ResetPasswordCard onBackToLogin={() => setView('login')} />
         )}

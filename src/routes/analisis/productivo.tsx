@@ -34,7 +34,7 @@ function ProductivoPage() {
         <ProductivoHeader />
       </ClientOnly>
 
-      <ClientOnly fallback={<LoginGate />}>
+      <ClientOnly fallback={<LoginGate hydrating />}>
         <ProductivoGate />
       </ClientOnly>
     </>

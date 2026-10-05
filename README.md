@@ -123,7 +123,7 @@ Every domain has the same three files; the one fixture left sits behind its doma
 ```
 src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
-├── auth/                   POST /api/auth/login/ (+csrf), POST /api/auth/admin/users/create/ (admin) — real; GET /api/auth/me/ parked (TODO(auth-me))
+├── auth/                   POST /api/auth/login/ (+csrf), GET /api/auth/me/; admin: GET /api/auth/admin/users/, POST /api/auth/admin/users/create/
 ├── parcels/                POST /api/parcels/filter-parcels/
 ├── metadata/               GET /api/parcels/filters/?riesgo={sanitario|productivo}&crop_type={value} (hero fields, for the picked crop); GET /api/parcels/indicators?riesgo={sanitario|productivo} (indicator list)
 └── analysis/               POST /api/parcels/analysis/{diseases|production}/; POST /api/parcels/analysis/summary/ (LLM summary)

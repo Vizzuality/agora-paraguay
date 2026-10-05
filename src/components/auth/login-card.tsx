@@ -30,9 +30,16 @@ import { useSessionActions } from '@/lib/auth/use-session';
  */
 export function LoginCard({
   className,
+  disabled = false,
   onSuccess,
   onReset,
-}: Readonly<{ className?: string; onSuccess?: () => void; onReset: () => void }>) {
+}: Readonly<{
+  className?: string;
+  /** Makes the whole form inert, fields included: the server-rendered gate before hydration. */
+  disabled?: boolean;
+  onSuccess?: () => void;
+  onReset: () => void;
+}>) {
   const { refresh } = useSessionActions();
 
   const fieldId = useId();
@@ -83,6 +90,7 @@ export function LoginCard({
               name="identifier"
               type="text"
               required
+              disabled={disabled}
               autoComplete="username"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
@@ -97,6 +105,7 @@ export function LoginCard({
               name="password"
               type="password"
               required
+              disabled={disabled}
               autoComplete="current-password"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
@@ -110,7 +119,7 @@ export function LoginCard({
         <CardFooter className="flex-col gap-6 px-10">
           <Button
             type="submit"
-            disabled={mutation.isPending}
+            disabled={disabled || mutation.isPending}
             className="h-11 w-full rounded-2xl font-normal"
           >
             {mutation.isPending ? 'Accediendo…' : 'Acceder'}
