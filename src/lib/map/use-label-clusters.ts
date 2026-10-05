@@ -4,11 +4,14 @@ import { useMap } from 'react-map-gl/maplibre';
 import type { LngLat } from '@/lib/map/label-anchor';
 import { clusterLabels, type LabelCluster } from '@/lib/map/label-clusters';
 
-/** Centre-to-centre distance in px under which two number chips are read as overlapping. */
-const CLUSTER_RADIUS = 28;
+/**
+ * Centre-to-centre distance in px under which two number chips are read as overlapping:
+ * a one-digit pill is about 40px wide (Figma 5540:8119).
+ */
+const CLUSTER_RADIUS = 40;
 
-/** A cluster placed back on the map: the chip text and where to pin it. */
-export type PlacedCluster = Pick<LabelCluster, 'numbers'> & { lngLat: LngLat };
+/** A cluster placed back on the map: the chip text, its highlight and where to pin it. */
+export type PlacedCluster = Pick<LabelCluster, 'numbers' | 'highlighted'> & { lngLat: LngLat };
 
 /**
  * Clusters parcel-number chips that would overlap on screen. Projection is per camera,
@@ -16,7 +19,7 @@ export type PlacedCluster = Pick<LabelCluster, 'numbers'> & { lngLat: LngLat };
  * the grouping. Empty until the map exists. Runs inside `<Map>`.
  */
 export function useLabelClusters(
-  anchors: readonly { number: number; lngLat: LngLat }[],
+  anchors: readonly { number: number; lngLat: LngLat; highlighted: boolean }[],
 ): PlacedCluster[] {
   const { current: mapRef } = useMap();
   const [tick, setTick] = useState(0);
@@ -42,15 +45,15 @@ export function useLabelClusters(
   // `tick` is only read so the projection below follows the camera.
   void tick;
 
-  const points = anchors.map(({ number, lngLat }) => {
+  const points = anchors.map(({ number, lngLat, highlighted }) => {
     const { x, y } = map.project(lngLat);
 
-    return { number, x, y };
+    return { number, x, y, highlighted };
   });
 
-  return clusterLabels(points, CLUSTER_RADIUS).map(({ numbers, x, y }) => {
+  return clusterLabels(points, CLUSTER_RADIUS).map(({ numbers, x, y, highlighted }) => {
     const { lng, lat } = map.unproject([x, y]);
 
-    return { numbers, lngLat: [lng, lat] };
+    return { numbers, highlighted, lngLat: [lng, lat] };
   });
 }

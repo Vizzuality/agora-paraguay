@@ -6,38 +6,39 @@ describe('clusterLabels', () => {
   it('keeps chips apart when they do not overlap', () => {
     const clusters = clusterLabels(
       [
-        { number: 1, x: 0, y: 0 },
-        { number: 2, x: 100, y: 0 },
+        { number: 1, x: 0, y: 0, highlighted: true },
+        { number: 2, x: 100, y: 0, highlighted: false },
       ],
       24,
     );
 
     expect(clusters).toEqual([
-      { numbers: [1], x: 0, y: 0 },
-      { numbers: [2], x: 100, y: 0 },
+      { numbers: [1], x: 0, y: 0, highlighted: true },
+      { numbers: [2], x: 100, y: 0, highlighted: false },
     ]);
   });
 
   it('merges chips within the radius and centres the group on its members', () => {
     const clusters = clusterLabels(
       [
-        { number: 3, x: 10, y: 0 },
-        { number: 1, x: 0, y: 0 },
-        { number: 2, x: 20, y: 0 },
+        { number: 3, x: 10, y: 0, highlighted: false },
+        { number: 1, x: 0, y: 0, highlighted: false },
+        { number: 2, x: 20, y: 0, highlighted: true },
       ],
       24,
     );
 
-    expect(clusters).toEqual([{ numbers: [1, 2, 3], x: 10, y: 0 }]);
+    // One highlighted member paints the whole chip.
+    expect(clusters).toEqual([{ numbers: [1, 2, 3], x: 10, y: 0, highlighted: true }]);
   });
 
   it('measures against the moving cluster centre, not the first member', () => {
     // 1 and 2 merge at x=12; 3 at x=30 is 18 from that centre, so it joins too.
     const clusters = clusterLabels(
       [
-        { number: 1, x: 0, y: 0 },
-        { number: 2, x: 24, y: 0 },
-        { number: 3, x: 30, y: 0 },
+        { number: 1, x: 0, y: 0, highlighted: false },
+        { number: 2, x: 24, y: 0, highlighted: false },
+        { number: 3, x: 30, y: 0, highlighted: false },
       ],
       24,
     );

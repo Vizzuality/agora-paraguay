@@ -1,8 +1,14 @@
-/** A parcel number with its chip's screen position, in px from the map's top-left. */
-export type LabelPoint = { number: number; x: number; y: number };
+/**
+ * A parcel number with its chip's screen position, in px from the map's top-left, and
+ * whether its parcel is the highlighted one.
+ */
+export type LabelPoint = { number: number; x: number; y: number; highlighted: boolean };
 
-/** Numbers sharing one chip, and where it sits: the mean of its members' positions. */
-export type LabelCluster = { numbers: number[]; x: number; y: number };
+/**
+ * Numbers sharing one chip, where it sits (the mean of its members' positions) and
+ * whether any member is highlighted, which paints the whole chip.
+ */
+export type LabelCluster = { numbers: number[]; x: number; y: number; highlighted: boolean };
 
 /**
  * Groups parcel numbers whose chips would overlap on screen: a point joins the first
@@ -19,13 +25,19 @@ export function clusterLabels(points: readonly LabelPoint[], radius: number): La
     );
 
     if (cluster === undefined) {
-      clusters.push({ numbers: [point.number], x: point.x, y: point.y });
+      clusters.push({
+        numbers: [point.number],
+        x: point.x,
+        y: point.y,
+        highlighted: point.highlighted,
+      });
       continue;
     }
 
     const size = cluster.numbers.length;
 
     cluster.numbers.push(point.number);
+    cluster.highlighted ||= point.highlighted;
     cluster.x = (cluster.x * size + point.x) / (size + 1);
     cluster.y = (cluster.y * size + point.y) / (size + 1);
   }

@@ -57,6 +57,7 @@
   --color-risk-low: var(--risk-low);
   --color-risk-medium: var(--risk-medium);
   --color-risk-high: var(--risk-high);
+  --color-parcel: var(--parcel);
   --font-sans:
     'Geologica Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
@@ -109,6 +110,8 @@
   --risk-low: #2a7bf1;
   --risk-medium: #ec6e00;
   --risk-high: var(--destructive);
+  /* The selected-parcel yellow; the map paints the same hex in `draw-styles.ts`. */
+  --parcel: #f1ff28;
   --chart-1: #3d8f5f;
   --chart-2: #4a90c2;
   --chart-3: oklch(0.398 0.07 227.392);
