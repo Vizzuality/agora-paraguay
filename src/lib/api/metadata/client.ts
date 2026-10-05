@@ -15,14 +15,16 @@ import {
 const DEFAULT_FILTERS_RIESGO = 'sanitario';
 
 /**
- * `GET /api/parcels/filters/?riesgo={sanitario|productivo}` — the filters of that side of
- * the analysis and their values. `riesgo` is mandatory on the wire; sanitario (public)
- * unless asked otherwise.
+ * `GET /api/parcels/filters/?riesgo={sanitario|productivo}&crop_type={value}` — the
+ * filters of that side of the analysis and their values. `riesgo` is mandatory on the
+ * wire; sanitario (public) unless asked otherwise. `crop_type` narrows the other filters
+ * to the crop picked in the hero; left out, the API answers for its default crop.
  */
 export async function fetchFilters({
   riesgo = DEFAULT_FILTERS_RIESGO,
+  crop_type,
 }: FiltersParams = {}): Promise<Filters> {
-  return filtersSchema.parse(await getJson('/api/parcels/filters/', { riesgo }));
+  return filtersSchema.parse(await getJson('/api/parcels/filters/', { riesgo, crop_type }));
 }
 
 /** `GET /api/parcels/indicators?riesgo={sanitario|productivo}` — the indicators of a riesgo and their metadata. */
