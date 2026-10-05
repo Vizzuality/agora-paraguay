@@ -21,11 +21,13 @@ export function resetRequestBody(email: string): string {
 
 /** The `mailto:` the Solicitar button opens, with subject and body percent-encoded. */
 export function resetRequestMailto(email: string): string {
-  const params = new URLSearchParams({
-    subject: RESET_REQUEST_SUBJECT,
-    body: resetRequestBody(email),
-  });
+  return mailtoHref(ADMIN_EMAIL, RESET_REQUEST_SUBJECT, resetRequestBody(email));
+}
+
+/** A `mailto:` with subject and body percent-encoded the way mail clients read them. */
+export function mailtoHref(to: string, subject: string, body: string): string {
+  const params = new URLSearchParams({ subject, body });
 
   // URLSearchParams encodes spaces as "+", which mail clients read literally.
-  return `mailto:${ADMIN_EMAIL}?${params.toString().replaceAll('+', '%20')}`;
+  return `mailto:${to}?${params.toString().replaceAll('+', '%20')}`;
 }

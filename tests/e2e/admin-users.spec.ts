@@ -45,6 +45,12 @@ test('an administrator adds a user and gets the link to pass on; the list shows 
   await expect(done).toBeVisible();
   await expect(done.getByRole('link', { name: new RegExp(RESET_TOKEN) })).toBeVisible();
 
+  // Enviar por email opens a mail to the new user with the link in the body.
+  const mailto = done.getByRole('link', { name: 'Enviar por email' });
+
+  await expect(mailto).toHaveAttribute('href', /^mailto:nueva@example\.com\?/);
+  await expect(mailto).toHaveAttribute('href', new RegExp(RESET_TOKEN));
+
   await done.getByRole('button', { name: 'Cerrar' }).click();
   await expect(done).toBeHidden();
 

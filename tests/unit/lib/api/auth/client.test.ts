@@ -216,6 +216,20 @@ describe('createUser', () => {
     expires_at: '2026-09-22T10:30:00Z',
   };
 
+  it('accepts the live answer, whose user carries names only — no id or flags', async () => {
+    vi.stubGlobal('document', { cookie: 'csrftoken=from-cookie' });
+    const live = {
+      ...created,
+      user: { username: 'Paule', email: 'paule@example.org', first_name: '', last_name: '' },
+      reset_link: 'http://46.60.18.203:8082/api/auth/reset-password/ecb687e7/',
+    };
+    fetchMock.mockResolvedValueOnce(json(live, 201));
+
+    await expect(createUser({ username: 'Paule', email: 'paule@example.org' })).resolves.toEqual(
+      live,
+    );
+  });
+
   it('POSTs the new user with the CSRF token and returns the setup link', async () => {
     vi.stubGlobal('document', { cookie: 'csrftoken=from-cookie' });
     fetchMock.mockResolvedValueOnce(json(created, 201));

@@ -149,8 +149,19 @@ export type AdminUser = z.infer<typeof adminUserSchema>;
 /** `GET /api/auth/admin/users/` — every account, ordered by username. Administrators only (403 otherwise). */
 export const adminUsersSchema = z.array(adminUserSchema);
 
+/**
+ * `POST /api/auth/admin/users/create/`'s answer. The live API echoes the user with its
+ * names only — no `id`, `is_active` or `is_staff` — so the list is re-read, not patched
+ * from this. `reset_link` is the one-time link as the backend builds it (its
+ * `FRONTEND_URL`); the front end hands it on untouched.
+ */
 export const createdUserSchema = z.looseObject({
-  user: adminUserSchema,
+  user: z.looseObject({
+    username: z.string().min(1),
+    email: z.string(),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+  }),
   reset_link: z.url(),
   token: z.string().min(1),
   expires_at: z.iso.datetime(),

@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { authMutations, authQueries } from '@/lib/api/auth/queries';
 import type { CreatedUser } from '@/lib/api/auth/schemas';
 import { ApiError } from '@/lib/api/http';
+import { setupLinkMailto } from '@/lib/auth/setup-link-mail';
 import { cn } from '@/lib/utils';
 
 /** The "Añadir usuario" call to action (Figma 5575:3998): primary, 44 px, icon left. */
@@ -159,13 +160,22 @@ function CreateUserForm({ onCreated }: Readonly<{ onCreated: (created: CreatedUs
   );
 }
 
-/** The created account and the link it needs, for the administrator to pass on. */
+/**
+ * The created account and the link it needs, for the administrator to pass on: copy it,
+ * or open a mail to the user with it (`setupLinkMailto`) — the API sends no mail itself.
+ */
 function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
   const [copied, setCopied] = useState(false);
   const expires = new Intl.DateTimeFormat('es-PY', {
     dateStyle: 'long',
     timeStyle: 'short',
   }).format(new Date(created.expires_at));
+  const mailto = setupLinkMailto({
+    username: created.user.username,
+    email: created.user.email,
+    link: created.reset_link,
+    expires,
+  });
 
   return (
     <div className="flex flex-col gap-6 py-10">
@@ -194,6 +204,9 @@ function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
           }}
         >
           {copied ? 'Enlace copiado' : 'Copiar enlace'}
+        </Button>
+        <Button asChild variant="secondary" className="h-11 w-full rounded-2xl font-normal">
+          <a href={mailto}>Enviar por email</a>
         </Button>
         <DialogClose asChild>
           <Button type="button" variant="secondary" className="h-11 w-full rounded-2xl font-normal">
