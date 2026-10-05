@@ -6,14 +6,16 @@ import { useId } from 'react';
 
 import { TONE_COLOR, TONES } from '@/components/charts/tones';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatNumber } from '@/lib/analysis/number-scale';
 import { binLabel, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
 
 /*
- * The "Categorical and numerical multiple" design: the range as a row of touching bins,
- * each a bar as tall as its parcel count with a solid cap and a body fading into the card,
- * a baseline, the scale's ticks under it and the class names under those in equal thirds.
- * visx primitives over a plain SVG, as `CategoryBars`. Hovering a bin names its edges with
- * its count in the app's tooltip.
+ * The "Categorical and numerical multiple" and "Numerical multiple" designs: the scale as
+ * a row of touching bins, each a bar as tall as its parcel count with a solid cap and a
+ * body fading into the card, a baseline, the scale's ticks under it and — when the
+ * indicator has classes — their names under those in equal thirds. visx primitives over a
+ * plain SVG, as `CategoryBars`. Hovering a bin names its edges with its count in the
+ * app's tooltip.
  */
 
 /** The plot's height from the design; the bins stand on the baseline. */
@@ -22,29 +24,32 @@ const CAP_HEIGHT = 4;
 const RADIUS = 2;
 /** The tick row under the baseline: one text line of 12px type. */
 const TICK_ROW = 18;
-const TICK_COUNT = 10;
 
-type ValueHistogramProps = Pick<ValueHistogramWidget, 'min' | 'max' | 'bins' | 'classes'>;
+type ValueHistogramProps = Pick<ValueHistogramWidget, 'min' | 'max' | 'ticks' | 'bins' | 'classes'>;
 
 /**
  * The binned bars with the scale and class names. Presentational: the card lists the
  * counts for assistive tech itself, so the drawing is hidden from it.
  */
-export function ValueHistogram({ min, max, bins, classes }: ValueHistogramProps) {
+export function ValueHistogram({ min, max, ticks, bins, classes }: Readonly<ValueHistogramProps>) {
   return (
     <div aria-hidden className="flex flex-col">
       <ParentSize debounceTime={50} style={{ height: PLOT_HEIGHT + 1 + TICK_ROW }}>
         {({ width }) =>
-          width > 0 ? <HistogramSvg width={width} min={min} max={max} bins={bins} /> : null
+          width > 0 ? (
+            <HistogramSvg width={width} min={min} max={max} ticks={ticks} bins={bins} />
+          ) : null
         }
       </ParentSize>
-      <ul className="flex text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
-        {classes.map((riskClass) => (
-          <li key={riskClass.label} className="min-w-0 flex-1">
-            {riskClass.label}
-          </li>
-        ))}
-      </ul>
+      {classes && (
+        <ul className="flex text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
+          {classes.map((riskClass) => (
+            <li key={riskClass.label} className="min-w-0 flex-1">
+              {riskClass.label}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -53,8 +58,9 @@ function HistogramSvg({
   width,
   min,
   max,
+  ticks,
   bins,
-}: Omit<ValueHistogramProps, 'classes'> & { width: number }) {
+}: Readonly<Omit<ValueHistogramProps, 'classes'> & { width: number }>) {
   const gradientId = useId();
   const most = Math.max(0, ...bins.map((bin) => bin.count));
 
@@ -63,7 +69,6 @@ function HistogramSvg({
     domain: [0, Math.max(1, most)],
     range: [0, PLOT_HEIGHT - CAP_HEIGHT],
   });
-  const ticks = xScale.ticks(TICK_COUNT);
 
   return (
     <svg width={width} height={PLOT_HEIGHT + 1 + TICK_ROW} className="block overflow-visible">
@@ -121,11 +126,11 @@ function HistogramSvg({
           key={tick}
           x={xScale(tick)}
           y={PLOT_HEIGHT + 1 + TICK_ROW}
-          textAnchor={index === 0 ? 'start' : index === ticks.length - 1 ? 'end' : 'middle'}
+          textAnchor={tickAnchor(index, ticks.length)}
           dominantBaseline="text-after-edge"
           className="fill-muted-foreground text-[12px] opacity-70"
         >
-          {tick}
+          {formatNumber(tick)}
         </text>
       ))}
 
@@ -150,6 +155,14 @@ function HistogramSvg({
       </TooltipProvider>
     </svg>
   );
+}
+
+/** The ends hug the edges so no label spills out of the card; the rest centre on their tick. */
+function tickAnchor(index: number, count: number): 'start' | 'middle' | 'end' {
+  if (index === 0) return 'start';
+  if (index === count - 1) return 'end';
+
+  return 'middle';
 }
 
 function parcelCount(count: number): string {

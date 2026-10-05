@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 /**
- * Custom, not stock shadcn (like `meter.tsx`). A label that rests inside its field while
+ * Custom, not stock shadcn. A label that rests inside its field while
  * the field is empty and floats onto the top border once it has a value, is open or is
  * focused — the WS Form "inside label" behaviour, styled per the Figma hero fields.
  *
@@ -22,7 +22,10 @@ export const FLOATING_FIELD_CLASS =
 export const FLOATING_CHIP_CLASS =
   'pointer-events-none absolute top-0 left-3 -translate-y-1/2 bg-card px-1 py-0.5 text-xs leading-3 font-normal text-muted-foreground uppercase';
 
-export function FloatingLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
+export function FloatingLabel({
+  className,
+  ...props
+}: Readonly<React.ComponentProps<typeof Label>>) {
   return (
     <Label
       data-slot="floating-label"

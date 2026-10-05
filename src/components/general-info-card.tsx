@@ -21,7 +21,7 @@ type GeneralInfoCardProps = {
  * facts. Same light surface as `RiskClassCard`; these are not risks, so no figure and
  * no ruler.
  */
-export function GeneralInfoCard({ items, className }: GeneralInfoCardProps) {
+export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
   return (
     <Card
       className={cn(

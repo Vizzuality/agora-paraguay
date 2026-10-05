@@ -18,7 +18,7 @@ import { authMutations } from '@/lib/api/auth/queries';
 import type { Session } from '@/lib/api/auth/schemas';
 import { useSession, useSessionActions } from '@/lib/auth/use-session';
 
-export function UserButton(props: React.ComponentProps<typeof Button>) {
+export function UserButton(props: Readonly<React.ComponentProps<typeof Button>>) {
   return (
     <Button
       variant="secondary"

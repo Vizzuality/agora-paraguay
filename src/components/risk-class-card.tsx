@@ -29,7 +29,7 @@ export function RiskClassCard({
   scale,
   action,
   className,
-}: RiskClassCardProps) {
+}: Readonly<RiskClassCardProps>) {
   return (
     <Card
       className={cn(
@@ -79,8 +79,8 @@ const MARKER_CLASS: Record<RiskTone, string> = {
 
 /**
  * Presentational: the class is printed right above it (with the exact value, when there
- * is one), so exposing the ruler and its labels would announce the same reading twice
- * (same reasoning as `Meter`).
+ * is one), so exposing the ruler and its labels would announce the same reading twice.
+ * The other tracks and charts hide themselves for the same reason.
  */
 function RiskRuler({ classes, position, value }: Readonly<RiskScale>) {
   const bands = rulerBands(position, classes);

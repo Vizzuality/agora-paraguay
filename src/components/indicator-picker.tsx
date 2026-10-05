@@ -25,7 +25,7 @@ type IndicatorPickerProps = {
  * cards on the page. General info is not listed: it is always shown. Renders inside
  * `<ClientOnly>` (it reads the analysis atoms).
  */
-export function IndicatorPicker({ riesgo }: IndicatorPickerProps) {
+export function IndicatorPicker({ riesgo }: Readonly<IndicatorPickerProps>) {
   const { indicators, indicatorsError: error } = useApplicableIndicators(riesgo);
 
   return (

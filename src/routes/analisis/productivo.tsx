@@ -66,11 +66,13 @@ function ProductivoGate() {
 
 /**
  * The productivo widgets follow the hero's open tab (`activeParcelIdAtom`), as sanitario's
- * do. Under Todas (`multiple` scope) an open number lists every parcel and a category
- * counts them per class; on a parcel tab (`individual`) the list holds that parcel's row
- * alone and the category reads its class on the ruler. In metadata order, restricted to
- * what the picker shows and to what applies to the crop (`useApplicableIndicators`). The
- * range indicators (IEP, ProInf, Puntuación) have their own design, not built yet.
+ * do. Under Todas (`multiple` scope) an open number bins every parcel's value over the
+ * set's scale, a category counts them per class and a range lists every parcel; on a
+ * parcel tab (`individual`) the number is that parcel's figure on the same scale, the
+ * category reads its class on the ruler, the list holds that parcel's row alone. In
+ * metadata order, restricted to what the picker shows and to what applies to the crop
+ * (`useApplicableIndicators`). The range indicators (IEP, ProInf, Puntuación) have their
+ * own design, not built yet.
  */
 function ProductivoWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } =

@@ -569,20 +569,19 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
 
-  // The productivo analysis runs once every filter has a value. Its widgets read the whole
-  // selection: the base production lists both parcels (Figma Widget01), the resilience
-  // proxy counts them per class (Widget03), and the thumbnail prints the summed area.
-  // Soja is picked: the indicators follow the crop.
+  // The productivo analysis runs once every filter has a value. Under Todas its widgets
+  // read the whole selection: the base production bins both parcels' values on a 0–4 t/ha
+  // scale (the "Numerical multiple" design; 3,55 and 3,81 fall in the 3,4–3,6 and 3,8–4
+  // bins), the resilience proxy counts them per class (Widget03), and the thumbnail
+  // prints the summed area. Soja is picked: the indicators follow the crop.
   await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Soja' }).click();
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')
     .locator('..');
-  await expect(production.getByRole('listitem')).toHaveText([
-    /^Parcela 1.*3,55$/,
-    /^Parcela 2.*3,81$/,
-  ]);
+  await expect(production).toContainText('t/ha');
+  await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
   const resilience = page
     .getByRole('heading', { name: 'Proxy de resiliencia operativa' })
     .locator('..')
@@ -590,17 +589,15 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
 
-  // A parcel tab narrows the widgets to that parcel: its row alone, its class on the
-  // ruler. Back on Todas both parcels list again.
+  // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
+  // (the "Numerical individual" design), its class on the ruler. Back on Todas the
+  // histogram returns.
   const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await parcelTabs.filter({ hasText: 'Parcela 2' }).getByRole('button').click();
-  await expect(production.getByRole('listitem')).toHaveText([/^Parcela 2.*3,81$/]);
+  await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
   await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
   await parcelTabs.filter({ hasText: 'Todas' }).getByRole('button').click();
-  await expect(production.getByRole('listitem')).toHaveText([
-    /^Parcela 1.*3,55$/,
-    /^Parcela 2.*3,81$/,
-  ]);
+  await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 
   // The arroz indicator is bound to the other crop (and came back "NA" besides): no widget,
   // and the picker does not offer it.

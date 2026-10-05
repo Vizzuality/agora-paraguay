@@ -29,7 +29,7 @@ export function ThemeTogglePlaceholder() {
   );
 }
 
-function ThemeToggleButton(props: React.ComponentProps<typeof Button>) {
+function ThemeToggleButton(props: Readonly<React.ComponentProps<typeof Button>>) {
   return (
     <Button
       variant="secondary"

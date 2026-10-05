@@ -51,6 +51,14 @@ describe('histogramBins', () => {
     expect(tones.slice(13)).toEqual(Array(7).fill('high'));
   });
 
+  it('paints every bin in one tone when asked to', () => {
+    const tones = histogramBins([], { min: 0, max: 10 }, { tone: 'elevated' }).map(
+      (bin) => bin.tone,
+    );
+
+    expect(new Set(tones)).toEqual(new Set(['elevated']));
+  });
+
   it('clamps a value outside the range to the outer bins', () => {
     expect(occupied(histogramBins([-3, 140], { min: 0, max: 100 }))).toEqual([
       [0, 1],
@@ -85,15 +93,45 @@ describe('valueHistogramWidgets', () => {
       min: 0,
       max: 100,
     });
-    expect(widget.classes.map((riskClass) => riskClass.label)).toEqual([
+    expect(widget.classes?.map((riskClass) => riskClass.label)).toEqual([
       'Sin riesgo',
       'Moderado',
       'Severo',
     ]);
+    expect(widget.ticks).toEqual([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
     expect(occupied(widget.bins)).toEqual([
       [2, 1],
       [17, 1],
     ]);
+  });
+
+  it('bins an open number on productivo under Todas from zero to a round figure, no classes, one tone', () => {
+    const production: Indicator = {
+      id: 'Pro_soja',
+      name: 'Producción base histórica de soja',
+      unit: 't/ha',
+      indicator_type: { type: 'numeric' },
+    };
+    const [widget] = valueHistogramWidgets(
+      [
+        parcel('A', { Pro_soja: 3.55 }),
+        parcel('B', { Pro_soja: 3.81 }),
+        parcel('C', { Pro_soja: 'NA' }),
+      ],
+      ['A', 'B', 'C'],
+      [production],
+      'productivo',
+      'multiple',
+    );
+
+    expect(widget).toMatchObject({ unit: 't/ha', min: 0, max: 4 });
+    expect(widget).not.toHaveProperty('classes');
+    expect(widget.ticks).toEqual([0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]);
+    expect(occupied(widget.bins)).toEqual([
+      [17, 1],
+      [19, 1],
+    ]);
+    expect(new Set(widget.bins.map((bin) => bin.tone))).toEqual(new Set(['elevated']));
   });
 
   it('leaves short ranges, productivo and single parcels to other widgets', () => {
