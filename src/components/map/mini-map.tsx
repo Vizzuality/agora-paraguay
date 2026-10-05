@@ -61,8 +61,7 @@ export function MiniMap() {
       <FilteredParcelsLayer
         parcelIds={analysedIds}
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
-        numbered
-        dotted
+        variant="hero"
       />
       <MiniMapBehaviour />
       {(parcels?.results.length ?? 0) === 0 && (
