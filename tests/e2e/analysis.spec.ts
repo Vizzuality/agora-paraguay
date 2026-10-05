@@ -256,7 +256,7 @@ test('says why when the indicator list cannot be loaded', async ({ page }) => {
   // Registered after `stubAnalysisApi`, so Playwright tries it first: the proxy answers
   // the way it does when the API is down, with the reason in the body.
   await page.route(
-    (url) => url.pathname === '/api/parcels/indicators/',
+    (url) => url.pathname === '/api/parcels/indicators',
     (route) =>
       route.fulfill({
         status: 502,

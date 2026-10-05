@@ -27,7 +27,7 @@ export const HERO_FILTERS = [
 ];
 
 /**
- * The indicator lists `GET /api/parcels/indicators/?riesgo={sanitario|productivo}` answers, with the ids the
+ * The indicator lists `GET /api/parcels/indicators?riesgo={sanitario|productivo}` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
  */
 /** The parcel area, answered as one more column; the thumbnail prints it, never a card. */
@@ -173,7 +173,7 @@ export async function stubAnalysisApi(page: Page) {
 
   // The indicator list of the riesgo asked for in the query string.
   await page.route(
-    (url) => url.pathname === '/api/parcels/indicators/',
+    (url) => url.pathname === '/api/parcels/indicators',
     (route) =>
       route.fulfill({
         contentType: 'application/json',

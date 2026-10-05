@@ -125,7 +125,7 @@ src/lib/api/
 ├── http.ts                 Shared transport: API_URL, session/CSRF cookies, getJson/postJson, ApiError
 ├── auth/                   POST /api/auth/login/ (+csrf), POST /api/auth/admin/users/create/ (admin) — real; GET /api/auth/me/ parked (TODO(auth-me))
 ├── parcels/                POST /api/parcels/filter-parcels/
-├── metadata/               GET /api/parcels/filters/?riesgo={sanitario|productivo}&crop_type={value} (hero fields, for the picked crop); GET /api/parcels/indicators/?riesgo={sanitario|productivo} (indicator list)
+├── metadata/               GET /api/parcels/filters/?riesgo={sanitario|productivo}&crop_type={value} (hero fields, for the picked crop); GET /api/parcels/indicators?riesgo={sanitario|productivo} (indicator list)
 └── analysis/               POST /api/parcels/analysis/{diseases|production}/; POST /api/parcels/analysis/summary/ (LLM summary)
     ├── schemas.ts          Zod schemas — the source of truth for types, wire shape as the spec writes it
     ├── client.ts           The ONLY module in the domain that knows the endpoint
@@ -138,7 +138,7 @@ Rules that keep the swap cheap:
 - Every response is parsed through the Zod schemas, so contract drift surfaces at the boundary
   instead of as `undefined` deep in a component.
 - **Everything talks to the API; there is no mock switch.** The indicator list is
-  `GET /api/parcels/indicators/?riesgo={sanitario|productivo}`.
+  `GET /api/parcels/indicators?riesgo={sanitario|productivo}`.
 - Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
   add fields without breaking the parse; tighten them as the contract settles.
 
