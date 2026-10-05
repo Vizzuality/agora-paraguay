@@ -13,16 +13,6 @@ export const EMPTY_ANALYSIS_FILTERS: AnalysisFilterSelection = {};
 /** The hero filter whose value the indicator list is asked for: the crop. */
 export const CROP_FILTER_ID = 'crop_type';
 
-/**
- * The crop the hero shows when the user has not picked one: the first option, as
- * `resolveFilterSelection` resolves it. `undefined` without a crop filter or options.
- */
-export function defaultCrop(filters: Filters): string | undefined {
-  const crop = filters.find((filter) => filter.id === CROP_FILTER_ID);
-
-  return crop?.field_type.type === 'category' ? crop.field_type.options[0]?.value : undefined;
-}
-
 /** How the hero lays the filters out: the date, the sowing date, then the crop. */
 const HERO_FILTER_ORDER = ['date', 'sowing_date', CROP_FILTER_ID];
 

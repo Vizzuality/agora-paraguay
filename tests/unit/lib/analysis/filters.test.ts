@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  defaultCrop,
   EMPTY_ANALYSIS_FILTERS,
   orderHeroFilters,
   resolveFilterSelection,
@@ -106,20 +105,5 @@ describe('orderHeroFilters', () => {
       'crop_type',
       'cycle',
     ]);
-  });
-});
-
-describe('defaultCrop', () => {
-  it('is the first crop option, what the hero shows untouched', () => {
-    expect(defaultCrop(FILTERS)).toBe('rice');
-  });
-
-  it('is undefined without a crop filter or without options', () => {
-    expect(defaultCrop(FILTERS.slice(1))).toBeUndefined();
-    expect(
-      defaultCrop([
-        { id: 'crop_type', name: 'Tipo de cultivo', field_type: { type: 'category', options: [] } },
-      ]),
-    ).toBeUndefined();
   });
 });
