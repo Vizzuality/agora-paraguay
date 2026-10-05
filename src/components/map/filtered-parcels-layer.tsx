@@ -6,6 +6,7 @@ import { Layer, Source } from 'react-map-gl/maplibre';
 import { ParcelNumbers } from '@/components/map/parcel-numbers';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
+import { DOT_PATTERN_ID, useDotPattern } from '@/lib/map/use-dot-pattern';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -31,15 +32,25 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  *   user's flips. The mini map passes the open tab's parcel.
  * - `numbered`: whether each parcel wears its "Parcela N" number (`ParcelNumbers`). The
  *   mini map does; the main map, where the parcels are still being picked, does not.
+ * - `dotted`: whether the highlighted parcels carry the design's dot texture over the
+ *   yellow (Figma 5538:6934). The mini map does.
  */
 export function FilteredParcelsLayer({
   parcelIds,
   highlightedIds,
   numbered = false,
-}: Readonly<{ parcelIds?: string[]; highlightedIds?: string[]; numbered?: boolean }>) {
+  dotted = false,
+}: Readonly<{
+  parcelIds?: string[];
+  highlightedIds?: string[];
+  numbered?: boolean;
+  dotted?: boolean;
+}>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
+
+  useDotPattern();
 
   if (!data) return null;
 
@@ -79,6 +90,14 @@ export function FilteredParcelsLayer({
           type="fill"
           paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
         />
+        {dotted && (
+          <Layer
+            id="filtered-parcels-dots"
+            type="fill"
+            filter={['get', 'selected']}
+            paint={{ 'fill-pattern': DOT_PATTERN_ID }}
+          />
+        )}
         <Layer
           id="filtered-parcels-outline"
           type="line"

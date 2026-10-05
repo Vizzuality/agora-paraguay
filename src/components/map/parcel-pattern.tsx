@@ -1,13 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import { useEffect } from 'react';
-import { Layer, Source, useMap } from 'react-map-gl/maplibre';
+import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { dotPatternImage } from '@/lib/map/draw-styles';
+import { DOT_PATTERN_ID, useDotPattern } from '@/lib/map/use-dot-pattern';
 import { drawPolygonsAtom } from '@/store/draw';
-
-const PATTERN_ID = 'parcel-dots';
 
 /**
  * The dot texture the design repeats inside every parcel. Terra Draw's adapter can
@@ -17,27 +14,10 @@ const PATTERN_ID = 'parcel-dots';
  * have replaced it on the map (`FilteredParcelsLayer`).
  */
 export function ParcelPattern() {
-  const { current: mapRef } = useMap();
   const polygons = useAtomValue(drawPolygonsAtom);
   const { data: parcels } = useQuery(parcelQueries.filtered(polygons));
 
-  useEffect(() => {
-    const map = mapRef?.getMap();
-
-    if (!map) return;
-
-    const addImage = () => {
-      if (!map.hasImage(PATTERN_ID)) map.addImage(PATTERN_ID, dotPatternImage());
-    };
-
-    // Same dance as use-terra-draw: images can only join a loaded style.
-    if (map.isStyleLoaded() || map.loaded()) addImage();
-    else map.once('load', addImage);
-
-    return () => {
-      map.off('load', addImage);
-    };
-  }, [mapRef]);
+  useDotPattern();
 
   if (polygons.length === 0 || (parcels?.results.length ?? 0) > 0) return null;
 
@@ -47,7 +27,7 @@ export function ParcelPattern() {
       type="geojson"
       data={{ type: 'FeatureCollection', features: polygons }}
     >
-      <Layer id="parcel-pattern-fill" type="fill" paint={{ 'fill-pattern': PATTERN_ID }} />
+      <Layer id="parcel-pattern-fill" type="fill" paint={{ 'fill-pattern': DOT_PATTERN_ID }} />
     </Source>
   );
 }
