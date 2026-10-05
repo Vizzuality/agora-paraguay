@@ -21,7 +21,10 @@ export type AnalysisWidgetsInput = {
   riesgo: Riesgo;
   /** One parcel (a parcel tab) or the whole selection (Todas). */
   scope: ParcelScope;
-  /** The parcel the risk-class cards read: the open tab's, or the set combined (`combinedParcel`). */
+  /**
+   * The parcel the open tab points at — what the risk-class cards read and the only
+   * parcel the value lists row — or, under Todas, the set combined (`combinedParcel`).
+   */
   parcel: AnalysisParcel | null | undefined;
 };
 
@@ -44,8 +47,13 @@ export function analysisWidgets({
   const cards = new Map(
     indicatorCards(parcel, indicators, riesgo, scope).map((card) => [card.id, card]),
   );
+  // A parcel tab lists that parcel alone; Todas lists the whole submission.
+  const listed = scope === 'individual' && parcel ? [String(parcel.parcel_id)] : parcelIds;
   const values = new Map(
-    parcelValueWidgets(parcels, parcelIds, indicators, riesgo).map((widget) => [widget.id, widget]),
+    parcelValueWidgets(parcels, parcelIds, indicators, riesgo, listed).map((widget) => [
+      widget.id,
+      widget,
+    ]),
   );
   const counts = new Map(
     categoryCountWidgets(parcels, parcelIds, indicators, riesgo, scope).map((widget) => [

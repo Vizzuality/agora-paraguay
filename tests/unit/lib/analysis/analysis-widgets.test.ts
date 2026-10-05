@@ -57,10 +57,10 @@ describe('analysisWidgets', () => {
     ]);
   });
 
-  it('productivo, one parcel: the category reads its class on the ruler', () => {
+  it('productivo, a parcel tab: the category reads its class on the ruler, the list holds that parcel alone', () => {
     const widgets = analysisWidgets({
       parcels,
-      parcelIds: ['B'],
+      parcelIds: ['A', 'B'],
       indicators: [resilience, production],
       riesgo: 'productivo',
       scope: 'individual',
@@ -72,6 +72,7 @@ describe('analysisWidgets', () => {
       ['parcel-list', 'Pro_soja'],
     ]);
     expect(widgets[0]).toMatchObject({ level: 'Alta' });
+    expect(widgets[1]).toMatchObject({ rows: [{ label: 'Parcela 2', text: '3,8' }] });
   });
 
   it('sanitario, Todas: the short range and the category count the parcels, the long range bins them', () => {
