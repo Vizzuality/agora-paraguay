@@ -1,12 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import type { ExpressionSpecification } from 'maplibre-gl';
-import { Layer, Marker, Source } from 'react-map-gl/maplibre';
+import { Layer, Source } from 'react-map-gl/maplibre';
 
-import { parcelNumber } from '@/lib/analysis/parcel-label';
+import { ParcelNumbers } from '@/components/map/parcel-numbers';
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import type { FilteredParcel } from '@/lib/api/parcels/schemas';
-import { labelAnchor } from '@/lib/map/label-anchor';
 import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
@@ -31,11 +29,14 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  *   passes the analysed ids, so unselected neighbours do not follow into the hero.
  * - `highlightedIds`: which of those paint yellow. Default: the selection after the
  *   user's flips. The mini map passes the open tab's parcel.
+ * - `numbered`: whether each parcel wears its "Parcela N" number (`ParcelNumbers`). The
+ *   mini map does; the main map, where the parcels are still being picked, does not.
  */
 export function FilteredParcelsLayer({
   parcelIds,
   highlightedIds,
-}: Readonly<{ parcelIds?: string[]; highlightedIds?: string[] }>) {
+  numbered = false,
+}: Readonly<{ parcelIds?: string[]; highlightedIds?: string[]; numbered?: boolean }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
@@ -66,10 +67,9 @@ export function FilteredParcelsLayer({
 
   if (features.length === 0) return null;
 
-  // The parcels that carry a number, in the order that gives it: the analysed list on
-  // the mini map, else the selection as Analizar will submit it (`ConfirmActions`), so
-  // the number on the map is the "Parcela N" its hero tab will carry.
-  const numbered = parcelIds ?? selectedParcelIds(parcels);
+  // The order that gives the numbers: the analysed list on the mini map, else the
+  // selection as Analizar will submit it (`ConfirmActions`), so N matches the hero tab.
+  const numberedIds = parcelIds ?? selectedParcelIds(parcels);
 
   return (
     <>
@@ -85,44 +85,7 @@ export function FilteredParcelsLayer({
           paint={{ 'line-color': COLOR, 'line-width': LINE_WIDTH }}
         />
       </Source>
-      {parcels.map((parcel) => (
-        <ParcelNumber key={parcel.parcel_id} parcel={parcel} parcelIds={numbered} />
-      ))}
+      {numbered && <ParcelNumbers parcels={parcels} parcelIds={numberedIds} />}
     </>
-  );
-}
-
-/**
- * The parcel's number on the map, over its centroid. A DOM marker rather than a symbol
- * layer: the satellite style has no glyphs, so MapLibre could not draw text. Lets clicks
- * through to the parcel underneath. Nothing for a parcel outside the numbered list.
- */
-function ParcelNumber({
-  parcel,
-  parcelIds,
-}: Readonly<{ parcel: FilteredParcel; parcelIds: string[] }>) {
-  const number = parcelNumber(parcel.parcel_id, parcelIds);
-
-  if (number === null) return null;
-
-  const anchor = labelAnchor(parcel.geometry.features.map((feature) => feature.geometry));
-
-  if (anchor === null) return null;
-
-  return (
-    <Marker
-      longitude={anchor[0]}
-      latitude={anchor[1]}
-      anchor="center"
-      style={{ pointerEvents: 'none' }}
-    >
-      <span
-        aria-hidden
-        data-slot="parcel-number"
-        className="flex size-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground shadow-md"
-      >
-        {number}
-      </span>
-    </Marker>
   );
 }
