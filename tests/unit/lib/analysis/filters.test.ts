@@ -9,7 +9,7 @@ import {
 } from '@/lib/analysis/filters';
 import type { Filters } from '@/lib/api/metadata/schemas';
 
-/** The live `GET /api/parcels/filters` shapes: a category and two dates, one defaulted. */
+/** The live `GET /api/parcels/filters/` shapes: a category and two dates, one defaulted. */
 const FILTERS: Filters = [
   {
     id: 'crop_type',

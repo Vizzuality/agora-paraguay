@@ -60,7 +60,7 @@ export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; par
 }
 
 /**
- * One field per filter `GET /api/parcels/filters` returns: a dropdown for a category, a
+ * One field per filter `GET /api/parcels/filters/` returns: a dropdown for a category, a
  * date input for a date. Only this page asks for them. They load client-side after
  * hydration like every query here, so there is a first render without them: two disabled
  * placeholder selects hold the layout instead of a Suspense boundary the rest of the app

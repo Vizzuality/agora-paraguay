@@ -73,7 +73,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   const analysisBodies: { indicators: string[]; crop_type?: string }[] = [];
   page.on('request', (request) => {
     const { pathname, search } = new URL(request.url());
-    if (pathname === '/api/parcels/filters') {
+    if (pathname === '/api/parcels/filters/') {
       filtersRequests += 1;
       filtersUrls.push(pathname + search);
     }
@@ -112,14 +112,14 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
   // Asked for the riesgo alone: with no crop picked yet, the API's default crop applies.
   expect(filtersRequests).toBe(1);
-  expect(filtersUrls).toEqual(['/api/parcels/filters?riesgo=sanitario']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
 
   // Picking the crop already shown asks nothing: that answer seeded the default crop's
   // entry, so only another crop would fetch again.
   await cultivo.click();
   await page.getByRole('option', { name: 'Arroz' }).click();
   await expect(cultivo).toHaveText('Arroz');
-  expect(filtersUrls).toEqual(['/api/parcels/filters?riesgo=sanitario']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.
@@ -256,7 +256,7 @@ test('says why when the indicator list cannot be loaded', async ({ page }) => {
   // Registered after `stubAnalysisApi`, so Playwright tries it first: the proxy answers
   // the way it does when the API is down, with the reason in the body.
   await page.route(
-    (url) => url.pathname === '/api/parcels/indicators',
+    (url) => url.pathname === '/api/parcels/indicators/',
     (route) =>
       route.fulfill({
         status: 502,
@@ -591,13 +591,13 @@ test('logs in from the header dialog', async ({ page }) => {
   const filtersUrls: string[] = [];
   page.on('request', (request) => {
     const { pathname, search } = new URL(request.url());
-    if (pathname === '/api/parcels/filters') filtersUrls.push(pathname + search);
+    if (pathname === '/api/parcels/filters/') filtersUrls.push(pathname + search);
   });
   await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Soja' }).click();
   await expect
     .poll(() => filtersUrls)
-    .toContain('/api/parcels/filters?riesgo=productivo&crop_type=soy');
+    .toContain('/api/parcels/filters/?riesgo=productivo&crop_type=soy');
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')
