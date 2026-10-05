@@ -1,7 +1,7 @@
 import type { Filter, Filters } from '@/lib/api/metadata/schemas';
 
 /**
- * The analysis hero fields: one per filter `GET /api/parcels/filters/` returns, keyed by
+ * The analysis hero fields: one per filter `GET /api/parcels/filters` returns, keyed by
  * the filter's `id`. Nothing here knows which filters exist — the list is the API's.
  */
 

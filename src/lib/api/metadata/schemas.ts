@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /*
- * Metadata contract: `GET /api/parcels/filters/?riesgo={sanitario|productivo}` and
+ * Metadata contract: `GET /api/parcels/filters?riesgo={sanitario|productivo}` and
  * `GET /api/parcels/indicators?riesgo={sanitario|productivo}`. The indicator attributes
  * are still "to be defined" in the spec, so that schema lets extra fields through
  * (`looseObject`); the filters follow the live response.

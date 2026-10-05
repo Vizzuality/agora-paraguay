@@ -73,7 +73,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   const analysisBodies: { indicators: string[]; crop_type?: string }[] = [];
   page.on('request', (request) => {
     const { pathname, search } = new URL(request.url());
-    if (pathname === '/api/parcels/filters/') {
+    if (pathname === '/api/parcels/filters') {
       filtersRequests += 1;
       filtersUrls.push(pathname + search);
     }
@@ -112,7 +112,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
   // Asked for the riesgo alone: with no crop picked yet, the API's default crop applies.
   expect(filtersRequests).toBe(1);
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters?riesgo=sanitario']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.
@@ -584,13 +584,13 @@ test('logs in from the header dialog', async ({ page }) => {
   const filtersUrls: string[] = [];
   page.on('request', (request) => {
     const { pathname, search } = new URL(request.url());
-    if (pathname === '/api/parcels/filters/') filtersUrls.push(pathname + search);
+    if (pathname === '/api/parcels/filters') filtersUrls.push(pathname + search);
   });
   await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Soja' }).click();
   await expect
     .poll(() => filtersUrls)
-    .toContain('/api/parcels/filters/?riesgo=productivo&crop_type=soy');
+    .toContain('/api/parcels/filters?riesgo=productivo&crop_type=soy');
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')

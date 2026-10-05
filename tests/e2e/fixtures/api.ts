@@ -94,7 +94,7 @@ export const PRODUCTIVO_INDICATORS = [
 /**
  * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
  * filtering, the indicator list and the analysis itself — plus the filters the /analisis
- * hero lists (`GET /api/parcels/filters/`). Keeps the specs hermetic — the Django backend is
+ * hero lists (`GET /api/parcels/filters`). Keeps the specs hermetic — the Django backend is
  * never running under Playwright — while still exercising the real client code, so a
  * body the schemas reject fails the spec.
  *
@@ -103,7 +103,7 @@ export const PRODUCTIVO_INDICATORS = [
  */
 export async function stubAnalysisApi(page: Page) {
   await page.route(
-    (url) => url.pathname === '/api/parcels/filters/',
+    (url) => url.pathname === '/api/parcels/filters',
     (route) =>
       route.fulfill({
         contentType: 'application/json',

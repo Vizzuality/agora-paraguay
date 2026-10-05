@@ -22,7 +22,7 @@ export function analysisPath(visibility: AnalysisVisibility): string {
 /**
  * The POST body, flat: `parcels`, the ids
  * `filter-parcels` returned; `indicators`, the ids to compute; and the hero selection
- * keyed by the ids `GET /api/parcels/filters/` lists (`crop_type`, `sowing_date`, `date`,
+ * keyed by the ids `GET /api/parcels/filters` lists (`crop_type`, `sowing_date`, `date`,
  * … — whatever the backend defines). Which filter keys exist is the API's call, so the
  * type is an intersection and the schema a record with three checks rather than an
  * object (a `z.object(...).catchall(z.string())` would infer an index signature the two
