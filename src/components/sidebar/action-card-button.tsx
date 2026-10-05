@@ -13,7 +13,7 @@ export function ActionCardButton({
   className,
   children,
   ...props
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Button
       variant={variant}
