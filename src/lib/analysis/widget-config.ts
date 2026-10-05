@@ -18,9 +18,9 @@ export type RiskClass = { label: string; tone: RiskTone };
 /**
  * What an indicator's widget renders: the class ruler, a fact, a row per parcel, the
  * parcels counted per class as bars, their values binned over a scale as a histogram, or
- * one parcel's number as a gauge on that scale.
+ * one parcel's number on that scale.
  */
-export type WidgetKind = 'ruler' | 'fact' | 'parcel-list' | 'bar-chart' | 'histogram' | 'gauge';
+export type WidgetKind = 'ruler' | 'fact' | 'parcel-list' | 'bar-chart' | 'histogram' | 'number';
 
 /** How many parcels a widget reads: one (a parcel tab) or the whole selection (Todas). */
 export type ParcelScope = 'individual' | 'multiple';
@@ -41,7 +41,7 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * 0–100 % quality in three classes would hide where the parcels sit. The other types
  * follow the riesgo: sanitario reads text and open numbers as facts; productivo lists
  * every parcel's range reading, and draws an open number per scope — one parcel as a
- * gauge on the set's scale (the "Numerical individual" design), several binned over it
+ * number card on the set's scale (the "Numerical individual" design), several binned over it
  * (the "Numerical multiple" design) — text is a fact on both.
  */
 export function widgetFor(
@@ -62,7 +62,7 @@ export function widgetFor(
     case 'number':
       if (riesgo !== 'productivo') return 'fact';
 
-      return scope === 'individual' ? 'gauge' : 'histogram';
+      return scope === 'individual' ? 'number' : 'histogram';
   }
 }
 

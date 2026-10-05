@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { numberGaugeWidgets } from '@/lib/analysis/number-gauge';
+import { numberWidgets } from '@/lib/analysis/number-widget';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
@@ -33,9 +33,9 @@ const parcels = [
   parcel('C', { Pro_soja: 'NA' }),
 ];
 
-describe('numberGaugeWidgets', () => {
+describe('numberWidgets', () => {
   it("reads the open parcel's number on the scale of every submitted parcel", () => {
-    const [widget] = numberGaugeWidgets(
+    const [widget] = numberWidgets(
       parcels,
       ['A', 'B', 'C'],
       [production],
@@ -59,7 +59,7 @@ describe('numberGaugeWidgets', () => {
   });
 
   it('reads digits in a string and matches the column ignoring case', () => {
-    const [widget] = numberGaugeWidgets(
+    const [widget] = numberWidgets(
       parcels,
       ['A', 'B'],
       [production],
@@ -73,19 +73,19 @@ describe('numberGaugeWidgets', () => {
 
   it('makes no widget without a reading, for the area, for a range, under Todas or on sanitario', () => {
     expect(
-      numberGaugeWidgets(parcels, ['A', 'C'], [production], 'productivo', 'individual', parcels[2]),
+      numberWidgets(parcels, ['A', 'C'], [production], 'productivo', 'individual', parcels[2]),
     ).toEqual([]);
     expect(
-      numberGaugeWidgets(parcels, ['A'], [area, score], 'productivo', 'individual', parcels[0]),
+      numberWidgets(parcels, ['A'], [area, score], 'productivo', 'individual', parcels[0]),
     ).toEqual([]);
     expect(
-      numberGaugeWidgets(parcels, ['A', 'B'], [production], 'productivo', 'multiple', undefined),
+      numberWidgets(parcels, ['A', 'B'], [production], 'productivo', 'multiple', undefined),
     ).toEqual([]);
     expect(
-      numberGaugeWidgets(parcels, ['A'], [production], 'sanitario', 'individual', parcels[0]),
+      numberWidgets(parcels, ['A'], [production], 'sanitario', 'individual', parcels[0]),
     ).toEqual([]);
     expect(
-      numberGaugeWidgets(parcels, ['A'], undefined, 'productivo', 'individual', parcels[0]),
+      numberWidgets(parcels, ['A'], undefined, 'productivo', 'individual', parcels[0]),
     ).toEqual([]);
   });
 });

@@ -6,13 +6,13 @@ import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The number-gauge widget (the "Numerical individual" design): one parcel's open number
+ * The number widget (the "Numerical individual" design): one parcel's open number
  * as the large figure, with a marker at its place on a scale from zero to a round figure
  * above the largest analysed value — the same scale the Todas histogram draws, so the
  * parcel can be read against the set. Pure, node-tested.
  */
 
-export type NumberGaugeWidget = {
+export type NumberWidget = {
   id: string;
   label: string;
   /** The metadata's description, behind the title's info icon. */
@@ -29,18 +29,18 @@ export type NumberGaugeWidget = {
 };
 
 /**
- * One widget per indicator that renders as a gauge under this riesgo and scope
+ * One widget per indicator that renders as a number widget under this riesgo and scope
  * (`widgetFor`), in metadata order, for the open parcel's reading. The scale spans every
  * submitted parcel's value, not only the open one's. A parcel with no reading gets no widget.
  */
-export function numberGaugeWidgets(
+export function numberWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
   riesgo: Riesgo,
   scope: ParcelScope,
   parcel: AnalysisParcel | null | undefined,
-): NumberGaugeWidget[] {
+): NumberWidget[] {
   if (!indicators || !parcel) return [];
 
   const byId = new Map(parcels.map((entry) => [String(entry.parcel_id), entry]));
@@ -48,7 +48,7 @@ export function numberGaugeWidgets(
 
   return indicators.flatMap((indicator) => {
     if (isAreaIndicator(indicator)) return [];
-    if (widgetFor(indicator.indicator_type, { riesgo, scope }) !== 'gauge') return [];
+    if (widgetFor(indicator.indicator_type, { riesgo, scope }) !== 'number') return [];
 
     const value = numberOf(parcel, indicator.id);
 

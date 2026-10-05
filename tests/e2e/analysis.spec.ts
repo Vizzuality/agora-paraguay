@@ -589,7 +589,7 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
 
-  // A parcel tab narrows the widgets to that parcel: its number as the gauge's figure
+  // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
   // (the "Numerical individual" design), its class on the ruler. Back on Todas the
   // histogram returns.
   const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');

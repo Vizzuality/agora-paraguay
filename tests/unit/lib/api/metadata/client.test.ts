@@ -149,7 +149,7 @@ describe('fetchIndicators', () => {
 
   it('rejects an indicator type it has no card for', async () => {
     fetchMock.mockResolvedValueOnce(
-      Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'gauge' } }]),
+      Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'unknown' } }]),
     );
 
     await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);

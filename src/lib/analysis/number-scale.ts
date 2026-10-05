@@ -1,7 +1,7 @@
 /*
  * The scale an open number (t/ha, no metadata range) is drawn on: from zero to a round
  * figure just above the largest analysed value, with the ticks d3 would pick — so the
- * gauge of one parcel and the histogram of them all read on the same axis.
+ * number card of one parcel and the histogram of them all read on the same axis.
  */
 
 export type NumberScale = { min: number; max: number; ticks: number[] };

@@ -60,7 +60,7 @@ describe('analysisWidgets', () => {
     expect(widgets[1]).not.toHaveProperty('classes');
   });
 
-  it("productivo, a parcel tab: the category reads its class on the ruler, the number is that parcel's gauge", () => {
+  it("productivo, a parcel tab: the category reads its class on the ruler, the number is that parcel's figure", () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
@@ -72,10 +72,10 @@ describe('analysisWidgets', () => {
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
       ['ruler', 'Resiliencia'],
-      ['gauge', 'Pro_soja'],
+      ['number', 'Pro_soja'],
     ]);
     expect(widgets[0]).toMatchObject({ level: 'Alta' });
-    // The gauge sits on the scale of the whole set (0–4), not of this parcel alone.
+    // The number card sits on the scale of the whole set (0–4), not of this parcel alone.
     expect(widgets[1]).toMatchObject({ text: '3,8', unit: 't/ha', max: 4, position: 95 });
   });
 

@@ -10,7 +10,7 @@ const production: Indicator = {
   unit: 't/ha',
   indicator_type: { type: 'numeric' },
 };
-/** A range on productivo is what the list serves now; an open number has the gauge and histogram. */
+/** A range on productivo is what the list serves now; an open number has the number card and histogram. */
 const score: Indicator = {
   id: 'Pro_soja_score',
   name: 'Puntuación de producción de soja',
@@ -84,7 +84,7 @@ describe('parcelValueWidgets', () => {
     expect(parcelValueWidgets(parcels, ['A'], [area], 'productivo')).toEqual([]);
   });
 
-  it('leaves open numbers to the gauge and the histogram, sanitario ranges to the ruler', () => {
+  it('leaves open numbers to the number card and the histogram, sanitario ranges to the ruler', () => {
     expect(parcelValueWidgets(parcels, ['A', 'B'], [production], 'productivo')).toEqual([]);
     expect(parcelValueWidgets(parcels, ['A'], [rust, score], 'sanitario')).toEqual([]);
     expect(parcelValueWidgets(parcels, ['A'], undefined, 'productivo')).toEqual([]);

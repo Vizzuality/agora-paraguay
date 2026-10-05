@@ -1,6 +1,6 @@
 import { categoryCountWidgets, type CategoryCountWidget } from '@/lib/analysis/category-counts';
 import { indicatorCards, type IndicatorCard } from '@/lib/analysis/indicator-cards';
-import { numberGaugeWidgets, type NumberGaugeWidget } from '@/lib/analysis/number-gauge';
+import { numberWidgets, type NumberWidget } from '@/lib/analysis/number-widget';
 import { parcelValueWidgets, type ParcelValuesWidget } from '@/lib/analysis/parcel-values';
 import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
 import type { ParcelScope } from '@/lib/analysis/widget-config';
@@ -12,7 +12,7 @@ export type AnalysisWidget =
   | ({ kind: 'parcel-list' } & ParcelValuesWidget)
   | ({ kind: 'bar-chart' } & CategoryCountWidget)
   | ({ kind: 'histogram' } & ValueHistogramWidget)
-  | ({ kind: 'gauge' } & NumberGaugeWidget);
+  | ({ kind: 'number' } & NumberWidget);
 
 export type AnalysisWidgetsInput = {
   /** The answer's parcels, matched by id — the backend need not echo them in request order. */
@@ -34,7 +34,7 @@ export type AnalysisWidgetsInput = {
  * Every widget the shown indicators produce, in metadata order, whatever its kind:
  * a risk card for a classed reading of one parcel, a list of every parcel's number, a
  * count of the parcels per class, a histogram of their values over a scale, one parcel's
- * number as a gauge on that scale. Which
+ * number on that scale. Which
  * kind an indicator takes is `widgetFor`'s
  * call, by riesgo and scope; each kind's builder answers only the indicators that are
  * its own, so an indicator lands in at most one widget.
@@ -70,8 +70,8 @@ export function analysisWidgets({
       widget,
     ]),
   );
-  const gauges = new Map(
-    numberGaugeWidgets(parcels, parcelIds, indicators, riesgo, scope, parcel).map((widget) => [
+  const numbers = new Map(
+    numberWidgets(parcels, parcelIds, indicators, riesgo, scope, parcel).map((widget) => [
       widget.id,
       widget,
     ]),
@@ -90,8 +90,8 @@ export function analysisWidgets({
     const histogram = histograms.get(indicator.id);
     if (histogram) return [{ kind: 'histogram', ...histogram }];
 
-    const gauge = gauges.get(indicator.id);
-    if (gauge) return [{ kind: 'gauge', ...gauge }];
+    const number = numbers.get(indicator.id);
+    if (number) return [{ kind: 'number', ...number }];
 
     return [];
   });

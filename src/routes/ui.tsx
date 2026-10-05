@@ -15,7 +15,7 @@ import type { ReactNode } from 'react';
 
 import { CategoryCountCard } from '@/components/category-count-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
-import { NumberGaugeCard } from '@/components/number-gauge-card';
+import { NumberCard } from '@/components/number-card';
 import { RiskClassCard } from '@/components/risk-class-card';
 import { StatCard } from '@/components/stat-card';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
@@ -444,8 +444,8 @@ function UiKitPage() {
                     { min: 0, max: 100 },
                   )}
                 />
-                {/* The numerical widgets: one parcel's gauge and the set binned, on one scale. */}
-                <NumberGaugeCard
+                {/* The numerical widgets: one parcel's number and the set binned, on one scale. */}
+                <NumberCard
                   label="Numerical individual"
                   description="Rendimiento de la parcela."
                   unit="t/ha"

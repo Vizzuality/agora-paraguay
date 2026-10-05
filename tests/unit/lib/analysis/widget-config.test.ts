@@ -43,8 +43,8 @@ describe('widgetFor', () => {
     expect(widgetFor(text, { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
   });
 
-  it("productivo: an open number is one parcel's gauge or, under Todas, the set's histogram", () => {
-    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual' })).toBe('gauge');
+  it("productivo: an open number is one parcel's figure or, under Todas, the set's histogram", () => {
+    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual' })).toBe('number');
     expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
     expect(widgetFor({ type: 'number' }, { riesgo: 'productivo', scope: 'multiple' })).toBe(
       'histogram',

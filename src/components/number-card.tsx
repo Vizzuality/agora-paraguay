@@ -1,17 +1,17 @@
 import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
-import type { NumberGaugeWidget } from '@/lib/analysis/number-gauge';
 import { formatNumber } from '@/lib/analysis/number-scale';
+import type { NumberWidget } from '@/lib/analysis/number-widget';
 import { cn } from '@/lib/utils';
 
-type NumberGaugeCardProps = Omit<NumberGaugeWidget, 'id'> & { className?: string };
+type NumberCardProps = Omit<NumberWidget, 'id'> & { className?: string };
 
 /**
  * Widget for one parcel's open number (the "Numerical individual" design): the
  * indicator's name and unit, the figure large, and a track with the marker at the value's
  * place on the scale, the scale's ticks under it. Same light surface as `RiskClassCard`.
  */
-export function NumberGaugeCard({
+export function NumberCard({
   label,
   description,
   unit,
@@ -19,7 +19,7 @@ export function NumberGaugeCard({
   ticks,
   position,
   className,
-}: NumberGaugeCardProps) {
+}: NumberCardProps) {
   return (
     <Card
       className={cn(

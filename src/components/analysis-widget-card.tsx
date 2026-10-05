@@ -1,5 +1,5 @@
 import { CategoryCountCard } from '@/components/category-count-card';
-import { NumberGaugeCard } from '@/components/number-gauge-card';
+import { NumberCard } from '@/components/number-card';
 import { ParcelValuesCard } from '@/components/parcel-values-card';
 import { RiskClassCard } from '@/components/risk-class-card';
 import { ValueHistogramCard } from '@/components/value-histogram-card';
@@ -16,7 +16,7 @@ export function AnalysisWidgetCard({ widget }: { widget: AnalysisWidget }) {
       return <CategoryCountCard {...widget} />;
     case 'histogram':
       return <ValueHistogramCard {...widget} />;
-    case 'gauge':
-      return <NumberGaugeCard {...widget} />;
+    case 'number':
+      return <NumberCard {...widget} />;
   }
 }
