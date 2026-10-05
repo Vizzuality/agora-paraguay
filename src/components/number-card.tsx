@@ -19,7 +19,7 @@ export function NumberCard({
   ticks,
   position,
   className,
-}: NumberCardProps) {
+}: Readonly<NumberCardProps>) {
   return (
     <Card
       className={cn(
