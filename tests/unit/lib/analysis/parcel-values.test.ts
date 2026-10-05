@@ -53,6 +53,13 @@ describe('parcelValueWidgets', () => {
     ]);
   });
 
+  it('lists only the given parcels, numbered by their place in the whole submission', () => {
+    const [widget] = parcelValueWidgets(parcels, ['A', 'B'], [production], 'productivo', ['B']);
+
+    expect(widget.rows.map((row) => [row.label, row.text])).toEqual([['Parcela 2', '3,81']]);
+    expect(parcelValueWidgets(parcels, ['A', 'C'], [production], 'productivo', ['C'])).toEqual([]);
+  });
+
   it('skips a parcel with no reading but keeps the others their numbers and numbering', () => {
     const [widget] = parcelValueWidgets(parcels, ['A', 'C', 'B'], [production], 'productivo');
 

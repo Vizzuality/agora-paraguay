@@ -590,6 +590,18 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
 
+  // A parcel tab narrows the widgets to that parcel: its row alone, its class on the
+  // ruler. Back on Todas both parcels list again.
+  const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await parcelTabs.filter({ hasText: 'Parcela 2' }).getByRole('button').click();
+  await expect(production.getByRole('listitem')).toHaveText([/^Parcela 2.*3,81$/]);
+  await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  await parcelTabs.filter({ hasText: 'Todas' }).getByRole('button').click();
+  await expect(production.getByRole('listitem')).toHaveText([
+    /^Parcela 1.*3,55$/,
+    /^Parcela 2.*3,81$/,
+  ]);
+
   // The arroz indicator is bound to the other crop (and came back "NA" besides): no widget,
   // and the picker does not offer it.
   await expect(

@@ -33,28 +33,31 @@ export type ParcelValuesWidget = {
 };
 
 /**
- * One widget per indicator that renders as parcel values, in metadata order, restricted to
- * the parcels Analizar submitted, in their order. A parcel with no reading has no row; an
- * indicator no parcel answered has no widget.
+ * One widget per indicator that renders as parcel values, in metadata order. `listed` are
+ * the parcels that get a row — the whole submission under Todas, the open tab's parcel
+ * alone otherwise — numbered "Parcela N" by their place in the submission (`parcelIds`),
+ * so a parcel keeps its number whichever tab is open. A parcel with no reading has no row;
+ * an indicator no listed parcel answered has no widget.
  */
 export function parcelValueWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
   riesgo: Riesgo,
+  listed: readonly string[] = parcelIds,
 ): ParcelValuesWidget[] {
   if (!indicators) return [];
 
   const byId = new Map(parcels.map((parcel) => [String(parcel.parcel_id), parcel]));
 
   return indicators.flatMap((indicator) => {
-    // A list of parcels is the multiple view by nature; the scope moves no number anyway.
+    // A list of parcels is the multiple view by nature; the scope only narrows the rows.
     if (widgetFor(indicator.indicator_type, { riesgo, scope: 'multiple' }) !== 'parcel-list') {
       return [];
     }
     if (isAreaIndicator(indicator)) return [];
 
-    const readings = parcelIds.flatMap((parcelId) => {
+    const readings = listed.flatMap((parcelId) => {
       const parcel = byId.get(parcelId);
       const value = parcel === undefined ? undefined : numberOf(parcel, indicator.id);
 

@@ -12,7 +12,11 @@ import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicato
 import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
 import { useDescribe } from '@/lib/analysis/use-describe';
 import { useSession } from '@/lib/auth/use-session';
-import { analysedParcelIdsAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
+import {
+  activeParcelIdAtom,
+  analysedParcelIdsAtom,
+  selectedIndicatorIdsAtom,
+} from '@/store/analysis';
 
 /**
  * Riesgo productivo needs an account: login gate until a session exists, with neither
@@ -61,16 +65,17 @@ function ProductivoGate() {
 }
 
 /**
- * The productivo widgets read the whole selection, not the hero's open tab: an open number
- * lists every parcel, a category counts them per class — or,
- * with a single parcel analysed, reads its class on the ruler (`individual` scope). In
- * metadata order, restricted to what the picker shows and to what applies to the crop
- * (`useApplicableIndicators`). The range indicators (IEP, ProInf, Puntuación) have their
- * own design, not built yet.
+ * The productivo widgets follow the hero's open tab (`activeParcelIdAtom`), as sanitario's
+ * do. Under Todas (`multiple` scope) an open number lists every parcel and a category
+ * counts them per class; on a parcel tab (`individual`) the list holds that parcel's row
+ * alone and the category reads its class on the ruler. In metadata order, restricted to
+ * what the picker shows and to what applies to the crop (`useApplicableIndicators`). The
+ * range indicators (IEP, ProInf, Puntuación) have their own design, not built yet.
  */
 function ProductivoWidgets() {
   const { analysis, indicators, indicatorsError, parcelIds } =
     useApplicableIndicators('productivo');
+  const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom).productivo;
   const describe = useDescribe('productivo');
 
@@ -78,14 +83,17 @@ function ProductivoWidgets() {
     ? visibleIndicators(selectableIndicators(indicators, 'productivo'), selected)
     : undefined;
   const answered = analysis.data?.indicators ?? [];
-  const scope = parcelIds.length > 1 ? 'multiple' : 'individual';
+  const scope = activeId === null ? 'multiple' : 'individual';
   const widgets = analysisWidgets({
     parcels: answered,
     parcelIds,
     indicators: shown,
     riesgo: 'productivo',
     scope,
-    parcel: answered.find((entry) => String(entry.parcel_id) === parcelIds[0]),
+    parcel:
+      activeId === null
+        ? undefined
+        : answered.find((entry) => String(entry.parcel_id) === activeId),
   }).map((widget) => ({ ...widget, description: describe(widget.description) }));
 
   return (
