@@ -1,12 +1,12 @@
 import { InfoTip } from '@/components/info-tip';
 import { Card } from '@/components/ui/card';
-import type { ParcelValuesTile } from '@/lib/analysis/parcel-values';
+import type { ParcelValuesWidget } from '@/lib/analysis/parcel-values';
 import { cn } from '@/lib/utils';
 
-type ParcelValuesCardProps = Omit<ParcelValuesTile, 'id'> & { className?: string };
+type ParcelValuesCardProps = Omit<ParcelValuesWidget, 'id'> & { className?: string };
 
 /**
- * Widget tile for an open number over the analysed parcels (Figma Widget01): the
+ * Widget for an open number over the analysed parcels (Figma Widget01): the
  * indicator's name and unit, then one row per parcel — its id, a track filled on the
  * indicator's scale or relative to the largest parcel, and the figure. Same light surface
  * as `RiskClassCard`.
@@ -17,7 +17,7 @@ export function ParcelValuesCard({
   unit,
   rows,
   className,
-}: ParcelValuesCardProps) {
+}: Readonly<ParcelValuesCardProps>) {
   return (
     <Card
       className={cn(
@@ -45,7 +45,7 @@ export function ParcelValuesCard({
             <span className="shrink-0 text-[12px] leading-[17.4px] font-semibold tabular-nums">
               {row.label}
             </span>
-            {/* Presentational: the figure beside it already says the value (see `Meter`). */}
+            {/* Presentational: the figure beside it already says the value (see `RiskRuler`). */}
             <span aria-hidden className="flex min-w-0 flex-1 items-center gap-[2px] p-px">
               <span
                 className="h-2 min-w-0 rounded-[2px] bg-risk-medium opacity-50"

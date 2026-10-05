@@ -4,7 +4,7 @@ import { errorReason } from '@/lib/api/http';
 type AnalysisStatusProps = Pick<ReturnType<typeof useAnalysis>, 'analysis' | 'indicatorsError'>;
 
 /**
- * What both analysis pages say above their tiles: the indicator list failing, the
+ * What both analysis pages say above their widgets: the indicator list failing, the
  * analysis failing, and the first run in flight. Nothing when all is well. Alerts for
  * failures, a polite live region for the wait.
  */

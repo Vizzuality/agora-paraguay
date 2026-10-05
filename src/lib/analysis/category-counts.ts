@@ -1,50 +1,51 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
-import { categoryIndex } from '@/lib/analysis/indicator-cards';
-import { hasColumn, readingOf } from '@/lib/analysis/readings';
-import { widgetKindOf } from '@/lib/analysis/widget-config';
+import { categoryIndex, rangeClassIndex } from '@/lib/analysis/indicator-cards';
+import { hasColumn, numberOf, readingOf } from '@/lib/analysis/readings';
+import {
+  categoryAxis,
+  categoryClasses,
+  NA_CATEGORY,
+  RANGE_CLASSES,
+  widgetFor,
+  type ParcelScope,
+  type RiskClass,
+  type RiskTone,
+} from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 /*
- * The category-count tile (Figma Widget03 on productivo): one indicator, one column per
- * category the indicator defines, with how many analysed parcels fall in it. Pure,
- * node-tested.
+ * The class-count widget (the "Categorical multiple" design): one indicator, one column
+ * per class the indicator is read in, with how many analysed parcels fall in it. A
+ * category's classes are its own categories; a short range's are the ruler's three
+ * (`RANGE_CLASSES`). Pure, node-tested; the bars are scaled by the chart (`CategoryBars`).
  */
 
-/**
- * The backend's "not applicable" class, listed as a category on some indicators (ITR,
- * volatility) and answered where the indicator does not apply to the parcel's crop. It
- * is never a column of the tile and a parcel reading it is counted nowhere.
- */
-const NA_CATEGORY = 'NA';
-
-/** The bar's hue: grey for the low classes, blue for the middle ones, orange for the high. */
-export type CategoryTone = 'low' | 'mid' | 'high';
+export { categoryAxis };
 
 export type CategoryColumn = {
   label: string;
   count: number;
-  /** 0–100: the bar's height relative to the fullest column. */
-  height: number;
-  tone: CategoryTone;
+  /** The bar's hue, in the ruler's vocabulary: blue, grey, orange, red. */
+  tone: RiskTone;
 };
 
 /**
  * The design paints a category by its magnitude word, whatever the indicator: "Bajo"
- * and "Muy bajo" grey, "Medio" and "Media" blue, "Alto" orange (Figma Widget03, the
- * volatility state). Read off the label: low words, high words, everything else middle
- * — so "Estable", "Moderado" and "Positiva" are blue.
+ * and "Muy bajo" grey, "Medio" and "Media" blue, "Alto" orange (the design's
+ * volatility state). Read off the label: low words grey, high words orange, everything
+ * else blue — so "Estable", "Moderado" and "Positiva" are blue.
  */
-export function categoryTone(label: string): CategoryTone {
+export function categoryTone(label: string): RiskTone {
   const word = label.trim().toLowerCase();
 
-  if (/^(muy )?baj[oa]$/.test(word)) return 'low';
-  if (/^(muy )?alt[oa]$/.test(word) || word === 'alerta') return 'high';
+  if (/^(muy )?baj[oa]$/.test(word)) return 'medium';
+  if (/^(muy )?alt[oa]$/.test(word) || word === 'alerta') return 'elevated';
 
-  return 'mid';
+  return 'low';
 }
 
-export type CategoryCountTile = {
+export type CategoryCountWidget = {
   id: string;
   label: string;
   /** The metadata's description, behind the title's info icon. */
@@ -53,67 +54,96 @@ export type CategoryCountTile = {
 };
 
 /**
- * The categories as the tile lays them out: the indicator's own, in the order it defines
- * them ("Alta, Media, Baja"). "NA" is not a column: a parcel answering it has no reading,
- * so nothing could ever be counted there.
+ * The classes an indicator is counted in, and which one a parcel's reading falls in —
+ * `undefined` when the parcel has no reading the classes can place (NA included).
  */
-export function categoryAxis(categories: readonly string[]): string[] {
-  return categories.filter((category) => category !== NA_CATEGORY);
+type Counting = {
+  classes: RiskClass[];
+  classOf: (parcel: AnalysisParcel) => number | undefined;
+};
+
+function countingFor(indicator: Indicator): Counting | undefined {
+  const type = indicator.indicator_type;
+
+  switch (type.type) {
+    case 'category': {
+      const axis = categoryAxis(type.categories);
+
+      return {
+        classes: categoryClasses(type.categories).map((riskClass) => ({
+          ...riskClass,
+          tone: categoryTone(riskClass.label),
+        })),
+        classOf: (parcel) => {
+          const value = readingOf(parcel, indicator.id);
+          const index = value === undefined ? undefined : categoryIndex(value, type.categories);
+
+          if (index === undefined) return undefined;
+
+          const category = type.categories[index];
+
+          return category === NA_CATEGORY ? undefined : axis.indexOf(category);
+        },
+      };
+    }
+    case 'range':
+      return {
+        classes: [...RANGE_CLASSES],
+        classOf: (parcel) => {
+          const value = numberOf(parcel, indicator.id);
+
+          return value === undefined ? undefined : rangeClassIndex(value, type);
+        },
+      };
+    default:
+      return undefined;
+  }
 }
 
 /**
- * One tile per category indicator the answer carries, in metadata order, over the
- * parcels Analizar submitted. A tile always shows every category, empty ones included —
- * an indicator that does not apply to the crop (every parcel NA) shows with nothing
- * counted. Only an indicator the answer has no column for gets no tile.
+ * One widget per indicator that counts under this riesgo and scope (`widgetFor`), in
+ * metadata order, over the parcels Analizar submitted — only under the `multiple` scope;
+ * one parcel reads its class on the ruler instead (`indicatorCards`). A widget always
+ * shows every class, empty ones included — an indicator that does not apply to the crop
+ * (every parcel NA) shows with nothing counted. Only an indicator the answer has no column
+ * for gets no widget.
  */
-export function categoryCountTiles(
+export function categoryCountWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
   riesgo: Riesgo,
-): CategoryCountTile[] {
+  scope: ParcelScope,
+): CategoryCountWidget[] {
   if (!indicators) return [];
 
   const byId = new Map(parcels.map((parcel) => [String(parcel.parcel_id), parcel]));
 
   return indicators.flatMap((indicator) => {
-    const type = indicator.indicator_type;
+    if (isAreaIndicator(indicator)) return [];
+    if (widgetFor(indicator.indicator_type, { riesgo, scope }) !== 'bar-chart') return [];
 
-    if (type.type !== 'category' || isAreaIndicator(indicator)) return [];
-    if (widgetKindOf(riesgo, type.type) !== 'category-count') return [];
+    const counting = countingFor(indicator);
+
+    if (!counting) return [];
 
     const submitted = parcelIds.flatMap((parcelId) => byId.get(parcelId) ?? []);
 
     if (!submitted.some((parcel) => hasColumn(parcel, indicator.id))) return [];
 
-    const counts = new Map<string, number>();
+    const counts = counting.classes.map(() => 0);
 
     for (const parcel of submitted) {
-      const value = readingOf(parcel, indicator.id);
-      const index = value === undefined ? undefined : categoryIndex(value, type.categories);
+      const index = counting.classOf(parcel);
 
-      if (index === undefined) continue;
-
-      const category = type.categories[index];
-
-      if (category === NA_CATEGORY) continue;
-
-      counts.set(category, (counts.get(category) ?? 0) + 1);
+      if (index !== undefined && index >= 0 && index < counts.length) counts[index] += 1;
     }
 
-    const axis = categoryAxis(type.categories);
-    const max = Math.max(0, ...axis.map((category) => counts.get(category) ?? 0));
-    const columns = axis.map((category) => {
-      const count = counts.get(category) ?? 0;
-
-      return {
-        label: category,
-        count,
-        height: max > 0 ? (count / max) * 100 : 0,
-        tone: categoryTone(category),
-      };
-    });
+    const columns = counting.classes.map((riskClass, index) => ({
+      label: riskClass.label,
+      count: counts[index],
+      tone: riskClass.tone,
+    }));
 
     return [
       { id: indicator.id, label: indicator.name, description: indicator.description, columns },

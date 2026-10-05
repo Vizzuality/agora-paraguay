@@ -8,10 +8,12 @@ function ScrollArea({
   children,
   viewportRef,
   ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
-  /** Reaches the scrolling element itself, for programmatic scrolling. */
-  viewportRef?: React.Ref<HTMLDivElement>;
-}) {
+}: Readonly<
+  React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
+    /** Reaches the scrolling element itself, for programmatic scrolling. */
+    viewportRef?: React.Ref<HTMLDivElement>;
+  }
+>) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
@@ -35,7 +37,7 @@ function ScrollBar({
   className,
   orientation = 'vertical',
   ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
+}: Readonly<React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>>) {
   return (
     <ScrollAreaPrimitive.ScrollAreaScrollbar
       data-slot="scroll-area-scrollbar"

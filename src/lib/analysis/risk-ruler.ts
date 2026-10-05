@@ -14,7 +14,7 @@ export type RulerBand = RiskClass & {
 /**
  * The ruler for a reading: one band per class, all the same width, the marker inside the
  * band the position falls in, at where it falls within it. Weights rather than widths,
- * so the marker lands at the same place whatever the tile's width — nothing is measured.
+ * so the marker lands at the same place whatever the widget's width — nothing is measured.
  */
 export function rulerBands(position: number, classes: readonly RiskClass[]): RulerBand[] {
   // NaN would reach the DOM as `flex-grow: NaN`, an invalid value that collapses the

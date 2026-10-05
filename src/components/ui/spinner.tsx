@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
  * the a11y lint asks for, so the glyph is decorative and the caller wraps it in an
  * `<output>` with the visible message (see `MiniMapThumbnail`).
  */
-function Spinner({ className, ...props }: React.ComponentProps<'svg'>) {
+function Spinner({ className, ...props }: Readonly<React.ComponentProps<'svg'>>) {
   return <Loader2Icon aria-hidden className={cn('size-4 animate-spin', className)} {...props} />;
 }
 

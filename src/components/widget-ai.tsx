@@ -36,7 +36,7 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
   );
 }
 
-export function WidgetAI({ parcels, className }: WidgetAIProps) {
+export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
   const mutation = useMutation(analysisMutations.summary());
 
   return (

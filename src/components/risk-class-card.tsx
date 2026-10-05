@@ -15,12 +15,12 @@ type RiskClassCardProps = Omit<IndicatorCard, 'id'> & {
 };
 
 /**
- * Widget tile for a classed indicator (Figma Widget03): a label, the class as the large
+ * Widget for a classed indicator: a label, the class as the large
  * figure, and a ruler of one band per class with the marker inside the class the reading
  * falls in, the class names under the bands.
  *
  * Light surface (`bg-card`), unlike `StatCard`'s navy `bg-widget` — the two are
- * different tiles in the design, not variants of one.
+ * different widgets in the design, not variants of one.
  */
 export function RiskClassCard({
   label,
@@ -29,7 +29,7 @@ export function RiskClassCard({
   scale,
   action,
   className,
-}: RiskClassCardProps) {
+}: Readonly<RiskClassCardProps>) {
   return (
     <Card
       className={cn(
@@ -53,6 +53,7 @@ export function RiskClassCard({
           className="text-[66px] leading-normal font-extralight tracking-[0.408px]"
         >
           {level}
+          {scale?.value && <span className="sr-only"> ({scale.value})</span>}
         </p>
         {scale && <RiskRuler {...scale} />}
       </div>
@@ -60,10 +61,11 @@ export function RiskClassCard({
   );
 }
 
-/** Track colour per band: the outer classes in their hue at half strength, the middle a faint grey. */
+/** Track colour per band: the coloured classes in their hue at half strength, the grey one faint. */
 const TRACK_CLASS: Record<RiskTone, string> = {
   low: 'bg-risk-low opacity-50',
   medium: 'bg-muted-foreground opacity-20',
+  elevated: 'bg-risk-medium opacity-50',
   high: 'bg-risk-high opacity-50',
 };
 
@@ -71,19 +73,22 @@ const TRACK_CLASS: Record<RiskTone, string> = {
 const MARKER_CLASS: Record<RiskTone, string> = {
   low: 'bg-risk-low',
   medium: 'bg-muted-foreground',
+  elevated: 'bg-risk-medium',
   high: 'bg-risk-high',
 };
 
 /**
- * Presentational: the class is printed right above it, so exposing the ruler and its
- * labels would announce the same reading twice (same reasoning as `Meter`).
+ * Presentational: the class is printed right above it (with the exact value, when there
+ * is one), so exposing the ruler and its labels would announce the same reading twice.
+ * The other tracks and charts hide themselves for the same reason.
  */
-function RiskRuler({ classes, position }: Readonly<RiskScale>) {
+function RiskRuler({ classes, position, value }: Readonly<RiskScale>) {
   const bands = rulerBands(position, classes);
 
   return (
     <div aria-hidden className="flex flex-col gap-1">
-      <div className="flex w-full items-center gap-[2px] p-px">
+      {/* The value sits over the marker; the top padding makes its room. */}
+      <div className={cn('flex w-full items-center gap-[2px] p-px', value && 'pt-5')}>
         {bands.map((band) =>
           band.marker ? (
             <div key={band.label} className="flex min-w-0 flex-1 items-center gap-[2px]">
@@ -91,7 +96,15 @@ function RiskRuler({ classes, position }: Readonly<RiskScale>) {
                 className={cn('h-2 min-w-0 rounded-[2px]', TRACK_CLASS[band.tone])}
                 style={{ flexGrow: band.marker.before }}
               />
-              <span className={cn('h-6 w-1 shrink-0 rounded-[2px]', MARKER_CLASS[band.tone])} />
+              <span
+                className={cn('relative h-6 w-1 shrink-0 rounded-[2px]', MARKER_CLASS[band.tone])}
+              >
+                {value && (
+                  <span className="absolute bottom-full left-1/2 w-8 -translate-x-1/2 text-center text-[12px] leading-[17.4px] whitespace-nowrap text-foreground opacity-70">
+                    {value}
+                  </span>
+                )}
+              </span>
               <span
                 className={cn('h-2 min-w-0 rounded-[2px]', TRACK_CLASS[band.tone])}
                 style={{ flexGrow: band.marker.after }}

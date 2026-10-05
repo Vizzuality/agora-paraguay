@@ -27,7 +27,7 @@ export const HERO_FILTERS = [
 ];
 
 /**
- * The indicator lists `GET /relay/indicators?riesgo=` answers, with the ids the
+ * The indicator lists `GET /api/parcels/indicators?riesgo={sanitario|productivo}` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
  */
 /** The parcel area, answered as one more column; the thumbnail prints it, never a card. */
@@ -41,7 +41,7 @@ const AREA_INDICATOR = {
 /** West 10.2 ha + east 7.3 ha: 17.5 ha under Todas. */
 export const PARCEL_AREAS: Record<string, number> = { D07D21P00000002: 10.2, D07D23P00000008: 7.3 };
 
-/** Base soy production per parcel (t/ha), for the productivo values tile: west, then east. */
+/** Base soy production per parcel (t/ha), for the productivo values widget: west, then east. */
 export const PARCEL_PRODUCTION: Record<string, number> = {
   D07D21P00000002: 3.55,
   D07D23P00000008: 3.81,
@@ -171,10 +171,9 @@ export async function stubAnalysisApi(page: Page) {
     },
   );
 
-  // The indicator list of the riesgo asked for in the query string. Stubbed at the relay,
-  // so the server route never has to reach an API under Playwright.
+  // The indicator list of the riesgo asked for in the query string.
   await page.route(
-    (url) => url.pathname === '/relay/indicators',
+    (url) => url.pathname === '/api/parcels/indicators',
     (route) =>
       route.fulfill({
         contentType: 'application/json',
@@ -220,7 +219,7 @@ export async function stubAnalysisApi(page: Page) {
           Pro_soja: PARCEL_PRODUCTION[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',
-          // Both parcels Media: the resilience tile counts 2 under Media.
+          // Both parcels Media: the resilience widget counts 2 under Media.
           Resiliencia: 'Media',
         };
 

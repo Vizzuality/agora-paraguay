@@ -36,7 +36,7 @@ function useMapViewState() {
   return viewState;
 }
 
-export function MapView({ children }: { children?: ReactNode }) {
+export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
   const viewState = useMapViewState();
   const navigate = useNavigate();
   const { bound } = useAtomValue(drawAtom);

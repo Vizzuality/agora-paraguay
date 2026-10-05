@@ -144,14 +144,19 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(areas).toHaveText(['Todas', 'Parcela 1', 'Parcela 2']);
   await expect(areas.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
 
-  // Under Todas the risk card combines the parcels: disease indices 3 and 1 average to
-  // 2, the middle of the 1–3 range — the class as the figure (Figma Widget03).
+  // Under Todas the disease card counts the parcels per class rather than averaging them
+  // (the "Categorical multiple" design): indices 3 and 1 put one parcel in Severo and one
+  // in Sin riesgo. The counts are listed for assistive tech under the chart.
   const card = page
     .getByRole('heading', { name: 'Phakopsora pachyrhizi' })
     .locator('..')
     .locator('..');
-  const level = card.locator('[data-slot="risk-level"]');
-  await expect(level).toHaveText('Moderado');
+  await expect(card).toContainText('Número de parcelas');
+  await expect(card.getByRole('listitem')).toHaveText([
+    'Sin riesgo: 1',
+    'Moderado: 0',
+    'Severo: 1',
+  ]);
 
   // Its text facts (crop, station, phenology) share one general-info card instead.
   const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
@@ -235,10 +240,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
 test('says why when the indicator list cannot be loaded', async ({ page }) => {
   const { draw, analyze } = controls(page);
 
-  // Registered after `stubAnalysisApi`, so Playwright tries it first: the relay answers
+  // Registered after `stubAnalysisApi`, so Playwright tries it first: the proxy answers
   // the way it does when the API is down, with the reason in the body.
   await page.route(
-    (url) => url.pathname === '/relay/indicators',
+    (url) => url.pathname === '/api/parcels/indicators',
     (route) =>
       route.fulfill({
         status: 502,
@@ -392,11 +397,13 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
     .locator('..')
     .locator('..');
   const level = card.locator('[data-slot="risk-level"]');
+  const counts = card.getByRole('listitem');
   // The thumbnail prints the open tab's area: the parcels summed under Todas.
 
-  // Lands on Todas: the combined index (3 and 1 → 2) reads "Moderado".
+  // Lands on Todas: the parcels counted per class (indices 3 and 1), no single figure.
   await expect(allTab).toHaveAttribute('aria-current', 'true');
-  await expect(level).toHaveText('Moderado');
+  await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
+  await expect(level).toHaveCount(0);
   await expect(page.getByText('17,5 ha')).toBeVisible();
   await expect.poll(() => analysisRuns.length).toBe(1);
 
@@ -420,7 +427,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   // The two stubbed parcels split the drawn bbox down the middle and are taller than
   // wide, so fitted they fill the canvas height and sit centred horizontally.
   await allTab.click();
-  await expect(level).toHaveText('Moderado');
+  await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
   const canvas = mapCanvas(page);
   await expect(canvas).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
@@ -573,28 +580,37 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
 
-  // The productivo analysis runs once every filter has a value. Its tiles read the whole
-  // selection: the base production lists both parcels (Figma Widget01), the resilience
-  // proxy counts them per class (Widget03), and the thumbnail prints the summed area.
-  // Soja is picked: the indicators follow the crop.
+  // The productivo analysis runs once every filter has a value. Under Todas its widgets
+  // read the whole selection: the base production bins both parcels' values on a 0–4 t/ha
+  // scale (the "Numerical multiple" design; 3,55 and 3,81 fall in the 3,4–3,6 and 3,8–4
+  // bins), the resilience proxy counts them per class (Widget03), and the thumbnail
+  // prints the summed area. Soja is picked: the indicators follow the crop.
   await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Soja' }).click();
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')
     .locator('..');
-  await expect(production.getByRole('listitem')).toHaveText([
-    /^Parcela 1.*3,55$/,
-    /^Parcela 2.*3,81$/,
-  ]);
+  await expect(production).toContainText('t/ha');
+  await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
   const resilience = page
     .getByRole('heading', { name: 'Proxy de resiliencia operativa' })
     .locator('..')
     .locator('..');
-  await expect(resilience.getByRole('listitem').filter({ hasText: /^2$/ })).toHaveCount(1);
+  await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
 
-  // The arroz indicator is bound to the other crop (and came back "NA" besides): no tile,
+  // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
+  // (the "Numerical individual" design), its class on the ruler. Back on Todas the
+  // histogram returns.
+  const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  await parcelTabs.filter({ hasText: 'Parcela 2' }).getByRole('button').click();
+  await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  await parcelTabs.filter({ hasText: 'Todas' }).getByRole('button').click();
+  await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
+
+  // The arroz indicator is bound to the other crop (and came back "NA" besides): no widget,
   // and the picker does not offer it.
   await expect(
     page.getByRole('heading', { name: 'Producción base histórica de arroz' }),

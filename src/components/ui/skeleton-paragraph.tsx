@@ -19,7 +19,7 @@ function wordWidth(line: number, word: number): number {
 }
 
 /** Placeholder text block at `text-sm` line height: one row of "word" bars per line. */
-function SkeletonParagraph({ lines = 4, className, ...props }: SkeletonParagraphProps) {
+function SkeletonParagraph({ lines = 4, className, ...props }: Readonly<SkeletonParagraphProps>) {
   const rows = Array.from({ length: lines }, (_, line) => {
     const closing = line === lines - 1;
     const words = closing ? CLOSING_LINE_WORDS : WORDS_PER_LINE;
