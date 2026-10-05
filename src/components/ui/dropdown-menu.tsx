@@ -46,7 +46,7 @@ function DropdownMenuContent({
         {...props}
       >
         {/* The scroller is a child so the mask fades rows, not the surface and border. */}
-        <div className="min-h-0 overflow-x-hidden overflow-y-auto scroll-fade-y p-1">
+        <div className="scroll-fade-y min-h-0 overflow-x-hidden overflow-y-auto p-1">
           {children}
         </div>
       </DropdownMenuPrimitive.Content>

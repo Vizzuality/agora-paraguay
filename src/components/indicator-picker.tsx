@@ -94,7 +94,7 @@ function IndicatorChecklist({
         <ul
           id={listId}
           aria-label="Indicadores"
-          className="max-h-80 overflow-y-auto scroll-fade-y px-1 py-1.5"
+          className="scroll-fade-y max-h-80 overflow-y-auto px-1 py-1.5"
         >
           {matching.map((indicator) => {
             const checked = visibleIds.includes(indicator.id);
