@@ -1,6 +1,6 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { createUser, deleteUser, fetchMe, listUsers, login, logout } from './client';
+import { createUser, deleteUser, fetchMe, getUsers, login, logout } from './client';
 import type { CreateUserRequest, Credentials } from './schemas';
 
 export const authQueries = {
@@ -23,7 +23,7 @@ export const authQueries = {
   users: () =>
     queryOptions({
       queryKey: ['auth', 'admin', 'users'] as const,
-      queryFn: listUsers,
+      queryFn: getUsers,
       retry: false,
     }),
 };

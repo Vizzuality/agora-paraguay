@@ -100,7 +100,7 @@ export async function login(credentials: Credentials): Promise<Session> {
  * session; anyone else gets the API's 403 as an `ApiError`, and the caller decides
  * whether that means "log in" or "not for you".
  */
-export async function listUsers(): Promise<AdminUser[]> {
+export async function getUsers(): Promise<AdminUser[]> {
   return adminUsersSchema.parse(await getJson('/api/auth/admin/users/'));
 }
 
