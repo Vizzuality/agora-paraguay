@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 /**
- * Custom, not stock shadcn (like `meter.tsx`). A label that rests inside its field while
+ * Custom, not stock shadcn. A label that rests inside its field while
  * the field is empty and floats onto the top border once it has a value, is open or is
  * focused — the WS Form "inside label" behaviour, styled per the Figma hero fields.
  *

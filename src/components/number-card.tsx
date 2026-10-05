@@ -49,7 +49,7 @@ export function NumberCard({
           {text}
           {unit && <span className="sr-only"> {unit}</span>}
         </p>
-        {/* Presentational: the figure above already says the value (see `Meter`). */}
+        {/* Presentational: the figure above already says the value (see `RiskRuler`). */}
         <div aria-hidden className="flex flex-col gap-1">
           <div className="flex w-full items-center gap-[2px] p-px">
             <span

@@ -71,7 +71,6 @@ import {
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Meter } from '@/components/ui/meter';
 import {
   Popover,
   PopoverContent,
@@ -470,11 +469,6 @@ function UiKitPage() {
                 />
                 <AnalysisCardsDemo />
               </ClientOnly>
-            </div>
-            <div className="grid max-w-md gap-3">
-              <Meter value={25} />
-              <Meter value={60} color="var(--chart-2)" />
-              <Meter value={90} color="var(--chart-4)" />
             </div>
           </Section>
 
