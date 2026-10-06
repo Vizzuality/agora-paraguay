@@ -6,7 +6,7 @@ import { clusterLabels, type LabelCluster } from '@/lib/map/label-clusters';
 
 /**
  * Centre-to-centre distance in px under which two number chips are read as overlapping:
- * a one-digit pill is about 40px wide (Figma 5540:8119).
+ * a one-digit pill is about 40px wide.
  */
 const CLUSTER_RADIUS = 40;
 
