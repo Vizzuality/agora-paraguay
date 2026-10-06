@@ -1,4 +1,5 @@
 import { categoryCountWidgets, type CategoryCountWidget } from '@/lib/analysis/category-counts';
+import { deviationWidgets, type DeviationWidget } from '@/lib/analysis/deviation-widget';
 import { indicatorCards, type IndicatorCard } from '@/lib/analysis/indicator-cards';
 import { numberWidgets, type NumberWidget } from '@/lib/analysis/number-widget';
 import { parcelValueWidgets, type ParcelValuesWidget } from '@/lib/analysis/parcel-values';
@@ -12,7 +13,8 @@ export type AnalysisWidget =
   | ({ kind: 'parcel-list' } & ParcelValuesWidget)
   | ({ kind: 'bar-chart' } & CategoryCountWidget)
   | ({ kind: 'histogram' } & ValueHistogramWidget)
-  | ({ kind: 'number' } & NumberWidget);
+  | ({ kind: 'number' } & NumberWidget)
+  | ({ kind: 'deviation' } & DeviationWidget);
 
 export type AnalysisWidgetsInput = {
   /** The answer's parcels, matched by id — the backend need not echo them in request order. */
@@ -34,7 +36,7 @@ export type AnalysisWidgetsInput = {
  * Every widget the shown indicators produce, in metadata order, whatever its kind:
  * a risk card for a classed reading of one parcel, a list of every parcel's number, a
  * count of the parcels per class, a histogram of their values over a scale, one parcel's
- * number on that scale. Which
+ * number on that scale, one parcel's signed deviation on a diverging track. Which
  * kind an indicator takes is `widgetFor`'s
  * call, by riesgo and scope; each kind's builder answers only the indicators that are
  * its own, so an indicator lands in at most one widget.
@@ -76,6 +78,12 @@ export function analysisWidgets({
       widget,
     ]),
   );
+  const deviations = new Map(
+    deviationWidgets(parcels, parcelIds, indicators, riesgo, scope, parcel).map((widget) => [
+      widget.id,
+      widget,
+    ]),
+  );
 
   return (indicators ?? []).flatMap((indicator): AnalysisWidget[] => {
     const card = cards.get(indicator.id);
@@ -92,6 +100,9 @@ export function analysisWidgets({
 
     const number = numbers.get(indicator.id);
     if (number) return [{ kind: 'number', ...number }];
+
+    const deviation = deviations.get(indicator.id);
+    if (deviation) return [{ kind: 'deviation', ...deviation }];
 
     return [];
   });

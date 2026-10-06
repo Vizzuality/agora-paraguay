@@ -621,14 +621,30 @@ test('logs in from the header dialog', async ({ page }) => {
     .locator('..');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
+  // The deviation from the base — a plain number on the wire, retyped by its `Des_` id —
+  // bins both parcels either side of zero, the scale ending on the largest one (±0,5 t/ha):
+  // -0,3 below, +0,5 above.
+  const deviation = page
+    .getByRole('heading', {
+      name: 'Desviación de la producción de soja respecto a la base histórica',
+    })
+    .locator('..')
+    .locator('..');
+  await expect(deviation.getByRole('listitem')).toHaveText(['-0,3 – -0,25: 1', '0,45 – 0,5: 1']);
 
   // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
-  // (the "Numerical individual" design), its class on the ruler. Back on Todas the
-  // histogram returns.
+  // (the "Numerical individual" design), its signed deviation on the diverging track
+  // (Widget03), its class on the ruler. Back on Todas the histograms return.
   const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await parcelTabs.filter({ hasText: 'Parcela 2' }).getByRole('button').click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  await expect(deviation.locator('[data-slot="figure"]')).toHaveText('-0,3 t/ha');
+  // …measured from that parcel's own base production (`Pro_soja`), printed under the track.
+  await expect(deviation.locator('[data-slot="base"]')).toHaveText('3,81');
   await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  await parcelTabs.filter({ hasText: 'Parcela 1' }).getByRole('button').click();
+  await expect(deviation.locator('[data-slot="figure"]')).toHaveText('+0,5 t/ha');
+  await expect(deviation.locator('[data-slot="base"]')).toHaveText('3,55');
   await parcelTabs.filter({ hasText: 'Todas' }).getByRole('button').click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 

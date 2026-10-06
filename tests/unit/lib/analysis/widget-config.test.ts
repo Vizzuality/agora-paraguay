@@ -16,6 +16,7 @@ const quality: IndicatorType = { type: 'range', min: 0, max: 100 };
 const category: IndicatorType = { type: 'category', categories: ['Alta', 'Media', 'Baja'] };
 const text: IndicatorType = { type: 'text' };
 const numeric: IndicatorType = { type: 'numeric' };
+const deviation: IndicatorType = { type: 'deviation' };
 
 describe('widgetFor', () => {
   it('sanitario, one parcel: a range gets the ruler, text and open numbers are general info', () => {
@@ -49,6 +50,13 @@ describe('widgetFor', () => {
     expect(widgetFor({ type: 'number' }, { riesgo: 'productivo', scope: 'multiple' })).toBe(
       'histogram',
     );
+  });
+
+  it("productivo: a deviation is one parcel's diverging card or, under Todas, the set's histogram; a fact on sanitario", () => {
+    expect(widgetFor(deviation, { riesgo: 'productivo', scope: 'individual' })).toBe('deviation');
+    expect(widgetFor(deviation, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
+    expect(widgetFor(deviation, { riesgo: 'sanitario', scope: 'individual' })).toBe('fact');
+    expect(widgetFor(deviation, { riesgo: 'sanitario', scope: 'multiple' })).toBe('fact');
   });
 
   it('a category follows the scope on both riesgos: one parcel on the ruler, several counted', () => {

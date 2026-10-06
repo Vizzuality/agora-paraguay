@@ -14,6 +14,7 @@ import {
 import type { ReactNode } from 'react';
 
 import { CategoryCountCard } from '@/components/category-count-card';
+import { DeviationCard } from '@/components/deviation-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { NumberCard } from '@/components/number-card';
 import { RiskClassCard } from '@/components/risk-class-card';
@@ -467,6 +468,17 @@ function UiKitPage() {
                     numberScale([5.15, 9.6]),
                     { tone: 'elevated' },
                   )}
+                />
+                {/* The diverging widget: one parcel's signed deviation from its base. */}
+                <DeviationCard
+                  label="Desviación de la producción de soja respecto a la base histórica"
+                  description="Diferencia con la base histórica."
+                  unit="t/ha"
+                  value={0.5}
+                  text="+0,5"
+                  span={1}
+                  position={75}
+                  base={3.87}
                 />
                 <AnalysisCardsDemo />
               </ClientOnly>

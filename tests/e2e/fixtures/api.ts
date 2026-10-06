@@ -47,6 +47,12 @@ export const PARCEL_PRODUCTION: Record<string, number> = {
   D07D23P00000008: 3.81,
 };
 
+/** Deviation from the base per parcel (t/ha): west above it, east below, for the diverging widget. */
+export const PARCEL_DEVIATION: Record<string, number> = {
+  D07D21P00000002: 0.5,
+  D07D23P00000008: -0.3,
+};
+
 export const SANITARIO_INDICATORS = [
   // The backend echoes the crop filter into the list as is — a filter, not an indicator.
   HERO_FILTERS[0],
@@ -78,6 +84,14 @@ export const PRODUCTIVO_INDICATORS = [
   {
     id: 'Pro_arroz',
     name: 'Producción base histórica de arroz',
+    unit: 't/ha',
+    default: true,
+    indicator_type: { type: 'numeric' },
+  },
+  // Typed `numeric` as the live list does; the client retypes it by its id (`Des_`).
+  {
+    id: 'Des_soja',
+    name: 'Desviación de la producción de soja respecto a la base histórica',
     unit: 't/ha',
     default: true,
     indicator_type: { type: 'numeric' },
@@ -217,6 +231,7 @@ export async function stubAnalysisApi(page: Page) {
           area: PARCEL_AREAS[parcelId],
           Asian_rust: rust,
           Pro_soja: PARCEL_PRODUCTION[parcelId],
+          Des_soja: PARCEL_DEVIATION[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',
           // Both parcels Media: the resilience widget counts 2 under Media.
