@@ -62,24 +62,41 @@ export function widgetFor(
 ): WidgetKind {
   switch (type.type) {
     case 'range':
-      if (riesgo === 'productivo') return 'parcel-list';
-      if (scope === 'individual') return 'ruler';
-
-      return isShortRange(type) ? 'bar-chart' : 'histogram';
+      return rangeWidget(type, riesgo, scope);
     case 'category':
       return scope === 'multiple' ? 'bar-chart' : 'ruler';
     case 'text':
       return 'fact';
     case 'numeric':
     case 'number':
-      if (riesgo !== 'productivo') return 'fact';
-
-      return scope === 'individual' ? 'number' : 'histogram';
+      return numberWidget(riesgo, scope, 'number', 'histogram');
     case 'deviation':
-      if (riesgo !== 'productivo') return 'fact';
-
-      return scope === 'individual' ? 'deviation' : 'diverging-histogram';
+      return numberWidget(riesgo, scope, 'deviation', 'diverging-histogram');
   }
+}
+
+/** A range: productivo lists the parcels; sanitario reads one on the ruler, several per class or binned. */
+function rangeWidget(
+  type: { min: number; max: number },
+  riesgo: Riesgo,
+  scope: ParcelScope,
+): WidgetKind {
+  if (riesgo === 'productivo') return 'parcel-list';
+  if (scope === 'individual') return 'ruler';
+
+  return isShortRange(type) ? 'bar-chart' : 'histogram';
+}
+
+/** A number of any kind: productivo draws it per scope (`one` parcel, `many` under Todas); sanitario reads it as a fact. */
+function numberWidget(
+  riesgo: Riesgo,
+  scope: ParcelScope,
+  one: WidgetKind,
+  many: WidgetKind,
+): WidgetKind {
+  if (riesgo !== 'productivo') return 'fact';
+
+  return scope === 'individual' ? one : many;
 }
 
 /**
