@@ -77,6 +77,20 @@ const categoryIndicatorTypeSchema = z.looseObject({
 const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric', 'number']) });
 
 /**
+ * A signed difference from a reference (a parcel's production against its historical
+ * base, t/ha): zero is the reference, the sign is the message. `base` names the indicator
+ * the reference is read from (`Pro_soja`), so the widget can print it under the track;
+ * `min`/`max` bound the scale either side of zero when the backend knows them; left out,
+ * the scale follows the analysed set.
+ */
+const deviationIndicatorTypeSchema = z.looseObject({
+  type: z.literal('deviation'),
+  base: z.string().min(1).optional(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+});
+
+/**
  * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in
  * `analysis/schemas.ts`. Unknown types fail the parse: a new kind needs a card first.
  */
@@ -84,6 +98,7 @@ export const indicatorTypeSchema = z.discriminatedUnion('type', [
   rangeIndicatorTypeSchema,
   categoryIndicatorTypeSchema,
   plainIndicatorTypeSchema,
+  deviationIndicatorTypeSchema,
 ]);
 
 export type IndicatorType = z.infer<typeof indicatorTypeSchema>;

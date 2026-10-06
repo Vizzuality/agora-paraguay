@@ -1,5 +1,4 @@
 import { Group } from '@visx/group';
-import { ParentSize } from '@visx/responsive';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { useId } from 'react';
 
@@ -7,10 +6,11 @@ import {
   Baseline,
   CappedBar,
   COLUMNS_HEIGHT,
+  HitAreas,
   parcelCount,
+  Responsive,
   ToneGradients,
 } from '@/components/charts/plot';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CategoryColumn } from '@/lib/analysis/category-counts';
 
 /*
@@ -33,17 +33,17 @@ type CategoryBarsProps = {
   columns: CategoryColumn[];
 };
 
-/**
- * The count bars with their labels. Presentational: the card lists the counts for
- * assistive tech itself, so the drawing is hidden from it.
- */
+/** The count bars with their labels. */
 export function CategoryBars({ columns }: Readonly<CategoryBarsProps>) {
   return (
-    <div aria-hidden className="flex flex-col">
-      <ParentSize debounceTime={50} style={{ height: COLUMNS_HEIGHT + 1 }}>
-        {({ width }) => (width > 0 ? <BarsSvg width={width} columns={columns} /> : null)}
-      </ParentSize>
-      <ul className="flex gap-2 text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
+    <div className="flex flex-col">
+      <Responsive height={COLUMNS_HEIGHT + 1}>
+        {(width) => <BarsSvg width={width} columns={columns} />}
+      </Responsive>
+      <ul
+        aria-hidden
+        className="flex gap-2 text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70"
+      >
         {columns.map((column) => (
           <li key={column.label} className="min-w-0 flex-1">
             {column.label}
@@ -103,26 +103,15 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
       })}
 
       <Baseline y={COLUMNS_HEIGHT} width={width} />
-
-      {/* One hit area per column, the full plot height, so an empty column answers too. */}
-      <TooltipProvider>
-        {columns.map((column) => (
-          <Tooltip key={column.label}>
-            <TooltipTrigger asChild>
-              <rect
-                x={xScale(column.label) ?? 0}
-                y={0}
-                width={bandwidth}
-                height={COLUMNS_HEIGHT}
-                fill="transparent"
-              />
-            </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>
-              {column.label}: {parcelCount(column.count)}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+      <HitAreas
+        height={COLUMNS_HEIGHT}
+        areas={columns.map((column) => ({
+          key: column.label,
+          x: xScale(column.label) ?? 0,
+          width: bandwidth,
+          label: `${column.label}: ${parcelCount(column.count)}`,
+        }))}
+      />
     </svg>
   );
 }

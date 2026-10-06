@@ -91,6 +91,12 @@ describe('fetchIndicators', () => {
     },
     { id: 'weather_station', name: 'Estación', indicator_type: { type: 'text' } },
     { id: 'Pro_soja', name: 'Producción', unit: 't/ha', indicator_type: { type: 'numeric' } },
+    {
+      id: 'Desv_soja',
+      name: 'Desviación respecto a la base',
+      unit: 't/ha',
+      indicator_type: { type: 'deviation', max: 2 },
+    },
   ];
 
   it('GETs /api/parcels/indicators with the riesgo as a query parameter, no body', async () => {

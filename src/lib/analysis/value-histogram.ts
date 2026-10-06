@@ -89,12 +89,16 @@ export function histogramBins(
       from: range.min + index * width,
       to: index === count - 1 ? range.max : range.min + (index + 1) * width,
       count: binCount,
-      tone:
-        'tone' in paint
-          ? paint.tone
-          : paint.classes[classIndexAt(middle, paint.classes.length)].tone,
+      tone: binTone(paint, middle),
     };
   });
+}
+
+/** The tone of a bin whose middle sits at `middle` (0–100 along the scale). */
+function binTone(paint: Paint, middle: number): RiskTone {
+  if ('tone' in paint) return paint.tone;
+
+  return paint.classes[classIndexAt(middle, paint.classes.length)].tone;
 }
 
 type SteppedRange = { min: number; max: number; step?: number | string };

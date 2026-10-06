@@ -1,12 +1,17 @@
+import { ParentSize } from '@visx/responsive';
 import { Bar } from '@visx/shape';
+import type { ReactNode } from 'react';
 
 import { TONE_COLOR, TONES } from '@/components/charts/tones';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatNumber } from '@/lib/analysis/number-scale';
 import type { RiskTone } from '@/lib/analysis/widget-config';
 
 /*
  * What the analysis charts share, from the designs: the geometry of a bar (a solid cap
  * over a body that fades into the card), the plot and tick-row heights of the histograms,
- * the baseline, and the words for a count of parcels. Each chart owns only its layout.
+ * the baseline, the axis ticks, the tooltip hit areas, the responsive wrapper, and the
+ * words for a count of parcels. Each chart owns only its layout.
  */
 
 /** The histograms' plot height: the "Numerical multiple" frame, and Widget03's two sides together. */
@@ -24,7 +29,7 @@ export const TICK_ROW = 18;
  * centre on their tick — a stepped scale's ticks sit half a bin in from the edges, so
  * they centre too.
  */
-export function tickAnchor(tick: number, min: number, max: number): 'start' | 'middle' | 'end' {
+function tickAnchor(tick: number, min: number, max: number): 'start' | 'middle' | 'end' {
   if (tick <= min) return 'start';
   if (tick >= max) return 'end';
 
@@ -35,11 +40,74 @@ export function parcelCount(count: number): string {
   return count === 1 ? '1 parcela' : `${count} parcelas`;
 }
 
+/**
+ * The chart at the width its card gives it, `height` tall. Presentational: every card
+ * lists its readings for assistive tech itself, so the drawing is hidden from it.
+ */
+export function Responsive({
+  height,
+  children,
+}: Readonly<{ height: number; children: (width: number) => ReactNode }>) {
+  return (
+    <div aria-hidden>
+      <ParentSize debounceTime={50} style={{ height }}>
+        {({ width }) => (width > 0 ? children(width) : null)}
+      </ParentSize>
+    </div>
+  );
+}
+
+type AxisTicksProps = {
+  ticks: number[];
+  /** The tick's place along the width. */
+  x: (tick: number) => number;
+  /** The text's bottom edge. */
+  y: number;
+  min: number;
+  max: number;
+};
+
+/** The scale's ticks under a baseline, the ones on the edges hugging them so nothing spills out. */
+export function AxisTicks({ ticks, x, y, min, max }: Readonly<AxisTicksProps>) {
+  return ticks.map((tick) => (
+    <text
+      key={tick}
+      x={x(tick)}
+      y={y}
+      textAnchor={tickAnchor(tick, min, max)}
+      dominantBaseline="text-after-edge"
+      className="fill-muted-foreground text-[12px] opacity-70"
+    >
+      {formatNumber(tick)}
+    </text>
+  ));
+}
+
+export type HitArea = { key: string | number; x: number; width: number; label: ReactNode };
+
+/** One transparent hit area per bin or column, the full plot height, so an empty one answers too. */
+export function HitAreas({ areas, height }: Readonly<{ areas: HitArea[]; height: number }>) {
+  return (
+    <TooltipProvider>
+      {areas.map((area) => (
+        <Tooltip key={area.key}>
+          <TooltipTrigger asChild>
+            <rect x={area.x} y={0} width={area.width} height={height} fill="transparent" />
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={4}>
+            {area.label}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </TooltipProvider>
+  );
+}
+
 /** Which way a bar's body fades: away from a cap on top (down) or on the bottom (up). */
-export type Fade = 'down' | 'up';
+type Fade = 'down' | 'up';
 
 /** The `fill` of a bar body fading in `fade` direction from `tone` (`ToneGradients` defines it). */
-export function toneFill(gradientId: string, tone: RiskTone, fade: Fade = 'down'): string {
+function toneFill(gradientId: string, tone: RiskTone, fade: Fade = 'down'): string {
   return `url('#${gradientId}-${tone}-${fade}')`;
 }
 

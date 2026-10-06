@@ -1,20 +1,19 @@
 import { Group } from '@visx/group';
-import { ParentSize } from '@visx/responsive';
 import { scaleLinear } from '@visx/scale';
 import { useId } from 'react';
 
 import {
+  AxisTicks,
   Baseline,
   CAP_HEIGHT,
   CappedBar,
-  parcelCount,
   HISTOGRAM_HEIGHT,
+  HitAreas,
+  parcelCount,
+  Responsive,
   TICK_ROW,
-  tickAnchor,
   ToneGradients,
 } from '@/components/charts/plot';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatNumber } from '@/lib/analysis/number-scale';
 import { binLabel, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
 
 /*
@@ -22,28 +21,24 @@ import { binLabel, type ValueHistogramWidget } from '@/lib/analysis/value-histog
  * a row of touching bins, each a bar as tall as its parcel count with a solid cap and a
  * body fading into the card, a baseline, the scale's ticks under it and — when the
  * indicator has classes — their names under those in equal thirds. visx primitives over a
- * plain SVG, as `CategoryBars`; the bar, gradients and baseline come from `plot.tsx`.
- * Hovering a bin names its edges with its count in the app's tooltip.
+ * plain SVG, as `CategoryBars`; the bar, gradients, baseline, ticks and hit areas come
+ * from `plot.tsx`. Hovering a bin names its edges with its count in the app's tooltip.
  */
 
 type ValueHistogramProps = Pick<ValueHistogramWidget, 'min' | 'max' | 'ticks' | 'bins' | 'classes'>;
 
-/**
- * The binned bars with the scale and class names. Presentational: the card lists the
- * counts for assistive tech itself, so the drawing is hidden from it.
- */
+/** The binned bars with the scale and class names. */
 export function ValueHistogram({ min, max, ticks, bins, classes }: Readonly<ValueHistogramProps>) {
   return (
-    <div aria-hidden className="flex flex-col">
-      <ParentSize debounceTime={50} style={{ height: HISTOGRAM_HEIGHT + 1 + TICK_ROW }}>
-        {({ width }) =>
-          width > 0 ? (
-            <HistogramSvg width={width} min={min} max={max} ticks={ticks} bins={bins} />
-          ) : null
-        }
-      </ParentSize>
+    <div className="flex flex-col">
+      <Responsive height={HISTOGRAM_HEIGHT + 1 + TICK_ROW}>
+        {(width) => <HistogramSvg width={width} min={min} max={max} ticks={ticks} bins={bins} />}
+      </Responsive>
       {classes && (
-        <ul className="flex text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
+        <ul
+          aria-hidden
+          className="flex text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70"
+        >
           {classes.map((riskClass) => (
             <li key={riskClass.label} className="min-w-0 flex-1">
               {riskClass.label}
@@ -98,40 +93,16 @@ function HistogramSvg({
       })}
 
       <Baseline y={HISTOGRAM_HEIGHT} width={width} />
-
-      {/* The scale's ticks, the ones on the edges hugging them so nothing spills out of the card. */}
-      {ticks.map((tick) => (
-        <text
-          key={tick}
-          x={xScale(tick)}
-          y={HISTOGRAM_HEIGHT + 1 + TICK_ROW}
-          textAnchor={tickAnchor(tick, min, max)}
-          dominantBaseline="text-after-edge"
-          className="fill-muted-foreground text-[12px] opacity-70"
-        >
-          {formatNumber(tick)}
-        </text>
-      ))}
-
-      {/* One hit area per bin, the full plot height, so an empty bin answers too. */}
-      <TooltipProvider>
-        {bins.map((bin) => (
-          <Tooltip key={bin.from}>
-            <TooltipTrigger asChild>
-              <rect
-                x={xScale(bin.from)}
-                y={0}
-                width={xScale(bin.to) - xScale(bin.from)}
-                height={HISTOGRAM_HEIGHT}
-                fill="transparent"
-              />
-            </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>
-              {binLabel(bin)}: {parcelCount(bin.count)}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+      <AxisTicks ticks={ticks} x={xScale} y={HISTOGRAM_HEIGHT + 1 + TICK_ROW} min={min} max={max} />
+      <HitAreas
+        height={HISTOGRAM_HEIGHT}
+        areas={bins.map((bin) => ({
+          key: bin.from,
+          x: xScale(bin.from),
+          width: xScale(bin.to) - xScale(bin.from),
+          label: `${binLabel(bin)}: ${parcelCount(bin.count)}`,
+        }))}
+      />
     </svg>
   );
 }
