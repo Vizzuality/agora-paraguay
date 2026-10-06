@@ -22,10 +22,10 @@ import type { CategoryColumn } from '@/lib/analysis/category-counts';
  * tooltip.
  */
 
-/** Inside `COLUMNS_HEIGHT`: the count line and its gap above the tallest bar. */
-const COUNT_LINE = 17.4;
-const COUNT_GAP = 4;
-const BAR_MAX = COLUMNS_HEIGHT - COUNT_LINE - COUNT_GAP;
+/** Padding above the tallest bar for its count: one 12px text line, and the gap between the two. */
+const COUNT_LABEL_HEIGHT = 17.4;
+const COUNT_LABEL_GAP = 4;
+const MAX_BAR_HEIGHT = COLUMNS_HEIGHT - COUNT_LABEL_HEIGHT - COUNT_LABEL_GAP;
 /** The space between columns, the same `gap-2` the label row under the chart uses. */
 const COLUMN_GAP = 8;
 
@@ -66,7 +66,7 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
     paddingInner: (COLUMN_GAP * columns.length) / (width + COLUMN_GAP),
     paddingOuter: 0,
   });
-  const yScale = scaleLinear<number>({ domain: [0, Math.max(1, max)], range: [0, BAR_MAX] });
+  const yScale = scaleLinear<number>({ domain: [0, Math.max(1, max)], range: [0, MAX_BAR_HEIGHT] });
   const bandwidth = xScale.bandwidth();
 
   return (
@@ -84,7 +84,7 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
           <Group key={column.label} left={x}>
             <text
               x={bandwidth / 2}
-              y={top - COUNT_GAP}
+              y={top - COUNT_LABEL_GAP}
               textAnchor="middle"
               dominantBaseline="text-after-edge"
               className="fill-foreground text-[12px] font-semibold tabular-nums"
