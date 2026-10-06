@@ -16,11 +16,11 @@ export type RiskTone = 'low' | 'medium' | 'elevated' | 'high';
 export type RiskClass = { label: string; tone: RiskTone };
 
 /**
- * What an indicator's widget renders: the class ruler, a fact, a row per parcel, the
- * parcels counted per class as bars, their values binned over a scale as a histogram, or
- * one parcel's number on that scale.
+ * What an indicator's widget renders: the class ruler, a fact, the parcels counted per
+ * class as bars, their values binned over a scale as a histogram, or one parcel's number
+ * on that scale.
  */
-export type WidgetKind = 'ruler' | 'fact' | 'parcel-list' | 'bar-chart' | 'histogram' | 'number';
+export type WidgetKind = 'ruler' | 'fact' | 'bar-chart' | 'histogram' | 'number';
 
 /** How many parcels a widget reads: one (a parcel tab) or the whole selection (Todas). */
 export type ParcelScope = 'individual' | 'multiple';
@@ -39,10 +39,12 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * on sanitario when it is short. A long range over several parcels bins their values
  * along the scale instead (the "Categorical and numerical multiple" design): counting a
  * 0–100 % quality in three classes would hide where the parcels sit. The other types
- * follow the riesgo: sanitario reads text and open numbers as facts; productivo lists
- * every parcel's range reading, and draws an open number per scope — one parcel as a
- * number card on the set's scale (the "Numerical individual" design), several binned over it
- * (the "Numerical multiple" design) — text is a fact on both.
+ * follow the riesgo: sanitario reads text and open numbers as facts; productivo draws a
+ * number per scope — one parcel as a number card (the "Numerical individual" design),
+ * several binned (the "Numerical multiple" design) — an open number on the set's scale,
+ * a range on its own (`min`–`max`, one bin per step when short): a productivo range is a
+ * count or a percentage, not a risk, so it never gets the ruler's classes. Text is a fact
+ * on both.
  */
 export function widgetFor(
   type: IndicatorType,
@@ -50,7 +52,7 @@ export function widgetFor(
 ): WidgetKind {
   switch (type.type) {
     case 'range':
-      if (riesgo === 'productivo') return 'parcel-list';
+      if (riesgo === 'productivo') return scope === 'individual' ? 'number' : 'histogram';
       if (scope === 'individual') return 'ruler';
 
       return isShortRange(type) ? 'bar-chart' : 'histogram';

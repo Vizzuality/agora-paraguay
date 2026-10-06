@@ -120,13 +120,13 @@ function HistogramSvg({
         strokeWidth={1}
       />
 
-      {/* The scale's ticks, the ends hugging the edges so nothing spills out of the card. */}
-      {ticks.map((tick, index) => (
+      {/* The scale's ticks, the ones on the edges hugging them so nothing spills out of the card. */}
+      {ticks.map((tick) => (
         <text
           key={tick}
           x={xScale(tick)}
           y={PLOT_HEIGHT + 1 + TICK_ROW}
-          textAnchor={tickAnchor(index, ticks.length)}
+          textAnchor={tickAnchor(tick, min, max)}
           dominantBaseline="text-after-edge"
           className="fill-muted-foreground text-[12px] opacity-70"
         >
@@ -157,10 +157,13 @@ function HistogramSvg({
   );
 }
 
-/** The ends hug the edges so no label spills out of the card; the rest centre on their tick. */
-function tickAnchor(index: number, count: number): 'start' | 'middle' | 'end' {
-  if (index === 0) return 'start';
-  if (index === count - 1) return 'end';
+/**
+ * A tick on an edge hugs it so no label spills out of the card; the rest centre on their
+ * tick — a stepped scale's ticks sit half a bin in from the edges, so they centre too.
+ */
+function tickAnchor(tick: number, min: number, max: number): 'start' | 'middle' | 'end' {
+  if (tick <= min) return 'start';
+  if (tick >= max) return 'end';
 
   return 'middle';
 }

@@ -62,6 +62,9 @@ export const SANITARIO_INDICATORS = [
   },
 ];
 
+/** Seasons of soy detected per parcel (0–8): west, then east. */
+export const PARCEL_SEASONS: Record<string, number> = { D07D21P00000002: 5, D07D23P00000008: 3 };
+
 /** The two parcels `filter-parcels` answers for any drawing: west half, east half. */
 export const WEST_PARCEL_ID = 'D07D21P00000002';
 export const EAST_PARCEL_ID = 'D07D23P00000008';
@@ -217,6 +220,7 @@ export async function stubAnalysisApi(page: Page) {
           area: PARCEL_AREAS[parcelId],
           Asian_rust: rust,
           Pro_soja: PARCEL_PRODUCTION[parcelId],
+          N_soja: PARCEL_SEASONS[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',
           // Both parcels Media: the resilience widget counts 2 under Media.

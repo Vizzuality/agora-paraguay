@@ -4,6 +4,7 @@ import {
   binLabel,
   HISTOGRAM_BINS,
   histogramBins,
+  steppedBins,
   valueHistogramWidgets,
 } from '@/lib/analysis/value-histogram';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
@@ -19,6 +20,17 @@ const rust: Indicator = {
   id: 'asian_rust',
   name: 'Phakopsora pachyrhizi',
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
+};
+const seasons: Indicator = {
+  id: 'N_soja',
+  name: 'Contador de zafras de soja detectadas',
+  indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
+};
+const stability: Indicator = {
+  id: 'IEP_H5_soja',
+  name: 'Índice de estabilidad productiva',
+  unit: '%',
+  indicator_type: { type: 'range', min: 0, max: 100, step: 1 },
 };
 
 function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisParcel {
@@ -71,12 +83,74 @@ describe('histogramBins', () => {
   });
 });
 
+describe('steppedBins', () => {
+  it('cuts a short range in one bin per step, centred on the value and named by it', () => {
+    const { min, max, bins } = steppedBins([0, 3, 3, 8], { min: 0, max: 8, step: 1 });
+
+    expect({ min, max }).toEqual({ min: -0.5, max: 8.5 });
+    expect(bins).toHaveLength(9);
+    expect(bins[0]).toMatchObject({ from: -0.5, to: 0.5, label: '0', count: 1 });
+    expect(bins[3]).toMatchObject({ label: '3', count: 2 });
+    expect(bins[8]).toMatchObject({ from: 7.5, to: 8.5, label: '8', count: 1 });
+    expect(new Set(bins.map((bin) => bin.tone))).toEqual(new Set(['elevated']));
+  });
+
+  it('reads the step as a number or as digits, and takes one without it', () => {
+    expect(steppedBins([], { min: 0, max: 2, step: '0.5' }).bins.map((bin) => bin.label)).toEqual([
+      '0',
+      '0,5',
+      '1',
+      '1,5',
+      '2',
+    ]);
+    expect(steppedBins([], { min: 1, max: 3 }).bins).toHaveLength(3);
+  });
+});
+
 describe('valueHistogramWidgets', () => {
   const parcels = [
-    parcel('A', { data_quality: 12, asian_rust: 2 }),
-    parcel('B', { data_quality: '87', asian_rust: 1 }),
-    parcel('C', { data_quality: 'NA', asian_rust: 3 }),
+    parcel('A', { data_quality: 12, asian_rust: 2, N_soja: 5, IEP_H5_soja: 62 }),
+    parcel('B', { data_quality: '87', asian_rust: 1, N_soja: 3, IEP_H5_soja: '87' }),
+    parcel('C', { data_quality: 'NA', asian_rust: 3, N_soja: 'NA' }),
   ];
+
+  it('bins a short productivo range per step on its own scale, no classes, one tone', () => {
+    const [widget] = valueHistogramWidgets(
+      parcels,
+      ['A', 'B', 'C'],
+      [seasons],
+      'productivo',
+      'multiple',
+    );
+
+    expect(widget).toMatchObject({ id: 'N_soja', unit: null, min: -0.5, max: 8.5 });
+    expect(widget).not.toHaveProperty('classes');
+    expect(widget.ticks).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(widget.bins.filter((bin) => bin.count > 0).map((bin) => [bin.label, bin.count])).toEqual(
+      [
+        ['3', 1],
+        ['5', 1],
+      ],
+    );
+  });
+
+  it('bins a long productivo range in twenty over its own scale, no classes, one tone', () => {
+    const [widget] = valueHistogramWidgets(
+      parcels,
+      ['A', 'B'],
+      [stability],
+      'productivo',
+      'multiple',
+    );
+
+    expect(widget).toMatchObject({ unit: '%', min: 0, max: 100 });
+    expect(widget).not.toHaveProperty('classes');
+    expect(occupied(widget.bins)).toEqual([
+      [12, 1],
+      [17, 1],
+    ]);
+    expect(new Set(widget.bins.map((bin) => bin.tone))).toEqual(new Set(['elevated']));
+  });
 
   it('bins a long range on sanitario under Todas over the submitted parcels, unreadable values left out', () => {
     const [widget] = valueHistogramWidgets(
@@ -134,12 +208,12 @@ describe('valueHistogramWidgets', () => {
     expect(new Set(widget.bins.map((bin) => bin.tone))).toEqual(new Set(['elevated']));
   });
 
-  it('leaves short ranges, productivo and single parcels to other widgets', () => {
+  it('leaves short sanitario ranges and single parcels to other widgets', () => {
     expect(valueHistogramWidgets(parcels, ['A', 'B'], [rust], 'sanitario', 'multiple')).toEqual([]);
-    expect(valueHistogramWidgets(parcels, ['A', 'B'], [quality], 'productivo', 'multiple')).toEqual(
+    expect(valueHistogramWidgets(parcels, ['A'], [quality], 'sanitario', 'individual')).toEqual([]);
+    expect(valueHistogramWidgets(parcels, ['A'], [seasons], 'productivo', 'individual')).toEqual(
       [],
     );
-    expect(valueHistogramWidgets(parcels, ['A'], [quality], 'sanitario', 'individual')).toEqual([]);
   });
 
   it('makes no widget when the answer has no column for it or without metadata', () => {
@@ -151,8 +225,9 @@ describe('valueHistogramWidgets', () => {
 });
 
 describe('binLabel', () => {
-  it('prints the edges in the platform locale', () => {
+  it('prints the edges in the platform locale, or the label a stepped bin carries', () => {
     expect(binLabel({ from: 0, to: 5 })).toBe('0 – 5');
     expect(binLabel({ from: 12.5, to: 15 })).toBe('12,5 – 15');
+    expect(binLabel({ from: 2.5, to: 3.5, label: '3' })).toBe('3');
   });
 });
