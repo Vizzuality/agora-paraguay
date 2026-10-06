@@ -15,7 +15,7 @@ and colors**, `Agora` file, node `5698-5900`.
 | **Indicator** | One entry of `GET /api/parcels/indicators/?riesgo=…`: id, name, description, unit, `default`, and an `indicator_type` that says how its reading is typed. |
 | **Reading**   | One parcel's value for one indicator, as a property column of the analysis answer.                                                                        |
 | **Scope**     | How many parcels a widget reads: `individual` (a parcel tab in the hero) or `multiple` (the Todas tab).                                                   |
-| **Widget**    | The card an indicator renders as. Kinds are named by what they draw: ruler, fact, parcel list, bar chart, histogram, number.                              |
+| **Widget**    | The card an indicator renders as. Kinds are named by what they draw: ruler, fact, bar chart, histogram, number, deviation, diverging histogram.           |
 | **Class**     | One band a classed reading falls in: `Sin riesgo` / `Moderado` / `Severo` for a range, the indicator's own categories for a category.                     |
 
 ## 1. Indicator types
@@ -23,12 +23,13 @@ and colors**, `Agora` file, node `5698-5900`.
 `indicator_type.type` is a discriminated union. An unknown type fails the parse on purpose: a
 new kind needs a widget before the list can show it.
 
-| Type       | Metadata carries                                | Reading must be                                        | Example (live)                                         |
-| ---------- | ----------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
-| `range`    | `min`, `max`, optional `step` (number or `"1"`) | A number, or digits in a string (`"2.49"`)             | Disease index 1–3 (`asian_rust`), data quality 0–100 % |
-| `category` | `categories` (ordered labels), optional `value` | One of the labels, or its index (sample encodes codes) | `Resiliencia`: Alta / Media / Baja; ITR, volatility    |
-| `text`     | nothing                                         | A string                                               | `weather_station`, `phenology_stage`, `crop_type`      |
-| `numeric`  | nothing (open number)                           | A number, or digits in a string                        | `Pro_soja` t/ha, `area` ha                             |
+| Type        | Metadata carries                                                        | Reading must be                                        | Example (live)                                         |
+| ----------- | ----------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| `range`     | `min`, `max`, optional `step` (number or `"1"`)                         | A number, or digits in a string (`"2.49"`)             | Disease index 1–3 (`asian_rust`), data quality 0–100 % |
+| `category`  | `categories` (ordered labels), optional `value`                         | One of the labels, or its index (sample encodes codes) | `Resiliencia`: Alta / Media / Baja; ITR, volatility    |
+| `text`      | nothing                                                                 | A string                                               | `weather_station`, `phenology_stage`, `crop_type`      |
+| `numeric`   | nothing (open number)                                                   | A number, or digits in a string                        | `Pro_soja` t/ha, `area` ha                             |
+| `deviation` | optional `base` (id of the reference indicator), optional `min` / `max` | A signed number: the difference from the base          | `Des_soja` t/ha (retyped by the client, see below)     |
 
 Normalisations the client applies before the schema (`asSpecIndicator`):
 
@@ -39,6 +40,12 @@ Normalisations the client applies before the schema (`asSpecIndicator`):
   (`"Soja"`), so it is read as a `text` indicator: general info, never in the picker.
 - **List envelope.** The endpoint answers either the bare array or `{ indicators: [...] }`.
   Both are accepted until the backend settles on one.
+- **`Des_*` → `deviation`** (`asDeviationIndicators`, a `select` on the indicators query,
+  marked `TODO(api-deviation)` and `TODO(risk)`). The live list types every productivo number
+  `numeric`, the deviations from the historical base included. Until the API says which
+  indicators are deviations, the client retypes those whose id starts with `Des_` and names
+  the crop's production as their base (`Des_soja` → `base: Pro_soja`). A guess on spelling:
+  replace with an API type or an explicit list of ids, never grow the prefix rule.
 
 ### Readings and "no reading"
 
@@ -94,12 +101,13 @@ widgets do not use the combined parcel; they count or bin the submitted parcels 
 
 ### Productivo (login)
 
-| Type       | One parcel                                      | Todas                                               |
-| ---------- | ----------------------------------------------- | --------------------------------------------------- |
-| `range`    | Parcel list with that parcel's row alone        | Parcel list, one row per parcel, track on the range |
-| `category` | Ruler: category as the figure                   | Bar chart, one column per category                  |
-| `text`     | Fact (no card renders it today)                 | Fact (no card renders it today)                     |
-| `numeric`  | Number card: figure + marker on the set's scale | Histogram over the set's scale, single colour       |
+| Type        | One parcel                                                                      | Todas                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `range`     | Number card: figure + marker on the range's own scale                           | Histogram over the range: one bin per step when short (0–8), twenty bins when long (0–100 %), single colour |
+| `category`  | Ruler: category as the figure                                                   | Bar chart, one column per category                                                                          |
+| `text`      | Fact (no card renders it today)                                                 | Fact (no card renders it today)                                                                             |
+| `numeric`   | Number card: figure + marker on the set's scale                                 | Histogram over the set's scale, single colour                                                               |
+| `deviation` | Deviation card: signed figure, marker on a diverging track, base value under it | Diverging histogram: parcels binned over their base, a bar up for those above it, down for those below      |
 
 Productivo-only rules:
 
@@ -110,8 +118,16 @@ Productivo-only rules:
   reads as no reading is out too. One the answer does not carry at all stays. Sanitario's list
   is left as is. Remove once the API filters by crop itself.
 - **Scale shared across scopes.** The number card (one parcel) and the histogram (Todas) draw
-  the same axis: zero to the first round tick above the largest submitted value
-  (`numberScale`, d3-style 1/2/5 steps), so a parcel reads against the set.
+  the same axis. An open number: zero to the first round tick above the largest submitted
+  value (`numberScale`, d3-style 1/2/5 steps), so a parcel reads against the set. A range:
+  its own `min`–`max` (`scaleFor`), so a count of 3 on 0–8 or 40 % on 0–100 reads against the
+  scale it is defined on, never as a risk class.
+- **A deviation reads against its base.** One parcel: the signed difference as the figure, the
+  track from `-span` to `+span` with zero in the middle (`deviationSpan`: the metadata's bound,
+  else a round figure above the largest absolute value), the base reading printed under the
+  marker. Todas: each parcel placed on the axis by its **base** reading, counted above or below
+  by the sign of its deviation (an exact zero counts neither); without a `base` the axis is the
+  deviation itself, symmetric around zero.
 - **Parcel labels.** Rows say "Parcela N", N the parcel's 1-based place in the submission,
   whichever tab is open.
 - The AI summary widget (`POST /api/parcels/analysis/summary/`) sits above the grid; it is not
@@ -125,17 +141,21 @@ Productivo-only rules:
 `src/lib/analysis/` answers only the indicators whose kind is its own, so an indicator lands in
 at most one widget; `analysisWidgets` assembles them in metadata order.
 
-| Type       | Riesgo     | Scope      | Widget kind                            | Builder                                          | Component                                  | Figma node                                                           |
-| ---------- | ---------- | ---------- | -------------------------------------- | ------------------------------------------------ | ------------------------------------------ | -------------------------------------------------------------------- |
-| `range`    | sanitario  | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            | `5698-5989` (integer on short range) / `5698-6186` (value on marker) |
-| `range`    | sanitario  | multiple   | `bar-chart` if short, else `histogram` | `categoryCountWidgets` / `valueHistogramWidgets` | `CategoryCountCard` / `ValueHistogramCard` | `5698-6010` / `5698-6207`                                            |
-| `range`    | productivo | any        | `parcel-list`                          | `parcelValueWidgets`                             | `ParcelValuesCard`                         | Widget01                                                             |
-| `category` | any        | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            | `5698-5989`                                                          |
-| `category` | any        | multiple   | `bar-chart`                            | `categoryCountWidgets`                           | `CategoryCountCard`                        | `5698-6010`                                                          |
-| `text`     | any        | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          | —                                                                    |
-| `numeric`  | sanitario  | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          | —                                                                    |
-| `numeric`  | productivo | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               | `5698-6230`                                                          |
-| `numeric`  | productivo | multiple   | `histogram`                            | `valueHistogramWidgets`                          | `ValueHistogramCard`                       | `5698-6251`                                                          |
+| Type        | Riesgo     | Scope      | Widget kind                            | Builder                                          | Component                                  | Figma node                                                           |
+| ----------- | ---------- | ---------- | -------------------------------------- | ------------------------------------------------ | ------------------------------------------ | -------------------------------------------------------------------- |
+| `range`     | sanitario  | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            | `5698-5989` (integer on short range) / `5698-6186` (value on marker) |
+| `range`     | sanitario  | multiple   | `bar-chart` if short, else `histogram` | `categoryCountWidgets` / `valueHistogramWidgets` | `CategoryCountCard` / `ValueHistogramCard` | `5698-6010` / `5698-6207`                                            |
+| `range`     | productivo | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               | — (own decision, AGP-69)                                             |
+| `range`     | productivo | multiple   | `histogram` (stepped when short)       | `valueHistogramWidgets`                          | `ValueHistogramCard`                       | — (own decision, AGP-69)                                             |
+| `category`  | any        | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            | `5698-5989`                                                          |
+| `category`  | any        | multiple   | `bar-chart`                            | `categoryCountWidgets`                           | `CategoryCountCard`                        | `5698-6010`                                                          |
+| `text`      | any        | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          | —                                                                    |
+| `numeric`   | sanitario  | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          | —                                                                    |
+| `numeric`   | productivo | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               | `5698-6230`                                                          |
+| `numeric`   | productivo | multiple   | `histogram`                            | `valueHistogramWidgets`                          | `ValueHistogramCard`                       | `5698-6251`                                                          |
+| `deviation` | sanitario  | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          | —                                                                    |
+| `deviation` | productivo | individual | `deviation`                            | `deviationWidgets`                               | `DeviationCard`                            | `5702-9119` (Widget03)                                               |
+| `deviation` | productivo | multiple   | `diverging-histogram`                  | `deviationHistogramWidgets`                      | `DeviationHistogramCard`                   | `5702-8853` (Widget03, several parcels)                              |
 
 "Short range" is `max ≤ 10` (`SHORT_RANGE_MAX`): a 1–3 disease index reads as a handful of
 values, a 0–100 % quality as a continuum.
@@ -176,18 +196,34 @@ the bin above, the maximum in the last, out-of-range values in the outer bins.
   bin painted by the class its middle falls in.
 - **Open number (productivo):** `numberScale` of the submitted values, no classes, every bin
   orange, the unit under the title.
+- **Range (productivo):** the indicator's `[min, max]`, no classes, every bin orange. A
+  **short range** (`max ≤ 10`) is **stepped** (`steppedBins`): one bin per step, centred on its
+  value and labelled by it, so 0–8 in steps of 1 is nine bins, "0" to "8", the axis padded half
+  a step either side so the ticks fall in the middle of the bins. A long range gets the twenty
+  equal bins.
 
 ### Number card (`NumberCard`)
 
-One parcel's open number as the figure, unit under the title, marker on a single-colour track
-over `numberScale` of **all** submitted parcels' values (the Todas histogram's axis).
+One parcel's number as the figure, unit under the title, marker on a single-colour track.
+An open number's track is `numberScale` of **all** submitted parcels' values (the Todas
+histogram's axis); a range's is its own `min`–`max` with linear ticks.
 
-### Parcel list (`ParcelValuesCard`)
+### Deviation card (`DeviationCard`)
 
-One row per listed parcel: "Parcela N", a track, the figure (es-PY locale, two decimals). The
-track fills on the range's own scale when it has one, else relative to the widget's largest
-value. Under Todas every submitted parcel is listed; on a parcel tab, that parcel alone. A
-parcel with no reading has no row; an indicator no listed parcel answered has no widget.
+One parcel's signed difference from its base as the figure (`formatSigned`: es-PY, sign
+always shown, `+0,5` / `-0,3`, zero bare), unit under the title, marker on a diverging track
+with zero in the middle, red to the left, blue to the right, `-span` / `0` / `+span` as the
+ticks. The base reading (`Pro_soja`: `3,55`) prints under the marker when the metadata names a
+`base` and the parcel answered it. A parcel with no reading gets no card.
+
+### Diverging histogram (`DeviationHistogramCard`)
+
+The set under Todas: twenty bins over the base production (zero to a round figure above the
+largest base), each bin a bar **up** with the count of parcels above their base and a bar
+**down** with the count below, sharing one y-unit so the sides compare. Tooltip: the bin's
+edges and "N por encima, M por debajo" (`deviationCounts`, "ninguna" when empty). A parcel
+without a base reading is left out; without a `base` in the metadata the axis is the deviation
+itself around zero.
 
 ### General info (`GeneralInfoCard`)
 
@@ -218,8 +254,9 @@ Mismatches between code, spec and live API, listed rather than fixed:
    normalisation and the schema comment about sanitario are stale. Drop or keep as insurance.
 3. **`crop_type` in the indicator list** as a `field_type` entry. Client reads it as text;
    the API should either list it as an indicator or leave it to the filters endpoint.
-4. **Productivo range indicators** (IEP, ProInf, Puntuación) render as a parcel list; the route
-   comment says their own design is not built yet.
+4. **Productivo range indicators** (IEP, ProInf, `N_*`) render as a number card and a histogram
+   on their own scale (AGP-69), a client decision without a Figma frame of its own: the design
+   file has no "range on productivo" widget. Confirm with design.
 5. **Productivo text indicators** are classed as facts but no card renders them: there is no
    general-info card on productivo. Live casualties: `Zafras_soja` / `Zafras_arroz`, the codes.
 6. **Crop applicability is client-side** (`_soja` / `_arroz` id suffix). Marked
@@ -282,29 +319,33 @@ Read off the list:
 Fifty-six entries, most in `_soja` / `_arroz` pairs (the crop rule hides the other crop's).
 `default` is `true` on all but the two codes. Grouped by family:
 
-| Family (ids)                                                                | Name                                                       | Type                                                 | Unit | Widget (parcel / Todas)     |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- | ---- | --------------------------- |
-| `DPTO_CODE`, `DIST_CODE`                                                    | Código del departamento / distrito                         | `text` (`default: false`)                            | —    | fact: nothing renders it    |
-| `area`                                                                      | Área de la parcela                                         | `numeric`                                            | ha   | mini map thumbnail          |
-| `Pro_*`, `Des_*`, `Mad_*`, `P25_*`, `P50_*`, `P75_*`, `IQR_*`               | Historical production: base, SD, MAD, quartiles, IQR       | `numeric`                                            | t/ha | number card / histogram     |
-| `MID_H5_*`, `MID_H10_*`, `HIGH_H5_*`, `HIGH_H10_*`, `LOW_H5_*`, `LOW_H10_*` | Projected production, 3 scenarios × 2 horizons             | `numeric`                                            | t/ha | number card / histogram     |
-| `N_soja`, `N_arroz`                                                         | Contador de zafras detectadas                              | `range` 0–8, step 1                                  | —    | parcel list / parcel list   |
-| `Zafras_soja`, `Zafras_arroz`                                               | Listado de Zafras                                          | `text`                                               | —    | fact: nothing renders it    |
-| `ITR_*`                                                                     | Índice de Tendencia Relativa                               | `category` Positiva / Estable / Alerta               | —    | ruler / bar chart           |
-| `Resiliencia`                                                               | Proxy de resiliencia operativa (no crop suffix: all crops) | `category` Muy Alta / Alta / Media / Baja / Muy Baja | —    | ruler (5 bands) / bar chart |
-| `Vol_*`                                                                     | Volatilidad del rendimiento asociada al clima              | `category` Alta / Media / Baja                       | —    | ruler / bar chart           |
-| `IEP_H5_*`, `IEP_H10_*`                                                     | Índice de estabilidad productiva                           | `range` 0–100, step 1                                | %    | parcel list / parcel list   |
-| `ProInf_H5_*`, `ProInf_H10_*`                                               | Probabilidad de quedar por debajo de la media histórica    | `range` 0–100, step 1                                | %    | parcel list / parcel list   |
-| `Conf_H5_*`, `Conf_H10_*`                                                   | Bandera de confianza para uso crediticio                   | `category` Muy Alta / Alta / Moderada / Baja         | —    | ruler (4 bands) / bar chart |
-| `Puntuacion_*`                                                              | Puntuación de exposición climática corto vs. medio plazo   | `category` Alta / Moderada / Baja                    | `%`  | ruler / bar chart           |
+| Family (ids)                                                                | Name                                                       | Type                                                  | Unit | Widget (parcel / Todas)              |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------- | ---- | ------------------------------------ |
+| `DPTO_CODE`, `DIST_CODE`                                                    | Código del departamento / distrito                         | `text` (`default: false`)                             | —    | fact: nothing renders it             |
+| `area`                                                                      | Área de la parcela                                         | `numeric`                                             | ha   | mini map thumbnail                   |
+| `Pro_*`, `Mad_*`, `P25_*`, `P50_*`, `P75_*`, `IQR_*`                        | Historical production: base, MAD, quartiles, IQR           | `numeric`                                             | t/ha | number card / histogram              |
+| `Des_*`                                                                     | Desviación de la producción (documented as SD)             | `numeric` → `deviation`, base `Pro_*` (client retype) | t/ha | deviation card / diverging histogram |
+| `MID_H5_*`, `MID_H10_*`, `HIGH_H5_*`, `HIGH_H10_*`, `LOW_H5_*`, `LOW_H10_*` | Projected production, 3 scenarios × 2 horizons             | `numeric`                                             | t/ha | number card / histogram              |
+| `N_soja`, `N_arroz`                                                         | Contador de zafras detectadas                              | `range` 0–8, step 1                                   | —    | number card / stepped histogram      |
+| `Zafras_soja`, `Zafras_arroz`                                               | Listado de Zafras                                          | `text`                                                | —    | fact: nothing renders it             |
+| `ITR_*`                                                                     | Índice de Tendencia Relativa                               | `category` Positiva / Estable / Alerta                | —    | ruler / bar chart                    |
+| `Resiliencia`                                                               | Proxy de resiliencia operativa (no crop suffix: all crops) | `category` Muy Alta / Alta / Media / Baja / Muy Baja  | —    | ruler (5 bands) / bar chart          |
+| `Vol_*`                                                                     | Volatilidad del rendimiento asociada al clima              | `category` Alta / Media / Baja                        | —    | ruler / bar chart                    |
+| `IEP_H5_*`, `IEP_H10_*`                                                     | Índice de estabilidad productiva                           | `range` 0–100, step 1                                 | %    | number card / histogram              |
+| `ProInf_H5_*`, `ProInf_H10_*`                                               | Probabilidad de quedar por debajo de la media histórica    | `range` 0–100, step 1                                 | %    | number card / histogram              |
+| `Conf_H5_*`, `Conf_H10_*`                                                   | Bandera de confianza para uso crediticio                   | `category` Muy Alta / Alta / Moderada / Baja          | —    | ruler (4 bands) / bar chart          |
+| `Puntuacion_*`                                                              | Puntuación de exposición climática corto vs. medio plazo   | `category` Alta / Moderada / Baja                     | `%`  | ruler / bar chart                    |
 
 Read off the list:
 
 - The open-number type is `numeric` here too. The `number → numeric` normalisation in
   `asSpecIndicator` matches nothing the live API writes today; it stays only as insurance.
-- **Every range on productivo is a parcel list**, whatever its length: `N_*` (0–8, a handful
-  of integers) gets the same per-parcel rows as `IEP_*` (0–100 %). No ruler, no class, no
-  count under Todas. The route comment records that these ranges' design is not built yet.
+- **Every range on productivo is a number on its own scale**, never a risk: `N_*` (0–8) is a
+  number card on 0–8 and, under Todas, nine stepped columns "0" to "8"; `IEP_*` / `ProInf_*`
+  (0–100 %) a number card on 0–100 and a twenty-bin histogram. No ruler, no classes.
+- **`Des_*` is retyped as a deviation** by the client (`Des_` prefix, base `Pro_*`) and gets
+  the diverging widgets. Its description calls it a standard deviation, which is never
+  negative; whether the backend answers a signed difference is open (follow-up 15).
 - **Text indicators render nowhere**: `Zafras_*` (the list of seasons detected) and the two
   codes are requested and answered but no productivo card shows facts.
 - **Category order is best → worst** (`Positiva, Estable, Alerta`; `Muy Alta … Muy Baja`), so
@@ -318,8 +359,9 @@ Read off the list:
   `ITR_arroz`'s description talks about soja; `P75_*` say "50 por ciento"; `IQR_arroz` writes
   `P75_arrox`.
 
-12. **Short ranges on productivo** (`N_soja` / `N_arroz`, 0–8 integers) render as a parcel list,
-    not a ruler or a count, because the productivo branch of `widgetFor` ignores range length.
+12. **Short ranges on productivo** (`N_soja` / `N_arroz`, 0–8 integers) bin one column per
+    step under Todas (AGP-69) and read as a number on a parcel tab, never as risk classes.
+    Confirm the stepped histogram is the wanted reading of "zafras detectadas".
 13. **Metadata content slips** (names, descriptions, a `%` unit on a category) listed under the
     productivo appendix; for the data team, not the client.
 14. **Productivo numbers need a representation of their own.** Two defects, seen live on a
@@ -342,5 +384,11 @@ Read off the list:
     suffix rule and with the same `TODO(api-filters)` caveat. Design for the grouped widgets is
     not in the Figma frame yet. What the frame does have is Widget03 (node `5702-9119`): a
     signed deviation from the base (`+0,5` t/ha) on a diverging track, red below zero, blue
-    above. That is a new indicator type, not a `numeric` rendered differently: the API has to
-    say which indicators are deviations.
+    above. Built as the `deviation` type (AGP-68), today fed by the `Des_` stopgap.
+
+15. **The `Des_` prefix rule is a stopgap** (`deviation-override.ts`, `TODO(api-deviation)`,
+    `TODO(risk)`). It guesses meaning from the spelling of ids, and the live `Des_soja` is
+    documented as a **standard deviation** (never negative), not a signed difference: on live
+    data the diverging track only ever fills the blue side. Needs the API to type deviations
+    (`{ type: 'deviation', base, min?, max? }`) and the data team to say which indicators are
+    signed. Discussion thread on AGP-68.
