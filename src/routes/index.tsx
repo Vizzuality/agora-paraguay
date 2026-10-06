@@ -22,10 +22,13 @@ export const Route = createFileRoute('/')({
 });
 
 /**
- * The parcel selection: the panel (Figma 7172:1758) beside the map on a wide screen;
- * on a phone the two take turns (`selectionView`), the panel first (mobile01), then
- * the map with the actions in a bar under it (mobile02, mobile03). The server and the
- * first paint render the panel view; the live layout takes over once the atoms do.
+ * The parcel selection. On a wide screen the panel sits beside the map. On a mobile
+ * device the two take turns (`selectionView`): first the selection view, where the
+ * user chooses how to bring an area in (upload a file or draw); then the map view,
+ * where the parcels the API answered for those areas are on the map and the user
+ * can still select and deselect them by tapping, with the step's actions in a bar
+ * under the map. The server and the first paint render the selection view; the live
+ * layout takes over once the atoms are readable.
  */
 function SelectionPage() {
   return (
@@ -118,7 +121,7 @@ function Layout({
   );
 }
 
-/** The phone nav bar's right side (Figma 5655:5511): theme switch and account. */
+/** The mobile nav bar's right side: theme switch and account. */
 function PhoneNav() {
   return (
     <>

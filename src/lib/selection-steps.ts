@@ -30,9 +30,9 @@ export type SelectionView = 'selection' | 'map';
 
 /**
  * A narrow screen cannot hold the panel beside the map, so they take turns: the panel
- * while the user picks how to bring an area in (Figma mobile01), the map as soon as a
- * polygon is being traced (mobile02) or areas have landed (mobile03, step 2). Wide
- * screens show both and never ask.
+ * while the user picks how to bring an area in, the map as soon as a polygon is being
+ * traced or areas have landed (step 2), where the parcels the API answered are picked
+ * by tapping. Wide screens show both and never ask.
  */
 export function selectionView(progress: SelectionProgress): SelectionView {
   return progress.drawing || progress.areaCount > 0 ? 'map' : 'selection';
