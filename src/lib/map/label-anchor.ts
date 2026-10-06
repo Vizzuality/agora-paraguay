@@ -5,8 +5,9 @@ export type LngLat = [number, number];
 
 /**
  * Where a parcel's number sits on the map: the area centroid of its largest outer ring,
- * across every Polygon or MultiPolygon the parcel is made of. Parcels are compact enough
- * for the centroid to land inside; a strongly concave one could push it out, accepted.
+ * across every Polygon or MultiPolygon the parcel is made of. Size does not matter, shape
+ * does: a convex ring always holds its centroid, and cadastral parcels are mostly simple
+ * blobs and rectangles; a strongly concave one (an L or a C) could push it out, accepted.
  * `null` when there is no ring to anchor to.
  */
 export function labelAnchor(geometries: readonly ArealGeometry[]): LngLat | null {
