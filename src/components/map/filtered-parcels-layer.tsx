@@ -32,9 +32,11 @@ const HERO_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 3
  *   passes the analysed ids, so unselected neighbours do not follow into the hero.
  * - `highlightedIds`: which of those paint yellow. Default: the selection after the
  *   user's flips. The mini map passes the open tab's parcel.
- * - `variant`: `hero` is the mini map's dress (Figma 5538:6934): every parcel wears its
- *   "Parcela N" number (`ParcelNumbers`) and the dot texture, outlines a step thicker.
- *   The main map, where the parcels are still being picked, keeps the default.
+ * - `variant`: how the parcels look. `default` is the main map: plain fills and thin
+ *   outlines while the user is still picking parcels. `hero` is the analysis mini map
+ *   (Figma 5538:6934), which adds three things: a "Parcela N" chip over each parcel
+ *   (`ParcelNumbers`), the design's dot texture over every fill, and outlines one step
+ *   thicker so they read on a small map.
  */
 export function FilteredParcelsLayer({
   parcelIds,
