@@ -37,10 +37,11 @@ describe('widgetFor', () => {
     ).toBe('histogram');
   });
 
-  it('productivo: ranges list the parcels under any scope, text is general info', () => {
-    expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
-    expect(widgetFor(quality, { riesgo: 'productivo', scope: 'multiple' })).toBe('parcel-list');
-    expect(widgetFor(quality, { riesgo: 'productivo', scope: 'individual' })).toBe('parcel-list');
+  it("productivo: a range is one parcel's number or the set's histogram, short or long; text is general info", () => {
+    expect(widgetFor(index, { riesgo: 'productivo', scope: 'individual' })).toBe('number');
+    expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
+    expect(widgetFor(quality, { riesgo: 'productivo', scope: 'individual' })).toBe('number');
+    expect(widgetFor(quality, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
     expect(widgetFor(text, { riesgo: 'productivo', scope: 'multiple' })).toBe('fact');
   });
 

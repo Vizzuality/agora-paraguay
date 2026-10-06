@@ -68,6 +68,9 @@ export const SANITARIO_INDICATORS = [
   },
 ];
 
+/** Seasons of soy detected per parcel (0–8): west, then east. */
+export const PARCEL_SEASONS: Record<string, number> = { D07D21P00000002: 5, D07D23P00000008: 3 };
+
 /** The two parcels `filter-parcels` answers for any drawing: west half, east half. */
 export const WEST_PARCEL_ID = 'D07D21P00000002';
 export const EAST_PARCEL_ID = 'D07D23P00000008';
@@ -102,6 +105,13 @@ export const PRODUCTIVO_INDICATORS = [
     unit: 't/ha',
     default: true,
     indicator_type: { type: 'numeric' },
+  },
+  {
+    id: 'N_soja',
+    name: 'Contador de zafras de soja detectadas',
+    unit: null,
+    default: true,
+    indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
   },
 ];
 
@@ -232,6 +242,7 @@ export async function stubAnalysisApi(page: Page) {
           Asian_rust: rust,
           Pro_soja: PARCEL_PRODUCTION[parcelId],
           Des_soja: PARCEL_DEVIATION[parcelId],
+          N_soja: PARCEL_SEASONS[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',
           // Both parcels Media: the resilience widget counts 2 under Media.
