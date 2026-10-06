@@ -1,20 +1,19 @@
 import { Group } from '@visx/group';
-import { ParentSize } from '@visx/responsive';
 import { scaleLinear } from '@visx/scale';
 import { useId } from 'react';
 
 import {
+  AxisTicks,
   Baseline,
   CAP_HEIGHT,
   CappedBar,
   HISTOGRAM_HEIGHT,
+  HitAreas,
+  Responsive,
   TICK_ROW,
-  tickAnchor,
   ToneGradients,
 } from '@/components/charts/plot';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DeviationHistogramWidget } from '@/lib/analysis/deviation-widget';
-import { formatNumber } from '@/lib/analysis/number-scale';
 import { binLabel } from '@/lib/analysis/value-histogram';
 
 /*
@@ -23,8 +22,8 @@ import { binLabel } from '@/lib/analysis/value-histogram';
  * and one hanging down for those below (red), both with a solid cap at the far end and a
  * body fading into the card towards the baseline. One parcel is the same height either
  * way, so the two sides share a scale; the baseline sits where the counts put it. visx
- * primitives over a plain SVG, as `ValueHistogram`; the bar, gradients and baseline come
- * from `plot.tsx`.
+ * primitives over a plain SVG, as `ValueHistogram`; the bar, gradients, baseline, ticks
+ * and hit areas come from `plot.tsx`.
  */
 
 /** Room between the lowest bar and the tick row. */
@@ -32,21 +31,12 @@ const GAP = 4;
 
 type DivergingHistogramProps = Pick<DeviationHistogramWidget, 'min' | 'max' | 'ticks' | 'bins'>;
 
-/**
- * The bars either side of the baseline with the axis. Presentational: the card lists the
- * counts for assistive tech itself, so the drawing is hidden from it.
- */
+/** The bars either side of the baseline with the axis. */
 export function DivergingHistogram({ min, max, ticks, bins }: Readonly<DivergingHistogramProps>) {
   return (
-    <div aria-hidden>
-      <ParentSize debounceTime={50} style={{ height: HISTOGRAM_HEIGHT + GAP + TICK_ROW }}>
-        {({ width }) =>
-          width > 0 ? (
-            <HistogramSvg width={width} min={min} max={max} ticks={ticks} bins={bins} />
-          ) : null
-        }
-      </ParentSize>
-    </div>
+    <Responsive height={HISTOGRAM_HEIGHT + GAP + TICK_ROW}>
+      {(width) => <HistogramSvg width={width} min={min} max={max} ticks={ticks} bins={bins} />}
+    </Responsive>
   );
 }
 
@@ -102,40 +92,16 @@ function HistogramSvg({
       })}
 
       <Baseline y={baseline} width={width} />
-
-      {/* The axis' ticks, the ones on the edges hugging them so nothing spills out of the card. */}
-      {ticks.map((tick) => (
-        <text
-          key={tick}
-          x={xScale(tick)}
-          y={height}
-          textAnchor={tickAnchor(tick, min, max)}
-          dominantBaseline="text-after-edge"
-          className="fill-muted-foreground text-[12px] opacity-70"
-        >
-          {formatNumber(tick)}
-        </text>
-      ))}
-
-      {/* One hit area per bin, the full plot height, so an empty bin answers too. */}
-      <TooltipProvider>
-        {bins.map((bin) => (
-          <Tooltip key={bin.from}>
-            <TooltipTrigger asChild>
-              <rect
-                x={xScale(bin.from)}
-                y={0}
-                width={xScale(bin.to) - xScale(bin.from)}
-                height={HISTOGRAM_HEIGHT}
-                fill="transparent"
-              />
-            </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>
-              {binLabel(bin)}: {deviationCounts(bin)}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+      <AxisTicks ticks={ticks} x={xScale} y={height} min={min} max={max} />
+      <HitAreas
+        height={HISTOGRAM_HEIGHT}
+        areas={bins.map((bin) => ({
+          key: bin.from,
+          x: xScale(bin.from),
+          width: xScale(bin.to) - xScale(bin.from),
+          label: `${binLabel(bin)}: ${deviationCounts(bin)}`,
+        }))}
+      />
     </svg>
   );
 }
