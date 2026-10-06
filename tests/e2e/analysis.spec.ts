@@ -630,7 +630,10 @@ test('logs in from the header dialog', async ({ page }) => {
     })
     .locator('..')
     .locator('..');
-  await expect(deviation.getByRole('listitem')).toHaveText(['-0,3 – -0,25: 1', '0,45 – 0,5: 1']);
+  await expect(deviation.getByRole('listitem')).toHaveText([
+    '3,4 – 3,6: 1 por encima',
+    '3,8 – 4: 1 por debajo',
+  ]);
 
   // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
   // (the "Numerical individual" design), its signed deviation on the diverging track
