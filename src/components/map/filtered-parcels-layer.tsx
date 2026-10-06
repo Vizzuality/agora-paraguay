@@ -47,7 +47,7 @@ export function FilteredParcelsLayer({
   highlightedIds?: string[];
   variant?: 'default' | 'analysis';
 }>) {
-  const analysis = variant === 'analysis';
+  const isAnalysis = variant === 'analysis';
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
@@ -92,7 +92,7 @@ export function FilteredParcelsLayer({
           type="fill"
           paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
         />
-        {analysis && (
+        {isAnalysis && (
           <Layer
             id="filtered-parcels-dots"
             type="fill"
@@ -102,10 +102,13 @@ export function FilteredParcelsLayer({
         <Layer
           id="filtered-parcels-outline"
           type="line"
-          paint={{ 'line-color': COLOR, 'line-width': analysis ? ANALYSIS_LINE_WIDTH : LINE_WIDTH }}
+          paint={{
+            'line-color': COLOR,
+            'line-width': isAnalysis ? ANALYSIS_LINE_WIDTH : LINE_WIDTH,
+          }}
         />
       </Source>
-      {analysis && <ParcelNumbers parcels={parcels} parcelIds={numberedIds} />}
+      {isAnalysis && <ParcelNumbers parcels={parcels} parcelIds={numberedIds} />}
     </>
   );
 }
