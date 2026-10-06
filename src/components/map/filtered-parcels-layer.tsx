@@ -14,8 +14,8 @@ import { toggledParcelIdsAtom } from '@/store/parcels';
 const COLOR: ExpressionSpecification = ['case', ['get', 'selected'], '#F1FF28', '#FFFFFF'];
 const FILL_OPACITY: ExpressionSpecification = ['case', ['get', 'selected'], 0.35, 0.05];
 const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
-/** The hero mini map is small and framed tight, so its outlines read a step heavier. */
-const HERO_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 3, 2];
+/** The analysis mini map is small and framed tight, so its outlines read a step heavier. */
+const ANALYSIS_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 3, 2];
 
 /**
  * The parcels `filter-parcels` answers for the polygons on the map, after the user's
@@ -33,7 +33,7 @@ const HERO_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 3
  * - `highlightedIds`: which of those paint yellow. Default: the selection after the
  *   user's flips. The mini map passes the open tab's parcel.
  * - `variant`: how the parcels look. `default` is the main map: plain fills and thin
- *   outlines while the user is still picking parcels. `hero` is the analysis map, which
+ *   outlines while the user is still picking parcels. `analysis` is the analysis map, which
  *   adds three things: a "Parcela N" chip over each parcel (`ParcelNumbers`), the
  *   design's dot texture over every fill, and outlines one step thicker so they read on
  *   a small map.
@@ -45,9 +45,9 @@ export function FilteredParcelsLayer({
 }: Readonly<{
   parcelIds?: string[];
   highlightedIds?: string[];
-  variant?: 'default' | 'hero';
+  variant?: 'default' | 'analysis';
 }>) {
-  const hero = variant === 'hero';
+  const analysis = variant === 'analysis';
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
@@ -92,7 +92,7 @@ export function FilteredParcelsLayer({
           type="fill"
           paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
         />
-        {hero && (
+        {analysis && (
           <Layer
             id="filtered-parcels-dots"
             type="fill"
@@ -102,10 +102,10 @@ export function FilteredParcelsLayer({
         <Layer
           id="filtered-parcels-outline"
           type="line"
-          paint={{ 'line-color': COLOR, 'line-width': hero ? HERO_LINE_WIDTH : LINE_WIDTH }}
+          paint={{ 'line-color': COLOR, 'line-width': analysis ? ANALYSIS_LINE_WIDTH : LINE_WIDTH }}
         />
       </Source>
-      {hero && <ParcelNumbers parcels={parcels} parcelIds={numberedIds} />}
+      {analysis && <ParcelNumbers parcels={parcels} parcelIds={numberedIds} />}
     </>
   );
 }
