@@ -1,8 +1,12 @@
-import { InfoTip } from '@/components/info-tip';
-import { Card } from '@/components/ui/card';
+import {
+  TrackMarker,
+  TrackTicks,
+  WidgetCard,
+  WidgetFigure,
+  WidgetHeader,
+} from '@/components/widget-card';
 import { formatSigned, type DeviationWidget } from '@/lib/analysis/deviation-widget';
 import { formatNumber } from '@/lib/analysis/number-scale';
-import { cn } from '@/lib/utils';
 
 type DeviationCardProps = Omit<DeviationWidget, 'id'> & { className?: string };
 
@@ -12,8 +16,7 @@ type DeviationCardProps = Omit<DeviationWidget, 'id'> & { className?: string };
  * with the reference in the middle — red to the left, blue to the right — the marker on
  * the side the sign puts it, in that side's colour. Under the track, the reference's own
  * value (the parcel's base production) with the track's ends either side of it in the
- * same unit; without a base, the deviation scale itself. Same light surface as
- * `RiskClassCard`.
+ * same unit; without a base, the deviation scale itself.
  */
 export function DeviationCard({
   label,
@@ -28,65 +31,38 @@ export function DeviationCard({
   const negative = position < 50;
   // The marker's place within its own half, 0–100 from the middle outwards.
   const within = Math.abs(position - 50) * 2;
-  const side = negative ? 'bg-risk-high' : 'bg-risk-low';
   // The base as read out: its figure with the unit when there is one.
   const baseText = base === null ? null : [formatNumber(base), unit].filter(Boolean).join(' ');
 
   return (
-    <Card
-      className={cn(
-        'min-h-[254px] justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
-        className,
-      )}
-    >
-      <div className="grid grid-cols-[auto_1fr] items-start gap-x-2">
-        <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
-        <InfoTip
-          description={description}
-          subject={label}
-          className="mt-0.5 text-accent-foreground"
-        />
-        {unit && (
-          <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
-            {unit}
-          </p>
-        )}
-      </div>
+    <WidgetCard className={className}>
+      <WidgetHeader label={label} description={description} subtitle={unit} />
 
       <div className="flex flex-col gap-1">
-        <p
-          data-slot="figure"
-          className="text-[66px] leading-normal font-extralight tracking-[0.408px]"
-        >
+        <WidgetFigure>
           {text}
           {unit && <span className="sr-only"> {unit}</span>}
-        </p>
+        </WidgetFigure>
         {/* Presentational: the figure above already says the value (see `RiskRuler`). */}
         <div aria-hidden className="flex flex-col gap-1">
           <div className="flex w-full items-center gap-[2px] p-px">
             {negative ? (
               <>
-                <Half tone={side} marker={100 - within} />
+                <Half tone="bg-risk-high" at={100 - within} />
                 <span className="h-2 min-w-0 flex-1 rounded-[2px] bg-risk-low opacity-50" />
               </>
             ) : (
               <>
                 <span className="h-2 min-w-0 flex-1 rounded-[2px] bg-risk-high opacity-50" />
-                <Half tone={side} marker={within} />
+                <Half tone="bg-risk-low" at={within} />
               </>
             )}
           </div>
-          <ul className="flex w-full justify-between text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
-            {scaleLabels(span, base).map((tick, index) => (
-              <li key={tick} data-slot={index === 1 ? 'base' : undefined}>
-                {tick}
-              </li>
-            ))}
-          </ul>
+          <TrackTicks labels={scaleLabels(span, base)} slot={{ index: 1, name: 'base' }} />
         </div>
         {baseText && <p className="sr-only">Base: {baseText}</p>}
       </div>
-    </Card>
+    </WidgetCard>
   );
 }
 
@@ -97,19 +73,11 @@ function scaleLabels(span: number, base: number | null): string[] {
   return [formatNumber(base - span), formatNumber(base), formatNumber(base + span)];
 }
 
-/** One half of the track with the marker at `marker` (0–100 from its left edge). */
-function Half({ tone, marker }: Readonly<{ tone: string; marker: number }>) {
+/** One half of the track, in its side's colour, with the marker at `at` (0–100 from its left edge). */
+function Half({ tone, at }: Readonly<{ tone: string; at: number }>) {
   return (
     <span className="flex min-w-0 flex-1 items-center gap-[2px]">
-      <span
-        className={cn('h-2 min-w-0 rounded-[2px] opacity-50', tone)}
-        style={{ flexGrow: marker }}
-      />
-      <span className={cn('h-6 w-1 shrink-0 rounded-[2px]', tone)} />
-      <span
-        className={cn('h-2 min-w-0 rounded-[2px] opacity-50', tone)}
-        style={{ flexGrow: 100 - marker }}
-      />
+      <TrackMarker at={at} track={`${tone} opacity-50`} marker={tone} />
     </span>
   );
 }
