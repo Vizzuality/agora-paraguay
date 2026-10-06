@@ -52,20 +52,34 @@ export function widgetFor(
 ): WidgetKind {
   switch (type.type) {
     case 'range':
-      if (riesgo === 'productivo') return scope === 'individual' ? 'number' : 'histogram';
-      if (scope === 'individual') return 'ruler';
-
-      return isShortRange(type) ? 'bar-chart' : 'histogram';
+      return rangeWidget(type, riesgo, scope);
     case 'category':
       return scope === 'multiple' ? 'bar-chart' : 'ruler';
     case 'text':
       return 'fact';
     case 'numeric':
     case 'number':
-      if (riesgo !== 'productivo') return 'fact';
-
-      return scope === 'individual' ? 'number' : 'histogram';
+      return numberWidget(riesgo, scope);
   }
+}
+
+/** A range: a number on productivo; on sanitario one parcel on the ruler, several per class or binned. */
+function rangeWidget(
+  type: { min: number; max: number },
+  riesgo: Riesgo,
+  scope: ParcelScope,
+): WidgetKind {
+  if (riesgo === 'productivo') return numberWidget(riesgo, scope);
+  if (scope === 'individual') return 'ruler';
+
+  return isShortRange(type) ? 'bar-chart' : 'histogram';
+}
+
+/** A number: productivo draws one parcel's card or the set's histogram; sanitario reads it as a fact. */
+function numberWidget(riesgo: Riesgo, scope: ParcelScope): WidgetKind {
+  if (riesgo !== 'productivo') return 'fact';
+
+  return scope === 'individual' ? 'number' : 'histogram';
 }
 
 /**

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { numberWidgets } from '@/lib/analysis/number-widget';
-import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
+
+import { parcel, seasons, stability } from './fixtures';
 
 const production: Indicator = {
   id: 'Pro_soja',
@@ -17,21 +18,6 @@ const area: Indicator = {
   unit: 'ha',
   indicator_type: { type: 'numeric' },
 };
-const seasons: Indicator = {
-  id: 'N_soja',
-  name: 'Contador de zafras de soja detectadas',
-  indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
-};
-const stability: Indicator = {
-  id: 'IEP_H5_soja',
-  name: 'Índice de estabilidad productiva',
-  unit: '%',
-  indicator_type: { type: 'range', min: 0, max: 100, step: 1 },
-};
-
-function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisParcel {
-  return { parcel_id: id, properties };
-}
 
 const parcels = [
   parcel('A', { Pro_soja: 3.55, area: 10.2, N_soja: 5, IEP_H5_soja: 62 }),

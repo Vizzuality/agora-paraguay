@@ -7,8 +7,9 @@ import {
   steppedBins,
   valueHistogramWidgets,
 } from '@/lib/analysis/value-histogram';
-import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
+
+import { parcel, seasons, stability } from './fixtures';
 
 const quality: Indicator = {
   id: 'data_quality',
@@ -21,21 +22,6 @@ const rust: Indicator = {
   name: 'Phakopsora pachyrhizi',
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
 };
-const seasons: Indicator = {
-  id: 'N_soja',
-  name: 'Contador de zafras de soja detectadas',
-  indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
-};
-const stability: Indicator = {
-  id: 'IEP_H5_soja',
-  name: 'Índice de estabilidad productiva',
-  unit: '%',
-  indicator_type: { type: 'range', min: 0, max: 100, step: 1 },
-};
-
-function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisParcel {
-  return { parcel_id: id, properties };
-}
 
 const occupied = (bins: { count: number }[]) =>
   bins.flatMap((bin, index) => (bin.count > 0 ? [[index, bin.count]] : []));
