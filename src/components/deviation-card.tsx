@@ -29,6 +29,8 @@ export function DeviationCard({
   // The marker's place within its own half, 0–100 from the middle outwards.
   const within = Math.abs(position - 50) * 2;
   const side = negative ? 'bg-risk-high' : 'bg-risk-low';
+  // The base as read out: its figure with the unit when there is one.
+  const baseText = base === null ? null : [formatNumber(base), unit].filter(Boolean).join(' ');
 
   return (
     <Card
@@ -82,9 +84,7 @@ export function DeviationCard({
             ))}
           </ul>
         </div>
-        <p className="sr-only">
-          {base === null ? null : `Base: ${formatNumber(base)}${unit ? ` ${unit}` : ''}`}
-        </p>
+        {baseText && <p className="sr-only">Base: {baseText}</p>}
       </div>
     </Card>
   );
