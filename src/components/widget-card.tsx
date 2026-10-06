@@ -118,7 +118,7 @@ export function TrackTicks({
   return (
     <ul className="flex w-full justify-between text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
       {labels.map((label, index) => (
-        <li key={label} data-slot={slot && slot.index === index ? slot.name : undefined}>
+        <li key={label} data-slot={slot?.index === index ? slot.name : undefined}>
           {label}
         </li>
       ))}
