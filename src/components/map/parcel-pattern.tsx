@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { DOT_PATTERN_ID, useDotPattern } from '@/lib/map/use-dot-pattern';
+import { DOT_PATTERN_ID } from '@/lib/map/dot-pattern';
 import { drawPolygonsAtom } from '@/store/draw';
 
 /**
@@ -16,8 +16,6 @@ import { drawPolygonsAtom } from '@/store/draw';
 export function ParcelPattern() {
   const polygons = useAtomValue(drawPolygonsAtom);
   const { data: parcels } = useQuery(parcelQueries.filtered(polygons));
-
-  useDotPattern();
 
   if (polygons.length === 0 || (parcels?.results.length ?? 0) > 0) return null;
 

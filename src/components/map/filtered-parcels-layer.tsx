@@ -5,8 +5,8 @@ import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { ParcelNumbers } from '@/components/map/parcel-numbers';
 import { parcelQueries } from '@/lib/api/parcels/queries';
+import { DOT_PATTERN_ID } from '@/lib/map/dot-pattern';
 import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
-import { DOT_PATTERN_ID, useDotPattern } from '@/lib/map/use-dot-pattern';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -51,8 +51,6 @@ export function FilteredParcelsLayer({
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
-
-  useDotPattern();
 
   if (!data) return null;
 

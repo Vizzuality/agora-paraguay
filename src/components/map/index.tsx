@@ -14,6 +14,7 @@ import { ParcelPattern } from '@/components/map/parcel-pattern';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
+import { addDotPattern } from '@/lib/map/dot-pattern';
 import { normalizeViewState } from '@/lib/map/view-state';
 import { drawAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
@@ -93,7 +94,10 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       }}
       mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
-      onLoad={(event) => collapseAttribution(event.target)}
+      onLoad={(event) => {
+        collapseAttribution(event.target);
+        addDotPattern(event.target);
+      }}
       onMoveEnd={handleMoveEnd}
       style={{ width: '100%', height: '100%' }}
       attributionControl={false}

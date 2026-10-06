@@ -7,6 +7,7 @@ import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, INITIAL_VIEW_STATE } from '@/lib/map/basemap';
+import { addDotPattern } from '@/lib/map/dot-pattern';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
@@ -52,7 +53,10 @@ export function MiniMap() {
       }
       mapStyle={BASEMAP_STYLE}
       attributionControl={false}
-      onLoad={(event) => collapseAttribution(event.target)}
+      onLoad={(event) => {
+        collapseAttribution(event.target);
+        addDotPattern(event.target);
+      }}
       dragRotate={false}
       touchPitch={false}
       style={{ width: '100%', height: '100%' }}
