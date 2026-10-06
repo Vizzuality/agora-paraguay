@@ -1,10 +1,15 @@
 import { Group } from '@visx/group';
 import { ParentSize } from '@visx/responsive';
 import { scaleBand, scaleLinear } from '@visx/scale';
-import { Bar } from '@visx/shape';
 import { useId } from 'react';
 
-import { TONE_COLOR, TONES } from '@/components/charts/tones';
+import {
+  Baseline,
+  CappedBar,
+  COLUMNS_HEIGHT,
+  parcelCount,
+  ToneGradients,
+} from '@/components/charts/plot';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CategoryColumn } from '@/lib/analysis/category-counts';
 
@@ -12,17 +17,15 @@ import type { CategoryColumn } from '@/lib/analysis/category-counts';
  * The "Categorical multiple" design: a column per class, the count over a bar
  * whose cap is solid and whose body fades into the card, a baseline, the names under.
  * visx primitives over a plain SVG — the card is a handful of rectangles, so no chart
- * component: the scales place them, `ParentSize` gives the width. Hovering a column
- * names it with its count in the app's tooltip.
+ * component: the scales place them, `ParentSize` gives the width; the bar, gradients and
+ * baseline come from `plot.tsx`. Hovering a column names it with its count in the app's
+ * tooltip.
  */
 
-/** The column's height from the design: the count line, a gap, then the bar. */
-const PLOT_HEIGHT = 98;
+/** Inside `COLUMNS_HEIGHT`: the count line and its gap above the tallest bar. */
 const COUNT_LINE = 17.4;
 const COUNT_GAP = 4;
-const BAR_MAX = PLOT_HEIGHT - COUNT_LINE - COUNT_GAP;
-const CAP_HEIGHT = 4;
-const RADIUS = 2;
+const BAR_MAX = COLUMNS_HEIGHT - COUNT_LINE - COUNT_GAP;
 /** The space between columns, the same `gap-2` the label row under the chart uses. */
 const COLUMN_GAP = 8;
 
@@ -37,7 +40,7 @@ type CategoryBarsProps = {
 export function CategoryBars({ columns }: Readonly<CategoryBarsProps>) {
   return (
     <div aria-hidden className="flex flex-col">
-      <ParentSize debounceTime={50} style={{ height: PLOT_HEIGHT + 1 }}>
+      <ParentSize debounceTime={50} style={{ height: COLUMNS_HEIGHT + 1 }}>
         {({ width }) => (width > 0 ? <BarsSvg width={width} columns={columns} /> : null)}
       </ParentSize>
       <ul className="flex gap-2 text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
@@ -67,22 +70,15 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
   const bandwidth = xScale.bandwidth();
 
   return (
-    <svg width={width} height={PLOT_HEIGHT + 1} className="block overflow-visible">
-      <defs>
-        {TONES.map((tone) => (
-          <linearGradient key={tone} id={`${gradientId}-${tone}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" style={{ stopColor: TONE_COLOR[tone] }} />
-            <stop offset="1" style={{ stopColor: 'var(--card)' }} />
-          </linearGradient>
-        ))}
-      </defs>
+    <svg width={width} height={COLUMNS_HEIGHT + 1} className="block overflow-visible">
+      <ToneGradients id={gradientId} />
 
       {columns.map((column) => {
         if (column.count === 0) return null;
 
         const x = xScale(column.label) ?? 0;
         const barHeight = yScale(column.count);
-        const top = PLOT_HEIGHT - barHeight;
+        const top = COLUMNS_HEIGHT - barHeight;
 
         return (
           <Group key={column.label} left={x}>
@@ -95,33 +91,18 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
             >
               {column.count}
             </text>
-            <Bar
+            <CappedBar
               y={top}
               width={bandwidth}
               height={barHeight}
-              rx={RADIUS}
-              fill={`url('#${gradientId}-${column.tone}')`}
-              opacity={0.2}
-            />
-            <Bar
-              y={top}
-              width={bandwidth}
-              height={CAP_HEIGHT}
-              rx={RADIUS}
-              style={{ fill: TONE_COLOR[column.tone] }}
+              tone={column.tone}
+              gradientId={gradientId}
             />
           </Group>
         );
       })}
 
-      <line
-        x1={0}
-        x2={width}
-        y1={PLOT_HEIGHT + 0.5}
-        y2={PLOT_HEIGHT + 0.5}
-        className="stroke-foreground"
-        strokeWidth={1}
-      />
+      <Baseline y={COLUMNS_HEIGHT} width={width} />
 
       {/* One hit area per column, the full plot height, so an empty column answers too. */}
       <TooltipProvider>
@@ -132,7 +113,7 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
                 x={xScale(column.label) ?? 0}
                 y={0}
                 width={bandwidth}
-                height={PLOT_HEIGHT}
+                height={COLUMNS_HEIGHT}
                 fill="transparent"
               />
             </TooltipTrigger>
@@ -144,8 +125,4 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
       </TooltipProvider>
     </svg>
   );
-}
-
-function parcelCount(count: number): string {
-  return count === 1 ? '1 parcela' : `${count} parcelas`;
 }
