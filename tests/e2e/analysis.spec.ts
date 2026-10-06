@@ -621,13 +621,22 @@ test('logs in from the header dialog', async ({ page }) => {
     .locator('..');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
   await expect(page.getByText('17,5 ha')).toBeVisible();
+  // A short range (seasons detected, 0–8) is a count, not a risk: one bin per value on its
+  // own scale, each parcel's value named outright.
+  const seasons = page
+    .getByRole('heading', { name: 'Contador de zafras de soja detectadas' })
+    .locator('..')
+    .locator('..');
+  await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
 
   // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
-  // (the "Numerical individual" design), its class on the ruler. Back on Todas the
-  // histogram returns.
+  // (the "Numerical individual" design) — the range on its own 0–8 scale — its class on
+  // the ruler. Back on Todas the histograms return.
   const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await parcelTabs.filter({ hasText: 'Parcela 2' }).getByRole('button').click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  await expect(seasons.locator('[data-slot="figure"]')).toHaveText('3');
+  await expect(seasons.getByText('8', { exact: true })).toBeVisible();
   await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
   await parcelTabs.filter({ hasText: 'Todas' }).getByRole('button').click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);

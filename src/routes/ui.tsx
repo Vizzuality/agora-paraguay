@@ -109,7 +109,7 @@ import { ValueHistogramCard } from '@/components/value-histogram-card';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { linearTicks, numberScale } from '@/lib/analysis/number-scale';
 import { requestedIndicatorIds, toAnalysisRequest } from '@/lib/analysis/request';
-import { histogramBins } from '@/lib/analysis/value-histogram';
+import { histogramBins, steppedBins } from '@/lib/analysis/value-histogram';
 import { RANGE_CLASSES } from '@/lib/analysis/widget-config';
 import { analysisQueries } from '@/lib/api/analysis/queries';
 import { metadataQueries } from '@/lib/api/metadata/queries';
@@ -467,6 +467,29 @@ function UiKitPage() {
                     numberScale([5.15, 9.6]),
                     { tone: 'elevated' },
                   )}
+                />
+                {/* A productivo range on its own scale: a 0–8 count, one parcel and the set per step. */}
+                <NumberCard
+                  label="Contador de zafras de soja detectadas"
+                  description="Zafras detectadas desde 2017-2018."
+                  unit={null}
+                  value={5}
+                  text="5"
+                  min={0}
+                  max={8}
+                  ticks={linearTicks(0, 8)}
+                  position={62.5}
+                />
+                <ValueHistogramCard
+                  label="Contador de zafras de soja detectadas"
+                  description="Zafras detectadas desde 2017-2018."
+                  unit={null}
+                  ticks={linearTicks(0, 8)}
+                  {...steppedBins([0, 2, 3, 3, 4, 5, 5, 5, 6, 7, 8, 8], {
+                    min: 0,
+                    max: 8,
+                    step: 1,
+                  })}
                 />
                 <AnalysisCardsDemo />
               </ClientOnly>
