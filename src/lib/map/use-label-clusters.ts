@@ -17,8 +17,11 @@ export type PlacedCluster = Pick<LabelCluster, 'numbers' | 'highlighted'> & { ln
 /**
  * Clusters parcel-number chips that would overlap on screen. Overlap depends on the
  * camera, so the map is read as an external store: the camera key is the snapshot and
- * `move`/`resize` are the change events, which re-renders this hook and re-projects.
- * `clusterLabels` does the grouping. Empty until the map exists. Runs inside `<Map>`.
+ * `moveend`/`resize` are the change events, which re-render this hook and re-project.
+ * `moveend` rather than `move`: the markers glide with the map on their own, and
+ * regrouping once per gesture is enough; a merged chip may split a beat after the zoom
+ * settles. `clusterLabels` does the grouping. Empty until the map exists. Runs inside
+ * `<Map>`.
  */
 export function useLabelClusters(
   anchors: readonly { number: number; lngLat: LngLat; highlighted: boolean }[],
@@ -30,11 +33,11 @@ export function useLabelClusters(
     (onChange: () => void) => {
       if (!map) return () => {};
 
-      map.on('move', onChange);
+      map.on('moveend', onChange);
       map.on('resize', onChange);
 
       return () => {
-        map.off('move', onChange);
+        map.off('moveend', onChange);
         map.off('resize', onChange);
       };
     },
