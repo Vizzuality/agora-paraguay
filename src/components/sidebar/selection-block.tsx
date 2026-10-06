@@ -44,7 +44,7 @@ export function SelectionBlockLayout({
   children,
 }: Readonly<{ step: PanelStep; children?: ReactNode }>) {
   return (
-    <section className="flex flex-col gap-10 px-10 pb-6">
+    <section className="flex flex-col gap-10 px-2 py-6 md:px-10 md:pt-0">
       <h1 className="text-4xl font-semibold tracking-[-0.015em]">Selección de parcelas</h1>
 
       <SelectionSteps current={step} />

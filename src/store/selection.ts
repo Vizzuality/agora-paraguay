@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import { selectionStep } from '@/lib/selection-steps';
+import { selectionStep, selectionView } from '@/lib/selection-steps';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { resetParcelTogglesAtom } from '@/store/parcels';
 
@@ -9,6 +9,13 @@ export const selectionStepAtom = atom((get) => {
   const draw = get(drawStateAtom);
 
   return selectionStep({ areaCount: draw.polygons.length, drawing: draw.tool === 'draw' });
+});
+
+/** Which of panel and map a phone shows, derived like the step. */
+export const selectionViewAtom = atom((get) => {
+  const draw = get(drawStateAtom);
+
+  return selectionView({ areaCount: draw.polygons.length, drawing: draw.tool === 'draw' });
 });
 
 /**
