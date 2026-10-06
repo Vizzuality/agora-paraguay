@@ -1,8 +1,6 @@
 import { CategoryBars } from '@/components/charts/category-bars';
-import { InfoTip } from '@/components/info-tip';
-import { Card } from '@/components/ui/card';
+import { WidgetCard, WidgetHeader } from '@/components/widget-card';
 import type { CategoryCountWidget } from '@/lib/analysis/category-counts';
-import { cn } from '@/lib/utils';
 
 type CategoryCountCardProps = Omit<CategoryCountWidget, 'id'> & { className?: string };
 
@@ -20,23 +18,8 @@ export function CategoryCountCard({
   className,
 }: Readonly<CategoryCountCardProps>) {
   return (
-    <Card
-      className={cn(
-        'min-h-[254px] justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
-        className,
-      )}
-    >
-      <div className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1">
-        <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
-        <InfoTip
-          description={description}
-          subject={label}
-          className="mt-0.5 text-accent-foreground"
-        />
-        <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
-          Número de parcelas
-        </p>
-      </div>
+    <WidgetCard className={className}>
+      <WidgetHeader label={label} description={description} subtitle="Número de parcelas" />
 
       <ul className="sr-only">
         {columns.map((column) => (
@@ -46,6 +29,6 @@ export function CategoryCountCard({
         ))}
       </ul>
       <CategoryBars columns={columns} />
-    </Card>
+    </WidgetCard>
   );
 }

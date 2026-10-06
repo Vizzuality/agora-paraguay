@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { InfoTip } from '@/components/info-tip';
-import { Card } from '@/components/ui/card';
+import { TrackMarker, WidgetCard, WidgetFigure, WidgetHeader } from '@/components/widget-card';
 import type { IndicatorCard, RiskScale } from '@/lib/analysis/indicator-cards';
 import { rulerBands } from '@/lib/analysis/risk-ruler';
 import type { RiskTone } from '@/lib/analysis/widget-config';
@@ -17,10 +16,8 @@ type RiskClassCardProps = Omit<IndicatorCard, 'id'> & {
 /**
  * Widget for a classed indicator: a label, the class as the large
  * figure, and a ruler of one band per class with the marker inside the class the reading
- * falls in, the class names under the bands.
- *
- * Light surface (`bg-card`), unlike `StatCard`'s navy `bg-widget` — the two are
- * different widgets in the design, not variants of one.
+ * falls in, the class names under the bands. Light surface (`WidgetCard`), unlike
+ * `StatCard`'s navy `bg-widget` — the two are different widgets in the design.
  */
 export function RiskClassCard({
   label,
@@ -31,33 +28,17 @@ export function RiskClassCard({
   className,
 }: Readonly<RiskClassCardProps>) {
   return (
-    <Card
-      className={cn(
-        'min-h-[254px] justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
-        className,
-      )}
-    >
-      <div className="flex items-start gap-2">
-        <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
-        <InfoTip
-          description={description}
-          subject={label}
-          className="mt-0.5 text-accent-foreground"
-        />
-        {action && <div className="ml-auto">{action}</div>}
-      </div>
+    <WidgetCard className={className}>
+      <WidgetHeader label={label} description={description} action={action} />
 
       <div className="flex flex-col gap-1">
-        <p
-          data-slot="risk-level"
-          className="text-[66px] leading-normal font-extralight tracking-[0.408px]"
-        >
+        <WidgetFigure slot="risk-level">
           {level}
           {scale?.value && <span className="sr-only"> ({scale.value})</span>}
-        </p>
+        </WidgetFigure>
         {scale && <RiskRuler {...scale} />}
       </div>
-    </Card>
+    </WidgetCard>
   );
 }
 
@@ -92,23 +73,17 @@ function RiskRuler({ classes, position, value }: Readonly<RiskScale>) {
         {bands.map((band) =>
           band.marker ? (
             <div key={band.label} className="flex min-w-0 flex-1 items-center gap-[2px]">
-              <span
-                className={cn('h-2 min-w-0 rounded-[2px]', TRACK_CLASS[band.tone])}
-                style={{ flexGrow: band.marker.before }}
-              />
-              <span
-                className={cn('relative h-6 w-1 shrink-0 rounded-[2px]', MARKER_CLASS[band.tone])}
+              <TrackMarker
+                at={band.marker.before}
+                track={TRACK_CLASS[band.tone]}
+                marker={MARKER_CLASS[band.tone]}
               >
                 {value && (
                   <span className="absolute bottom-full left-1/2 w-8 -translate-x-1/2 text-center text-[12px] leading-[17.4px] whitespace-nowrap text-foreground opacity-70">
                     {value}
                   </span>
                 )}
-              </span>
-              <span
-                className={cn('h-2 min-w-0 rounded-[2px]', TRACK_CLASS[band.tone])}
-                style={{ flexGrow: band.marker.after }}
-              />
+              </TrackMarker>
             </div>
           ) : (
             <span
