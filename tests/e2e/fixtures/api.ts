@@ -92,6 +92,13 @@ export const PRODUCTIVO_INDICATORS = [
     default: true,
     indicator_type: { type: 'numeric' },
   },
+  {
+    id: 'N_soja',
+    name: 'Contador de zafras de soja detectadas',
+    unit: null,
+    default: true,
+    indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
+  },
 ];
 
 /**
