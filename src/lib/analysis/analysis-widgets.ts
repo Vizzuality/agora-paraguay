@@ -1,5 +1,10 @@
 import { categoryCountWidgets, type CategoryCountWidget } from '@/lib/analysis/category-counts';
-import { deviationWidgets, type DeviationWidget } from '@/lib/analysis/deviation-widget';
+import {
+  deviationHistogramWidgets,
+  deviationWidgets,
+  type DeviationHistogramWidget,
+  type DeviationWidget,
+} from '@/lib/analysis/deviation-widget';
 import { indicatorCards, type IndicatorCard } from '@/lib/analysis/indicator-cards';
 import { numberWidgets, type NumberWidget } from '@/lib/analysis/number-widget';
 import { parcelValueWidgets, type ParcelValuesWidget } from '@/lib/analysis/parcel-values';
@@ -14,7 +19,8 @@ export type AnalysisWidget =
   | ({ kind: 'bar-chart' } & CategoryCountWidget)
   | ({ kind: 'histogram' } & ValueHistogramWidget)
   | ({ kind: 'number' } & NumberWidget)
-  | ({ kind: 'deviation' } & DeviationWidget);
+  | ({ kind: 'deviation' } & DeviationWidget)
+  | ({ kind: 'diverging-histogram' } & DeviationHistogramWidget);
 
 export type AnalysisWidgetsInput = {
   /** The answer's parcels, matched by id — the backend need not echo them in request order. */
@@ -36,7 +42,8 @@ export type AnalysisWidgetsInput = {
  * Every widget the shown indicators produce, in metadata order, whatever its kind:
  * a risk card for a classed reading of one parcel, a list of every parcel's number, a
  * count of the parcels per class, a histogram of their values over a scale, one parcel's
- * number on that scale, one parcel's signed deviation on a diverging track. Which
+ * number on that scale, one parcel's signed deviation on a diverging track, the set's
+ * deviations as bars up and down from their base. Which
  * kind an indicator takes is `widgetFor`'s
  * call, by riesgo and scope; each kind's builder answers only the indicators that are
  * its own, so an indicator lands in at most one widget.
@@ -84,6 +91,12 @@ export function analysisWidgets({
       widget,
     ]),
   );
+  const divergences = new Map(
+    deviationHistogramWidgets(parcels, parcelIds, indicators, riesgo, scope).map((widget) => [
+      widget.id,
+      widget,
+    ]),
+  );
 
   return (indicators ?? []).flatMap((indicator): AnalysisWidget[] => {
     const card = cards.get(indicator.id);
@@ -103,6 +116,9 @@ export function analysisWidgets({
 
     const deviation = deviations.get(indicator.id);
     if (deviation) return [{ kind: 'deviation', ...deviation }];
+
+    const divergence = divergences.get(indicator.id);
+    if (divergence) return [{ kind: 'diverging-histogram', ...divergence }];
 
     return [];
   });

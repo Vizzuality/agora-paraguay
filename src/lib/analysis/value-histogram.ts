@@ -1,5 +1,4 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
-import { deviationSpan } from '@/lib/analysis/deviation-widget';
 import { formatNumber, linearTicks, numberScale } from '@/lib/analysis/number-scale';
 import { hasColumn, numberOf } from '@/lib/analysis/readings';
 import {
@@ -19,8 +18,7 @@ import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
  * bin by the class it sits in and names the classes under the scale in equal thirds, as on
  * the ruler (the "Categorical and numerical multiple" design); an open number (t/ha) has
  * no classes, runs from zero to a round figure above the largest value and paints every
- * bin orange (the "Numerical multiple" design); a deviation runs symmetric around zero
- * and paints the bins below it red, above it blue. Pure, node-tested; the chart
+ * bin orange (the "Numerical multiple" design). Pure, node-tested; the chart
  * (`ValueHistogram`) places the bins.
  */
 
@@ -53,8 +51,8 @@ export type ValueHistogramWidget = {
 
 type Range = { min: number; max: number };
 
-/** How the bins are painted: by the class each sits in, all in one tone, or by sign. */
-type Paint = { classes: readonly RiskClass[] } | { tone: RiskTone } | { diverging: true };
+/** How the bins are painted: by the class each sits in, or all in one tone. */
+type Paint = { classes: readonly RiskClass[] } | { tone: RiskTone };
 
 /** The default paint: a range's bins in the ruler's classes. */
 const RANGE_PAINT: Paint = { classes: RANGE_CLASSES };
@@ -94,7 +92,6 @@ export function histogramBins(
 /** The tone of a bin whose middle sits at `middle` (0–100 along the scale). */
 function binTone(paint: Paint, middle: number): RiskTone {
   if ('tone' in paint) return paint.tone;
-  if ('diverging' in paint) return middle < 50 ? 'high' : 'low';
 
   return paint.classes[classIndexAt(middle, paint.classes.length)].tone;
 }
@@ -102,9 +99,9 @@ function binTone(paint: Paint, middle: number): RiskTone {
 /**
  * One widget per indicator that bins under this riesgo and scope (`widgetFor`), in
  * metadata order, over the parcels Analizar submitted. A range is binned over its own
- * scale in its classes; an open number over `numberScale` of the values, in one tone; a
- * deviation over `deviationSpan` either side of zero, by sign. Every bin is kept, empty
- * ones included; only an indicator the answer has no column for gets no widget.
+ * scale in its classes; an open number over `numberScale` of the values, in one tone.
+ * Every bin is kept, empty ones included; only an indicator the answer has no column for
+ * gets no widget.
  */
 export function valueHistogramWidgets(
   parcels: AnalysisParcel[],
@@ -144,20 +141,6 @@ export function valueHistogramWidgets(
           ticks: linearTicks(type.min, type.max),
           classes: RANGE_CLASSES,
           bins: histogramBins(values, type),
-        },
-      ];
-    }
-
-    if (type.type === 'deviation') {
-      const span = deviationSpan(type, values);
-      const scale = { min: -span, max: span };
-
-      return [
-        {
-          ...widget,
-          ...scale,
-          ticks: linearTicks(-span, span),
-          bins: histogramBins(values, scale, { diverging: true }),
         },
       ];
     }

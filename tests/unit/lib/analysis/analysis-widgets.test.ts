@@ -59,7 +59,7 @@ const parcels: AnalysisParcel[] = [
 ];
 
 describe('analysisWidgets', () => {
-  it("productivo: a deviation is the open parcel's diverging card, and the set's histogram under Todas", () => {
+  it("productivo: a deviation is the open parcel's diverging card, and the set's diverging histogram under Todas", () => {
     const one = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
@@ -80,7 +80,10 @@ describe('analysisWidgets', () => {
     expect(one).toEqual([
       expect.objectContaining({ kind: 'deviation', text: '+0,5', position: 75 }),
     ]);
-    expect(all).toEqual([expect.objectContaining({ kind: 'histogram', min: -1, max: 1 })]);
+    // No base named: the axis is the deviation itself, ±1 as the metadata bounds it.
+    expect(all).toEqual([
+      expect.objectContaining({ kind: 'diverging-histogram', min: -1, max: 1 }),
+    ]);
   });
 
   it('productivo, Todas: the category counts the parcels, the number bins them, in metadata order', () => {

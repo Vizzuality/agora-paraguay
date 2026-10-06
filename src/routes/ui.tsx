@@ -15,6 +15,7 @@ import type { ReactNode } from 'react';
 
 import { CategoryCountCard } from '@/components/category-count-card';
 import { DeviationCard } from '@/components/deviation-card';
+import { DeviationHistogramCard } from '@/components/deviation-histogram-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { NumberCard } from '@/components/number-card';
 import { RiskClassCard } from '@/components/risk-class-card';
@@ -107,6 +108,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ValueHistogramCard } from '@/components/value-histogram-card';
+import { deviationHistogramBins } from '@/lib/analysis/deviation-widget';
 import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { linearTicks, numberScale } from '@/lib/analysis/number-scale';
 import { requestedIndicatorIds, toAnalysisRequest } from '@/lib/analysis/request';
@@ -479,6 +481,44 @@ function UiKitPage() {
                   span={1}
                   position={75}
                   base={3.87}
+                />
+                {/* The diverging histogram: the set over its base, bars up and down. */}
+                <DeviationHistogramCard
+                  label="Desviación de la producción de soja respecto a la base histórica"
+                  description="Diferencia con la base histórica."
+                  unit="t/ha"
+                  {...numberScale([9.6])}
+                  bins={deviationHistogramBins(
+                    [
+                      [0.2, 1],
+                      [0.7, -1],
+                      [1.1, 1],
+                      [1.2, 1],
+                      [1.6, 1],
+                      [1.7, 1],
+                      [1.8, 1],
+                      [2.1, 1],
+                      [2.2, 1],
+                      [2.3, 1],
+                      [2.6, 1],
+                      [2.7, 1],
+                      [3.1, 1],
+                      [3.2, 1],
+                      [3.3, 1],
+                      [4.1, 1],
+                      [4.6, 1],
+                      [5.15, 1],
+                      [5.4, -1],
+                      [6.4, 1],
+                      [7.1, 1],
+                      [7.6, 1],
+                      [8.2, 1],
+                      [8.5, 1],
+                      [9.4, -1],
+                      [9.6, 1],
+                    ].map(([at, deviation]) => ({ at, deviation })),
+                    numberScale([9.6]),
+                  )}
                 />
                 <AnalysisCardsDemo />
               </ClientOnly>

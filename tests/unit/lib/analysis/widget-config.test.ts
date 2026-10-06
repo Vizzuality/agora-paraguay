@@ -52,9 +52,11 @@ describe('widgetFor', () => {
     );
   });
 
-  it("productivo: a deviation is one parcel's diverging card or, under Todas, the set's histogram; a fact on sanitario", () => {
+  it("productivo: a deviation is one parcel's diverging card or, under Todas, the set's diverging histogram; a fact on sanitario", () => {
     expect(widgetFor(deviation, { riesgo: 'productivo', scope: 'individual' })).toBe('deviation');
-    expect(widgetFor(deviation, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
+    expect(widgetFor(deviation, { riesgo: 'productivo', scope: 'multiple' })).toBe(
+      'diverging-histogram',
+    );
     expect(widgetFor(deviation, { riesgo: 'sanitario', scope: 'individual' })).toBe('fact');
     expect(widgetFor(deviation, { riesgo: 'sanitario', scope: 'multiple' })).toBe('fact');
   });

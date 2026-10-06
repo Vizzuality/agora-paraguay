@@ -18,7 +18,9 @@ export type RiskClass = { label: string; tone: RiskTone };
 /**
  * What an indicator's widget renders: the class ruler, a fact, a row per parcel, the
  * parcels counted per class as bars, their values binned over a scale as a histogram,
- * one parcel's number on that scale, or one parcel's signed deviation on a diverging track.
+ * one parcel's number on that scale, one parcel's signed deviation on a diverging track,
+ * or the parcels binned over their base with a bar up for those above it and down for
+ * those below.
  */
 export type WidgetKind =
   | 'ruler'
@@ -27,7 +29,8 @@ export type WidgetKind =
   | 'bar-chart'
   | 'histogram'
   | 'number'
-  | 'deviation';
+  | 'deviation'
+  | 'diverging-histogram';
 
 /** How many parcels a widget reads: one (a parcel tab) or the whole selection (Todas). */
 export type ParcelScope = 'individual' | 'multiple';
@@ -50,8 +53,8 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * every parcel's range reading, and draws an open number per scope — one parcel as a
  * number card on the set's scale (the "Numerical individual" design), several binned over it
  * (the "Numerical multiple" design) — text is a fact on both. A deviation follows the open
- * number's path with its own card for one parcel (the diverging Widget03 design) and the
- * histogram painted by sign under Todas.
+ * number's path with its own cards: one parcel on the diverging track, several as the
+ * diverging histogram, bars up and down from the baseline (the two Widget03 designs).
  */
 export function widgetFor(
   type: IndicatorType,
@@ -75,7 +78,7 @@ export function widgetFor(
     case 'deviation':
       if (riesgo !== 'productivo') return 'fact';
 
-      return scope === 'individual' ? 'deviation' : 'histogram';
+      return scope === 'individual' ? 'deviation' : 'diverging-histogram';
   }
 }
 

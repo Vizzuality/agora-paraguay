@@ -1,5 +1,6 @@
 import { CategoryCountCard } from '@/components/category-count-card';
 import { DeviationCard } from '@/components/deviation-card';
+import { DeviationHistogramCard } from '@/components/deviation-histogram-card';
 import { NumberCard } from '@/components/number-card';
 import { ParcelValuesCard } from '@/components/parcel-values-card';
 import { RiskClassCard } from '@/components/risk-class-card';
@@ -21,5 +22,7 @@ export function AnalysisWidgetCard({ widget }: Readonly<{ widget: AnalysisWidget
       return <NumberCard {...widget} />;
     case 'deviation':
       return <DeviationCard {...widget} />;
+    case 'diverging-histogram':
+      return <DeviationHistogramCard {...widget} />;
   }
 }

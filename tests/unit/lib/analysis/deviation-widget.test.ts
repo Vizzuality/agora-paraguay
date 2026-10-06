@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  deviationHistogramBins,
+  deviationHistogramWidgets,
   deviationPosition,
   deviationSpan,
   deviationWidgets,
@@ -151,5 +153,111 @@ describe('deviationWidgets', () => {
     expect(
       deviationWidgets(parcels, ['A', 'B'], [deviation], 'sanitario', 'individual', parcels[0]),
     ).toEqual([]);
+  });
+});
+
+const occupied = (bins: { above: number; below: number }[]) =>
+  bins.flatMap((bin, index) =>
+    bin.above > 0 || bin.below > 0 ? [[index, bin.above, bin.below]] : [],
+  );
+
+describe('deviationHistogramBins', () => {
+  it('counts a positive deviation above and a negative one below, in the bin its place falls in', () => {
+    const bins = deviationHistogramBins(
+      [
+        { at: 0, deviation: 1 },
+        { at: 0.5, deviation: -1 },
+        { at: 2.5, deviation: 0.2 },
+        { at: 2.5, deviation: -0.2 },
+        { at: 10, deviation: 1 },
+      ],
+      { min: 0, max: 10 },
+    );
+
+    expect(bins).toHaveLength(20);
+    expect(bins[0]).toMatchObject({ from: 0, to: 0.5 });
+    expect(bins[19]).toMatchObject({ from: 9.5, to: 10 });
+    expect(occupied(bins)).toEqual([
+      [0, 1, 0],
+      [1, 0, 1],
+      [5, 1, 1],
+      [19, 1, 0],
+    ]);
+  });
+
+  it('counts an exact zero on neither side, and clamps a place outside the axis to the outer bins', () => {
+    const bins = deviationHistogramBins(
+      [
+        { at: 1, deviation: 0 },
+        { at: -4, deviation: -1 },
+        { at: 40, deviation: 1 },
+      ],
+      { min: 0, max: 10 },
+    );
+
+    expect(occupied(bins)).toEqual([
+      [0, 0, 1],
+      [19, 1, 0],
+    ]);
+  });
+});
+
+describe('deviationHistogramWidgets', () => {
+  const withBase: Indicator = {
+    ...deviation,
+    indicator_type: { type: 'deviation', base: 'Pro_soja' },
+  };
+  const set = [
+    parcel('A', { Desv_soja: 0.5, Pro_soja: 3.55 }),
+    parcel('B', { desv_soja: '-0.3', pro_soja: '3.81' }),
+    parcel('C', { Desv_soja: 0.1 }),
+  ];
+
+  it("bins the parcels over their base production, a bar up or down by the deviation's sign", () => {
+    const [widget] = deviationHistogramWidgets(
+      set,
+      ['A', 'B', 'C'],
+      [withBase],
+      'productivo',
+      'multiple',
+    );
+
+    // 3,55 and 3,81 on 0–4; C has no base reading, so it is not placed.
+    expect(widget).toMatchObject({ id: 'Desv_soja', unit: 't/ha', min: 0, max: 4 });
+    expect(occupied(widget.bins)).toEqual([
+      [17, 1, 0],
+      [19, 0, 1],
+    ]);
+  });
+
+  it('bins the deviation itself, symmetric around zero, when no base is named', () => {
+    const unbased: Indicator = { ...deviation, indicator_type: { type: 'deviation', max: 2 } };
+    const [widget] = deviationHistogramWidgets(
+      set,
+      ['A', 'B', 'C'],
+      [unbased],
+      'productivo',
+      'multiple',
+    );
+
+    // +0,5, -0,3 and +0,1 on ±2: every parcel placed, C included.
+    expect(widget).toMatchObject({ min: -2, max: 2 });
+    expect(occupied(widget.bins)).toEqual([
+      [8, 0, 1],
+      [10, 1, 0],
+      [12, 1, 0],
+    ]);
+  });
+
+  it('is nothing on a parcel tab, on sanitario, or for an indicator the answer has no column for', () => {
+    expect(
+      deviationHistogramWidgets(set, ['A', 'B'], [withBase], 'productivo', 'individual'),
+    ).toEqual([]);
+    expect(deviationHistogramWidgets(set, ['A', 'B'], [withBase], 'sanitario', 'multiple')).toEqual(
+      [],
+    );
+    expect(deviationHistogramWidgets(set, ['A', 'B'], [bounded], 'productivo', 'multiple')).toEqual(
+      [],
+    );
   });
 });

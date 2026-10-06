@@ -20,12 +20,6 @@ const rust: Indicator = {
   name: 'Phakopsora pachyrhizi',
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
 };
-const deviation: Indicator = {
-  id: 'Desv_soja',
-  name: 'Desviación de la producción de soja respecto a la base histórica',
-  unit: 't/ha',
-  indicator_type: { type: 'deviation', max: 1 },
-};
 
 function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisParcel {
   return { parcel_id: id, properties };
@@ -65,15 +59,6 @@ describe('histogramBins', () => {
     expect(new Set(tones)).toEqual(new Set(['elevated']));
   });
 
-  it('paints by sign when asked to: red below zero, blue above', () => {
-    const tones = histogramBins([], { min: -1, max: 1 }, { diverging: true }).map(
-      (bin) => bin.tone,
-    );
-
-    expect(tones.slice(0, 10)).toEqual(Array(10).fill('high'));
-    expect(tones.slice(10)).toEqual(Array(10).fill('low'));
-  });
-
   it('clamps a value outside the range to the outer bins', () => {
     expect(occupied(histogramBins([-3, 140], { min: 0, max: 100 }))).toEqual([
       [0, 1],
@@ -88,31 +73,10 @@ describe('histogramBins', () => {
 
 describe('valueHistogramWidgets', () => {
   const parcels = [
-    parcel('A', { data_quality: 12, asian_rust: 2, Desv_soja: 0.5 }),
-    parcel('B', { data_quality: '87', asian_rust: 1, Desv_soja: '-0.3' }),
+    parcel('A', { data_quality: 12, asian_rust: 2 }),
+    parcel('B', { data_quality: '87', asian_rust: 1 }),
     parcel('C', { data_quality: 'NA', asian_rust: 3 }),
   ];
-
-  it('bins a deviation on productivo under Todas either side of zero, by sign, no classes', () => {
-    const [widget] = valueHistogramWidgets(
-      parcels,
-      ['A', 'B', 'C'],
-      [deviation],
-      'productivo',
-      'multiple',
-    );
-
-    expect(widget).toMatchObject({ id: 'Desv_soja', unit: 't/ha', min: -1, max: 1 });
-    expect(widget).not.toHaveProperty('classes');
-    expect(widget.ticks).toEqual([-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1]);
-    // -0,3 in the [-0,3, -0,2) bin, painted red; +0,5 in [0,5, 0,6), blue.
-    expect(occupied(widget.bins)).toEqual([
-      [7, 1],
-      [15, 1],
-    ]);
-    expect(widget.bins[7].tone).toBe('high');
-    expect(widget.bins[15].tone).toBe('low');
-  });
 
   it('bins a long range on sanitario under Todas over the submitted parcels, unreadable values left out', () => {
     const [widget] = valueHistogramWidgets(
