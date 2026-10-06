@@ -3,8 +3,7 @@ import { Marker } from 'react-map-gl/maplibre';
 import { parcelNumber } from '@/lib/analysis/parcel-label';
 import type { FilteredParcel } from '@/lib/api/parcels/schemas';
 import { labelAnchor } from '@/lib/map/label-anchor';
-import { formatNumbers } from '@/lib/map/label-clusters';
-import { useLabelClusters } from '@/lib/map/use-label-clusters';
+import { formatNumbers, placeLabelClusters } from '@/lib/map/label-clusters';
 import { cn } from '@/lib/utils';
 
 /**
@@ -13,12 +12,15 @@ import { cn } from '@/lib/utils';
  * is in the parcel yellow, the others' white. DOM markers rather than a symbol layer:
  * the satellite style has no glyphs, so MapLibre could not draw text. The chips let
  * clicks through to the parcel underneath. A parcel outside `parcelIds` gets no number.
- * Runs inside `<Map>`, mounted from `FilteredParcelsLayer`.
+ * `zoom` is the camera's, from the map's `onMoveEnd`: overlap depends on it alone, so
+ * the grouping is a pure function of anchors and zoom. Runs inside `<Map>`, mounted from
+ * `FilteredParcelsLayer`.
  */
 export function ParcelNumbers({
   parcels,
   parcelIds,
-}: Readonly<{ parcels: FilteredParcel[]; parcelIds: string[] }>) {
+  zoom,
+}: Readonly<{ parcels: FilteredParcel[]; parcelIds: string[]; zoom: number }>) {
   const anchors = parcels.flatMap((parcel) => {
     const number = parcelNumber(parcel.parcel_id, parcelIds);
     const lngLat =
@@ -30,7 +32,7 @@ export function ParcelNumbers({
       ? []
       : [{ number, lngLat, highlighted: parcel.selected }];
   });
-  const clusters = useLabelClusters(anchors);
+  const clusters = placeLabelClusters(anchors, zoom);
 
   return clusters.map(({ numbers, lngLat, highlighted }) => (
     <Marker

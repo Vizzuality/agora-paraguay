@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
+import { useState } from 'react';
 import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
@@ -36,6 +37,9 @@ export function MiniMap() {
   const analysedIds = useAtomValue(analysedParcelIdsAtom);
   const activeParcelId = useAtomValue(activeParcelIdAtom);
   const { data: parcels } = useQuery(parcelQueries.filtered(areas));
+  // The camera's zoom once known, for the parcel number chips: `initialViewState` fits
+  // bounds, so the real zoom only exists after load, then follows each finished move.
+  const [zoom, setZoom] = useState<number>();
 
   const bounds = featuresBounds([
     ...areas,
@@ -56,7 +60,9 @@ export function MiniMap() {
       onLoad={(event) => {
         collapseAttribution(event.target);
         addDotPattern(event.target);
+        setZoom(event.target.getZoom());
       }}
+      onMoveEnd={(event) => setZoom(event.viewState.zoom)}
       dragRotate={false}
       touchPitch={false}
       style={{ width: '100%', height: '100%' }}
@@ -66,6 +72,7 @@ export function MiniMap() {
         parcelIds={analysedIds}
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
         variant="analysis"
+        zoom={zoom}
       />
       <MiniMapBehaviour />
       {(parcels?.results.length ?? 0) === 0 && (

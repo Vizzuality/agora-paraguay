@@ -37,15 +37,19 @@ const ANALYSIS_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'
  *   adds three things: a "Parcela N" chip over each parcel (`ParcelNumbers`), the
  *   design's dot texture over every fill, and outlines one step thicker so they read on
  *   a small map.
+ * - `zoom`: the camera's zoom, which the analysis chips need to know when they overlap.
+ *   The mini map feeds it from `onMoveEnd`; chips wait for it.
  */
 export function FilteredParcelsLayer({
   parcelIds,
   highlightedIds,
   variant = 'default',
+  zoom,
 }: Readonly<{
   parcelIds?: string[];
   highlightedIds?: string[];
   variant?: 'default' | 'analysis';
+  zoom?: number;
 }>) {
   const isAnalysis = variant === 'analysis';
   const polygons = useAtomValue(drawPolygonsAtom);
@@ -106,7 +110,9 @@ export function FilteredParcelsLayer({
           }}
         />
       </Source>
-      {isAnalysis && <ParcelNumbers parcels={parcels} parcelIds={numberedIds} />}
+      {isAnalysis && zoom !== undefined && (
+        <ParcelNumbers parcels={parcels} parcelIds={numberedIds} zoom={zoom} />
+      )}
     </>
   );
 }

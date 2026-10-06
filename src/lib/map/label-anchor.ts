@@ -1,7 +1,5 @@
 import type { ArealGeometry } from '@/lib/map/area-bounds';
-
-/** `[lng, lat]`, the order GeoJSON and MapLibre markers use. */
-export type LngLat = [number, number];
+import type { LngLat } from '@/lib/map/label-clusters';
 
 /**
  * Where a parcel's number sits on the map: the area centroid of its largest outer ring,
