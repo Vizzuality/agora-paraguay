@@ -60,7 +60,7 @@ export function formatNumbers(numbers: readonly number[]): string {
 
     const run = numbers.slice(start, index);
 
-    parts.push(run.length >= 3 ? `${run[0]}–${run[run.length - 1]}` : run.join(', '));
+    parts.push(run.length >= 3 ? `${run[0]}–${run.at(-1)}` : run.join(', '));
     start = index;
   }
 
