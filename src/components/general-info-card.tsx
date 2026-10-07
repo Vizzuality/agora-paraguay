@@ -1,5 +1,5 @@
 import { InfoTip } from '@/components/info-tip';
-import { Card } from '@/components/ui/card';
+import { WidgetCard } from '@/components/widget-card';
 import { cn } from '@/lib/utils';
 
 export type GeneralInfoItem = {
@@ -18,17 +18,12 @@ type GeneralInfoCardProps = {
 
 /**
  * Widget for the parcel's context — station, crop, phenology — as one list of
- * facts. Same light surface as `RiskClassCard`; these are not risks, so no figure and
- * no ruler.
+ * facts. These are not risks, so no figure and no ruler; the heading sits right in the
+ * card, no subtitle, and the list is not pinned to the bottom.
  */
 export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
   return (
-    <Card
-      className={cn(
-        'min-h-[254px] gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-[4px]',
-        className,
-      )}
-    >
+    <WidgetCard className={cn('justify-start', className)}>
       <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Información general</h3>
 
       <dl className="flex flex-col gap-3">
@@ -46,6 +41,6 @@ export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardPr
           </div>
         ))}
       </dl>
-    </Card>
+    </WidgetCard>
   );
 }

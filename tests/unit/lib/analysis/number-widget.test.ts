@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { numberWidgets } from '@/lib/analysis/number-widget';
-import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
+
+import { parcel, seasons, stability } from './fixtures';
 
 const production: Indicator = {
   id: 'Pro_soja',
@@ -17,19 +18,10 @@ const area: Indicator = {
   unit: 'ha',
   indicator_type: { type: 'numeric' },
 };
-const score: Indicator = {
-  id: 'Pro_soja_score',
-  name: 'Puntuación',
-  indicator_type: { type: 'range', min: 0, max: 5 },
-};
-
-function parcel(id: string, properties: AnalysisParcel['properties']): AnalysisParcel {
-  return { parcel_id: id, properties };
-}
 
 const parcels = [
-  parcel('A', { Pro_soja: 3.55, area: 10.2, Pro_soja_score: 3 }),
-  parcel('B', { pro_soja: '3.81', area: 7.3, Pro_soja_score: 4 }),
+  parcel('A', { Pro_soja: 3.55, area: 10.2, N_soja: 5, IEP_H5_soja: 62 }),
+  parcel('B', { pro_soja: '3.81', area: 7.3, N_soja: 3, IEP_H5_soja: '87' }),
   parcel('C', { Pro_soja: 'NA' }),
 ];
 
@@ -71,13 +63,37 @@ describe('numberWidgets', () => {
     expect(widget).toMatchObject({ value: 3.81, text: '3,81', position: 95.25 });
   });
 
-  it('makes no widget without a reading, for the area, for a range, under Todas or on sanitario', () => {
+  it('draws a range on its own scale, whatever the set: a 0–8 count with a tick per step, a 0–100 % every ten', () => {
+    const [count, stable] = numberWidgets(
+      parcels,
+      ['A', 'B'],
+      [seasons, stability],
+      'productivo',
+      'individual',
+      parcels[1],
+    );
+
+    expect(count).toMatchObject({
+      id: 'N_soja',
+      unit: null,
+      value: 3,
+      text: '3',
+      min: 0,
+      max: 8,
+      ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      position: 37.5,
+    });
+    expect(stable).toMatchObject({ value: 87, min: 0, max: 100, position: 87 });
+    expect(stable.ticks).toEqual([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
+  });
+
+  it('makes no widget without a reading, for the area, under Todas or on sanitario', () => {
     expect(
       numberWidgets(parcels, ['A', 'C'], [production], 'productivo', 'individual', parcels[2]),
     ).toEqual([]);
-    expect(
-      numberWidgets(parcels, ['A'], [area, score], 'productivo', 'individual', parcels[0]),
-    ).toEqual([]);
+    expect(numberWidgets(parcels, ['A'], [area], 'productivo', 'individual', parcels[0])).toEqual(
+      [],
+    );
     expect(
       numberWidgets(parcels, ['A', 'B'], [production], 'productivo', 'multiple', undefined),
     ).toEqual([]);

@@ -3,6 +3,7 @@ import { formatNumber, linearTicks, numberScale } from '@/lib/analysis/number-sc
 import { hasColumn, numberOf } from '@/lib/analysis/readings';
 import {
   classIndexAt,
+  isShortRange,
   RANGE_CLASSES,
   widgetFor,
   type ParcelScope,
@@ -18,8 +19,10 @@ import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
  * bin by the class it sits in and names the classes under the scale in equal thirds, as on
  * the ruler (the "Categorical and numerical multiple" design); an open number (t/ha) has
  * no classes, runs from zero to a round figure above the largest value and paints every
- * bin orange (the "Numerical multiple" design). Pure, node-tested; the chart
- * (`ValueHistogram`) places the bins.
+ * bin orange (the "Numerical multiple" design). A productivo range is drawn like the open
+ * number over its own `min`–`max`: a short one (a 0–8 count of seasons) with one bin per
+ * step, centred on the value and labelled by it; a long one (0–100 %) in the usual twenty.
+ * Pure, node-tested; the chart (`ValueHistogram`) places the bins.
  */
 
 /** The design draws the scale in twenty bins, whatever the range. */
@@ -32,6 +35,8 @@ export type HistogramBin = {
   count: number;
   /** The class the bin's middle falls in, which is the bar's hue. */
   tone: RiskTone;
+  /** How the bin is named when not by its edges: the one value a stepped bin holds. */
+  label?: string;
 };
 
 export type ValueHistogramWidget = {
@@ -84,20 +89,48 @@ export function histogramBins(
       from: range.min + index * width,
       to: index === count - 1 ? range.max : range.min + (index + 1) * width,
       count: binCount,
-      tone:
-        'tone' in paint
-          ? paint.tone
-          : paint.classes[classIndexAt(middle, paint.classes.length)].tone,
+      tone: binTone(paint, middle),
     };
   });
 }
 
+/** The tone of a bin whose middle sits at `middle` (0–100 along the scale). */
+function binTone(paint: Paint, middle: number): RiskTone {
+  if ('tone' in paint) return paint.tone;
+
+  return paint.classes[classIndexAt(middle, paint.classes.length)].tone;
+}
+
+type SteppedRange = { min: number; max: number; step?: number | string };
+
+/**
+ * A short range's values, one bin per step, each centred on its value and labelled by
+ * it: 0–8 in steps of 1 is nine bins, the first from -0,5 to 0,5 named "0". The scale
+ * the bins sit on is the range padded by half a step either side, so the chart's ticks
+ * fall in the middle of the bins.
+ */
+export function steppedBins(
+  values: number[],
+  range: SteppedRange,
+  tone: RiskTone = 'elevated',
+): { min: number; max: number; bins: HistogramBin[] } {
+  const step = Number(range.step ?? 1) || 1;
+  const count = Math.max(1, Math.round((range.max - range.min) / step) + 1);
+  const padded = { min: range.min - step / 2, max: range.max + step / 2 };
+  const bins = histogramBins(values, padded, { tone }, count).map((bin, index) => ({
+    ...bin,
+    label: formatNumber(range.min + index * step),
+  }));
+
+  return { ...padded, bins };
+}
+
 /**
  * One widget per indicator that bins under this riesgo and scope (`widgetFor`), in
- * metadata order, over the parcels Analizar submitted. A range is binned over its own
- * scale in its classes; an open number over `numberScale` of the values, in one tone.
- * Every bin is kept, empty ones included; only an indicator the answer has no column for
- * gets no widget.
+ * metadata order, over the parcels Analizar submitted. A sanitario range is binned over
+ * its own scale in its classes; a productivo one over its own scale in one tone, per step
+ * when short; an open number over `numberScale` of the values, in one tone. Every bin is
+ * kept, empty ones included; only an indicator the answer has no column for gets no widget.
  */
 export function valueHistogramWidgets(
   parcels: AnalysisParcel[],
@@ -128,6 +161,22 @@ export function valueHistogramWidgets(
       unit: indicator.unit ?? null,
     };
 
+    if (type.type === 'range' && riesgo === 'productivo') {
+      const ticks = linearTicks(type.min, type.max);
+
+      if (isShortRange(type)) return [{ ...widget, ticks, ...steppedBins(values, type) }];
+
+      return [
+        {
+          ...widget,
+          min: type.min,
+          max: type.max,
+          ticks,
+          bins: histogramBins(values, type, { tone: 'elevated' }),
+        },
+      ];
+    }
+
     if (type.type === 'range') {
       return [
         {
@@ -147,7 +196,7 @@ export function valueHistogramWidgets(
   });
 }
 
-/** A bin's edges as printed: "15 – 20", platform locale, two decimals at most. */
-export function binLabel(bin: Pick<HistogramBin, 'from' | 'to'>): string {
-  return `${formatNumber(bin.from)} – ${formatNumber(bin.to)}`;
+/** A bin as printed: its own label when it has one, else its edges, "15 – 20", platform locale. */
+export function binLabel(bin: Pick<HistogramBin, 'from' | 'to' | 'label'>): string {
+  return bin.label ?? `${formatNumber(bin.from)} – ${formatNumber(bin.to)}`;
 }

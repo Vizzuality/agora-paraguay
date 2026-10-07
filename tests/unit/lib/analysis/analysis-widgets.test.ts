@@ -32,11 +32,21 @@ const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { ty
 const parcels: AnalysisParcel[] = [
   {
     parcel_id: 'A',
-    properties: { Resiliencia: 'Media', Pro_soja: 3.5, asian_rust: 3, data_quality: 12 },
+    properties: {
+      Resiliencia: 'Media',
+      Pro_soja: 3.5,
+      asian_rust: 3,
+      data_quality: 12,
+    },
   },
   {
     parcel_id: 'B',
-    properties: { Resiliencia: 'Alta', Pro_soja: 3.8, asian_rust: 1, data_quality: 87 },
+    properties: {
+      Resiliencia: 'Alta',
+      Pro_soja: 3.8,
+      asian_rust: 1,
+      data_quality: 87,
+    },
   },
 ];
 
