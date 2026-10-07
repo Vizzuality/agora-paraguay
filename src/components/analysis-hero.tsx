@@ -83,7 +83,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+    <div className="grid gap-x-3 gap-y-6 md:grid-cols-2">
       {filters ? (
         orderHeroFilters(filters).map((filter) => (
           <HeroField
@@ -95,7 +95,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
             value={resolved[filter.id] ?? ''}
             onChange={(value) => setFilter({ id: filter.id, value })}
             // The crop closes the grid on a row of its own.
-            className={filter.id === CROP_FILTER_ID ? 'col-span-2' : undefined}
+            className={filter.id === CROP_FILTER_ID ? 'md:col-span-2' : undefined}
           />
         ))
       ) : (
@@ -196,7 +196,7 @@ function MiniMapThumbnail() {
   const area = useParcelArea();
 
   return (
-    <div className="relative h-64 min-w-0 flex-1 overflow-hidden rounded-md bg-muted lg:h-[335px]">
+    <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px]">
       <MiniMap />
       {area && (
         <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">

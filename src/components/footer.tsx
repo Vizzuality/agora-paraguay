@@ -10,16 +10,16 @@ const LINK_CLASS =
 /**
  * Bottom bar of the analysis screen (Figma node 5180:11421): brand logo on the
  * left, the three navigation links on the right. Same destinations as the top
- * `AnalysisNav`, restyled for the navy band.
+ * `AnalysisNav`, restyled for the navy band. Stacked and centred on a mobile device.
  */
 export function Footer() {
   return (
-    <footer className="flex w-full items-center justify-between bg-primary p-10">
+    <footer className="flex w-full flex-col items-center gap-10 bg-primary p-10 md:flex-row md:justify-between">
       <Link to="/" aria-label="Inicio">
         <Logo className="h-[30px] w-auto text-primary-foreground" />
       </Link>
 
-      <nav className="flex items-center gap-2">
+      <nav className="flex flex-col items-center gap-2 md:flex-row">
         <SelectionLink className={LINK_CLASS}>{SELECTION_LINK.label}</SelectionLink>
         {RISK_LINKS.map(({ label, to, replace }) => (
           <Link key={label} to={to} replace={replace} className={LINK_CLASS}>
