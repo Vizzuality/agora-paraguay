@@ -80,7 +80,7 @@ const numberReadingSchema = z.union([
 
 /**
  * What a parcel's reading of an indicator must be, by its `indicator_type.type`: a number
- * (or digits in a string) for `numeric`, `range` and `deviation`, text for `text`, a label
+ * (or digits in a string) for `numeric` and `range`, text for `text`, a label
  * or class code for `category`. "NA" and blanks are the absence of a reading and are filtered out
  * before this runs.
  */
@@ -89,7 +89,6 @@ export function indicatorReadingSchema(type: IndicatorType): z.ZodType<string | 
     case 'numeric':
     case 'number':
     case 'range':
-    case 'deviation':
       return numberReadingSchema;
     case 'text':
       return z.string();

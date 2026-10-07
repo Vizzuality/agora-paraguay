@@ -28,12 +28,6 @@ const quality: Indicator = {
   indicator_type: { type: 'range', min: 0, max: 100 },
 };
 const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
-const deviation: Indicator = {
-  id: 'Desv_soja',
-  name: 'Desviación de la producción de soja respecto a la base histórica',
-  unit: 't/ha',
-  indicator_type: { type: 'deviation', max: 1 },
-};
 
 const parcels: AnalysisParcel[] = [
   {
@@ -43,7 +37,6 @@ const parcels: AnalysisParcel[] = [
       Pro_soja: 3.5,
       asian_rust: 3,
       data_quality: 12,
-      Desv_soja: 0.5,
     },
   },
   {
@@ -53,39 +46,11 @@ const parcels: AnalysisParcel[] = [
       Pro_soja: 3.8,
       asian_rust: 1,
       data_quality: 87,
-      Desv_soja: -0.3,
     },
   },
 ];
 
 describe('analysisWidgets', () => {
-  it("productivo: a deviation is the open parcel's diverging card, and the set's diverging histogram under Todas", () => {
-    const one = analysisWidgets({
-      parcels,
-      parcelIds: ['A', 'B'],
-      indicators: [deviation],
-      riesgo: 'productivo',
-      scope: 'individual',
-      parcel: parcels[0],
-    });
-    const all = analysisWidgets({
-      parcels,
-      parcelIds: ['A', 'B'],
-      indicators: [deviation],
-      riesgo: 'productivo',
-      scope: 'multiple',
-      parcel: undefined,
-    });
-
-    expect(one).toEqual([
-      expect.objectContaining({ kind: 'deviation', text: '+0,5', position: 75 }),
-    ]);
-    // No base named: the axis is the deviation itself, ±1 as the metadata bounds it.
-    expect(all).toEqual([
-      expect.objectContaining({ kind: 'diverging-histogram', min: -1, max: 1 }),
-    ]);
-  });
-
   it('productivo, Todas: the category counts the parcels, the number bins them, in metadata order', () => {
     const widgets = analysisWidgets({
       parcels,

@@ -404,8 +404,13 @@ function scalePosition(value: number, range: Range | undefined): number {
   return ((value - min) / (max - min)) * 100;
 }
 
+/** Units whose readings print as whole numbers: a temperature's decimals say nothing to a grower. */
+const INTEGER_UNITS = new Set(['°C']);
+
 function formatValue(value: number, unit: string | null | undefined): string {
-  const number = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(value);
+  const number = new Intl.NumberFormat('es-PY', {
+    maximumFractionDigits: unit && INTEGER_UNITS.has(unit) ? 0 : 2,
+  }).format(value);
 
   return unit ? `${number} ${unit}` : number;
 }
