@@ -344,6 +344,18 @@ describe('generalInfo', () => {
 
   it('reads a numeric indicator that is not a number as "Sin datos", digits in a string being a number', () => {
     expect(generalInfo(parcel({ Pro_soja: '2.774' }), [production])[0].value).toBe('2,77 t/ha');
+  });
+
+  it('prints a temperature as a whole number: the decimals of an average say nothing', () => {
+    const temperature: Indicator = {
+      id: 'temperature_avg',
+      name: 'Temperatura promedio',
+      unit: '°C',
+      indicator_type: { type: 'numeric' },
+    };
+
+    expect(generalInfo(parcel({ temperature_avg: 23.456 }), [temperature])[0].value).toBe('23 °C');
+    expect(generalInfo(parcel({ temperature_avg: 23.5 }), [temperature])[0].value).toBe('24 °C');
     expect(generalInfo(parcel({ Pro_soja: 'alto' }), [production])[0].value).toBe('Sin datos');
   });
 

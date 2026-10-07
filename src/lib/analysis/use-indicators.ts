@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { asDeviationIndicators } from '@/lib/analysis/deviation-override';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 
@@ -11,10 +10,8 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
  *
  * The riesgo's indicator list, asked once per riesgo and shared by the page, the picker
  * and the hero (same key). It does not follow the hero filters yet: the crop reaches the
- * API in the analysis request, which is what re-runs on a crop change. The deviations the
- * live list types as plain numbers are retyped on the way out (`asDeviationIndicators`,
- * TODO(api-deviation)); the cache keeps the list as the API wrote it.
+ * API in the analysis request, which is what re-runs on a crop change.
  */
 export function useIndicators(riesgo: Riesgo) {
-  return useQuery({ ...metadataQueries.indicators({ riesgo }), select: asDeviationIndicators });
+  return useQuery(metadataQueries.indicators({ riesgo }));
 }

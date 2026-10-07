@@ -65,7 +65,7 @@ export function WidgetHeader({
   );
 }
 
-/** The large figure: a class, a number, a signed deviation. `slot` is what the specs read it by. */
+/** The large figure: a class or a number. `slot` is what the specs read it by. */
 export function WidgetFigure({
   slot = 'figure',
   children,

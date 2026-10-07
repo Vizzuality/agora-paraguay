@@ -12,7 +12,7 @@ import { analysedParcelIdsAtom } from '@/store/analysis';
  * What both analysis pages put above their widgets: the hero with one tab per parcel
  * Analizar submitted, then the title row with Personalizar indicadores and Exportar.
  * Tabs come from that snapshot, not the analysis answer, so they show before the POST
- * resolves. Reads an atom, so callers render it inside `<ClientOnly>`.
+ * resolves. Exportar informe is productivo's alone: the public side has no report. Reads an atom, so callers render it inside `<ClientOnly>`.
  */
 export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
@@ -27,10 +27,12 @@ export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 
         <div className="flex items-center gap-4">
           <IndicatorPicker riesgo={riesgo} />
-          <Button className="h-11 rounded-2xl px-8 font-normal">
-            <Upload aria-hidden />
-            Exportar informe
-          </Button>
+          {riesgo === 'productivo' && (
+            <Button className="h-11 rounded-2xl px-8 font-normal">
+              <Upload aria-hidden />
+              Exportar informe
+            </Button>
+          )}
         </div>
       </div>
     </>
