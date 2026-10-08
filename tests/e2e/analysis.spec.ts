@@ -101,6 +101,16 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page).toHaveURL(/\/analisis/);
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
 
+  // The hero mini map numbers the analysed parcels as their tabs do: two chips, or one
+  // reading "1, 2" when the camera puts the two centroids too close to keep apart.
+  await expect
+    .poll(async () => {
+      const chips = await page.locator('[data-slot=parcel-number]').allTextContents();
+
+      return chips.join(', ');
+    })
+    .toBe('1, 2');
+
   // The hero renders one field per filter the public side returned, named after it: a
   // dropdown for the category with its first option preselected, a date input per date
   // (the API's default, else today).
