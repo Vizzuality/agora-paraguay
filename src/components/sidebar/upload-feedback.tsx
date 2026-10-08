@@ -88,15 +88,7 @@ function UploadNotices() {
         dismissLabel="Descartar los avisos de subida"
         onDismiss={() => setUploadResult(null)}
       >
-        {formatOrSize ? (
-          <FormatSizeHelp />
-        ) : (
-          <p>
-            {uploadResult.errorCode === 'out-of-paraguay'
-              ? NO_PARCEL_INTERSECTION_MESSAGE
-              : uploadResult.error}
-          </p>
-        )}
+        {formatOrSize ? <FormatSizeHelp /> : <p>{uploadResult.error}</p>}
       </ErrorToast>
     );
   }
