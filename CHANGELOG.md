@@ -6,7 +6,7 @@
 ### Features
 
 * accounts are their email — no username on Añadir usuario, the list, the confirms or the login field (AGP-71) ([#155](https://github.com/Vizzuality/agora-paraguay/issues/155)) ([ba6f9eb](https://github.com/Vizzuality/agora-paraguay/commit/ba6f9eb0c7892e4eb58a49277ff77673fa310e74))
-* an unknown URL lands on Página no encontrada, nav and footer around it, instead of the router's bare fallback ([#157](https://github.com/Vizzuality/agora-paraguay/issues/157)) ([0c19295](https://github.com/Vizzuality/agora-paraguay/commit/0c192956d13033777f365349fefed27154fefe6c))
+* an unknown URL lands on Página no encontrada, the message alone with the way back, instead of the router's bare fallback ([#157](https://github.com/Vizzuality/agora-paraguay/issues/157)) ([0c19295](https://github.com/Vizzuality/agora-paraguay/commit/0c192956d13033777f365349fefed27154fefe6c))
 * the landing takes turns on a phone — selection panel first, then the map with the actions under it (AGP-70) ([#142](https://github.com/Vizzuality/agora-paraguay/issues/142)) ([54b2dcc](https://github.com/Vizzuality/agora-paraguay/commit/54b2dccb06b8b3056a7f86dfb1b92987079d6959))
 * the one-time link lands on a reset-password page that checks the token and sets the password (AGP-34) ([#156](https://github.com/Vizzuality/agora-paraguay/issues/156)) ([a9b28a2](https://github.com/Vizzuality/agora-paraguay/commit/a9b28a2d9aac8868957518a6e22bc7c93a6d4290))
 
