@@ -165,6 +165,36 @@ describe('getJson / postJson', () => {
     expect(errorReason(error)).toBe('The sowing date field is required.');
   });
 
+  it("joins a DRF field-error body's reasons as `detail`, without the field names", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json(
+        { new_password: ['This password is too common.', 'This password is entirely numeric.'] },
+        { status: 400 },
+      ),
+    );
+
+    const error = await postJson('/api/x', {}).catch((caught: unknown) => caught);
+
+    expect((error as ApiError).detail).toBe(
+      'This password is too common. This password is entirely numeric.',
+    );
+  });
+
+  it('reads a `detail` Django wrote as a list, and ignores non-string values', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ detail: ['Enlace inválido', 'o expirado.'] }, { status: 400 }),
+    );
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ isAuthenticated: false, results: [{ id: 1 }] }, { status: 400 }),
+    );
+
+    const listed = await postJson('/api/x', {}).catch((caught: unknown) => caught);
+    const plain = await postJson('/api/x', {}).catch((caught: unknown) => caught);
+
+    expect((listed as ApiError).detail).toBe('Enlace inválido o expirado.');
+    expect((plain as ApiError).detail).toBeNull();
+  });
+
   it('leaves detail null for a non-JSON body, and errorReason falls back to the message', async () => {
     fetchMock.mockResolvedValueOnce(new Response('<html>Bad Gateway</html>', { status: 502 }));
 

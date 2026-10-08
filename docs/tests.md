@@ -58,13 +58,20 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - is anonymous when the body says so, or names nobody
 - propagates a server error so the caller can tell "anonymous" from "unknown"
 
-**setPassword**
+**checkResetToken**
 
-- posts the one-time link parameters with the new password
-- posts the password alone for a logged-in change
+- GETs the check endpoint for the token and returns whether the link is still good
+- reports a spent or unknown link as not valid, from the 200 the endpoint answers with
+- refuses a token that is not a UUID before touching the network
+- propagates an outage as an ApiError, so the page can tell "expired" from "unknown"
+
+**confirmResetPassword**
+
+- POSTs the token with the new password, CSRF header included
 - rejects a weak password client-side, before touching the network
-- rejects a uid without its token
-- surfaces the server's own validators (the common-password list) as an ApiError 400
+- rejects a malformed token before touching the network
+- surfaces a spent link as an ApiError 400 quoting the backend
+- surfaces the server's own validators (the common-password list) as the reason
 
 ### `tests/unit/lib/api/parcels/schemas.test.ts` (12)
 

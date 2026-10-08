@@ -9,14 +9,16 @@ import {
   loginResponseSchema,
   sessionSchema,
   meResponseSchema,
-  setPasswordSchema,
+  resetPasswordConfirmSchema,
+  resetTokenCheckSchema,
+  resetTokenSchema,
   toSession,
   type AdminUser,
   type CreatedUser,
   type CreateUserRequest,
   type Credentials,
+  type ResetPasswordConfirmRequest,
   type Session,
-  type SetPasswordRequest,
 } from './schemas';
 
 /* Auth is real: Django session endpoints. */
@@ -138,16 +140,24 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * TODO(auth-password): parked — no route or form calls this yet, and its tests went with
- * the dead-code sweep. Kept on purpose for the reset flow.
- *
- * Sets the password — from a one-time link (`uid` + `token`) or for the logged-in user.
- * The client-side validators run in the parse, so a weak password fails as a `ZodError`
- * before the network; the server's own (including the common-password list) come back
- * as an `ApiError` 400.
+ * `GET /api/auth/reset-password/check/{token}/`: whether a reset link is still good. The
+ * endpoint answers 200 either way, so a malformed token is refused here without a round
+ * trip and an outage propagates as an `ApiError`.
  */
-export async function setPassword(request: SetPasswordRequest): Promise<void> {
-  await postJson('/api/auth/password/reset/', setPasswordSchema.parse(request));
+export async function checkResetToken(token: string): Promise<boolean> {
+  const body = await getJson(`/api/auth/reset-password/check/${resetTokenSchema.parse(token)}/`);
+
+  return resetTokenCheckSchema.parse(body).valid;
+}
+
+/**
+ * `POST /api/auth/reset-password/confirm/`: sets the password behind a reset link. The
+ * client-side validators run in the parse, so a weak password fails as a `ZodError`
+ * before the network; a spent link and the server's own validators (including the
+ * common-password list) come back as an `ApiError` 400 whose `detail` is the reason.
+ */
+export async function confirmResetPassword(request: ResetPasswordConfirmRequest): Promise<void> {
+  await postJson('/api/auth/reset-password/confirm/', resetPasswordConfirmSchema.parse(request));
 }
 
 /** Statuses that mean "no session": the spec's 400, and the 401/403 Django would also use. */

@@ -1,7 +1,16 @@
 import { mutationOptions, queryOptions } from '@tanstack/react-query';
 
-import { createUser, deleteUser, fetchMe, getUsers, login, logout } from './client';
-import type { CreateUserRequest, Credentials } from './schemas';
+import {
+  checkResetToken,
+  confirmResetPassword,
+  createUser,
+  deleteUser,
+  fetchMe,
+  getUsers,
+  login,
+  logout,
+} from './client';
+import type { CreateUserRequest, Credentials, ResetPasswordConfirmRequest } from './schemas';
 
 export const authQueries = {
   /**
@@ -24,6 +33,14 @@ export const authQueries = {
     queryOptions({
       queryKey: ['auth', 'admin', 'users'] as const,
       queryFn: getUsers,
+      retry: false,
+    }),
+  /** Whether a reset link is still good. Asked once when its page opens; the answer does not age. */
+  resetToken: (token: string) =>
+    queryOptions({
+      queryKey: ['auth', 'reset-password', 'check', token] as const,
+      queryFn: () => checkResetToken(token),
+      staleTime: Infinity,
       retry: false,
     }),
 };
@@ -52,5 +69,11 @@ export const authMutations = {
     mutationOptions({
       mutationKey: ['auth', 'admin', 'users', 'delete'] as const,
       mutationFn: (id: number) => deleteUser(id),
+    }),
+  /** Sets the password behind a reset link. Anonymous; the user logs in afterwards. */
+  confirmResetPassword: () =>
+    mutationOptions({
+      mutationKey: ['auth', 'reset-password', 'confirm'] as const,
+      mutationFn: (request: ResetPasswordConfirmRequest) => confirmResetPassword(request),
     }),
 };
