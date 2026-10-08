@@ -7,11 +7,10 @@ import type { Page } from '@playwright/test';
  * Signing in for real is a manual check: no test account lives in the repo or its
  * environment.
  */
-/** Two accounts as `GET /api/auth/admin/users/` lists them, by username. */
+/** Two accounts as `GET /api/auth/admin/users/` lists them, by email. */
 export const ADMIN_USERS = [
   {
     id: 1,
-    username: 'admin',
     email: 'admin@example.com',
     first_name: 'Ana',
     last_name: 'Lista',
@@ -20,7 +19,6 @@ export const ADMIN_USERS = [
   },
   {
     id: 2,
-    username: 'analista',
     email: 'analista@example.com',
     first_name: '',
     last_name: '',
@@ -72,10 +70,9 @@ export async function stubAdminUsers(
       return;
     }
 
-    const request = route.request().postDataJSON() as { username: string; email: string };
+    const request = route.request().postDataJSON() as { email: string };
     const user: AdminUserRow = {
       id: users.length + 1,
-      username: request.username,
       email: request.email,
       first_name: '',
       last_name: '',
@@ -84,7 +81,7 @@ export async function stubAdminUsers(
     };
 
     users.push(user);
-    users.sort((a, b) => a.username.localeCompare(b.username));
+    users.sort((a, b) => a.email.localeCompare(b.email));
 
     await route.fulfill({
       status: 201,
@@ -134,23 +131,23 @@ export async function stubAdminUsers(
 export const RESET_TOKEN = '550e8400-e29b-41d4-a716-446655440000';
 
 export async function stubAuth(page: Page, { staff = false }: { staff?: boolean } = {}) {
-  let username: string | null = null;
+  let email: string | null = null;
 
   await page.route('**/api/auth/csrf/', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify({ csrfToken: 'e2e' }) }),
   );
   await page.route('**/api/auth/login/', async (route) => {
-    ({ identifier: username } = route.request().postDataJSON() as { identifier: string });
+    ({ identifier: email } = route.request().postDataJSON() as { identifier: string });
 
-    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ username }) });
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ email }) });
   });
   await page.route('**/api/auth/logout/', async (route) => {
-    username = null;
+    email = null;
 
     await route.fulfill({ status: 204 });
   });
   await page.route('**/api/auth/me/', (route) =>
-    username === null
+    email === null
       ? route.fulfill({
           status: 400,
           contentType: 'application/json',
@@ -160,8 +157,7 @@ export async function stubAuth(page: Page, { staff = false }: { staff?: boolean 
           contentType: 'application/json',
           body: JSON.stringify({
             id: 1,
-            username,
-            email: `${username}@example.com`,
+            email,
             first_name: 'Ana',
             last_name: 'Lista',
             is_active: true,

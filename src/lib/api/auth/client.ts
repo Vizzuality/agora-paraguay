@@ -90,13 +90,13 @@ export async function login(credentials: Credentials): Promise<Session> {
 
   // Some login views answer with an empty body; the identity then comes from the form.
   const body: unknown = await response.text().then((text) => (text ? JSON.parse(text) : {}));
-  const { username } = loginResponseSchema.parse(body);
+  const { email } = loginResponseSchema.parse(body);
 
-  return sessionSchema.parse({ username: username ?? parsed.identifier });
+  return sessionSchema.parse({ email: email ?? parsed.identifier });
 }
 
 /**
- * `GET /api/auth/admin/users/`: every account, ordered by username. Needs an admin
+ * `GET /api/auth/admin/users/`: every account, ordered by email. Needs an admin
  * session; anyone else gets the API's 403 as an `ApiError`, and the caller decides
  * whether that means "log in" or "not for you".
  */

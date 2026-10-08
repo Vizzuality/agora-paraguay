@@ -25,11 +25,11 @@ describe('login', () => {
   it('fetches a CSRF token, then posts the credentials with it', async () => {
     fetchMock
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
-      .mockResolvedValueOnce(json({ username: 'analista' }));
+      .mockResolvedValueOnce(json({ email: 'analista@example.com' }));
 
-    const session = await login({ identifier: 'analista', password: 'secreta' });
+    const session = await login({ identifier: 'analista@example.com', password: 'secreta' });
 
-    expect(session).toEqual({ username: 'analista', isStaff: false });
+    expect(session).toEqual({ email: 'analista@example.com', isStaff: false });
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     const [csrfUrl, csrfInit] = fetchMock.mock.calls[0];
@@ -42,7 +42,7 @@ describe('login', () => {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': 'abc' },
-      body: JSON.stringify({ identifier: 'analista', password: 'secreta' }),
+      body: JSON.stringify({ identifier: 'analista@example.com', password: 'secreta' }),
     });
   });
 
@@ -70,13 +70,13 @@ describe('login', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('names the session after the form when the login body carries no username', async () => {
+  it('names the session after the form when the login body carries no email', async () => {
     fetchMock
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(new Response('', { status: 200 }));
 
-    await expect(login({ identifier: 'analista', password: 'x' })).resolves.toEqual({
-      username: 'analista',
+    await expect(login({ identifier: 'analista@example.com', password: 'x' })).resolves.toEqual({
+      email: 'analista@example.com',
       isStaff: false,
     });
   });
@@ -143,7 +143,6 @@ describe('getUsers', () => {
   const users = [
     {
       id: 1,
-      username: 'test',
       email: 'test@gmv.com',
       first_name: '',
       last_name: '',
@@ -152,7 +151,6 @@ describe('getUsers', () => {
     },
     {
       id: 7,
-      username: 'zoe',
       email: 'zoe@example.com',
       first_name: 'Zoe',
       last_name: 'Pérez',
@@ -175,7 +173,7 @@ describe('getUsers', () => {
     fetchMock.mockResolvedValueOnce(json([{ ...users[0], last_login: '2026-09-30T08:00:00Z' }]));
 
     const [first] = await getUsers();
-    expect(first).toMatchObject({ username: 'test', last_login: '2026-09-30T08:00:00Z' });
+    expect(first).toMatchObject({ email: 'test@gmv.com', last_login: '2026-09-30T08:00:00Z' });
 
     fetchMock.mockResolvedValueOnce(json([]));
     await expect(getUsers()).resolves.toEqual([]);
@@ -204,7 +202,6 @@ describe('createUser', () => {
   const created = {
     user: {
       id: 7,
-      username: 'newuser',
       email: 'newuser@example.com',
       first_name: 'New',
       last_name: 'User',
@@ -220,14 +217,12 @@ describe('createUser', () => {
     vi.stubGlobal('document', { cookie: 'csrftoken=from-cookie' });
     const live = {
       ...created,
-      user: { username: 'Paule', email: 'paule@example.org', first_name: '', last_name: '' },
+      user: { email: 'paule@example.org', first_name: '', last_name: '' },
       reset_link: 'http://46.60.18.203:8082/api/auth/reset-password/ecb687e7/',
     };
     fetchMock.mockResolvedValueOnce(json(live, 201));
 
-    await expect(createUser({ username: 'Paule', email: 'paule@example.org' })).resolves.toEqual(
-      live,
-    );
+    await expect(createUser({ email: 'paule@example.org' })).resolves.toEqual(live);
   });
 
   it('POSTs the new user with the CSRF token and returns the setup link', async () => {
@@ -235,7 +230,6 @@ describe('createUser', () => {
     fetchMock.mockResolvedValueOnce(json(created, 201));
 
     const request = {
-      username: 'newuser',
       email: 'newuser@example.com',
       first_name: 'New',
       last_name: 'User',
@@ -258,9 +252,7 @@ describe('createUser', () => {
     vi.stubGlobal('document', { cookie: 'csrftoken=t' });
     fetchMock.mockResolvedValueOnce(json({ ...created, user: { ...created.user, role: 'x' } }));
 
-    await expect(
-      createUser({ username: 'newuser', email: 'newuser@example.com' }),
-    ).resolves.toMatchObject({
+    await expect(createUser({ email: 'newuser@example.com' })).resolves.toMatchObject({
       user: { role: 'x' },
     });
   });
@@ -269,9 +261,7 @@ describe('createUser', () => {
     vi.stubGlobal('document', { cookie: 'csrftoken=t' });
     fetchMock.mockResolvedValueOnce(json({ detail: 'Administrator only.' }, 403));
 
-    await expect(
-      createUser({ username: 'newuser', email: 'newuser@example.com' }),
-    ).rejects.toMatchObject({
+    await expect(createUser({ email: 'newuser@example.com' })).rejects.toMatchObject({
       name: 'ApiError',
       status: 403,
       detail: 'Administrator only.',
@@ -282,15 +272,11 @@ describe('createUser', () => {
     vi.stubGlobal('document', { cookie: 'csrftoken=t' });
     fetchMock.mockResolvedValueOnce(json({ user: created.user }));
 
-    await expect(createUser({ username: 'newuser', email: 'newuser@example.com' })).rejects.toThrow(
-      ZodError,
-    );
+    await expect(createUser({ email: 'newuser@example.com' })).rejects.toThrow(ZodError);
   });
 
   it('rejects a malformed email before touching the network', async () => {
-    await expect(createUser({ username: 'newuser', email: 'not-an-email' })).rejects.toThrow(
-      ZodError,
-    );
+    await expect(createUser({ email: 'not-an-email' })).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
@@ -370,7 +356,6 @@ describe('logout', () => {
 describe('fetchMe', () => {
   const me = {
     id: 7,
-    username: 'analista',
     email: 'analista@example.com',
     first_name: 'Ana',
     last_name: 'Lista',
@@ -384,7 +369,6 @@ describe('fetchMe', () => {
     fetchMock.mockResolvedValueOnce(json(me));
 
     await expect(fetchMe()).resolves.toEqual({
-      username: 'analista',
       email: 'analista@example.com',
       firstName: 'Ana',
       lastName: 'Lista',

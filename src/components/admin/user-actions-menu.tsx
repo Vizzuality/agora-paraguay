@@ -20,7 +20,7 @@ export function UserActionsMenu({ user }: Readonly<{ user: AdminUser }>) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            aria-label={`Acciones de ${user.username}`}
+            aria-label={`Acciones de ${user.email}`}
             className="h-8 w-8 shrink-0 rounded-full shadow-none data-[state=open]:bg-accent"
           >
             <Ellipsis aria-hidden />
@@ -31,7 +31,7 @@ export function UserActionsMenu({ user }: Readonly<{ user: AdminUser }>) {
             disabled={true}
             onSelect={() => {
               // TODO(backoffice-api): call the admin password-reset endpoint once it exists.
-              console.info(`password reset requested for ${user.username} — TODO: connect to API`);
+              console.info(`password reset requested for ${user.email} — TODO: connect to API`);
             }}
           >
             Restablecer contraseña

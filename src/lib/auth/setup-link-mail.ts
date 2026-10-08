@@ -10,7 +10,6 @@ import { mailtoHref } from '@/lib/auth/reset-request';
 export const SETUP_LINK_SUBJECT = 'Acceso a Ágora Paraguay';
 
 export type SetupLinkMail = {
-  username: string;
   email: string;
   /** The one-time link as the API answered it. */
   link: string;
@@ -18,9 +17,9 @@ export type SetupLinkMail = {
   expires: string;
 };
 
-export function setupLinkBody({ username, link, expires }: Omit<SetupLinkMail, 'email'>): string {
+export function setupLinkBody({ link, expires }: Omit<SetupLinkMail, 'email'>): string {
   return [
-    `Hola, ${username}:`,
+    'Hola:',
     '',
     'Se ha creado su cuenta de acceso a Ágora Paraguay. Defina su contraseña en este enlace:',
     link,
