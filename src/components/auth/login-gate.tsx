@@ -7,7 +7,7 @@ import { ResetPasswordCard } from '@/components/auth/reset-password-card';
 export type AuthView = 'login' | 'reset';
 
 /**
- * The private-content gate (Figma 5180:12021): empty widget frames around the login
+ * The private-content gate: empty widget frames around the login
  * card, or around the reset card once the user asks to reset the password. On a
  * mobile device the card stands alone, full width.
  *
@@ -38,7 +38,7 @@ export function LoginGate({ hydrating = false }: Readonly<{ hydrating?: boolean 
   );
 }
 
-/** Empty widget frame behind the gate (Figma 5180:11125). */
+/** Empty card used as placeholder. */
 function WidgetPlaceholder() {
   return (
     <div aria-hidden className="min-w-50 flex-1 rounded-3xl border-3 border-border max-md:hidden" />

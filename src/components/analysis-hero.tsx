@@ -219,7 +219,7 @@ function MiniMapThumbnail() {
  * tab: clicking it, picking it in the dropdown, or clicking its parcel on the mini map
  * (`selectAnalysedParcelAtom`). The last two may target a tab out of view, so the strip
  * scrolls to bring it to the leading edge; a direct click never scrolls, since the tab
- * is already under the pointer. Layout per Figma 5540:7991.
+ * is already under the pointer.
  */
 const ALL_TAB = 'Todas';
 

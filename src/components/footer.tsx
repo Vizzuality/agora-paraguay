@@ -8,7 +8,7 @@ const LINK_CLASS =
   'flex h-11 items-center justify-center rounded-2xl px-8 text-sm text-primary-foreground';
 
 /**
- * Bottom bar of the analysis screen (Figma node 5180:11421): brand logo on the
+ * Bottom bar of the analysis screen: brand logo on the
  * left, the three navigation links on the right. Same destinations as the top
  * `AnalysisNav`, restyled for the navy band. Stacked and centred on a mobile device.
  */

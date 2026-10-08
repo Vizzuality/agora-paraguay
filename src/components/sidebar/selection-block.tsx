@@ -16,8 +16,8 @@ const DESCRIPTIONS: Record<PanelStep, string> = {
 };
 
 /**
- * The selection panel's content, driven by the derived step (Figma 7172:1562 for step
- * 1, 7172:1771 for step 2). Rendered inside `<ClientOnly>`: every part reads atoms.
+ * The selection panel's content, driven by the derived step. Rendered inside
+ * `<ClientOnly>`: every part reads atoms.
  */
 export function SelectionBlock() {
   const step = useAtomValue(selectionStepAtom);

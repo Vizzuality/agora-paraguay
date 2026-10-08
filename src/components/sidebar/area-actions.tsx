@@ -64,8 +64,8 @@ export function AreaActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'b
       <ActionCardButton
         icon={Upload}
         layout={layout}
-        // The entry point that caused the showing error carries a destructive border
-        // (Figma 7288:2096): a file that failed, or areas the cadastre does not cover.
+        // The entry point that caused the showing error carries a destructive border:
+        // a file that failed, or areas the cadastre does not cover.
         className={cn(
           (uploadResult?.error != null || rejection?.source === 'upload') && 'border-destructive',
         )}

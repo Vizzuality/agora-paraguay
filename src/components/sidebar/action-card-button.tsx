@@ -6,11 +6,11 @@ import { cn } from '@/lib/utils';
 
 type Props = ComponentProps<typeof Button> & {
   icon: LucideIcon;
-  /** `card`: the panel's icon-over-label tile. `bar`: the phone's 44px row button, no icon (Figma 5655:6555). */
+  /** `card`: the panel's icon-over-label tile. `bar`: the phone's 44px row button, no icon. */
   layout?: 'card' | 'bar';
 };
 
-/** The big icon-over-label card the selection panel uses for every action (Figma 7172:1593). */
+/** The big icon-over-label card the selection panel uses for every action. */
 export function ActionCardButton({
   icon: Icon,
   variant = 'secondary',
