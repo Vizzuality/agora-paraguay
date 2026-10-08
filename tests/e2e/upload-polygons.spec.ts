@@ -128,9 +128,7 @@ test('rejects an upload outside Paraguay with a warning', async ({ page }) => {
 
   await upload(page, 'farms-outside-paraguay.geojson');
 
-  await expect(notices).toContainText(
-    'El polígono que ha dibujado no toca el área de ninguna parcela.',
-  );
+  await expect(notices).toContainText('El archivo contiene geometría fuera de Paraguay');
   await expect(analyze).toBeHidden();
 
   // The entry point that caused the error is outlined until the toast is dismissed.
