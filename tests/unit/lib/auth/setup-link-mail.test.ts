@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { SETUP_LINK_SUBJECT, setupLinkBody, setupLinkMailto } from '@/lib/auth/setup-link-mail';
 
 const mail = {
-  username: 'Paule',
   email: 'paule@example.org',
   link: 'http://api.example.org/api/auth/reset-password/ecb687e7-324c-4e9c-a03c-5e52218d77d7/',
   expires: '7 de octubre de 2026, 9:45',
@@ -19,7 +18,7 @@ describe('setupLinkMailto', () => {
     expect(url.searchParams.get('body')).toBe(setupLinkBody(mail));
     expect(url.searchParams.get('body')).toContain(mail.link);
     expect(url.searchParams.get('body')).toContain('caduca el 7 de octubre de 2026, 9:45');
-    expect(url.searchParams.get('body')).toContain('Hola, Paule:');
+    expect(url.searchParams.get('body')).toContain('Hola:');
   });
 
   it('percent-encodes spaces and newlines so mail clients read them literally', () => {

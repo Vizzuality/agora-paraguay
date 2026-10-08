@@ -29,14 +29,14 @@ export function AddUserButton({ className, ...props }: React.ComponentProps<type
 }
 
 function failureMessage(error: unknown): string {
-  if (error instanceof ZodError) return 'Revise el nombre de usuario y el email.';
+  if (error instanceof ZodError) return 'Revise el email.';
   if (error instanceof ApiError && error.detail !== null) return error.detail;
 
   return 'No se pudo crear el usuario. Inténtalo de nuevo en unos minutos.';
 }
 
 /**
- * The create-user card as a modal: username and email, Añadir and Cancelar. The account
+ * The create-user card as a modal: the email, Añadir and Cancelar. The account
  * is created inactive; the answer carries the one-time link the administrator hands the
  * user to set a password, which the success view shows, since there is no mail server to
  * send it. Creating refreshes the list behind the dialog.
@@ -91,7 +91,7 @@ function CreateUserForm({ onCreated }: Readonly<{ onCreated: (created: CreatedUs
           return typeof value === 'string' ? value : '';
         };
 
-        mutation.mutate({ username: text('username'), email: text('email') });
+        mutation.mutate({ email: text('email') });
       }}
     >
       <div className="flex flex-col gap-1.5 px-10">
@@ -105,20 +105,6 @@ function CreateUserForm({ onCreated }: Readonly<{ onCreated: (created: CreatedUs
       </div>
 
       <div className="flex flex-col gap-4 px-10">
-        <div className="relative">
-          <Input
-            id={`${fieldId}-username`}
-            name="username"
-            type="text"
-            required
-            autoComplete="off"
-            placeholder=" "
-            aria-invalid={mutation.isError || undefined}
-            aria-describedby={mutation.isError ? errorId : undefined}
-            className={FLOATING_FIELD_CLASS}
-          />
-          <FloatingLabel htmlFor={`${fieldId}-username`}>Nombre de usuario</FloatingLabel>
-        </div>
         <div className="relative">
           <Input
             id={`${fieldId}-email`}
@@ -170,7 +156,6 @@ function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
     timeStyle: 'short',
   }).format(new Date(created.expires_at));
   const mailto = setupLinkMailto({
-    username: created.user.username,
     email: created.user.email,
     link: created.reset_link,
     expires,
@@ -183,7 +168,7 @@ function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
           Usuario creado
         </DialogTitle>
         <DialogDescription>
-          {created.user.username} ya aparece en la lista. Envíele este enlace para que defina su
+          {created.user.email} ya aparece en la lista. Envíele este enlace para que defina su
           contraseña; caduca el {expires}.
         </DialogDescription>
       </div>

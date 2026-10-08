@@ -8,7 +8,7 @@ import { ADMIN_USERS, RESET_TOKEN, stubAdminUsers, stubAuth } from './fixtures/a
  * the client's card rather than typing into a form about to be replaced.
  */
 async function loginAtGate(page: Page) {
-  await page.getByLabel('Usuario o email').fill('admin');
+  await page.getByLabel('Email').fill('admin@example.com');
   await page.getByLabel('Contraseña').fill('cualquiera');
   await page.getByRole('button', { name: 'Acceder' }).click();
   await expect(page.getByRole('table')).toBeVisible();
@@ -36,7 +36,6 @@ test('an administrator adds a user and gets the link to pass on; the list shows 
   const form = dialog(page);
 
   await expect(form).toBeVisible();
-  await form.getByLabel('Nombre de usuario').fill('nueva');
   await form.getByLabel('Email').fill('nueva@example.com');
   await form.getByRole('button', { name: 'Añadir' }).click();
 
@@ -59,17 +58,19 @@ test('an administrator adds a user and gets the link to pass on; the list shows 
 
   await expect(rows).toHaveCount(1 + ADMIN_USERS.length + 1);
   await expect(
-    page.getByRole('row', { name: /nueva/ }).getByRole('cell', { name: 'nueva@example.com' }),
+    page.getByRole('row', { name: /nueva@example\.com/ }).getByRole('cell', {
+      name: 'nueva@example.com',
+    }),
   ).toBeVisible();
 });
 
 test('Cancelar closes the form, and the API refusal is quoted on it', async ({ page }) => {
   await stubAdminUsers(page, {
-    // A `detail` body; DRF field errors (`{ username: [...] }`) read as the reason once the
+    // A `detail` body; DRF field errors (`{ email: [...] }`) read as the reason once the
     // transport change on the password-reset branch lands.
     createFailure: {
       status: 400,
-      body: { detail: 'Ya existe un usuario con ese nombre.' },
+      body: { detail: 'Ya existe un usuario con ese email.' },
     },
   });
   await page.goto('/usuarios');
@@ -80,11 +81,10 @@ test('Cancelar closes the form, and the API refusal is quoted on it', async ({ p
   await expect(dialog(page)).toBeHidden();
 
   await page.getByRole('button', { name: 'Añadir usuario' }).first().click();
-  await dialog(page).getByLabel('Nombre de usuario').fill('admin');
   await dialog(page).getByLabel('Email').fill('admin@example.com');
   await dialog(page).getByRole('button', { name: 'Añadir' }).click();
 
-  await expect(dialog(page).getByRole('alert')).toHaveText('Ya existe un usuario con ese nombre.');
+  await expect(dialog(page).getByRole('alert')).toHaveText('Ya existe un usuario con ese email.');
 
   // The list behind the modal is aria-hidden while it is open: dismiss, then check that
   // nothing was added.
@@ -94,8 +94,8 @@ test('Cancelar closes the form, and the API refusal is quoted on it', async ({ p
 });
 
 /** The row's three-dots menu, opened. */
-async function openActions(page: Page, username: string) {
-  await page.getByRole('button', { name: `Acciones de ${username}` }).click();
+async function openActions(page: Page, email: string) {
+  await page.getByRole('button', { name: `Acciones de ${email}` }).click();
 
   return page.getByRole('menu');
 }
@@ -105,19 +105,21 @@ test('the row menu deletes an account after confirming; the list drops it', asyn
   await page.goto('/usuarios');
   await loginAtGate(page);
 
-  const menu = await openActions(page, 'analista');
+  const menu = await openActions(page, 'analista@example.com');
 
   await expect(menu.getByRole('menuitem')).toHaveText(['Restablecer contraseña', 'Borrar cuenta']);
   await menu.getByRole('menuitem', { name: 'Borrar cuenta' }).click();
 
-  const confirm = page.getByRole('alertdialog', { name: '¿Borrar la cuenta de analista?' });
+  const confirm = page.getByRole('alertdialog', {
+    name: '¿Borrar la cuenta de analista@example.com?',
+  });
 
   await expect(confirm).toBeVisible();
   await confirm.getByRole('button', { name: 'Borrar' }).click();
   await expect(confirm).toBeHidden();
 
   await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + ADMIN_USERS.length - 1);
-  await expect(page.getByRole('row', { name: /analista/ })).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /analista@example\.com/ })).toHaveCount(0);
 });
 
 test('Cancelar keeps the account, and the API refusal is quoted in the confirm dialog', async ({
@@ -129,14 +131,17 @@ test('Cancelar keeps the account, and the API refusal is quoted in the confirm d
   await page.goto('/usuarios');
   await loginAtGate(page);
 
-  const confirm = page.getByRole('alertdialog', { name: '¿Borrar la cuenta de admin?' });
+  const confirm = page.getByRole('alertdialog', {
+    name: '¿Borrar la cuenta de admin@example.com?',
+  });
+  const admin = 'admin@example.com';
 
-  await (await openActions(page, 'admin')).getByRole('menuitem', { name: 'Borrar cuenta' }).click();
+  await (await openActions(page, admin)).getByRole('menuitem', { name: 'Borrar cuenta' }).click();
   await confirm.getByRole('button', { name: 'Cancelar' }).click();
   await expect(confirm).toBeHidden();
   await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + ADMIN_USERS.length);
 
-  await (await openActions(page, 'admin')).getByRole('menuitem', { name: 'Borrar cuenta' }).click();
+  await (await openActions(page, admin)).getByRole('menuitem', { name: 'Borrar cuenta' }).click();
   await confirm.getByRole('button', { name: 'Borrar' }).click();
 
   await expect(confirm.getByRole('alert')).toHaveText('No puedes eliminar tu propia cuenta.');
@@ -155,7 +160,7 @@ test('Restablecer contraseña is listed but disabled until the endpoint exists',
   await page.goto('/usuarios');
   await loginAtGate(page);
 
-  const menu = await openActions(page, 'analista');
+  const menu = await openActions(page, 'analista@example.com');
   const reset = menu.getByRole('menuitem', { name: 'Restablecer contraseña' });
 
   await expect(reset).toBeVisible();

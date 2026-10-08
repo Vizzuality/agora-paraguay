@@ -43,7 +43,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - fetches a CSRF token, then posts the credentials with it
 - falls back to the csrftoken cookie when the CSRF body only says "cookie set"
 - reports the backend as unavailable when no CSRF token is obtainable
-- names the session after the form's identifier when the login body carries no username
+- names the session after the form's email when the login body carries none
 - reports wrong credentials on a 401
 - reports wrong credentials on a 400 too, the other status Django login views use
 - reports the backend as unavailable on a server error

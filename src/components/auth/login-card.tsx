@@ -84,20 +84,20 @@ export function LoginCard({
         <CardContent className="flex flex-col gap-4 px-10">
           {/* Floating labels: the label is the placeholder, hence `placeholder=" "`. */}
           <div className="relative">
-            {/* One field, username or email: the API resolves `identifier` either way. */}
+            {/* The account is its email; `identifier` is the login body's name for it. */}
             <Input
               id={`${fieldId}-identifier`}
               name="identifier"
-              type="text"
+              type="email"
               required
               disabled={disabled}
-              autoComplete="username"
+              autoComplete="email"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
             />
-            <FloatingLabel htmlFor={`${fieldId}-identifier`}>Usuario o email</FloatingLabel>
+            <FloatingLabel htmlFor={`${fieldId}-identifier`}>Email</FloatingLabel>
           </div>
           <div className="relative">
             <Input

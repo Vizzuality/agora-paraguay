@@ -13,7 +13,6 @@ export const PASSWORD_MAX_SIMILARITY = 0.7;
 
 /** What the similarity check compares against. Unknown attributes are simply skipped. */
 export type UserAttributes = {
-  username?: string;
   email?: string;
   firstName?: string;
   lastName?: string;
@@ -29,7 +28,6 @@ export type PasswordError = {
 
 /** Spanish labels for Django's `verbose_name` in the similarity message. */
 const ATTRIBUTE_LABELS: Record<keyof UserAttributes, string> = {
-  username: 'nombre de usuario',
   email: 'correo electrónico',
   firstName: 'nombre',
   lastName: 'apellido',

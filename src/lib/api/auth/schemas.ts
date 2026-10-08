@@ -4,8 +4,8 @@ import { passwordErrors } from '@/lib/auth/password';
 
 /**
  * Auth contract, against the Django session endpoints (`/api/auth/csrf/` then
- * `/api/auth/login/`, plus `/api/auth/me/`). The login body carries `identifier`, which
- * the API resolves as a username or an email.
+ * `/api/auth/login/`, plus `/api/auth/me/`). The login body carries `identifier`, the
+ * account's email: accounts have no username.
  */
 export const credentialsSchema = z.object({
   identifier: z.string().trim().min(1),
@@ -25,7 +25,7 @@ export const csrfResponseSchema = z.looseObject({ csrfToken: z.string().min(1).o
  * The login body is not contractually fixed yet, so only the one field the UI can use
  * is declared and anything else passes through. Session state itself is the cookie.
  */
-export const loginResponseSchema = z.looseObject({ username: z.string().min(1).optional() });
+export const loginResponseSchema = z.looseObject({ email: z.string().min(1).optional() });
 
 /**
  * `GET /api/auth/me/` — the user behind the session cookie. Anonymous is a 400 with
@@ -33,8 +33,7 @@ export const loginResponseSchema = z.looseObject({ username: z.string().min(1).o
  */
 export const meResponseSchema = z.looseObject({
   id: z.number().optional(),
-  username: z.string().min(1).optional(),
-  email: z.string().optional(),
+  email: z.string().min(1).optional(),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
   is_active: z.boolean().optional(),
@@ -67,7 +66,7 @@ export type AccountSetupSearch = z.infer<typeof accountSetupSearchSchema>;
 /**
  * Runs the client-side half of Django's `AUTH_PASSWORD_VALIDATORS` (length, numeric).
  * Similarity needs the user's attributes, which only the logged-in form knows — it
- * calls `passwordErrors(password, { username })` itself; the server checks all of
+ * calls `passwordErrors(password, { email })` itself; the server checks all of
  * them, plus the common-password list, and answers 400.
  */
 export const setPasswordSchema = z
@@ -93,12 +92,11 @@ export const setPasswordSchema = z
 export type SetPasswordRequest = z.infer<typeof setPasswordSchema>;
 
 /**
- * The identified user, in app vocabulary. `isStaff` opens the administration
- * (Administrar usuarios); the names are for the header/session UI.
+ * The identified user, in app vocabulary: the email is the account. `isStaff` opens the
+ * administration (Administrar usuarios); the names are for the header/session UI.
  */
 export const sessionSchema = z.object({
-  username: z.string().min(1),
-  email: z.string().optional(),
+  email: z.string().min(1),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   isStaff: z.boolean().default(false),
@@ -108,10 +106,9 @@ export type Session = z.infer<typeof sessionSchema>;
 
 /** The `/me` answer as a session, or `null` when it names nobody or says so itself. */
 export function toSession(me: MeResponse): Session | null {
-  if (me.isAuthenticated === false || me.username === undefined) return null;
+  if (me.isAuthenticated === false || me.email === undefined) return null;
 
   return sessionSchema.parse({
-    username: me.username,
     email: me.email,
     firstName: me.first_name,
     lastName: me.last_name,
@@ -125,7 +122,6 @@ export function toSession(me: MeResponse): Session | null {
  * excerpt shows only the answer; the body is assumed to be the user's writable fields.
  */
 export const createUserRequestSchema = z.object({
-  username: z.string().trim().min(1),
   email: z.email(),
   first_name: z.string().trim().optional(),
   last_name: z.string().trim().optional(),
@@ -136,7 +132,6 @@ export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 /** A user as the admin endpoints return it — the same shape in the list and in a creation's answer. */
 const adminUserSchema = z.looseObject({
   id: z.number().int(),
-  username: z.string().min(1),
   email: z.string(),
   first_name: z.string(),
   last_name: z.string(),
@@ -146,7 +141,7 @@ const adminUserSchema = z.looseObject({
 
 export type AdminUser = z.infer<typeof adminUserSchema>;
 
-/** `GET /api/auth/admin/users/` — every account, ordered by username. Administrators only (403 otherwise). */
+/** `GET /api/auth/admin/users/` — every account, ordered by email. Administrators only (403 otherwise). */
 export const adminUsersSchema = z.array(adminUserSchema);
 
 /**
@@ -157,7 +152,6 @@ export const adminUsersSchema = z.array(adminUserSchema);
  */
 export const createdUserSchema = z.looseObject({
   user: z.looseObject({
-    username: z.string().min(1),
     email: z.string(),
     first_name: z.string().optional(),
     last_name: z.string().optional(),

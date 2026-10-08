@@ -49,7 +49,7 @@ export function DeleteUserDialog({
       <AlertDialogContent className="w-[411px] max-w-none gap-6 rounded-3xl border-0 bg-card p-10 text-card-foreground shadow-none">
         <div className="flex flex-col gap-1.5">
           <AlertDialogTitle className="text-4xl font-light tracking-[-0.015em]">
-            ¿Borrar la cuenta de {user.username}?
+            ¿Borrar la cuenta de {user.email}?
           </AlertDialogTitle>
           <AlertDialogDescription>
             El usuario perderá el acceso a la plataforma. Esta acción no se puede deshacer.

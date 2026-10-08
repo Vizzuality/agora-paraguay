@@ -44,10 +44,10 @@ async function analyzeFirstPolygon(page: Page) {
 }
 
 /** Signs in through the header dialog (stubbed: any credentials) and waits for it to close. */
-async function loginFromHeader(page: Page, username = 'analista') {
+async function loginFromHeader(page: Page, email = 'analista@example.com') {
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
-  await dialog.getByLabel('Usuario o email').fill(username);
+  await dialog.getByLabel('Email').fill(email);
   await dialog.getByLabel('Contraseña').fill('cualquiera');
   await dialog.getByRole('button', { name: 'Acceder' }).click();
   await expect(dialog).toBeHidden();
@@ -226,7 +226,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
-  await expect(page.getByLabel('Usuario o email')).toBeVisible();
+  await expect(page.getByLabel('Email')).toBeVisible();
   await expect(page.getByLabel('Contraseña')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
 
@@ -243,7 +243,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
 
   // Stubbed login (`stubAuth`): any credentials open the private indicators in place.
-  await page.getByLabel('Usuario o email').fill('analista');
+  await page.getByLabel('Email').fill('analista@example.com');
   await page.getByLabel('Contraseña').fill('cualquiera');
   await page.getByRole('button', { name: 'Acceder' }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
@@ -510,7 +510,7 @@ test('swaps the login card for the reset-password card and back', async ({ page 
   // …and its link brings the login card back.
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
-  await expect(page.getByLabel('Usuario o email')).toBeVisible();
+  await expect(page.getByLabel('Email')).toBeVisible();
 });
 
 test('closes the session from the user menu', async ({ page }) => {
@@ -548,7 +548,7 @@ test('staff reach Administrar usuarios from the user menu', async ({ page }) => 
   await stubAuth(page, { staff: true });
   await stubAdminUsers(page);
   await analyzeFirstPolygon(page);
-  await loginFromHeader(page, 'admin');
+  await loginFromHeader(page, 'admin@example.com');
 
   await page.getByRole('button', { name: 'Cuenta' }).click();
   await page.getByRole('menuitem', { name: 'Administrar usuarios' }).click();
@@ -560,13 +560,10 @@ test('staff reach Administrar usuarios from the user menu', async ({ page }) => 
 
   const table = page.getByRole('table');
 
-  await expect(table.getByRole('columnheader', { name: 'Nombre de usuario' })).toBeVisible();
-  await expect(table.getByRole('columnheader', { name: 'Email' })).toBeVisible();
+  await expect(table.getByRole('columnheader')).toHaveText(['Email', 'Acciones']);
 
   for (const user of ADMIN_USERS) {
-    const row = table.getByRole('row', { name: new RegExp(user.username) });
-
-    await expect(row.getByRole('cell', { name: user.email })).toBeVisible();
+    await expect(table.getByRole('cell', { name: user.email })).toBeVisible();
   }
 });
 
