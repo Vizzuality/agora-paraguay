@@ -87,7 +87,6 @@ const numberReadingSchema = z.union([
 export function indicatorReadingSchema(type: IndicatorType): z.ZodType<string | number> {
   switch (type.type) {
     case 'numeric':
-    case 'number':
     case 'range':
       return numberReadingSchema;
     case 'text':

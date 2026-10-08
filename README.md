@@ -141,6 +141,8 @@ Rules that keep the swap cheap:
   `GET /api/parcels/indicators?riesgo={sanitario|productivo}`.
 - Spec attributes marked "to be defined" are modelled loosely (`z.looseObject`) so the backend can
   add fields without breaking the parse; tighten them as the contract settles.
+- How indicators are typed, what each riesgo does with them and which widget each renders:
+  [`docs/indicators.md`](docs/indicators.md).
 
 Query state is fetched on the client after hydration; SSR sends the shell and a loading state.
 Wiring server-side prefetch (`@tanstack/react-router-ssr-query`) was deliberately deferred until
