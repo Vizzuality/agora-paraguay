@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 /**
- * The end of the reset flow, either way: the password was updated (Figma 5601:5651), or
+ * The end of the reset flow, either way: the password was updated, or
  * the link is no good — expired, spent, or not a link the backend issued. Both hand the
  * user back to the map, where the header opens the login.
  */

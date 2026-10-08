@@ -28,7 +28,7 @@ function failureMessage(error: unknown): string {
 }
 
 /**
- * The new-password card behind a reset link (Figma 5596:1446): the password twice and
+ * The new-password card behind a reset link: the password twice and
  * Guardar. Mismatch and Django's client-side validators are reported before the round
  * trip; whatever the server refuses is quoted as it said it. `onUpdated` swaps in the
  * confirmation.
