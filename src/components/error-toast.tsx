@@ -33,8 +33,8 @@ export function ErrorToast({
 }
 
 /**
- * Shown under Analizar when `filter-parcels` flags no parcel for the drawn areas.
- * Doubles as the out-of-Paraguay body until that is redefined.
+ * Shown under Analizar when `filter-parcels` flags no parcel for the drawn areas, and
+ * when an out-of-coverage rejection comes with no reason of its own.
  */
 export const NO_PARCEL_INTERSECTION_MESSAGE =
   'El polígono que ha dibujado no toca el área de ninguna parcela.';
