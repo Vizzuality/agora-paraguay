@@ -382,7 +382,7 @@ network access. Binary upload fixtures are regenerated with
 
 ### `tests/e2e/not-found.spec.ts` (1)
 
-- an unknown URL gets the 404 page, with the nav, the footer and a way back
+- an unknown URL gets the 404 page, bare, with a way back
 
 ### `tests/e2e/select-cadastral-parcel.spec.ts` (2)
 
