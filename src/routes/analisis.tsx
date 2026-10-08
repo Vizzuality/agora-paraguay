@@ -3,8 +3,9 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 
 import { Footer } from '@/components/footer';
-import { HeaderNav } from '@/components/sidebar/header-nav';
+import { HeaderNav, PhoneAnalysisNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
+import { useNarrowScreen } from '@/lib/use-narrow-screen';
 import { drawPolygonsAtom } from '@/store/draw';
 
 /**
@@ -18,6 +19,8 @@ export const Route = createFileRoute('/analisis')({
 });
 
 function AnalysisLayout() {
+  const narrow = useNarrowScreen();
+
   return (
     // The nav and footer live outside <main> on purpose: header/footer only get
     // their banner/contentinfo landmark roles when they are not descendants of
@@ -30,11 +33,11 @@ function AnalysisLayout() {
         <EmptySelectionRedirect />
       </ClientOnly>
 
-      <NavBar>
-        <HeaderNav />
+      <NavBar below={narrow && <PhoneAnalysisNav />}>
+        <HeaderNav compact={narrow} />
       </NavBar>
 
-      <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
+      <main className="flex flex-1 flex-col gap-6 px-2 pt-6 pb-10 md:px-10 md:pt-10 md:pb-12">
         <Outlet />
       </main>
 

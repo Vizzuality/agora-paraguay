@@ -16,8 +16,8 @@ const DESCRIPTIONS: Record<PanelStep, string> = {
 };
 
 /**
- * The selection panel's content, driven by the derived step (Figma 7172:1562 for step
- * 1, 7172:1771 for step 2). Rendered inside `<ClientOnly>`: every part reads atoms.
+ * The selection panel's content, driven by the derived step. Rendered inside
+ * `<ClientOnly>`: every part reads atoms.
  */
 export function SelectionBlock() {
   const step = useAtomValue(selectionStepAtom);
@@ -44,7 +44,7 @@ export function SelectionBlockLayout({
   children,
 }: Readonly<{ step: PanelStep; children?: ReactNode }>) {
   return (
-    <section className="flex flex-col gap-10 px-10 pb-6">
+    <section className="flex flex-col gap-10 px-2 py-6 md:px-10 md:pt-0">
       <h1 className="text-4xl font-semibold tracking-[-0.015em]">Selección de parcelas</h1>
 
       <SelectionSteps current={step} />
