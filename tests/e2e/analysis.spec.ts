@@ -212,7 +212,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Información general' })).toBeVisible();
 
-  // The navbar offers the way back and the login entry point (Figma node 5180:12072).
+  // The navbar offers the way back and the login entry point.
   // Locators are scoped to the header because the footer repeats the same link names.
   const navbar = page.getByRole('banner');
   await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
@@ -222,7 +222,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
   // The risk tabs live in the URL, not the store: each is its own route under /analisis.
-  // Riesgo productivo is private, gated behind the login card (Figma node 5180:11125).
+  // Riesgo productivo is private, gated behind the login card.
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
@@ -235,7 +235,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
-  // The footer repeats the brand and the three destinations (Figma node 5180:11421).
+  // The footer repeats the brand and the three destinations.
   const footer = page.getByRole('contentinfo');
   await expect(footer.getByRole('link', { name: 'Inicio' })).toBeVisible();
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
@@ -488,7 +488,7 @@ test('swaps the login card for the reset-password card and back', async ({ page 
   await page.getByRole('banner').getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
 
-  // The reset card (Figma node 5596:1619) takes the login card's slot in the gate.
+  // The reset card takes the login card's slot in the gate.
   await page.getByRole('button', { name: 'Restablecer contraseña' }).click();
   await expect(page.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
   await expect(page.getByLabel('Email')).toBeVisible();
@@ -517,7 +517,7 @@ test('closes the session from the user menu', async ({ page }) => {
   await analyzeFirstPolygon(page);
   await loginFromHeader(page);
 
-  // Signed in, the user button opens the account menu instead (Figma node 5653:1665):
+  // Signed in, the user button opens the account menu instead:
   // password reset is listed but out of scope, so it stays disabled.
   const navbar = page.getByRole('banner');
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
@@ -571,7 +571,7 @@ test('staff reach Administrar usuarios from the user menu', async ({ page }) => 
 test('logs in from the header dialog', async ({ page }) => {
   await analyzeFirstPolygon(page);
 
-  // The header's user button opens the login dialog (Figma node 5351:11729); its
+  // The header's user button opens the login dialog; its
   // accessible name comes from the dialog's screen-reader-only title.
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 /*
- * What the analysis widgets share, from the Figma widget frame: the light card, the
+ * What the analysis widgets share, from the design's widget frame: the light card, the
  * header (title, info tip, a subtitle line), the 66px figure, and the pieces of a track
  * with a marker. Each card composes these and owns only what it draws.
  */

@@ -92,7 +92,7 @@ function LoginPopover() {
 }
 
 /**
- * The signed-in user's menu (Figma node 5653:1665). Restablecer contraseña is listed
+ * The signed-in user's menu. Restablecer contraseña is listed
  * but always disabled: resetting the password from inside a session is out of scope.
  * Staff get Administrar usuarios in between.
  */

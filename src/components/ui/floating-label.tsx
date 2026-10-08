@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 /**
  * Custom, not stock shadcn. A label that rests inside its field while
  * the field is empty and floats onto the top border once it has a value, is open or is
- * focused — the WS Form "inside label" behaviour, styled per the Figma hero fields.
+ * focused — the WS Form "inside label" behaviour, styled like the hero fields.
  *
  * Pure CSS, driven by the sibling: render the trigger/input first with the `peer` class
  * and this label right after it inside a `relative` wrapper. The `field-empty` variant
