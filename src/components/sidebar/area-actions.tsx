@@ -16,9 +16,10 @@ import { failUploadAtom, uploadFeaturesAtom, uploadResultAtom } from '@/store/up
  * upload a file of polygons or draw one. Upload outcomes are reported by
  * `UploadFeedback`, which outlives this component into step 2.
  *
- * Rendered inside `<ClientOnly>`: it reads the draw atoms.
+ * Rendered inside `<ClientOnly>`: it reads the draw atoms. `layout` is the buttons':
+ * the panel's cards, or the phone's bar under the map.
  */
-export function AreaActions() {
+export function AreaActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'bar' }>) {
   const draw = useAtomValue(drawAtom);
   const mode = useAtomValue(modeAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
@@ -57,13 +58,14 @@ export function AreaActions() {
   };
 
   return (
-    <fieldset className="grid grid-cols-2 gap-1.5">
+    <fieldset className={layout === 'card' ? 'grid grid-cols-2 gap-1.5' : 'flex gap-2'}>
       <legend className="sr-only">Seleccionar parcelas para análisis</legend>
 
       <ActionCardButton
         icon={Upload}
-        // The entry point that caused the showing error carries a destructive border
-        // (Figma 7288:2096): a file that failed, or areas the cadastre does not cover.
+        layout={layout}
+        // The entry point that caused the showing error carries a destructive border:
+        // a file that failed, or areas the cadastre does not cover.
         className={cn(
           (uploadResult?.error != null || rejection?.source === 'upload') && 'border-destructive',
         )}
@@ -81,6 +83,7 @@ export function AreaActions() {
 
       <ActionCardButton
         icon={SquarePen}
+        layout={layout}
         className={cn(
           'aria-pressed:border-primary aria-pressed:text-primary',
           rejection?.source === 'draw' && 'border-destructive',

@@ -17,6 +17,8 @@ import { selectedIndicatorIdsAtom } from '@/store/analysis';
 
 type IndicatorPickerProps = {
   riesgo: Riesgo;
+  /** Extra classes for the trigger button (the title row sizes it per screen). */
+  className?: string;
 };
 
 /**
@@ -25,15 +27,21 @@ type IndicatorPickerProps = {
  * cards on the page. General info is not listed: it is always shown. Renders inside
  * `<ClientOnly>` (it reads the analysis atoms).
  */
-export function IndicatorPicker({ riesgo }: Readonly<IndicatorPickerProps>) {
+export function IndicatorPicker({ riesgo, className }: Readonly<IndicatorPickerProps>) {
   const { indicators, indicatorsError: error } = useApplicableIndicators(riesgo);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="secondary" className="h-11 rounded-2xl px-8 font-normal">
+        <Button
+          variant="secondary"
+          className={cn('h-11 rounded-2xl px-8 font-normal', className)}
+          // The short label on a mobile device; the name stays the full one.
+          aria-label="Personalizar indicadores"
+        >
           <SquarePen aria-hidden />
-          Personalizar indicadores
+          <span className="max-md:hidden">Personalizar indicadores</span>
+          <span className="md:hidden">Personalizar</span>
         </Button>
       </PopoverTrigger>
 
