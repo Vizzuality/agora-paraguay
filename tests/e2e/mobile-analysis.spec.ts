@@ -47,7 +47,8 @@ test('the hero and the title row actions fit the width', async ({ page }) => {
   await expect(parcels).toHaveText(['Todas', 'Parcela 1', 'Parcela 2']);
 
   await expect(page.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Exportar informe' })).toBeVisible();
+  // Sanitario has no report: the picker is the only action on the row.
+  await expect(page.getByRole('button', { name: 'Exportar informe' })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Personalizar indicadores' }).click();
   await expect(page.getByRole('checkbox').first()).toBeVisible();
