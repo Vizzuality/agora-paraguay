@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.5.0...v0.6.0) (2026-10-08)
+
+
+### Features
+
+* areas over 100 000 ha are rejected before their parcels are asked for (AGP-73) ([#160](https://github.com/Vizzuality/agora-paraguay/issues/160)) ([70a388e](https://github.com/Vizzuality/agora-paraguay/commit/70a388e808f0a62e88ce702866b32621715f04f1))
+* chart tones from the theme's custom colours, one value per mode (AGP-72) ([#159](https://github.com/Vizzuality/agora-paraguay/issues/159)) ([88c0455](https://github.com/Vizzuality/agora-paraguay/commit/88c04553cf49528599b465c271de338b090c89b0))
+
+
+### Bug Fixes
+
+* an upload outside Paraguay says so, instead of the drawing's no-parcel message ([#162](https://github.com/Vizzuality/agora-paraguay/issues/162)) ([6153c19](https://github.com/Vizzuality/agora-paraguay/commit/6153c194f647517656e914d0d9ad1fcd3e924d5b))
+
 ## [0.5.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.4.0...v0.5.0) (2026-10-08)
 
 
