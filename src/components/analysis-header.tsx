@@ -16,9 +16,10 @@ export const ACTION_CLASS =
  * What both analysis pages put above their widgets: the hero with one tab per parcel
  * Analizar submitted, then the title row with Personalizar indicadores and Exportar.
  * Tabs come from that snapshot, not the analysis answer, so they show before the POST
- * resolves. Reads an atom, so callers render it inside `<ClientOnly>`. On a mobile
- * device the title is for screen readers only (the active tab already names the
- * riesgo) and the two actions share a row, icon over label.
+ * resolves. Exportar informe is productivo's alone: the public side has no report.
+ * Reads an atom, so callers render it inside `<ClientOnly>`. On a mobile device the
+ * title is for screen readers only (the active tab already names the riesgo) and
+ * the two actions share a row, icon over label.
  */
 export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
@@ -33,10 +34,12 @@ export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 
         <div className="flex items-center gap-4 max-md:w-full">
           <IndicatorPicker riesgo={riesgo} className={ACTION_CLASS} />
-          <Button className={ACTION_CLASS}>
-            <Upload aria-hidden />
-            Exportar informe
-          </Button>
+          {riesgo === 'productivo' && (
+            <Button className={ACTION_CLASS}>
+              <Upload aria-hidden />
+              Exportar informe
+            </Button>
+          )}
         </div>
       </div>
     </>

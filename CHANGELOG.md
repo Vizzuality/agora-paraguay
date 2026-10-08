@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.4.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.3.0...v0.4.0) (2026-10-08)
+
+
+### Features
+
+* /usuarios lists the accounts, Añadir usuario with the one-time link to copy or send by email, Borrar cuenta with confirm (AGP-48) ([#127](https://github.com/Vizzuality/agora-paraguay/issues/127)) ([5e13a03](https://github.com/Vizzuality/agora-paraguay/commit/5e13a03cb5113e7d2b5b8d2f25284664c33202a2))
+* admin creates a user through POST /api/auth/admin/users/create/ (AGP-50) ([#110](https://github.com/Vizzuality/agora-paraguay/issues/110)) ([f62744e](https://github.com/Vizzuality/agora-paraguay/commit/f62744e9db35953197114c30f56c54e2c407a10b))
+* categorical widget per scope — ruler for one parcel, visx count bars for several (AGP-60) ([#130](https://github.com/Vizzuality/agora-paraguay/issues/130)) ([6dc959c](https://github.com/Vizzuality/agora-paraguay/commit/6dc959c5220e25309c0872e28c2ec494c134ae54))
+* Cerrar sesión from the header user menu (AGP-42) ([#114](https://github.com/Vizzuality/agora-paraguay/issues/114)) ([8cc273b](https://github.com/Vizzuality/agora-paraguay/commit/8cc273b60ac11b867c2a7bab1c36336d4c683fcf))
+* deviation widgets — signed difference from the crop's base on a diverging track, the set as bars up and down (AGP-68) ([#139](https://github.com/Vizzuality/agora-paraguay/issues/139)) ([00afe01](https://github.com/Vizzuality/agora-paraguay/commit/00afe014b454158b5f3d8827ec794fd3a1cb4239))
+* dropdowns cap at 20rem and fade the rows cut off by the scroll, top and bottom ([#136](https://github.com/Vizzuality/agora-paraguay/issues/136)) ([a603728](https://github.com/Vizzuality/agora-paraguay/commit/a60372835c199a1ec9d1012d9315168dcabed744))
+* Generar resumen asks the API for the LLM summary of the analysed parcels (AGP-38) ([#112](https://github.com/Vizzuality/agora-paraguay/issues/112)) ([dbc87b8](https://github.com/Vizzuality/agora-paraguay/commit/dbc87b87d01a2c9fb892f30766ff6fee79ab3ec6))
+* generating and finished states of the AI summary tile (AGP-38) ([#113](https://github.com/Vizzuality/agora-paraguay/issues/113)) ([56c867e](https://github.com/Vizzuality/agora-paraguay/commit/56c867e83958d76c886b21b00292d0575434ea2d))
+* GMV feedback — deviation widgets dropped so Des_* read like any number, temperatures as whole degrees, no Exportar informe on sanitario ([#151](https://github.com/Vizzuality/agora-paraguay/issues/151)) ([2da7594](https://github.com/Vizzuality/agora-paraguay/commit/2da7594ff66a3e45d339fb552eed63958030cfee))
+* indicator list from GET /api/parcels/indicators/ through a server relay, analysis waits for every filter ([#107](https://github.com/Vizzuality/agora-paraguay/issues/107)) ([99a400e](https://github.com/Vizzuality/agora-paraguay/commit/99a400e664c8306e4234c4f4d56a5eb1625c963e))
+* indicator tiles by type — range ruler per Figma, facts in the info card, area on the thumbnail ([#118](https://github.com/Vizzuality/agora-paraguay/issues/118)) ([4969076](https://github.com/Vizzuality/agora-paraguay/commit/4969076199a2668825795d1691bbaad776c57040))
+* mini map numbers the parcels over the map, dot texture and thicker outlines (AGP-66) ([#138](https://github.com/Vizzuality/agora-paraguay/issues/138)) ([a88c4cf](https://github.com/Vizzuality/agora-paraguay/commit/a88c4cfd3adcabd3fd49960bc57b82fa90f1da5d))
+* numerical widget — one parcel's number, Todas' histogram, on the set's scale (AGP-62) ([#134](https://github.com/Vizzuality/agora-paraguay/issues/134)) ([d097f5e](https://github.com/Vizzuality/agora-paraguay/commit/d097f5e429c3ebc16f1f30194d1c902571ac2835))
+* parcel tabs per Figma, one parcel without Todas, mini map of the analysed parcels only (AGP-45) ([#119](https://github.com/Vizzuality/agora-paraguay/issues/119)) ([154c00f](https://github.com/Vizzuality/agora-paraguay/commit/154c00f869d20d0ce996cdf1b48f2012d155e343))
+* parcels read "Parcela N", info icon with the metadata description on widgets and hero fields (AGP-54) ([#121](https://github.com/Vizzuality/agora-paraguay/issues/121)) ([862f70c](https://github.com/Vizzuality/agora-paraguay/commit/862f70c3c3e07bf4b5563e11d5395f4d67e74966))
+* productivo ranges as numbers on their own scale — number card per parcel, stepped histogram under Todas (AGP-69) ([#140](https://github.com/Vizzuality/agora-paraguay/issues/140)) ([5f479fd](https://github.com/Vizzuality/agora-paraguay/commit/5f479fdb47af6fc608d1c7f4191a2e11de483f0c))
+* riesgo productivo tiles — parcel values, category counts, the crop's indicators only ([#117](https://github.com/Vizzuality/agora-paraguay/issues/117)) ([7ba6213](https://github.com/Vizzuality/agora-paraguay/commit/7ba621367c9d78389ad1f5062288afe965079b89))
+* the hero filters are asked for the picked crop (GET /api/parcels/filters/?crop_type=) ([#135](https://github.com/Vizzuality/agora-paraguay/issues/135)) ([04e3729](https://github.com/Vizzuality/agora-paraguay/commit/04e3729deda8fb9b5269fe954e9eabfe25691a43))
+* the session comes from GET /api/auth/me/, staff get Administrar usuarios (AGP-46) ([#115](https://github.com/Vizzuality/agora-paraguay/issues/115)) ([cfc8a1f](https://github.com/Vizzuality/agora-paraguay/commit/cfc8a1f6fe3dc9c0b9a60380916f553c98c029fc))
+* Todas counts a short range per class and bins a long one as a histogram (AGP-60) ([#132](https://github.com/Vizzuality/agora-paraguay/issues/132)) ([ca52927](https://github.com/Vizzuality/agora-paraguay/commit/ca5292783551bf82a51f35eb12115f16e17fa9e4))
+
+
+### Bug Fixes
+
+* a rejected drawing no longer taints the upload that follows (AGP-43) ([#106](https://github.com/Vizzuality/agora-paraguay/issues/106)) ([8ccf4e8](https://github.com/Vizzuality/agora-paraguay/commit/8ccf4e848d8d43ee31aa6a4fdbf453bfa7ece155))
+* ask the hero filters by riesgo, sanitario by default ([#131](https://github.com/Vizzuality/agora-paraguay/issues/131)) ([48a0692](https://github.com/Vizzuality/agora-paraguay/commit/48a0692f15753e6a4d6cfca2e8d998f80c708dce))
+* **deps:** bump @tanstack/react-start to 1.168.60 for CVE-2026-102989 ([#128](https://github.com/Vizzuality/agora-paraguay/issues/128)) ([bc20b94](https://github.com/Vizzuality/agora-paraguay/commit/bc20b94d09774e5506642b90ba187d92a606ab2b))
+* productivo widgets follow the open parcel tab ([#133](https://github.com/Vizzuality/agora-paraguay/issues/133)) ([b689613](https://github.com/Vizzuality/agora-paraguay/commit/b689613cdd75d66e1f8c353af893b843bd548744))
+* Reiniciar clears the parcels layer with the drawing (AGP-43) ([#105](https://github.com/Vizzuality/agora-paraguay/issues/105)) ([9fa1d45](https://github.com/Vizzuality/agora-paraguay/commit/9fa1d45d2966fbd00d8fc1dfdc65eade08cbb511))
+* the AI summary text takes three quarters of the tile ([#116](https://github.com/Vizzuality/agora-paraguay/issues/116)) ([b7a6418](https://github.com/Vizzuality/agora-paraguay/commit/b7a64185800fd3cc8c05883d932ef9d57cc7f070))
+* the login body sends identifier, a username or an email ([#111](https://github.com/Vizzuality/agora-paraguay/issues/111)) ([55e8a81](https://github.com/Vizzuality/agora-paraguay/commit/55e8a812113fc6fafc3a26cb831e069b8a4e1985))
+
 ## [0.3.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.2.0...v0.3.0) (2026-09-24)
 
 

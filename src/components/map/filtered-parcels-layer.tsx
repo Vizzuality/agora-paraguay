@@ -3,8 +3,10 @@ import { useAtomValue } from 'jotai';
 import type { ExpressionSpecification } from 'maplibre-gl';
 import { Layer, Source } from 'react-map-gl/maplibre';
 
+import { ParcelNumbers } from '@/components/map/parcel-numbers';
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { applyToggles } from '@/lib/map/parcel-selection';
+import { DOT_PATTERN_ID } from '@/lib/map/dot-pattern';
+import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -12,6 +14,8 @@ import { toggledParcelIdsAtom } from '@/store/parcels';
 const COLOR: ExpressionSpecification = ['case', ['get', 'selected'], '#F1FF28', '#FFFFFF'];
 const FILL_OPACITY: ExpressionSpecification = ['case', ['get', 'selected'], 0.35, 0.05];
 const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
+/** The analysis mini map is small and framed tight, so its outlines read a step heavier. */
+const ANALYSIS_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 3, 2];
 
 /**
  * The parcels `filter-parcels` answers for the polygons on the map, after the user's
@@ -28,11 +32,26 @@ const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
  *   passes the analysed ids, so unselected neighbours do not follow into the hero.
  * - `highlightedIds`: which of those paint yellow. Default: the selection after the
  *   user's flips. The mini map passes the open tab's parcel.
+ * - `variant`: how the parcels look. `default` is the main map: plain fills and thin
+ *   outlines while the user is still picking parcels. `analysis` is the analysis map, which
+ *   adds three things: a "Parcela N" chip over each parcel (`ParcelNumbers`), the
+ *   design's dot texture over every fill, and outlines one step thicker so they read on
+ *   a small map.
+ * - `zoom`: the camera's zoom, which the analysis chips need to know when they overlap.
+ *   The mini map feeds it from `onMoveEnd`; chips wait for it.
  */
 export function FilteredParcelsLayer({
   parcelIds,
   highlightedIds,
-}: Readonly<{ parcelIds?: string[]; highlightedIds?: string[] }>) {
+  variant = 'default',
+  zoom,
+}: Readonly<{
+  parcelIds?: string[];
+  highlightedIds?: string[];
+  variant?: 'default' | 'analysis';
+  zoom?: number;
+}>) {
+  const isAnalysis = variant === 'analysis';
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
@@ -63,18 +82,37 @@ export function FilteredParcelsLayer({
 
   if (features.length === 0) return null;
 
+  // The order that gives the numbers: the analysed list on the mini map, else the
+  // selection as Analizar will submit it (`ConfirmActions`), so N matches the hero tab.
+  const numberedIds = parcelIds ?? selectedParcelIds(parcels);
+
   return (
-    <Source id="filtered-parcels" type="geojson" data={{ type: 'FeatureCollection', features }}>
-      <Layer
-        id="filtered-parcels-fill"
-        type="fill"
-        paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
-      />
-      <Layer
-        id="filtered-parcels-outline"
-        type="line"
-        paint={{ 'line-color': COLOR, 'line-width': LINE_WIDTH }}
-      />
-    </Source>
+    <>
+      <Source id="filtered-parcels" type="geojson" data={{ type: 'FeatureCollection', features }}>
+        <Layer
+          id="filtered-parcels-fill"
+          type="fill"
+          paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
+        />
+        {isAnalysis && (
+          <Layer
+            id="filtered-parcels-dots"
+            type="fill"
+            paint={{ 'fill-pattern': DOT_PATTERN_ID }}
+          />
+        )}
+        <Layer
+          id="filtered-parcels-outline"
+          type="line"
+          paint={{
+            'line-color': COLOR,
+            'line-width': isAnalysis ? ANALYSIS_LINE_WIDTH : LINE_WIDTH,
+          }}
+        />
+      </Source>
+      {isAnalysis && zoom !== undefined && (
+        <ParcelNumbers parcels={parcels} parcelIds={numberedIds} zoom={zoom} />
+      )}
+    </>
   );
 }
