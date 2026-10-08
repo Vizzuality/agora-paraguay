@@ -74,7 +74,7 @@ const categoryIndicatorTypeSchema = z.looseObject({
 });
 
 /** Free text (`weather_station`, `phenology_stage`) and open numbers (`Pro_soja` t/ha). */
-const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric', 'number']) });
+const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric']) });
 
 /**
  * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in
@@ -89,12 +89,10 @@ export const indicatorTypeSchema = z.discriminatedUnion('type', [
 export type IndicatorType = z.infer<typeof indicatorTypeSchema>;
 
 /**
- * The live list as the spec writes it. Two things it does differently: the open-number
- * type is `number` for sanitario and `numeric` for productivo — the API documentation
- * itself writes it both ways, one per riesgo, for the same kind of value — and the cards
- * only know `numeric`; and the hero filter `crop_type` is echoed into the list as a
- * filter (`field_type` with options) rather than an indicator. The analysis answers it as
- * text ("Soja"), so it reads as a text indicator — general info, never in the picker.
+ * The live list as the spec writes it, with one thing it does differently: the hero filter
+ * `crop_type` is echoed into the list as a filter (`field_type` with options) rather than
+ * an indicator. The analysis answers it as text ("Soja"), so it reads as a text indicator —
+ * general info, never in the picker.
  */
 function asSpecIndicator(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
@@ -103,12 +101,6 @@ function asSpecIndicator(raw: unknown): unknown {
 
   if (!('indicator_type' in entry) && 'field_type' in entry) {
     return { ...entry, indicator_type: { type: 'text' } };
-  }
-
-  const type = entry.indicator_type;
-
-  if (typeof type === 'object' && type !== null && 'type' in type && type.type === 'number') {
-    return { ...entry, indicator_type: { ...type, type: 'numeric' } };
   }
 
   return entry;

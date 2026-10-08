@@ -112,7 +112,7 @@ describe('fetchIndicators', () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/indicators?riesgo=productivo');
   });
 
-  it('reads the live list: a null unit, `number` as numeric, and the echoed crop filter as text', async () => {
+  it('reads the live list: a null unit and the echoed crop filter as text', async () => {
     const cropFilter = {
       id: 'crop_type',
       name: 'Tipo de cultivo',
@@ -135,7 +135,13 @@ describe('fetchIndicators', () => {
           default: true,
           indicator_type: { type: 'text' },
         },
-        { id: 'area', name: 'Area', unit: 'ha', default: true, indicator_type: { type: 'number' } },
+        {
+          id: 'area',
+          name: 'Area',
+          unit: 'ha',
+          default: true,
+          indicator_type: { type: 'numeric' },
+        },
         cropFilter,
       ]),
     );
