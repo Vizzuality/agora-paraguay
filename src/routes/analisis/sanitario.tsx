@@ -1,17 +1,12 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
-import { useAtomValue } from 'jotai';
 
 import { AnalysisHeader } from '@/components/analysis-header';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { WidgetGrid } from '@/components/widget-grid';
-import { analysisWidgets } from '@/lib/analysis/analysis-widgets';
-import { combinedParcel, generalInfo } from '@/lib/analysis/indicator-cards';
-import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
-import { useAnalysis } from '@/lib/analysis/use-analysis';
-import { useDescribe } from '@/lib/analysis/use-describe';
-import { activeParcelIdAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
+import { generalInfo } from '@/lib/analysis/indicator-cards';
+import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
 
 /** Riesgo sanitario is public: hero, title row and the cards, no gate. */
 export const Route = createFileRoute('/analisis/sanitario')({
@@ -33,47 +28,17 @@ function SanitarioPage() {
 }
 
 /**
- * The active parcel tab's indicators — its text facts in the general-info card, then one
- * widget per selected measured indicator. Cards are per parcel; the Todas tab reads the
- * whole selection (`multiple` scope): a category or a short range counted per class, a
- * long range binned over its scale, the text facts over the parcels combined
- * (`combinedParcel`). The active parcel is the hero's open
- * tab (`activeParcelIdAtom`); the answer is matched by id, since the backend need not
- * echo the parcels in request order. Changing the picker or the hero filters re-runs the
- * analysis (`useAnalysis`); the previous cards stay until the new answer lands.
+ * The open tab's text facts in the general-info card (always on), then the widgets
+ * (`useRiesgoWidgets`): under Todas the facts read the parcels combined.
  */
 function SanitarioWidgets() {
-  const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis('sanitario');
-  const activeId = useAtomValue(activeParcelIdAtom);
-  const selected = useAtomValue(selectedIndicatorIdsAtom).sanitario;
-  const describe = useDescribe('sanitario');
+  const { analysis, indicators, indicatorsError, parcel, widgets, describe } =
+    useRiesgoWidgets('sanitario');
 
-  const answered = analysis.data?.indicators ?? [];
-  const scope = activeId === null ? 'multiple' : 'individual';
-  const parcel =
-    activeId === null
-      ? combinedParcel(
-          answered.filter((entry) => parcelIds.includes(String(entry.parcel_id))),
-          indicators,
-        )
-      : answered.find((entry) => String(entry.parcel_id) === activeId);
-  // General info is always on; the cards are the selected measured indicators (the API's
-  // defaults until the user touches Personalizar indicadores).
   const info = generalInfo(parcel, indicators, 'sanitario').map((row) => ({
     ...row,
     description: describe(row.description),
   }));
-  const shown = indicators
-    ? visibleIndicators(selectableIndicators(indicators, 'sanitario'), selected)
-    : undefined;
-  const widgets = analysisWidgets({
-    parcels: answered,
-    parcelIds,
-    indicators: shown,
-    riesgo: 'sanitario',
-    scope,
-    parcel,
-  }).map((widget) => ({ ...widget, description: describe(widget.description) }));
 
   return (
     <div className="flex flex-col gap-4">
