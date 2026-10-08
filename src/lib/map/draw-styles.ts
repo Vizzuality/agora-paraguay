@@ -1,7 +1,7 @@
 import type { GeoJSONStoreFeatures, HexColor } from 'terra-draw';
 
 /**
- * Per-feature Terra Draw styling for the parcel polygons (Figma parcel styles).
+ * Per-feature Terra Draw styling for the parcel polygons, per the design's parcel styles.
  *
  * Terra Draw's adapter paints hex + opacity only, so the design's dot texture cannot
  * live here — `<ParcelPattern>` overlays it as a MapLibre `fill-pattern` layer. The
@@ -86,7 +86,7 @@ export const PARCEL_STYLES = {
 };
 
 /**
- * The dot texture the Figma parcel fill repeats every 50px, generated as raw RGBA
+ * The dot texture the designed parcel fill repeats every 50px, generated as raw RGBA
  * pixels so no image asset or DOM canvas is needed — MapLibre's `addImage` accepts
  * `{ width, height, data }` directly.
  *

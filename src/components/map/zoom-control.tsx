@@ -8,7 +8,7 @@ const buttonClass =
   'border-border text-foreground transition-colors hover:bg-accent cursor-pointer';
 
 /**
- * Zoom control matching the Figma design (node 5187:12646): two stacked
+ * Zoom control as designed: two stacked
  * capsule buttons that replace MapLibre's default NavigationControl.
  */
 export function ZoomControl() {
