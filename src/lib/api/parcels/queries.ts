@@ -17,8 +17,8 @@ export const parcelQueries = {
    * mutation: the answer is a function of the geometry, so it is keyed by it, refetches
    * when a polygon is edited, and is reused by Analizar instead of asked again.
    * Disabled with nothing on the map (the wire schema rejects an empty list) and with
-   * areas over `MAX_AREA_HECTARES`: those are rejected before any request
-   * (`useRejectOversizedAreas`).
+   * areas over `MAX_AREA_HECTARES`: a drawing that size is rejected before any request
+   * (`useRejectOversizedAreas`); an upload that size never lands (`normalize.ts`).
    */
   filtered: (
     polygons: DrawnPolygon[],

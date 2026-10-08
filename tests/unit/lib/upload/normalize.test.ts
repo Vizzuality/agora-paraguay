@@ -6,17 +6,18 @@ import { UploadError } from '@/lib/upload/types';
 
 /**
  * A closed square inside Paraguay offset by `at`, the smallest valid store polygon.
- * Anchored near Asunción because normalization rejects geometry outside the country.
+ * Anchored near Asunción because normalization rejects geometry outside the country, and
+ * `side` degrees across (≈ 2 km by default) because it also rejects oversized files.
  */
-function square(at = 0): number[][] {
+function square(at = 0, side = 0.02): number[][] {
   const lng = -58 + at * 0.05;
   const lat = -24 + at * 0.05;
 
   return [
     [lng, lat],
-    [lng, lat + 0.5],
-    [lng + 0.5, lat + 0.5],
-    [lng + 0.5, lat],
+    [lng, lat + side],
+    [lng + side, lat + side],
+    [lng + side, lat],
     [lng, lat],
   ];
 }
@@ -139,6 +140,39 @@ describe('Paraguay bounds', () => {
     expect(code(() => normalizeFeatures(collection(polygon({}, square(), strayHole))))).toBe(
       'out-of-paraguay',
     );
+  });
+});
+
+describe('size', () => {
+  // A one-degree square is about 1.1 million hectares at this latitude.
+  const oversized = square(0, 1);
+
+  it('rejects a file whose polygons cover more than the area limit', () => {
+    expect(() => normalizeFeatures(collection(polygon({}, oversized)))).toThrow(
+      /supera el máximo de 100\.000 ha/,
+    );
+    expect(code(() => normalizeFeatures(collection(polygon({}, oversized))))).toBe('oversized');
+  });
+
+  it('caps the total of the file, not each polygon', () => {
+    // Half a degree a side is ≈ 280 000 ha: three of them fail together, one passes.
+    const half = (at: number) => square(at, 0.25);
+
+    expect(code(() => normalizeFeatures(collection(polygon({}, half(0)))))).toBeNull();
+    expect(
+      code(() =>
+        normalizeFeatures(
+          collection(polygon({}, half(0)), polygon({}, half(10)), polygon({}, half(20))),
+        ),
+      ),
+    ).toBe('oversized');
+  });
+
+  it('answers oversized before out-of-paraguay when a polygon is both', () => {
+    // A polygon this big tends to cross the border too; the actionable reason wins.
+    const overTheBorder = oversized.map(([lng, lat]) => [lng + 4, lat]);
+
+    expect(code(() => normalizeFeatures(collection(polygon({}, overTheBorder))))).toBe('oversized');
   });
 });
 

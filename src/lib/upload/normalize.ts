@@ -1,3 +1,4 @@
+import { areasHectares, MAX_AREA_HECTARES, oversizedAreasMessage } from '@/lib/map/polygon-area';
 import {
   featureCollectionEnvelopeSchema,
   featureSchema,
@@ -23,7 +24,8 @@ import {
  * which is why the browser-only parsers stay thin. Interior rings pass through: the
  * app's polygon mode (`src/lib/map/polygon-mode.ts`) accepts them.
  *
- * The one product rule enforced here is that every coordinate lies inside Paraguay.
+ * Two product rules are enforced here, in this order: the polygons together stay under
+ * `MAX_AREA_HECTARES`, and every coordinate lies inside Paraguay.
  */
 
 /** Terra Draw rejects coordinates with more than 9 decimals (≈ 0.1 mm). */
@@ -114,6 +116,15 @@ function normalizeInputs(inputs: UploadFeatureInput[], invalid: number): ParseOu
         properties: { mode: 'polygon', origin: 'upload', name: partName },
       });
     });
+  }
+
+  // Size before country: a country-sized polygon fails both, and "pick a smaller area" is
+  // the advice that helps. Measured here rather than once on the map because the country
+  // check below would otherwise answer first.
+  const hectares = areasHectares(features);
+
+  if (hectares > MAX_AREA_HECTARES) {
+    throw new UploadError('oversized', oversizedAreasMessage(hectares));
   }
 
   // The platform is Paraguay-only, so anything outside the country is wrong data: a file

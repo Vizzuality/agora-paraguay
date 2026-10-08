@@ -1,5 +1,3 @@
-import type { DrawnPolygon } from '@/lib/map/draw-features';
-
 /*
  * The size of the areas on the map, in hectares, before anything is asked of the API.
  * `filter-parcels` answers every cadastral parcel inside the areas with its geometry: a
@@ -15,6 +13,9 @@ const EARTH_RADIUS = 6_378_137;
 const SQUARE_METRES_PER_HECTARE = 10_000;
 
 type Position = readonly number[];
+
+/** Anything with polygon rings: a Terra Draw feature or an upload feature before it lands. */
+type Areal = { geometry: { coordinates: readonly (readonly Position[])[] } };
 
 /**
  * The area a lon/lat ring encloses on the sphere, in square metres, whichever way it
@@ -50,14 +51,14 @@ export function polygonHectares(rings: readonly (readonly Position[])[]): number
 }
 
 /** The hectares the areas cover together. */
-export function areasHectares(polygons: readonly DrawnPolygon[]): number {
+export function areasHectares(polygons: readonly Areal[]): number {
   return polygons.reduce(
     (total, polygon) => total + polygonHectares(polygon.geometry.coordinates),
     0,
   );
 }
 
-export function exceedsMaxArea(polygons: readonly DrawnPolygon[]): boolean {
+export function exceedsMaxArea(polygons: readonly Areal[]): boolean {
   return areasHectares(polygons) > MAX_AREA_HECTARES;
 }
 

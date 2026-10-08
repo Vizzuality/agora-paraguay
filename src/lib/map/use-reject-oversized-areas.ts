@@ -9,8 +9,9 @@ import { rejectAreasAtom } from '@/store/selection';
  * Areas over `MAX_AREA_HECTARES` are rejected the way an out-of-coverage answer is
  * (`useRejectUncoveredAreas`): cleared from the map, the panel back to step 1 with the
  * reason. Only this never asks the API: `parcelQueries.filtered` stays disabled for
- * oversized areas, so the rejection is the only thing that happens to them. Mounted from
- * `DrawLayer`.
+ * oversized areas, so the rejection is the only thing that happens to them. This is the
+ * drawing's guard; an upload is measured while parsing (`src/lib/upload/normalize.ts`)
+ * and never lands when over the limit. Mounted from `DrawLayer`.
  */
 export function useRejectOversizedAreas() {
   const polygons = useAtomValue(drawPolygonsAtom);

@@ -50,6 +50,7 @@ export type ParseOutcome = {
 export type UploadErrorCode =
   | 'unsupported-type'
   | 'too-large'
+  | 'oversized'
   | 'unreadable'
   | 'out-of-paraguay'
   | 'no-polygons'
