@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { categoryAxis, categoryCountWidgets, categoryTone } from '@/lib/analysis/category-counts';
+import { categoryAxis, categoryCountWidgets } from '@/lib/analysis/category-counts';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
@@ -40,25 +40,6 @@ describe('categoryAxis', () => {
   });
 });
 
-describe('categoryTone', () => {
-  it("reads the magnitude word: low grey, high orange, the rest blue — the ruler's tones", () => {
-    expect(['Bajo', 'Muy baja', 'baja'].map(categoryTone)).toEqual(['medium', 'medium', 'medium']);
-    expect(['Alto', 'Muy alto', 'Alta', 'Alerta'].map(categoryTone)).toEqual([
-      'elevated',
-      'elevated',
-      'elevated',
-      'elevated',
-    ]);
-    expect(['Medio', 'Media', 'Moderado', 'Estable', 'Positiva'].map(categoryTone)).toEqual([
-      'low',
-      'low',
-      'low',
-      'low',
-      'low',
-    ]);
-  });
-});
-
 describe('categoryCountWidgets', () => {
   const parcels = [
     parcel('A', { resiliencia: 'Media', ITR_soja: 'Positiva' }),
@@ -80,9 +61,9 @@ describe('categoryCountWidgets', () => {
       id: 'Resiliencia',
       label: 'Proxy de resiliencia operativa',
       columns: [
-        { label: 'Alta', count: 1, tone: 'elevated' },
-        { label: 'Media', count: 2, tone: 'low' },
-        { label: 'Baja', count: 0, tone: 'medium' },
+        { label: 'Alta', count: 1, tone: 'low' },
+        { label: 'Media', count: 2, tone: 'medium' },
+        { label: 'Baja', count: 0, tone: 'high' },
       ],
     });
   });
@@ -126,16 +107,16 @@ describe('categoryCountWidgets', () => {
 
     expect(widget.columns).toEqual([
       { label: 'Positiva', count: 2, tone: 'low' },
-      { label: 'Estable', count: 0, tone: 'low' },
-      { label: 'Alerta', count: 0, tone: 'elevated' },
+      { label: 'Estable', count: 0, tone: 'medium' },
+      { label: 'Alerta', count: 0, tone: 'high' },
     ]);
   });
 
   it('keeps the widget, nothing counted, when every parcel reads NA — the crop it does not apply to', () => {
     const empty = [
       { label: 'Positiva', count: 0, tone: 'low' },
-      { label: 'Estable', count: 0, tone: 'low' },
-      { label: 'Alerta', count: 0, tone: 'elevated' },
+      { label: 'Estable', count: 0, tone: 'medium' },
+      { label: 'Alerta', count: 0, tone: 'high' },
     ];
 
     expect(

@@ -44,6 +44,7 @@ export function RiskClassCard({
 
 /** Track colour per band: the coloured classes in their hue at half strength, the grey one faint. */
 const TRACK_CLASS: Record<RiskTone, string> = {
+  none: 'bg-risk-none opacity-50',
   low: 'bg-risk-low opacity-50',
   medium: 'bg-risk-neutral opacity-20',
   elevated: 'bg-risk-medium opacity-50',
@@ -52,6 +53,7 @@ const TRACK_CLASS: Record<RiskTone, string> = {
 
 /** The marker takes its band's hue at full strength. */
 const MARKER_CLASS: Record<RiskTone, string> = {
+  none: 'bg-risk-none',
   low: 'bg-risk-low',
   medium: 'bg-risk-neutral',
   elevated: 'bg-risk-medium',

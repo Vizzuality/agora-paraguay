@@ -54,6 +54,7 @@
   --color-widget: var(--widget);
   --color-widget-foreground: var(--widget-foreground);
   --color-highlight: var(--highlight);
+  --color-risk-none: var(--risk-none);
   --color-risk-low: var(--risk-low);
   --color-risk-neutral: var(--risk-neutral);
   --color-risk-medium: var(--risk-medium);
@@ -112,14 +113,15 @@
   /*
     Chart tones, the "custom" group of the 1.0 Theme collection, one value per mode so
     they keep contrast on the light card and on the navy one: blue, grey, orange, red,
-    and a green no widget paints yet.
+    green.
   */
   --chart-1: #2a7bf1;
   --chart-2: #657690;
   --chart-3: #e06900;
   --chart-4: #ec1919;
   --chart-5: #109704;
-  /* The band a risk class paints, by tone: bajo blue, the grey middle, medio orange, alto red. */
+  /* The band a risk class paints, by tone: none green, bajo blue, the grey middle, medio orange, alto red. */
+  --risk-none: var(--chart-5);
   --risk-low: var(--chart-1);
   --risk-neutral: var(--chart-2);
   --risk-medium: var(--chart-3);

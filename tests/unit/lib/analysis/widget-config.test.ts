@@ -102,7 +102,8 @@ describe('classIndexAt', () => {
 });
 
 describe('classTones', () => {
-  it('follows the design scales: four run blue, grey, orange, red; three drop the orange', () => {
+  it('follows the design scales: five run green, blue, grey, orange, red; four and three drop from the ends', () => {
+    expect(classTones(5)).toEqual(['none', 'low', 'medium', 'elevated', 'high']);
     expect(classTones(4)).toEqual(['low', 'medium', 'elevated', 'high']);
     expect(classTones(3)).toEqual(['low', 'medium', 'high']);
   });
@@ -113,8 +114,8 @@ describe('classTones', () => {
     expect(classTones(0)).toEqual([]);
   });
 
-  it('keeps the ends for five or more and greys the middle', () => {
-    expect(classTones(5)).toEqual(['low', 'medium', 'medium', 'elevated', 'high']);
+  it('keeps the coloured ends for more than five and greys the middle', () => {
+    expect(classTones(6)).toEqual(['none', 'low', 'medium', 'medium', 'elevated', 'high']);
   });
 });
 
