@@ -324,9 +324,6 @@ Read off the list:
 - **Every range on productivo is a number on its own scale**, never a risk: `N_*` (0–8) is a
   number card on 0–8 and, under Todas, nine stepped columns "0" to "8"; `IEP_*` / `ProInf_*`
   (0–100 %) a number card on 0–100 and a twenty-bin histogram. No ruler, no classes.
-- **`Des_*` reads like any number** (number card / histogram). Its description calls it a
-  standard deviation, which is never negative, so there is no signed widget for it
-  (follow-up 15).
 - **Text indicators render nowhere**: `Zafras_*` (the list of seasons detected) and the two
   codes are requested and answered but no productivo card shows facts.
 - **Category order is best → worst** (`Positiva, Estable, Alerta`; `Muy Alta … Muy Baja`), so
@@ -364,9 +361,3 @@ Read off the list:
     `low`, `mid`, `high`, `h5`, `h10`) or a client convention on the id prefix, like the crop
     suffix rule and with the same `TODO(api-filters)` caveat. There is no design for the grouped
     widgets yet.
-
-15. **`Des_*` is a standard deviation, not a signed difference.** The live `Des_soja` is
-    documented as an SD (never negative). A signed-deviation widget (a diverging track, bars up
-    and down from the base `Pro_*`) was built for it (AGP-68, #139) and dropped on GMV feedback
-    (#151): `Des_*` now reads like any number. Should the API ever type a true signed deviation
-    (`{ type: 'deviation', base }`), that widget is in the history. Discussion thread on AGP-68.
