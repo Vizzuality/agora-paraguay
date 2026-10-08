@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { themeAtom, toggleThemeAtom } from '@/store/theme';
 
 /**
- * The header's light/dark switch (Figma "Mode selector"): a 48px round secondary
+ * The header's light/dark switch: a 48px round secondary
  * button showing the theme it switches to. Reads the theme atom, so render it inside
  * `<ClientOnly>` with `<ThemeTogglePlaceholder />` as the fallback.
  */

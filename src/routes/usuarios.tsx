@@ -7,7 +7,7 @@ import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { useSession } from '@/lib/auth/use-session';
 
-/** Administrar usuarios, staff only: the account list (Figma 5565:988) between header and footer. */
+/** Administrar usuarios, staff only: the account list between header and footer. */
 export const Route = createFileRoute('/usuarios')({
   component: UsersPage,
 });

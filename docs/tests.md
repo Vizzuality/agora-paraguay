@@ -387,6 +387,10 @@ network access. Binary upload fixtures are regenerated with
 - reactivating draw clears the previous session
 - loses the drawing on reload
 
+### `tests/e2e/not-found.spec.ts` (1)
+
+- an unknown URL gets the 404 page, bare, with a way back
+
 ### `tests/e2e/select-cadastral-parcel.spec.ts` (2)
 
 - clicking cadastral parcels selects until Analizar submits them

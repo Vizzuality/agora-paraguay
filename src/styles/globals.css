@@ -14,7 +14,7 @@
 ));
 
 /*
-  Design tokens from the Figma "1.0 Theme" variable collection, which carries a light and
+  Design tokens from the design system's "1.0 Theme" variable collection, which carries a light and
   a dark mode. Both modes are mirrored below, hover shades included — they are real tokens
   in the collection (hover:primary etc.), so components use `*-hover` utilities rather
   than opacity modifiers.
@@ -67,10 +67,10 @@
   /* Tells the browser which palette its own widgets use — the date picker's calendar
      glyph, scrollbars, form controls — so they follow the theme without per-field CSS. */
   color-scheme: light;
-  --radius: 0.5rem; /* Figma: var(--radius) = 8 */
+  --radius: 0.5rem; /* the theme's radius token, 8px */
   --background: #ffffff;
   --foreground: #020617; /* slate-950 */
-  --card: #f1f5f9; /* slate-100 — aliases secondary in the Figma theme */
+  --card: #f1f5f9; /* slate-100 — aliases secondary in the theme */
   --card-foreground: #020617;
   --popover: #ffffff;
   --popover-foreground: #020617;
@@ -99,14 +99,14 @@
     every use needs a legend, a direct label, or a text value beside the mark.
   */
   /*
-    Widget surface, taken from the AGORA Figma file (node 46:7042). The design layers
+    Widget surface, taken from the AGORA design. The design layers
     a 20% black overlay over the navy page; this is the resulting colour, baked in, so
     the card holds up on any background rather than only on the navy one.
   */
   --widget: #13294f;
   --widget-foreground: #ffffff;
-  --highlight: #ec6e00; /* step progress, Figma hardcodes it */
-  /* Risk ruler by class: bajo, medio, alto. Figma hardcodes the first two; alto reuses the alert red. */
+  --highlight: #ec6e00; /* step progress, hardcoded in the design */
+  /* Risk ruler by class: bajo, medio, alto. The design hardcodes the first two; alto reuses the alert red. */
   --risk-low: #2a7bf1;
   --risk-medium: #ec6e00;
   --risk-high: var(--destructive);
@@ -120,7 +120,7 @@
 }
 
 /*
-  Dark values come from the Figma "1.0 Theme" variable collection (dark mode): the page
+  Dark values come from the "1.0 Theme" variable collection (dark mode): the page
   goes brand navy rather than slate, surfaces are a deeper navy, and borders are white
   at 30% so they read on any navy.
 */

@@ -44,7 +44,7 @@ function rejectionMessage(rejection: AreaRejection): string {
 }
 
 /**
- * The areas were outside the cadastre's coverage (Figma 7288:2099). Takes the place of
+ * The areas were outside the cadastre's coverage. Takes the place of
  * the upload notice while shown: the same answer rejected an upload's areas too, so
  * its "imported N areas" would contradict the map.
  */
