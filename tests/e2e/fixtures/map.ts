@@ -22,21 +22,32 @@ const BLANK_TILE = Buffer.from(
  */
 export const FARM_SCALE_URL = '/?lng=-58.44&lat=-23.44&zoom=12';
 
+/** The camera zoom as the URL holds it; the opening view's when nothing is written yet. */
+function urlZoom(page: Page): number {
+  return Number(new URL(page.url()).searchParams.get('zoom') ?? 5.5);
+}
+
 /**
  * Zooms the opening view in to farm scale without reloading (the map's own control),
- * for flows that come back to the country-wide view and draw again.
+ * for flows that come back to the country-wide view and draw again. One step at a
+ * time: each click eases the camera and a second click mid-ease would cut the first
+ * short, so every step waits for its own camera write before the next.
  */
-export async function zoomToFarmScale(page: Page) {
-  const zoomIn = page.getByRole('button', { name: 'Acercar' });
+export async function zoomToFarmScale(page: Page, target = 12): Promise<void> {
+  const before = urlZoom(page);
 
-  for (let step = 0; step < 7; step++) await zoomIn.click();
+  if (before >= target) return;
 
-  // The camera is written to the URL throttled after moveend.
+  await page.getByRole('button', { name: 'Acercar' }).click();
+
+  // The camera is written to the URL throttled after moveend; a zoom-in step adds one.
   await page.waitForFunction(
-    () => Number(new URL(window.location.href).searchParams.get('zoom')) >= 12,
-    undefined,
+    (reached) => Number(new URL(window.location.href).searchParams.get('zoom')) >= reached,
+    before + 0.9,
     { timeout: 5_000 },
   );
+
+  return zoomToFarmScale(page, target);
 }
 
 export async function stubBasemap(page: Page) {
