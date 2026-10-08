@@ -563,7 +563,8 @@ test('staff reach Administrar usuarios from the user menu', async ({ page }) => 
   await expect(table.getByRole('columnheader')).toHaveText(['Email', 'Acciones']);
 
   for (const user of ADMIN_USERS) {
-    await expect(table.getByRole('cell', { name: user.email })).toBeVisible();
+    // `exact`: the actions cell is named after its button, "Acciones de {email}".
+    await expect(table.getByRole('cell', { name: user.email, exact: true })).toBeVisible();
   }
 });
 

@@ -60,6 +60,7 @@ test('an administrator adds a user and gets the link to pass on; the list shows 
   await expect(
     page.getByRole('row', { name: /nueva@example\.com/ }).getByRole('cell', {
       name: 'nueva@example.com',
+      exact: true,
     }),
   ).toBeVisible();
 });
