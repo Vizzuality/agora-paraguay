@@ -7,7 +7,7 @@ import type { IndicatorType, Riesgo } from '@/lib/api/metadata/schemas';
  */
 
 /**
- * The ruler band a class paints: blue, grey, orange, red (`--risk-low`, muted,
+ * The ruler band a class paints: blue, grey, orange, red (`--risk-low`, `--risk-neutral`,
  * `--risk-medium`, `--risk-high`).
  */
 export type RiskTone = 'low' | 'medium' | 'elevated' | 'high';

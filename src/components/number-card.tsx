@@ -39,7 +39,7 @@ export function NumberCard({
             <TrackMarker
               at={position}
               track="bg-risk-medium opacity-50"
-              after="bg-muted-foreground opacity-20"
+              after="bg-risk-neutral opacity-20"
               marker="bg-risk-medium"
             />
           </div>
