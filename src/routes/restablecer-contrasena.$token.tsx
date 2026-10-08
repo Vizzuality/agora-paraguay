@@ -13,9 +13,9 @@ import { authQueries } from '@/lib/api/auth/queries';
 import { resetTokenSchema } from '@/lib/api/auth/schemas';
 
 /**
- * Where a password reset link lands: `/restablecer-contrasena/{token}`. The backend's
- * `FRONTEND_URL` must point here — it composes the link an administrator hands the user.
- * The token is checked first, so a spent link never shows a form it cannot submit.
+ * Where a password reset link lands: `/restablecer-contrasena/{token}`, the link the
+ * backend composes and an administrator hands the user. The token is checked first, so a
+ * spent link never shows a form it cannot submit.
  */
 export const Route = createFileRoute('/restablecer-contrasena/$token')({
   component: ResetPasswordPage,

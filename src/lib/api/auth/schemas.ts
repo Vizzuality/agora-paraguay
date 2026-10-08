@@ -132,8 +132,8 @@ export const adminUsersSchema = z.array(adminUserSchema);
 /**
  * `POST /api/auth/admin/users/create/`'s answer. The live API echoes the user with its
  * names only — no `id`, `is_active` or `is_staff` — so the list is re-read, not patched
- * from this. `reset_link` is the one-time link as the backend builds it (its
- * `FRONTEND_URL`); the front end hands it on untouched.
+ * from this. `reset_link` is the one-time link as the backend builds it; the front end
+ * hands it on untouched.
  */
 export const createdUserSchema = z.looseObject({
   user: z.looseObject({
