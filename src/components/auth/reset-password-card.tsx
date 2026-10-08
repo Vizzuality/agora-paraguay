@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { resetRequestMailto } from '@/lib/auth/reset-request';
 
 /**
- * The reset-password card (Figma 5596:1619): an email and a Solicitar button. Shown in
+ * The reset-password card: an email and a Solicitar button. Shown in
  * place of `LoginCard` by whoever hosts it (`LoginGate`, `LoginDialog`).
  *
  * There is no request-reset endpoint and no mail server, so Solicitar opens the user's

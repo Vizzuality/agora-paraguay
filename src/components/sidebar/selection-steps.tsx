@@ -1,7 +1,7 @@
 import { SELECTION_STEPS, type SelectionStep } from '@/lib/selection-steps';
 import { cn } from '@/lib/utils';
 
-/** The three-step progress bar over the selection panel (Figma 7172:1773). */
+/** The three-step progress bar over the selection panel. */
 export function SelectionSteps({ current }: Readonly<{ current: SelectionStep }>) {
   return (
     <ol aria-label="Pasos de la selección" className="flex w-full gap-0.5">

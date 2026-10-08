@@ -42,7 +42,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 // One área de interés per session: closing the polygon parks the tool and the panel
-// moves on to confirmation (Figma 7172:1771).
+// moves on to confirmation.
 test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }) => {
   const { draw, analyze, currentStep } = controls(page);
 
@@ -50,7 +50,7 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
   await expect(analyze).toBeHidden();
 
   await draw.click();
-  // While armed the button reads "Cancelar" (Figma 7172:1997).
+  // While armed the button reads "Cancelar".
   await expect(draw).toHaveAttribute('aria-pressed', 'true');
   await expect(draw).toHaveAccessibleName('Cancelar');
   await expect(page.getByText('Haga clic para comenzar el polígono')).toBeVisible();
@@ -131,8 +131,8 @@ test('loses the drawing on reload', async ({ page }) => {
 });
 
 // The cadastre does not cover the drawn area: the API answers `empty` (HTTP 200) and the
-// drawing is rejected — back to step 1 with the reason in the error toast (Figma
-// 7288:2099) and the entry point that made it outlined (7288:2096) until dismissed.
+// drawing is rejected — back to step 1 with the reason in the error toast and the entry
+// point that made it outlined until dismissed.
 test('a drawing outside the cadastre is rejected back to step 1 with the reason', async ({
   page,
 }) => {
