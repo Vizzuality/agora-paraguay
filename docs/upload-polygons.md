@@ -64,6 +64,12 @@ workaround can be revisited.
   outside the country's bounds (`out-of-paraguay`) — the only product validation. It also
   covers projected coordinates read as lng/lat (a shapefile without its `.prj`), whether
   they fall outside ±180/±90 or land near (0,0) in the Gulf of Guinea.
+- **Size is capped after landing, not while parsing**: once on the map, drawn and
+  uploaded areas together may not exceed `MAX_AREA_HECTARES` (`src/lib/map/polygon-area.ts`).
+  Over it, they are rejected like an out-of-coverage answer and `filter-parcels` is never
+  asked — that endpoint answers every parcel inside the areas with its geometry, so a
+  department-sized upload would come back as hundreds of megabytes. The API has no cap of
+  its own.
 - **KMZ**: only `doc.kml` (or the first `.kml`) is read; `<NetworkLink>` is not
   fetched.
 - **Extension-based dispatch**: a mislabelled file fails with its claimed format's

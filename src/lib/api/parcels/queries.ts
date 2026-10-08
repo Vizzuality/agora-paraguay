@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 
 import type { DrawnPolygon } from '@/lib/map/draw-features';
+import { exceedsMaxArea } from '@/lib/map/polygon-area';
 
 import { filterParcels } from './client';
 import {
@@ -15,7 +16,9 @@ export const parcelQueries = {
    * fetched as soon as a drawing is finished or an upload lands. A query, not a
    * mutation: the answer is a function of the geometry, so it is keyed by it, refetches
    * when a polygon is edited, and is reused by Analizar instead of asked again.
-   * Disabled with nothing on the map (the wire schema rejects an empty list).
+   * Disabled with nothing on the map (the wire schema rejects an empty list) and with
+   * areas over `MAX_AREA_HECTARES`: those are rejected before any request
+   * (`useRejectOversizedAreas`).
    */
   filtered: (
     polygons: DrawnPolygon[],
@@ -29,7 +32,7 @@ export const parcelQueries = {
         options,
       ] as const,
       queryFn: () => filterParcels(toFilterParcelsRequest(polygons, options)),
-      enabled: polygons.length > 0,
+      enabled: polygons.length > 0 && !exceedsMaxArea(polygons),
       staleTime: Infinity,
       // A geometry change (a vertex drag, a restore after /analisis) re-keys the query;
       // the parcels already on the map stay painted until the new answer lands instead

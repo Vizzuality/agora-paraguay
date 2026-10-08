@@ -2,7 +2,14 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { ADMIN_USERS, stubAdminUsers, stubAuth } from './fixtures/auth';
-import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
+import {
+  drawPolygon,
+  FARM_SCALE_URL,
+  mapCanvas,
+  stubBasemap,
+  yellowPixelCount,
+  zoomToFarmScale,
+} from './fixtures/map';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
 // ~640px wide).
@@ -57,7 +64,9 @@ test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await stubAuth(page);
-  await page.goto('/');
+  // Zoomed in to farm scale: at the opening zoom the test triangle covers a department,
+  // over the area limit (see 'a drawing over the area limit').
+  await page.goto(FARM_SCALE_URL);
 
   await expect(controls(page).draw).toBeEnabled();
   await expect(mapCanvas(page)).toBeVisible();
@@ -344,6 +353,8 @@ test('Selección de parcelas starts a new selection with an empty map', async ({
   await expect(analyze).toBeHidden();
 
   // A fresh drawing works as on a first visit, and its analysis lands on Todas again.
+  // (Zoomed in again: the reset put the camera back on the country-wide view.)
+  await zoomToFarmScale(page);
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await expect(analyze).toBeEnabled();

@@ -39,15 +39,15 @@ const PRJ =
   'PARAMETER["Central_Meridian",-57.0],PARAMETER["Scale_Factor",0.9996],' +
   'PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]';
 
-/** The farms, as lon/lat rings (clockwise, as the shapefile spec wants outer rings). */
+/** The farms, as lon/lat rings (clockwise, as the shapefile spec wants outer rings): about 2 km a side, under the area limit. */
 const FARMS = [
   {
     name: 'Estancia San Pedro',
     ring: [
       [-59.4, -24.4],
-      [-59.4, -22.4],
-      [-57.4, -22.4],
-      [-57.4, -24.4],
+      [-59.4, -24.38],
+      [-59.38, -24.38],
+      [-59.38, -24.4],
       [-59.4, -24.4],
     ],
   },
@@ -55,9 +55,9 @@ const FARMS = [
     name: 'Campo Verde',
     ring: [
       [-56.8, -24.8],
-      [-56.8, -24.2],
-      [-56.2, -24.2],
-      [-56.2, -24.8],
+      [-56.8, -24.794],
+      [-56.794, -24.794],
+      [-56.794, -24.8],
       [-56.8, -24.8],
     ],
   },
