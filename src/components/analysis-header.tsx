@@ -8,9 +8,8 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { RISK_TABS } from '@/lib/nav-links';
 import { analysedParcelIdsAtom } from '@/store/analysis';
 
-/** The title row's buttons: a 44px pill, or on a mobile device half the row with the icon over the label. */
-export const ACTION_CLASS =
-  'h-11 rounded-2xl px-8 font-normal max-md:h-auto max-md:flex-1 max-md:flex-col max-md:gap-2.5 max-md:py-4';
+/** The title row's buttons: a 44px pill, icon beside the label; on a mobile device each takes its share of the row. */
+export const ACTION_CLASS = 'h-11 rounded-2xl px-8 font-normal max-md:flex-1 max-md:px-4';
 
 /**
  * What both analysis pages put above their widgets: the hero with one tab per parcel
