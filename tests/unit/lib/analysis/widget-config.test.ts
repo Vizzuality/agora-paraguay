@@ -47,9 +47,6 @@ describe('widgetFor', () => {
   it("productivo: an open number is one parcel's figure or, under Todas, the set's histogram", () => {
     expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual' })).toBe('number');
     expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');
-    expect(widgetFor({ type: 'number' }, { riesgo: 'productivo', scope: 'multiple' })).toBe(
-      'histogram',
-    );
   });
 
   it('a category follows the scope on both riesgos: one parcel on the ruler, several counted', () => {

@@ -58,7 +58,6 @@ export function widgetFor(
     case 'text':
       return 'fact';
     case 'numeric':
-    case 'number':
       return numberWidget(riesgo, scope, 'number', 'histogram');
   }
 }
