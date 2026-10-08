@@ -4,7 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 
 import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
-import { drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
+import {
+  drawPolygon,
+  FARM_SCALE_URL,
+  mapCanvas,
+  stubBasemap,
+  yellowPixelCount,
+  zoomToFarmScale,
+} from './fixtures/map';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -33,7 +40,9 @@ function controls(page: Page) {
 test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
-  await page.goto('/');
+  // Zoomed in to farm scale: at the opening zoom the test triangle covers a department,
+  // over the area limit (see 'a drawing over the area limit').
+  await page.goto(FARM_SCALE_URL);
 
   // Terra Draw starts on the style's `load` event, and the Draw button is disabled until
   // it has: waiting on that is what makes the rest of the spec deterministic.
@@ -109,7 +118,9 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
     .poll(() => Object.fromEntries(new URL(page.url()).searchParams), { timeout: 5_000 })
     .toEqual({ lng: '-58.44', lat: '-23.44', zoom: '5.5' });
 
-  // A fresh session works exactly like the first one.
+  // A fresh session works exactly like the first one (zoomed in again: the opening view
+  // makes the test triangle a department, over the area limit).
+  await zoomToFarmScale(page);
   await draw.click();
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
@@ -200,4 +211,42 @@ test('a rejected drawing does not taint the upload that follows', async ({ page 
   await expect(page.getByRole('status', { name: 'Estado de la selección' })).toContainText(
     'Se importaron 3 áreas de farms.geojson.',
   );
+});
+
+// The areas are measured before anything is asked: at the country-wide opening zoom the
+// test triangle covers hundreds of thousands of hectares, over the limit, and is
+// rejected the way an out-of-coverage answer is — but `filter-parcels` never runs.
+test('a drawing over the area limit is rejected back to step 1 without asking the API', async ({
+  page,
+}) => {
+  const { draw, analyze, currentStep } = controls(page);
+  const notice = page.getByRole('region', { name: 'Aviso de área' });
+
+  let requests = 0;
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
+    (route) => {
+      requests += 1;
+
+      return route.fallback();
+    },
+  );
+
+  await page.goto('/');
+  await expect(draw).toBeEnabled();
+  await expect(mapCanvas(page)).toBeVisible();
+
+  await draw.click();
+  await drawPolygon(page, POLYGON);
+
+  await expect(currentStep).toContainText('Paso 1');
+  await expect(analyze).toBeHidden();
+  await expect(notice).toContainText('Ha habido un error.');
+  await expect(notice).toContainText(/supera el máximo de 100\.000 ha/);
+  await expect(draw).toHaveClass(/(^| )border-destructive( |$)/);
+  expect(requests).toBe(0);
+
+  // Dismissed, the next drawing starts clean.
+  await notice.getByRole('button', { name: 'Descartar el aviso de área' }).click();
+  await expect(notice).toBeHidden();
 });

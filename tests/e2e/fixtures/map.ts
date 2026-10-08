@@ -15,6 +15,41 @@ const BLANK_TILE = Buffer.from(
  * dependent on someone else's uptime, and none of what they assert is about tiles.
  * The inline style loads regardless, and `load` is what starts Terra Draw.
  */
+/**
+ * The opening view zoomed to farm scale. At the country-wide default (zoom 5.5) a
+ * sixty-pixel test triangle covers hundreds of thousands of hectares, over the area
+ * limit, and would be rejected before `filter-parcels` is asked.
+ */
+export const FARM_SCALE_URL = '/?lng=-58.44&lat=-23.44&zoom=12';
+
+/** The camera zoom as the URL holds it; the opening view's when nothing is written yet. */
+function urlZoom(page: Page): number {
+  return Number(new URL(page.url()).searchParams.get('zoom') ?? 5.5);
+}
+
+/**
+ * Zooms the opening view in to farm scale without reloading (the map's own control),
+ * for flows that come back to the country-wide view and draw again. One step at a
+ * time: each click eases the camera and a second click mid-ease would cut the first
+ * short, so every step waits for its own camera write before the next.
+ */
+export async function zoomToFarmScale(page: Page, target = 12): Promise<void> {
+  const before = urlZoom(page);
+
+  if (before >= target) return;
+
+  await page.getByRole('button', { name: 'Acercar' }).click();
+
+  // The camera is written to the URL throttled after moveend; a zoom-in step adds one.
+  await page.waitForFunction(
+    (reached) => Number(new URL(window.location.href).searchParams.get('zoom')) >= reached,
+    before + 0.9,
+    { timeout: 5_000 },
+  );
+
+  return zoomToFarmScale(page, target);
+}
+
 export async function stubBasemap(page: Page) {
   await page.route('https://server.arcgisonline.com/**', (route) =>
     route.fulfill({ contentType: 'image/png', body: BLANK_TILE }),
