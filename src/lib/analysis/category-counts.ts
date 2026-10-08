@@ -26,24 +26,9 @@ export { categoryAxis };
 export type CategoryColumn = {
   label: string;
   count: number;
-  /** The bar's hue, in the ruler's vocabulary: blue, grey, orange, red. */
+  /** The bar's hue: the band the ruler paints the same class with (`classTones`). */
   tone: RiskTone;
 };
-
-/**
- * The design paints a category by its magnitude word, whatever the indicator: "Bajo"
- * and "Muy bajo" grey, "Medio" and "Media" blue, "Alto" orange (the design's
- * volatility state). Read off the label: low words grey, high words orange, everything
- * else blue — so "Estable", "Moderado" and "Positiva" are blue.
- */
-export function categoryTone(label: string): RiskTone {
-  const word = label.trim().toLowerCase();
-
-  if (/^(muy )?baj[oa]$/.test(word)) return 'medium';
-  if (/^(muy )?alt[oa]$/.test(word) || word === 'alerta') return 'elevated';
-
-  return 'low';
-}
 
 export type CategoryCountWidget = {
   id: string;
@@ -70,10 +55,7 @@ function countingFor(indicator: Indicator): Counting | undefined {
       const axis = categoryAxis(type.categories);
 
       return {
-        classes: categoryClasses(type.categories).map((riskClass) => ({
-          ...riskClass,
-          tone: categoryTone(riskClass.label),
-        })),
+        classes: categoryClasses(type.categories),
         classOf: (parcel) => {
           const value = readingOf(parcel, indicator.id);
           const index = value === undefined ? undefined : categoryIndex(value, type.categories);

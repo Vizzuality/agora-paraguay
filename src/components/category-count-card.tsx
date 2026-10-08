@@ -7,7 +7,7 @@ type CategoryCountCardProps = Omit<CategoryCountWidget, 'id'> & { className?: st
 /**
  * Widget counting the analysed parcels per category (the "Categorical multiple"
  * design): the indicator's name, one column per category with the count over a bar
- * coloured by the class (`categoryTone`), a baseline and the category names. Empty
+ * coloured by the class (`classTones`), a baseline and the category names. Empty
  * categories keep their slot. The counts are listed for assistive tech; the chart is
  * decoration over that list.
  */

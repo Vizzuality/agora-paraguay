@@ -54,7 +54,9 @@
   --color-widget: var(--widget);
   --color-widget-foreground: var(--widget-foreground);
   --color-highlight: var(--highlight);
+  --color-risk-none: var(--risk-none);
   --color-risk-low: var(--risk-low);
+  --color-risk-neutral: var(--risk-neutral);
   --color-risk-medium: var(--risk-medium);
   --color-risk-high: var(--risk-high);
   --color-parcel: var(--parcel);
@@ -106,17 +108,24 @@
   --widget: #13294f;
   --widget-foreground: #ffffff;
   --highlight: #ec6e00; /* step progress, hardcoded in the design */
-  /* Risk ruler by class: bajo, medio, alto. The design hardcodes the first two; alto reuses the alert red. */
-  --risk-low: #2a7bf1;
-  --risk-medium: #ec6e00;
-  --risk-high: var(--destructive);
   /* The selected-parcel yellow; the map paints the same hex in `draw-styles.ts`. */
   --parcel: #f1ff28;
-  --chart-1: #3d8f5f;
-  --chart-2: #4a90c2;
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /*
+    Chart tones, the "custom" group of the 1.0 Theme collection, one value per mode so
+    they keep contrast on the light card and on the navy one: blue, grey, orange, red,
+    green.
+  */
+  --chart-1: #2a7bf1;
+  --chart-2: #657690;
+  --chart-3: #e06900;
+  --chart-4: #ec1919;
+  --chart-5: #109704;
+  /* The band a risk class paints, by tone: none green, bajo blue, the grey middle, medio orange, alto red. */
+  --risk-none: var(--chart-5);
+  --risk-low: var(--chart-1);
+  --risk-neutral: var(--chart-2);
+  --risk-medium: var(--chart-3);
+  --risk-high: var(--chart-4);
 }
 
 /*
@@ -148,11 +157,11 @@
   --border: rgb(255 255 255 / 30%);
   --input: rgb(255 255 255 / 30%);
   --ring: #94a3b8; /* slate-400 */
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --chart-1: #4c95ff;
+  --chart-2: #96a3b5;
+  --chart-3: #ff871f;
+  --chart-4: #ff3838;
+  --chart-5: #1af807;
 }
 
 /*

@@ -7,10 +7,10 @@ import type { IndicatorType, Riesgo } from '@/lib/api/metadata/schemas';
  */
 
 /**
- * The ruler band a class paints: blue, grey, orange, red (`--risk-low`, muted,
- * `--risk-medium`, `--risk-high`).
+ * The ruler band a class paints: green, blue, grey, orange, red (`--risk-none`,
+ * `--risk-low`, `--risk-neutral`, `--risk-medium`, `--risk-high`).
  */
-export type RiskTone = 'low' | 'medium' | 'elevated' | 'high';
+export type RiskTone = 'none' | 'low' | 'medium' | 'elevated' | 'high';
 
 /** One class an indicator is read in: the word the widget prints and the band it sits on. */
 export type RiskClass = { label: string; tone: RiskTone };
@@ -111,9 +111,10 @@ export function categoryAxis(categories: readonly string[]): string[] {
 }
 
 /**
- * The band colours for a class count, from the design's colour scales:
- * four classes run blue, grey, orange, red; three drop the orange; two face off blue
- * against red; one is orange alone. More than four keep the ends and grey the middle.
+ * The band colours for a class count, from the design's colour scales: five classes run
+ * green, blue, grey, orange, red; four drop the green; three drop the orange too; two
+ * face off blue against red; one is orange alone. More than five keep the four coloured
+ * ends and grey the middle.
  */
 export function classTones(count: number): RiskTone[] {
   switch (count) {
@@ -125,15 +126,19 @@ export function classTones(count: number): RiskTone[] {
       return ['low', 'high'];
     case 3:
       return ['low', 'medium', 'high'];
+    case 4:
+      return ['low', 'medium', 'elevated', 'high'];
     default:
       return Array.from({ length: count }, (_, index) =>
         index === 0
-          ? 'low'
-          : index === count - 1
-            ? 'high'
-            : index === count - 2
-              ? 'elevated'
-              : 'medium',
+          ? 'none'
+          : index === 1
+            ? 'low'
+            : index === count - 1
+              ? 'high'
+              : index === count - 2
+                ? 'elevated'
+                : 'medium',
       );
   }
 }
