@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import { selectionStep } from '@/lib/selection-steps';
+import { selectionStep, selectionView } from '@/lib/selection-steps';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { resetParcelTogglesAtom } from '@/store/parcels';
 
@@ -11,10 +11,17 @@ export const selectionStepAtom = atom((get) => {
   return selectionStep({ areaCount: draw.polygons.length, drawing: draw.tool === 'draw' });
 });
 
+/** Which of panel and map a phone shows, derived like the step. */
+export const selectionViewAtom = atom((get) => {
+  const draw = get(drawStateAtom);
+
+  return selectionView({ areaCount: draw.polygons.length, drawing: draw.tool === 'draw' });
+});
+
 /**
  * `filter-parcels` answered with nothing for the areas (outside the cadastre's coverage).
- * The areas are gone from the map; the panel shows the backend's reason (Figma 7288:2099)
- * and outlines the entry point that brought them (7288:2096) until dismissed.
+ * The areas are gone from the map; the panel shows the backend's reason and outlines
+ * the entry point that brought them until dismissed.
  */
 export type AreaRejection = { source: 'draw' | 'upload'; message: string };
 

@@ -20,9 +20,10 @@ import { toggledParcelIdsAtom } from '@/store/parcels';
  * (`parcelQueries.filtered`, painted on the map), and the user may have flipped some by
  * clicking them; Analizar sends the parcels selected after those flips to the analysis
  * page, which runs it (`useAnalysis`) and lands on riesgo sanitario, the public side.
- * Renders inside `<ClientOnly>` (it reads the draw atoms).
+ * Renders inside `<ClientOnly>` (it reads the draw atoms). `layout` is the buttons':
+ * the panel's cards, or the phone's bar under the map.
  */
-export function ConfirmActions() {
+export function ConfirmActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'bar' }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data: parcels, isError, isSuccess } = useQuery(parcelQueries.filtered(polygons));
@@ -45,14 +46,15 @@ export function ConfirmActions() {
   }
   return (
     <section aria-live="polite" className="flex w-full flex-col gap-2">
-      <div className="grid grid-cols-2 gap-1.5">
-        <ActionCardButton icon={Undo2} onClick={() => restart()}>
+      <div className={layout === 'card' ? 'grid grid-cols-2 gap-1.5' : 'flex gap-2'}>
+        <ActionCardButton icon={Undo2} layout={layout} onClick={() => restart()}>
           Reiniciar
         </ActionCardButton>
 
         <ActionCardButton
           variant="default"
           icon={CircleArrowRight}
+          layout={layout}
           disabled={parcelIds.length === 0}
           onClick={analyze}
         >

@@ -7,8 +7,9 @@ import { ResetPasswordCard } from '@/components/auth/reset-password-card';
 export type AuthView = 'login' | 'reset';
 
 /**
- * The private-content gate (Figma 5180:12021): empty widget frames around the login
- * card, or around the reset card once the user asks to reset the password.
+ * The private-content gate: empty widget frames around the login
+ * card, or around the reset card once the user asks to reset the password. On a
+ * mobile device the card stands alone, full width.
  *
  * As the server-rendered fallback (`hydrating`) the card is inert, fields and button: a
  * submit before React takes over would be a native one, reloading the page with the
@@ -29,7 +30,7 @@ export function LoginGate({ hydrating = false }: Readonly<{ hydrating?: boolean 
         )}
         <WidgetPlaceholder />
       </div>
-      <div className="flex h-28 gap-4">
+      <div className="flex h-28 gap-4 max-md:hidden">
         <WidgetPlaceholder />
         <WidgetPlaceholder />
       </div>
@@ -37,7 +38,9 @@ export function LoginGate({ hydrating = false }: Readonly<{ hydrating?: boolean 
   );
 }
 
-/** Empty widget frame behind the gate (Figma 5180:11125). */
+/** Empty card used as placeholder. */
 function WidgetPlaceholder() {
-  return <div aria-hidden className="min-w-50 flex-1 rounded-3xl border-3 border-border" />;
+  return (
+    <div aria-hidden className="min-w-50 flex-1 rounded-3xl border-3 border-border max-md:hidden" />
+  );
 }
