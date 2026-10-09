@@ -799,4 +799,19 @@ test('exports the productivo report as the page printed', async ({ page }) => {
 
   const pdf = await page.pdf({ format: 'A4' });
   expect(pdf.byteLength).toBeGreaterThan(1_000);
+
+  // With a parcel's tab open the report follows it, like the widgets: that parcel and
+  // its area on one line, no table, no total.
+  await page.emulateMedia({ media: 'screen' });
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page
+    .getByRole('group', { name: 'Parcela' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Parcela 1' })
+    .getByRole('button')
+    .click();
+  await page.emulateMedia({ media: 'print' });
+  await expect(table).toBeHidden();
+  await expect(info.getByText(/^Parcela 1\s*10,2 ha$/)).toBeVisible();
+  await expect(info.getByText('Todas')).toBeHidden();
 });

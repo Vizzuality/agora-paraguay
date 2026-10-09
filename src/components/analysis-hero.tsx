@@ -252,10 +252,11 @@ function MiniMapThumbnail() {
 }
 
 /**
- * The report's stand-in for the tabs and the mini map: every analysed parcel with its
- * area, the open one marked, the total under Todas. A single parcel is one line, not a
- * table. Same answer the thumbnail reads (`useParcelArea`): the sanitario analysis
- * carries the area column.
+ * The report's stand-in for the tabs and the mini map, following the open tab like the
+ * widgets do: under Todas every analysed parcel with its area and the total; with a
+ * parcel's tab open, that parcel alone. A single parcel is one line, not a table. Same
+ * answer the thumbnail reads (`useParcelArea`): the sanitario analysis carries the area
+ * column.
  */
 function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
   const { analysis, indicators } = useAnalysis('sanitario');
@@ -263,8 +264,10 @@ function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
   const answered = (analysis.data?.indicators ?? []).filter((parcel) =>
     parcels.includes(String(parcel.parcel_id)),
   );
-  const rows = parcelAreaRows(answered, parcels, indicators);
-  const total = parcels.length > 1 ? parcelArea(answered, null, indicators) : null;
+  const rows = parcelAreaRows(answered, parcels, indicators).filter(
+    (row) => activeId === null || row.parcelId === activeId,
+  );
+  const total = rows.length > 1 ? parcelArea(answered, null, indicators) : null;
 
   if (rows.length === 1) {
     const [{ parcelId, area }] = rows;
