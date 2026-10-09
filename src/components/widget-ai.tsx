@@ -63,7 +63,7 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
           <Button
             type="button"
             variant="outline"
-            className="h-11 shrink-0 rounded-2xl px-8 font-normal"
+            className="h-11 shrink-0 rounded-2xl px-8 font-normal print:hidden"
             onClick={() => mutation.mutate({ parcels })}
           >
             <RefreshCw aria-hidden />
@@ -74,7 +74,7 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
             type="button"
             // Generando is disabled against a double request but stays full-strength.
             className={cn(
-              'h-11 shrink-0 rounded-2xl px-8 font-normal',
+              'h-11 shrink-0 rounded-2xl px-8 font-normal print:hidden',
               mutation.isPending && 'disabled:opacity-100',
             )}
             disabled={mutation.isPending || parcels.length === 0}

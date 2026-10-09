@@ -83,30 +83,56 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   }
 
   return (
-    <div className="grid gap-x-3 gap-y-6 md:grid-cols-2">
-      {filters ? (
-        orderHeroFilters(filters).map((filter) => (
-          <HeroField
-            key={filter.id}
-            filter={filter}
-            description={
-              filter.description && describeWithFilters(filter.description, filters, resolved)
-            }
-            value={resolved[filter.id] ?? ''}
-            onChange={(value) => setFilter({ id: filter.id, value })}
-            // The crop closes the grid on a row of its own.
-            className={filter.id === CROP_FILTER_ID ? 'md:col-span-2' : undefined}
-          />
-        ))
-      ) : (
-        // Placeholder: two disabled selects hold the layout until the filters land.
-        <>
-          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
-          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
-        </>
+    <>
+      {/* The report's info zone: the filters in force as plain text, in place of the
+          controls (agreed with design in lieu of a PDF layout). */}
+      {filters && (
+        <dl className="hidden grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm print:grid">
+          {orderHeroFilters(filters).map((filter) => (
+            <div key={filter.id} className="contents">
+              <dt className="text-muted-foreground">{filter.name}</dt>
+              <dd>{filterValueLabel(filter, resolved[filter.id] ?? '')}</dd>
+            </div>
+          ))}
+        </dl>
       )}
-    </div>
+
+      <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 print:hidden">
+        {filters ? (
+          orderHeroFilters(filters).map((filter) => (
+            <HeroField
+              key={filter.id}
+              filter={filter}
+              description={
+                filter.description && describeWithFilters(filter.description, filters, resolved)
+              }
+              value={resolved[filter.id] ?? ''}
+              onChange={(value) => setFilter({ id: filter.id, value })}
+              // The crop closes the grid on a row of its own.
+              className={filter.id === CROP_FILTER_ID ? 'md:col-span-2' : undefined}
+            />
+          ))
+        ) : (
+          // Placeholder: two disabled selects hold the layout until the filters land.
+          <>
+            <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+            <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+          </>
+        )}
+      </div>
+    </>
   );
+}
+
+/** What the report prints for a filter: the option's label for a category, the date as is. */
+function filterValueLabel(filter: Filter, value: string): string {
+  const field = filter.field_type;
+
+  if (field.type === 'category') {
+    return field.options.find((option) => option.value === value)?.label ?? value;
+  }
+
+  return value;
 }
 
 /** The control a filter's `field_type` calls for. */
@@ -196,16 +222,25 @@ function MiniMapThumbnail() {
   const area = useParcelArea();
 
   return (
-    <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px]">
-      <MiniMap />
+    <>
+      {/* The map does not print (a WebGL canvas comes out blank); the area does. */}
+      <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px] print:hidden">
+        <MiniMap />
+        {area && (
+          <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
+            <span className="text-[36px] font-light tracking-[0.408px] text-white">
+              {formatArea(area)}
+            </span>
+          </div>
+        )}
+      </div>
       {area && (
-        <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
-          <span className="text-[36px] font-light tracking-[0.408px] text-white">
-            {formatArea(area)}
-          </span>
-        </div>
+        <p className="hidden text-sm print:block">
+          <span className="text-muted-foreground">Área </span>
+          {formatArea(area)}
+        </p>
       )}
-    </div>
+    </>
   );
 }
 
@@ -303,11 +338,26 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   };
 
   return (
-    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1">
-      <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
+    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:h-auto print:border-0 print:p-0">
+      <legend className={cn(FLOATING_CHIP_CLASS, 'print:hidden')}>Parcela</legend>
+      {/* The report lists every analysed parcel, the open one underlined, with nothing to
+          scroll or click. */}
+      <ul className="hidden flex-wrap gap-x-5 gap-y-1 text-sm print:flex">
+        {tabs.map((tab, index) => (
+          <li
+            key={tab}
+            className={cn(
+              'py-1',
+              index === activeIndex && 'border-b-[3px] border-primary text-primary',
+            )}
+          >
+            {tabLabel(tab, parcels)}
+          </li>
+        ))}
+      </ul>
       {/* Clipped on the fieldset's own radius, so a tab scrolled under the rounded
           corner does not show its underline outside the border. */}
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-l-2xl">
+      <div className="relative min-w-0 flex-1 overflow-hidden rounded-l-2xl print:hidden">
         {!atStart && (
           <div
             aria-hidden
@@ -357,7 +407,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atStart}
         onClick={() => scroll('left')}
         aria-label="Parcelas anteriores"
-        className="size-8 rounded-full disabled:opacity-30"
+        className="size-8 rounded-full disabled:opacity-30 print:hidden"
       >
         <ArrowLeft />
       </Button>
@@ -368,7 +418,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atEnd}
         onClick={() => scroll('right')}
         aria-label="Parcelas siguientes"
-        className="size-8 rounded-full disabled:opacity-30"
+        className="size-8 rounded-full disabled:opacity-30 print:hidden"
       >
         <ArrowRight />
       </Button>
@@ -381,7 +431,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
             // Nothing to choose from with a single tab.
             disabled={tabs.length === 1}
             aria-label="Ver lista de parcelas"
-            className="size-8 rounded-full disabled:opacity-30"
+            className="size-8 rounded-full disabled:opacity-30 print:hidden"
           >
             <ChevronDown />
           </Button>

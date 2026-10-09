@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
  */
 export function WidgetGrid({ children }: Readonly<{ children?: ReactNode }>) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(389px,100%),1fr))] gap-4">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(389px,100%),1fr))] gap-4 print:grid-cols-2">
       {children}
     </div>
   );

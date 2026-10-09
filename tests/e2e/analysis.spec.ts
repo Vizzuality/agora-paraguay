@@ -710,3 +710,49 @@ test('logs in from the header dialog', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 });
+
+// The report is the productivo page printed. The print dialog cannot be driven, so the
+// click is checked by the file name it hands the browser (the document title at print
+// time), and the report itself under print media: no nav, no footer, no buttons, the
+// hero filters as plain information, and the browser able to render it to a PDF.
+test('exports the productivo report as the page printed', async ({ page }) => {
+  await analyzeFirstPolygon(page);
+  await page.getByRole('banner').getByRole('link', { name: 'Riesgo productivo' }).click();
+  await page.getByLabel('Email').fill('analista@example.com');
+  await page.getByLabel('Contraseña').fill('cualquiera');
+  await page.getByRole('button', { name: 'Acceder' }).click();
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeEnabled();
+
+  await page.evaluate(() => {
+    window.print = () => {
+      document.body.dataset.printedAs = document.title;
+    };
+  });
+  await page.getByRole('button', { name: 'Exportar informe' }).click();
+  await expect(page.locator('body')).toHaveAttribute(
+    'data-printed-as',
+    `agora-productivo-${TODAY}`,
+  );
+
+  await page.emulateMedia({ media: 'print' });
+
+  await expect(page.getByRole('banner')).toBeHidden();
+  await expect(page.getByRole('contentinfo')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Exportar informe' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Personalizar indicadores' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Generar resumen' })).toBeHidden();
+  await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Ver lista de parcelas' })).toBeHidden();
+
+  // The info zone: each filter as "name — value", the parcel list, the date.
+  const info = page.getByRole('main');
+  await expect(info.getByRole('term').filter({ hasText: 'Tipo de cultivo' })).toBeVisible();
+  await expect(info.getByRole('definition').filter({ hasText: /Arroz|Soja/ })).toBeVisible();
+  await expect(info.getByRole('definition').filter({ hasText: '2026-09-17' })).toBeVisible();
+  await expect(info.getByText('Informe generado el')).toBeVisible();
+  await expect(info.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
+
+  const pdf = await page.pdf({ format: 'A4' });
+  expect(pdf.byteLength).toBeGreaterThan(1_000);
+});

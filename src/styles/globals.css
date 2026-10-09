@@ -237,3 +237,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* The analysis report is the page printed (`printReport`): the chrome is hidden with
+   `print:` utilities where it lives; here only what no utility expresses. Card and chart
+   colours are kept rather than bleached by the browser's ink saving. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    print-color-adjust: exact;
+  }
+}
