@@ -438,7 +438,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await expect(allTab).toHaveAttribute('aria-current', 'true');
   await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
   await expect(level).toHaveCount(0);
-  await expect(page.getByText('17,5 ha')).toBeVisible();
+  await expect(page.getByText('17,5 ha').filter({ visible: true })).toBeVisible();
   await expect.poll(() => analysisRuns.length).toBe(1);
 
   // The list button opens a single-choice menu — Todas, then the analysed parcels — with
@@ -455,7 +455,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
   await expect(allTab).not.toHaveAttribute('aria-current', 'true');
   await expect(level).toHaveText('Sin riesgo');
-  await expect(page.getByText('7,3 ha')).toBeVisible();
+  await expect(page.getByText('7,3 ha').filter({ visible: true })).toBeVisible();
 
   // Back to Todas from the strip: both parcels paint again, the frame fits them both.
   // The two stubbed parcels split the drawn bbox down the middle and are taller than
@@ -477,7 +477,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await canvas.click({ position: { x: centre.x - offset, y: centre.y } });
   await expect(westTab).toHaveAttribute('aria-current', 'true');
   await expect(level).toHaveText('Severo');
-  await expect(page.getByText('10,2 ha')).toBeVisible();
+  await expect(page.getByText('10,2 ha').filter({ visible: true })).toBeVisible();
   await page.waitForTimeout(FIT_ANIMATION);
   await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
 
@@ -639,7 +639,7 @@ test('logs in from the header dialog', async ({ page }) => {
     .locator('..')
     .locator('..');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
-  await expect(page.getByText('17,5 ha')).toBeVisible();
+  await expect(page.getByText('17,5 ha').filter({ visible: true })).toBeVisible();
   // A short range (seasons detected, 0–8) is a count, not a risk: one bin per value on its
   // own scale, each parcel's value named outright.
   const seasons = page
