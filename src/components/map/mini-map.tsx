@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
-import { useState } from 'react';
-import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import Map, { AttributionControl, Layer, Source, useMap } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { parcelQueries } from '@/lib/api/parcels/queries';
@@ -13,6 +13,7 @@ import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
+import { paperLayoutAtom, reportMapAtom } from '@/store/report';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
@@ -75,6 +76,7 @@ export function MiniMap() {
         zoom={zoom}
       />
       <MiniMapBehaviour />
+      <ReportSnapshot />
       {(parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
           <Layer type="fill" paint={{ 'fill-color': AREA_COLOR, 'fill-opacity': 0.5 }} />
@@ -89,6 +91,43 @@ export function MiniMap() {
 function MiniMapBehaviour() {
   useAnalysedParcelClick();
   useFitActiveParcel();
+
+  return null;
+}
+
+/**
+ * The map for the report: a WebGL canvas prints blank, so while the page is laid out for
+ * paper (`printReport`) the map is rendered to an image the hero prints in its place.
+ * Taken once the map has settled at paper width with its tiles in (`idle`), from inside
+ * a render — the only moment the canvas can be read without preserving its buffer.
+ */
+function ReportSnapshot() {
+  const { current: map } = useMap();
+  const paperLayout = useAtomValue(paperLayoutAtom);
+  const setSnapshot = useSetAtom(reportMapAtom);
+
+  useEffect(() => {
+    if (!paperLayout || !map) return;
+
+    const instance = map.getMap();
+    let cancelled = false;
+
+    const take = () => {
+      instance.once('render', () => {
+        if (!cancelled) setSnapshot(instance.getCanvas().toDataURL('image/png'));
+      });
+      instance.triggerRepaint();
+    };
+
+    instance.once('idle', take);
+    // A repaint guarantees an `idle` even when the paper layout changed nothing.
+    instance.triggerRepaint();
+
+    return () => {
+      cancelled = true;
+      instance.off('idle', take);
+    };
+  }, [paperLayout, map, setSnapshot]);
 
   return null;
 }

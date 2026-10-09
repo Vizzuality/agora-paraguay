@@ -438,7 +438,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await expect(allTab).toHaveAttribute('aria-current', 'true');
   await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
   await expect(level).toHaveCount(0);
-  await expect(page.getByText('17,5 ha')).toBeVisible();
+  await expect(page.getByText('17,5 ha').filter({ visible: true })).toBeVisible();
   await expect.poll(() => analysisRuns.length).toBe(1);
 
   // The list button opens a single-choice menu — Todas, then the analysed parcels — with
@@ -455,7 +455,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await expect(eastTab).toHaveAttribute('aria-current', 'true');
   await expect(allTab).not.toHaveAttribute('aria-current', 'true');
   await expect(level).toHaveText('Sin riesgo');
-  await expect(page.getByText('7,3 ha')).toBeVisible();
+  await expect(page.getByText('7,3 ha').filter({ visible: true })).toBeVisible();
 
   // Back to Todas from the strip: both parcels paint again, the frame fits them both.
   // The two stubbed parcels split the drawn bbox down the middle and are taller than
@@ -477,7 +477,7 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   await canvas.click({ position: { x: centre.x - offset, y: centre.y } });
   await expect(westTab).toHaveAttribute('aria-current', 'true');
   await expect(level).toHaveText('Severo');
-  await expect(page.getByText('10,2 ha')).toBeVisible();
+  await expect(page.getByText('10,2 ha').filter({ visible: true })).toBeVisible();
   await page.waitForTimeout(FIT_ANIMATION);
   await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
 
@@ -639,7 +639,7 @@ test('logs in from the header dialog', async ({ page }) => {
     .locator('..')
     .locator('..');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
-  await expect(page.getByText('17,5 ha')).toBeVisible();
+  await expect(page.getByText('17,5 ha').filter({ visible: true })).toBeVisible();
   // A short range (seasons detected, 0–8) is a count, not a risk: one bin per value on its
   // own scale, each parcel's value named outright.
   const seasons = page
@@ -709,4 +709,109 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(page.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+});
+
+// The report is the productivo page printed. The print dialog cannot be driven, so the
+// click is checked by the file name it hands the browser (the document title at print
+// time), and the report itself under print media: no nav, no footer, no buttons, the
+// hero filters as plain information, and the browser able to render it to a PDF.
+test('exports the productivo report as the page printed', async ({ page }) => {
+  await analyzeFirstPolygon(page);
+  await page.getByRole('banner').getByRole('link', { name: 'Riesgo productivo' }).click();
+  await page.getByLabel('Email').fill('analista@example.com');
+  await page.getByLabel('Contraseña').fill('cualquiera');
+  await page.getByRole('button', { name: 'Acceder' }).click();
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeEnabled();
+
+  // A report printed mid-generation would go out without the summary: Exportar waits.
+  const exportButton = page.getByRole('button', { name: 'Exportar informe' });
+  await page.getByRole('button', { name: 'Generar resumen' }).click();
+  await expect(exportButton).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+  await expect(exportButton).toBeEnabled();
+
+  await page.evaluate(() => {
+    window.print = () => {
+      document.body.dataset.printedAs = document.title;
+    };
+  });
+  await page.getByRole('button', { name: 'Exportar informe' }).click();
+  await expect(page.locator('body')).toHaveAttribute(
+    'data-printed-as',
+    `agora-productivo-${TODAY}`,
+  );
+
+  await page.emulateMedia({ media: 'print' });
+
+  await expect(page.getByRole('banner')).toBeHidden();
+  await expect(page.getByRole('contentinfo')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Exportar informe' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Personalizar indicadores' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Generar resumen' })).toBeHidden();
+  await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Ver lista de parcelas' })).toBeHidden();
+
+  // The info zone: each filter as "name — value", the parcels with their areas in place
+  // of the tabs and the map, the date; the brand where the nav and footer were.
+  const info = page.getByRole('main');
+  await expect(info.getByRole('term').filter({ hasText: 'Tipo de cultivo' })).toBeVisible();
+  await expect(info.getByRole('definition').filter({ hasText: /Arroz|Soja/ })).toBeVisible();
+  await expect(info.getByRole('definition').filter({ hasText: '2026-09-17' })).toBeVisible();
+  await expect(info.getByText('Informe generado el')).toBeVisible();
+  await expect(info.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
+
+  const table = info.getByRole('table', { name: 'Parcelas analizadas' });
+  await expect(table.getByRole('row')).toHaveText([
+    // Cell texts run together in a row's text, hence `\s*`.
+    /Parcela\s*Área/,
+    /Parcela 1\s*10,2 ha/,
+    /Parcela 2\s*7,3 ha/,
+    /Todas\s*17,5 ha/,
+  ]);
+  // Visible ones: the nav's and footer's logos are display-none, still in the DOM.
+  await expect(page.getByText('LOGO').filter({ visible: true })).toHaveCount(2);
+  await expect(info.getByRole('img', { name: 'Mapa de las parcelas analizadas' })).toBeVisible();
+
+  // Paper is narrower than the screen (A4 is under the `md` breakpoint) and the page is
+  // not re-measured for it: the title still prints, the summary takes the card's whole
+  // width without its button, and a chart stays inside its card instead of keeping the
+  // screen's width.
+  await page.setViewportSize({ width: 794, height: 1123 });
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+  const summary = info.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
+  const summaryCard = summary.locator('..').locator('..');
+  const [summaryBox, summaryCardBox] = await Promise.all([
+    summary.boundingBox(),
+    summaryCard.boundingBox(),
+  ]);
+  expect(summaryBox && summaryCardBox && summaryBox.width / summaryCardBox.width).toBeGreaterThan(
+    0.85,
+  );
+  const chart = info.locator('svg[data-slot="chart"]').first();
+  const chartCard = chart.locator('xpath=ancestor::*[@data-slot="card"][1]');
+  const [chartBox, chartCardBox] = await Promise.all([
+    chart.boundingBox(),
+    chartCard.boundingBox(),
+  ]);
+  if (!chartBox || !chartCardBox) throw new Error('The chart or its card has no box');
+  expect(chartBox.x + chartBox.width).toBeLessThanOrEqual(chartCardBox.x + chartCardBox.width);
+
+  const pdf = await page.pdf({ format: 'A4' });
+  expect(pdf.byteLength).toBeGreaterThan(1_000);
+
+  // With a parcel's tab open the report follows it, like the widgets: that parcel and
+  // its area on one line, no table, no total.
+  await page.emulateMedia({ media: 'screen' });
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page
+    .getByRole('group', { name: 'Parcela' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Parcela 1' })
+    .getByRole('button')
+    .click();
+  await page.emulateMedia({ media: 'print' });
+  await expect(table).toBeHidden();
+  await expect(info.getByText(/^Parcela 1\s*10,2 ha$/)).toBeVisible();
+  await expect(info.getByText('Todas')).toBeHidden();
 });

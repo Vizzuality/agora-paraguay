@@ -11,7 +11,7 @@ import { Logo } from '@/components/logo';
  */
 export function NavBar({ children, below }: Readonly<{ children?: ReactNode; below?: ReactNode }>) {
   return (
-    <header className="flex w-full flex-col">
+    <header className="flex w-full flex-col print:hidden">
       <div className="flex w-full items-center justify-between p-2 md:p-10">
         <Link to="/" aria-label="Inicio">
           <Logo className="h-[30px] w-auto text-primary" />
