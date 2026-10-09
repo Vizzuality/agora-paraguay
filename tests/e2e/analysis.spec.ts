@@ -763,12 +763,39 @@ test('exports the productivo report as the page printed', async ({ page }) => {
 
   const table = info.getByRole('table', { name: 'Parcelas analizadas' });
   await expect(table.getByRole('row')).toHaveText([
-    /Parcela\s+Área/,
-    /Parcela 1\s+10,2 ha/,
-    /Parcela 2\s+7,3 ha/,
-    /Todas\s+17,5 ha/,
+    // Cell texts run together in a row's text, hence `\s*`.
+    /Parcela\s*Área/,
+    /Parcela 1\s*10,2 ha/,
+    /Parcela 2\s*7,3 ha/,
+    /Todas\s*17,5 ha/,
   ]);
-  await expect(page.getByText('LOGO')).toHaveCount(2);
+  // Visible ones: the nav's and footer's logos are display-none, still in the DOM.
+  await expect(page.getByText('LOGO').filter({ visible: true })).toHaveCount(2);
+  await expect(info.getByRole('img', { name: 'Mapa de las parcelas analizadas' })).toBeVisible();
+
+  // Paper is narrower than the screen (A4 is under the `md` breakpoint) and the page is
+  // not re-measured for it: the title still prints, the summary takes the card's whole
+  // width without its button, and a chart stays inside its card instead of keeping the
+  // screen's width.
+  await page.setViewportSize({ width: 794, height: 1123 });
+  await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
+  const summary = info.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
+  const summaryCard = summary.locator('..').locator('..');
+  const [summaryBox, summaryCardBox] = await Promise.all([
+    summary.boundingBox(),
+    summaryCard.boundingBox(),
+  ]);
+  expect(summaryBox && summaryCardBox && summaryBox.width / summaryCardBox.width).toBeGreaterThan(
+    0.85,
+  );
+  const chart = info.locator('svg[data-slot="chart"]').first();
+  const chartCard = chart.locator('xpath=ancestor::*[@data-slot="card"][1]');
+  const [chartBox, chartCardBox] = await Promise.all([
+    chart.boundingBox(),
+    chartCard.boundingBox(),
+  ]);
+  if (!chartBox || !chartCardBox) throw new Error('The chart or its card has no box');
+  expect(chartBox.x + chartBox.width).toBeLessThanOrEqual(chartCardBox.x + chartCardBox.width);
 
   const pdf = await page.pdf({ format: 'A4' });
   expect(pdf.byteLength).toBeGreaterThan(1_000);

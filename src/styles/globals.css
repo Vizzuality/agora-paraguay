@@ -250,3 +250,13 @@
     print-color-adjust: exact;
   }
 }
+
+/* The page at paper width on screen while the print dialog is up (`printReport`): A4
+   portrait less the page margins, so the charts measure the width they will print at,
+   and the mini map renders its image at the size the report shows it (`paper:`). */
+@custom-variant paper (&:is(.paper-layout *));
+
+html.paper-layout body {
+  width: 186mm;
+  margin-inline: auto;
+}

@@ -11,6 +11,7 @@ import {
   HitAreas,
   parcelCount,
   Responsive,
+  SVG_CLASS,
   TICK_ROW,
   ToneGradients,
 } from '@/components/charts/plot';
@@ -67,7 +68,11 @@ function HistogramSvg({
   });
 
   return (
-    <svg width={width} height={HISTOGRAM_HEIGHT + 1 + TICK_ROW} className="block overflow-visible">
+    <svg
+      data-slot="chart"
+      viewBox={`0 0 ${width} ${HISTOGRAM_HEIGHT + 1 + TICK_ROW}`}
+      className={SVG_CLASS}
+    >
       <ToneGradients id={gradientId} />
 
       {bins.map((bin) => {

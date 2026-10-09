@@ -41,14 +41,16 @@ import { useParcelArea } from '@/lib/analysis/use-parcel-area';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import { activeParcelIdAtom, activeParcelTabAtom, setAnalysisFilterAtom } from '@/store/analysis';
+import { reportMapAtom } from '@/store/report';
 
 /**
  * The analysed parcels as tabs, and the filters the API offers for that side of the
  * analysis: the filters are asked for that `riesgo`.
  */
 export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
+  // The report keeps the wide layout: the map beside the parcels and filters.
   return (
-    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
+    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row print:flex-row paper:flex-row">
       <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
@@ -222,10 +224,19 @@ function HeroDate({
  */
 function MiniMapThumbnail() {
   const area = useParcelArea();
+  const reportMap = useAtomValue(reportMapAtom);
 
   return (
     <>
-      {/* The map does not print (a WebGL canvas comes out blank); the area does. */}
+      {/* The map does not print (a WebGL canvas comes out blank): the report gets the
+          image `printReport` had it render instead. */}
+      {reportMap && (
+        <img
+          src={reportMap}
+          alt="Mapa de las parcelas analizadas"
+          className="hidden h-[335px] min-w-0 flex-1 rounded-md object-cover print:block"
+        />
+      )}
       <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px] print:hidden">
         <MiniMap />
         {area && (
@@ -242,8 +253,9 @@ function MiniMapThumbnail() {
 
 /**
  * The report's stand-in for the tabs and the mini map: every analysed parcel with its
- * area, the open one marked, the total under Todas. Same answer the thumbnail reads
- * (`useParcelArea`): the sanitario analysis carries the area column.
+ * area, the open one marked, the total under Todas. A single parcel is one line, not a
+ * table. Same answer the thumbnail reads (`useParcelArea`): the sanitario analysis
+ * carries the area column.
  */
 function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
   const { analysis, indicators } = useAnalysis('sanitario');
@@ -253,6 +265,17 @@ function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
   );
   const rows = parcelAreaRows(answered, parcels, indicators);
   const total = parcels.length > 1 ? parcelArea(answered, null, indicators) : null;
+
+  if (rows.length === 1) {
+    const [{ parcelId, area }] = rows;
+
+    return (
+      <p className="hidden text-sm print:block">
+        <span className="text-muted-foreground">{parcelLabel(parcelId, parcels)} </span>
+        {area ? formatArea(area) : '—'}
+      </p>
+    );
+  }
 
   return (
     <table className="hidden w-full text-sm print:table">

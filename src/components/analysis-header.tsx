@@ -1,5 +1,5 @@
 import { useIsMutating } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { Upload } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,6 +32,7 @@ export const ACTION_CLASS = 'h-11 rounded-2xl px-8 font-normal max-md:flex-1 max
  */
 export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
+  const store = useStore();
   const title = RISK_TABS.find((tab) => tab.riesgo === riesgo)?.label;
   // A report printed mid-generation would go out without the summary: wait for it.
   const generatingSummary =
@@ -42,7 +43,8 @@ export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
       <AnalysisHero riesgo={riesgo} parcels={parcelIds} />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-[66px] font-thin tracking-[0.408px] max-md:sr-only print:text-[40px]">
+        {/* Paper is narrower than `md`: the phone's hidden title would vanish from the report. */}
+        <h1 className="text-[66px] font-thin tracking-[0.408px] max-md:not-print:sr-only print:text-[40px]">
           {title}
         </h1>
 
@@ -55,7 +57,7 @@ export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
               className={ACTION_CLASS}
               disabled={generatingSummary}
               title={generatingSummary ? 'Espere a que termine el resumen del análisis' : undefined}
-              onClick={() => printReport(reportFileName(riesgo, new Date()))}
+              onClick={() => printReport(reportFileName(riesgo, new Date()), store)}
             >
               <Upload aria-hidden />
               Exportar informe

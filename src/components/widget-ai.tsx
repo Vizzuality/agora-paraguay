@@ -43,11 +43,14 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
     <Card
       className={cn(
         'min-w-50 flex-col gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
+        // Printed, the summary is body text of the report, not a card.
+        'print:bg-transparent print:p-0',
         className,
       )}
     >
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-2 sm:w-3/4" aria-busy={mutation.isPending}>
+        {/* Three quarters leave the button its column; printed, the button is gone. */}
+        <div className="flex flex-col gap-2 sm:w-3/4 print:w-full" aria-busy={mutation.isPending}>
           <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
 
           <SummaryBody status={mutation.status} text={mutation.data} />

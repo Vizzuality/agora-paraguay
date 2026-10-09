@@ -69,7 +69,7 @@ function EmptySelectionRedirect() {
 /** Print only: the logo at the top and the bottom of the report. */
 function ReportBrand() {
   return (
-    <div className="hidden px-10 py-6 print:block">
+    <div className="hidden px-2 py-6 md:px-10 print:block">
       <Logo className="h-[30px] w-auto text-primary" />
     </div>
   );
