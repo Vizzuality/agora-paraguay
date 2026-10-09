@@ -12,6 +12,7 @@ import { SelectionBlock, SelectionBlockLayout } from '@/components/sidebar/selec
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { useNarrowScreen } from '@/lib/use-narrow-screen';
+import { useSavedSelection } from '@/lib/use-saved-selection';
 import { cn } from '@/lib/utils';
 import { drawPolygonsAtom } from '@/store/draw';
 import { backToSelectionAtom } from '@/store/mode';
@@ -44,6 +45,7 @@ function SelectionPage() {
       >
         {/* Client-only like every other atom consumer (see draw-core.ts). */}
         <ResumeSelectionMode />
+        <PersistSelection />
         <LiveLayout />
       </ClientOnly>
     </main>
@@ -147,6 +149,13 @@ function ParcelsLookup() {
   const { isFetching } = useQuery(parcelQueries.filtered(polygons));
 
   return isFetching ? <MapLoading>Buscando parcelas…</MapLoading> : null;
+}
+
+/** The selection survives a reload: restored from disk on mount, saved on every change. */
+function PersistSelection() {
+  useSavedSelection();
+
+  return null;
 }
 
 /** Returning to `/` resumes selection: the surviving areas are editable again. */

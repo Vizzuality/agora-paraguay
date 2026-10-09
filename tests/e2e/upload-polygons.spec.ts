@@ -204,14 +204,33 @@ test('rejects a corrupt zip with a readable error', async ({ page }) => {
   await expect(notices).toContainText('No se pudo leer el archivo como archivo zip.');
 });
 
-// Uploads live in the same in-memory store as drawn polygons, and only the camera is
-// persisted — so a reload clears them, consistently with `draw.spec.ts`.
-test('loses the upload on reload', async ({ page }) => {
+// Uploaded areas are saved like drawn ones: a reload lands on step 2 with the areas
+// back, and the analysis still goes through. The upload notice itself is not kept.
+test('keeps the upload across a reload', async ({ page }) => {
   await upload(page, 'farms.geojson');
   await expect(controls(page).analyze).toBeEnabled();
 
   await page.reload();
 
-  await expect(controls(page).upload).toBeEnabled();
-  await expect(controls(page).analyze).toBeHidden();
+  await expect(controls(page).analyze).toBeEnabled();
+  await expect(controls(page).upload).toBeHidden();
+
+  await controls(page).analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+});
+
+// Reiniciar removes the saved record too: a reload after it starts from nothing.
+test('a reload after Reiniciar starts from step 1', async ({ page }) => {
+  const { upload: uploadButton, analyze, restart } = controls(page);
+
+  await upload(page, 'farms.geojson');
+  await expect(analyze).toBeEnabled();
+
+  await restart.click();
+  await expect(analyze).toBeHidden();
+
+  await page.reload();
+
+  await expect(uploadButton).toBeEnabled();
+  await expect(analyze).toBeHidden();
 });
