@@ -7,13 +7,19 @@ import type { DrawnPolygon, FeatureId } from '@/lib/map/draw-features';
  * coordinates, over localStorage's string cap, and because the write is off the main
  * thread. Every function here degrades to a no-op where storage is missing or refuses
  * (private windows, blocked site data, quota): the app then behaves as if nothing had
- * been saved.
+ * been saved. A record older than `MAX_AGE_MS` reads as nothing saved: a selection from
+ * last week on the map is a surprise, not a convenience.
  */
 export type SavedSelection = {
   polygons: DrawnPolygon[];
   analysisId: FeatureId | null;
   toggledParcelIds: string[];
 };
+
+/** What sits in the database: the selection plus when it was written. */
+type SavedRecord = SavedSelection & { savedAt: number };
+
+export const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const DB_NAME = 'parcels';
 const STORE_NAME = 'selection';
@@ -75,28 +81,38 @@ function isPolygon(value: unknown): value is DrawnPolygon {
 }
 
 /** A record written by an older build, or tampered with, is treated as nothing saved. */
-export function isSavedSelection(value: unknown): value is SavedSelection {
+export function isSavedRecord(value: unknown): value is SavedRecord {
   if (typeof value !== 'object' || value === null) return false;
 
-  const record = value as Partial<SavedSelection>;
+  const record = value as Partial<SavedRecord>;
 
   return (
     Array.isArray(record.polygons) &&
     record.polygons.every(isPolygon) &&
     (record.analysisId === null || isFeatureId(record.analysisId)) &&
     Array.isArray(record.toggledParcelIds) &&
-    record.toggledParcelIds.every((id) => typeof id === 'string')
+    record.toggledParcelIds.every((id) => typeof id === 'string') &&
+    typeof record.savedAt === 'number'
   );
 }
 
-/** The saved selection, or `null` when there is none or storage is unusable. */
+/** The record's selection, or `null` once it is older than `MAX_AGE_MS`. */
+export function unexpired(record: SavedRecord, now = Date.now()): SavedSelection | null {
+  if (now - record.savedAt > MAX_AGE_MS) return null;
+
+  const { savedAt: _savedAt, ...selection } = record;
+
+  return selection;
+}
+
+/** The saved selection, or `null` when there is none, it expired, or storage is unusable. */
 export async function readSavedSelection(): Promise<SavedSelection | null> {
   if (!available()) return null;
 
   try {
     const record: unknown = await transact('readonly', (store) => store.get(RECORD_KEY));
 
-    return isSavedSelection(record) ? record : null;
+    return isSavedRecord(record) ? unexpired(record) : null;
   } catch {
     return null;
   }
@@ -110,7 +126,9 @@ export async function writeSavedSelection(selection: SavedSelection): Promise<vo
     if (selection.polygons.length === 0) {
       await transact('readwrite', (store) => store.delete(RECORD_KEY));
     } else {
-      await transact('readwrite', (store) => store.put(selection, RECORD_KEY));
+      const record: SavedRecord = { ...selection, savedAt: Date.now() };
+
+      await transact('readwrite', (store) => store.put(record, RECORD_KEY));
     }
   } catch {
     // Nothing to do: the next write retries, and a reload simply restores nothing.
