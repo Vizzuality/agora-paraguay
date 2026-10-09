@@ -724,6 +724,13 @@ test('exports the productivo report as the page printed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Riesgo productivo' })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeEnabled();
 
+  // A report printed mid-generation would go out without the summary: Exportar waits.
+  const exportButton = page.getByRole('button', { name: 'Exportar informe' });
+  await page.getByRole('button', { name: 'Generar resumen' }).click();
+  await expect(exportButton).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+  await expect(exportButton).toBeEnabled();
+
   await page.evaluate(() => {
     window.print = () => {
       document.body.dataset.printedAs = document.title;
@@ -745,13 +752,23 @@ test('exports the productivo report as the page printed', async ({ page }) => {
   await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Ver lista de parcelas' })).toBeHidden();
 
-  // The info zone: each filter as "name — value", the parcel list, the date.
+  // The info zone: each filter as "name — value", the parcels with their areas in place
+  // of the tabs and the map, the date; the brand where the nav and footer were.
   const info = page.getByRole('main');
   await expect(info.getByRole('term').filter({ hasText: 'Tipo de cultivo' })).toBeVisible();
   await expect(info.getByRole('definition').filter({ hasText: /Arroz|Soja/ })).toBeVisible();
   await expect(info.getByRole('definition').filter({ hasText: '2026-09-17' })).toBeVisible();
   await expect(info.getByText('Informe generado el')).toBeVisible();
   await expect(info.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
+
+  const table = info.getByRole('table', { name: 'Parcelas analizadas' });
+  await expect(table.getByRole('row')).toHaveText([
+    /Parcela\s+Área/,
+    /Parcela 1\s+10,2 ha/,
+    /Parcela 2\s+7,3 ha/,
+    /Todas\s+17,5 ha/,
+  ]);
+  await expect(page.getByText('LOGO')).toHaveCount(2);
 
   const pdf = await page.pdf({ format: 'A4' });
   expect(pdf.byteLength).toBeGreaterThan(1_000);

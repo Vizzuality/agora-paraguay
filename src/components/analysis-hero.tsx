@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatArea } from '@/lib/analysis/area';
+import { formatArea, parcelArea, parcelAreaRows } from '@/lib/analysis/area';
 import { describeWithFilters } from '@/lib/analysis/describe';
 import { CROP_FILTER_ID, orderHeroFilters } from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
@@ -35,6 +35,7 @@ import {
   scrollLeftForTab,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
+import { useAnalysis } from '@/lib/analysis/use-analysis';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { useParcelArea } from '@/lib/analysis/use-parcel-area';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
@@ -52,6 +53,7 @@ export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; par
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <ParcelTabs parcels={parcels} />
+        <ParcelTable parcels={parcels} />
 
         <HeroFilters riesgo={riesgo} />
       </div>
@@ -234,13 +236,58 @@ function MiniMapThumbnail() {
           </div>
         )}
       </div>
-      {area && (
-        <p className="hidden text-sm print:block">
-          <span className="text-muted-foreground">Área </span>
-          {formatArea(area)}
-        </p>
-      )}
     </>
+  );
+}
+
+/**
+ * The report's stand-in for the tabs and the mini map: every analysed parcel with its
+ * area, the open one marked, the total under Todas. Same answer the thumbnail reads
+ * (`useParcelArea`): the sanitario analysis carries the area column.
+ */
+function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
+  const { analysis, indicators } = useAnalysis('sanitario');
+  const activeId = useAtomValue(activeParcelIdAtom);
+  const answered = (analysis.data?.indicators ?? []).filter((parcel) =>
+    parcels.includes(String(parcel.parcel_id)),
+  );
+  const rows = parcelAreaRows(answered, parcels, indicators);
+  const total = parcels.length > 1 ? parcelArea(answered, null, indicators) : null;
+
+  return (
+    <table className="hidden w-full text-sm print:table">
+      <caption className="mb-1 text-left text-muted-foreground">Parcelas analizadas</caption>
+      <thead>
+        <tr className="border-b text-left text-muted-foreground">
+          <th scope="col" className="py-1 font-normal">
+            Parcela
+          </th>
+          <th scope="col" className="py-1 text-right font-normal">
+            Área
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ parcelId, area }) => (
+          <tr
+            key={parcelId}
+            aria-current={parcelId === activeId || undefined}
+            className={cn('border-b', parcelId === activeId && 'font-semibold text-primary')}
+          >
+            <td className="py-1">{parcelLabel(parcelId, parcels)}</td>
+            <td className="py-1 text-right">{area ? formatArea(area) : '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+      {total && (
+        <tfoot>
+          <tr className={cn(activeId === null && 'font-semibold text-primary')}>
+            <td className="py-1">Todas</td>
+            <td className="py-1 text-right">{formatArea(total)}</td>
+          </tr>
+        </tfoot>
+      )}
+    </table>
   );
 }
 
@@ -338,26 +385,11 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   };
 
   return (
-    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:h-auto print:border-0 print:p-0">
-      <legend className={cn(FLOATING_CHIP_CLASS, 'print:hidden')}>Parcela</legend>
-      {/* The report lists every analysed parcel, the open one underlined, with nothing to
-          scroll or click. */}
-      <ul className="hidden flex-wrap gap-x-5 gap-y-1 text-sm print:flex">
-        {tabs.map((tab, index) => (
-          <li
-            key={tab}
-            className={cn(
-              'py-1',
-              index === activeIndex && 'border-b-[3px] border-primary text-primary',
-            )}
-          >
-            {tabLabel(tab, parcels)}
-          </li>
-        ))}
-      </ul>
+    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:hidden">
+      <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
       {/* Clipped on the fieldset's own radius, so a tab scrolled under the rounded
           corner does not show its underline outside the border. */}
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-l-2xl print:hidden">
+      <div className="relative min-w-0 flex-1 overflow-hidden rounded-l-2xl">
         {!atStart && (
           <div
             aria-hidden
@@ -407,7 +439,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atStart}
         onClick={() => scroll('left')}
         aria-label="Parcelas anteriores"
-        className="size-8 rounded-full disabled:opacity-30 print:hidden"
+        className="size-8 rounded-full disabled:opacity-30"
       >
         <ArrowLeft />
       </Button>
@@ -418,7 +450,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         disabled={atEnd}
         onClick={() => scroll('right')}
         aria-label="Parcelas siguientes"
-        className="size-8 rounded-full disabled:opacity-30 print:hidden"
+        className="size-8 rounded-full disabled:opacity-30"
       >
         <ArrowRight />
       </Button>
@@ -431,7 +463,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
             // Nothing to choose from with a single tab.
             disabled={tabs.length === 1}
             aria-label="Ver lista de parcelas"
-            className="size-8 rounded-full disabled:opacity-30 print:hidden"
+            className="size-8 rounded-full disabled:opacity-30"
           >
             <ChevronDown />
           </Button>

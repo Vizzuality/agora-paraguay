@@ -1,3 +1,4 @@
+import { useIsMutating } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { IndicatorPicker } from '@/components/indicator-picker';
 import { Button } from '@/components/ui/button';
 import { printReport } from '@/lib/analysis/print-report';
 import { reportCaption, reportFileName } from '@/lib/analysis/report';
+import { analysisMutations } from '@/lib/api/analysis/queries';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { RISK_TABS } from '@/lib/nav-links';
 import { analysedParcelIdsAtom } from '@/store/analysis';
@@ -31,6 +33,9 @@ export const ACTION_CLASS = 'h-11 rounded-2xl px-8 font-normal max-md:flex-1 max
 export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
   const title = RISK_TABS.find((tab) => tab.riesgo === riesgo)?.label;
+  // A report printed mid-generation would go out without the summary: wait for it.
+  const generatingSummary =
+    useIsMutating({ mutationKey: analysisMutations.summary().mutationKey }) > 0;
 
   return (
     <>
@@ -48,6 +53,8 @@ export function AnalysisHeader({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
           {riesgo === 'productivo' && (
             <Button
               className={ACTION_CLASS}
+              disabled={generatingSummary}
+              title={generatingSummary ? 'Espere a que termine el resumen del análisis' : undefined}
               onClick={() => printReport(reportFileName(riesgo, new Date()))}
             >
               <Upload aria-hidden />
