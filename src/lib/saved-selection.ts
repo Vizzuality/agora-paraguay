@@ -38,7 +38,7 @@ function openDatabase(): Promise<IDBDatabase> {
       request.result.createObjectStore(STORE_NAME);
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(request.error ?? new Error('IndexedDB open failed'));
     request.onblocked = () => reject(new Error('IndexedDB open blocked'));
   });
 }
@@ -60,7 +60,7 @@ async function transact<T>(
     };
     transaction.onerror = () => {
       database.close();
-      reject(transaction.error);
+      reject(transaction.error ?? new Error('IndexedDB transaction failed'));
     };
     transaction.onabort = transaction.onerror;
   });
