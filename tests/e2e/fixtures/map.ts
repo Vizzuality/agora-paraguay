@@ -1,5 +1,11 @@
 import type { Page } from '@playwright/test';
 
+import {
+  INITIAL_VIEW_STATE,
+  type MapViewState,
+  PARAGUAY_VIEW_STATE,
+} from '../../../src/lib/map/view-state';
+
 /** A 1×1 transparent PNG, so stubbed raster tiles decode cleanly. */
 const BLANK_TILE = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
@@ -15,16 +21,31 @@ const BLANK_TILE = Buffer.from(
  * dependent on someone else's uptime, and none of what they assert is about tiles.
  * The inline style loads regardless, and `load` is what starts Terra Draw.
  */
+/** The camera as the URL holds it (`lng`/`lat`/`zoom`, written by nuqs as plain floats). */
+export function cameraParams(view: MapViewState): Record<'lng' | 'lat' | 'zoom', string> {
+  return { lng: String(view.longitude), lat: String(view.latitude), zoom: String(view.zoom) };
+}
+
+function cameraUrl(view: MapViewState): string {
+  return `/?${new URLSearchParams(cameraParams(view))}`;
+}
+
+/** The zoom the map opens at (`INITIAL_VIEW_STATE`), whatever the app currently sets it to. */
+export const OPENING_ZOOM = INITIAL_VIEW_STATE.zoom;
+
 /**
- * The opening view zoomed to farm scale. At the country-wide default (zoom 5.5) a
- * sixty-pixel test triangle covers hundreds of thousands of hectares, over the area
- * limit, and would be rejected before `filter-parcels` is asked.
+ * The whole country in view: a sixty-pixel test triangle there covers hundreds of
+ * thousands of hectares, over the area limit, and is rejected before `filter-parcels`
+ * is asked.
  */
-export const FARM_SCALE_URL = '/?lng=-58.44&lat=-23.44&zoom=12';
+export const COUNTRY_SCALE_URL = cameraUrl(PARAGUAY_VIEW_STATE);
+
+/** The country view zoomed to farm scale, where the same triangle is a few farms. */
+export const FARM_SCALE_URL = cameraUrl({ ...PARAGUAY_VIEW_STATE, zoom: 12 });
 
 /** The camera zoom as the URL holds it; the opening view's when nothing is written yet. */
 function urlZoom(page: Page): number {
-  return Number(new URL(page.url()).searchParams.get('zoom') ?? 5.5);
+  return Number(new URL(page.url()).searchParams.get('zoom') ?? OPENING_ZOOM);
 }
 
 /**

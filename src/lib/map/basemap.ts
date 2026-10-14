@@ -52,16 +52,6 @@ export const BASEMAP_STYLE: string | StyleSpecification =
   env.VITE_BASEMAP_STYLE_URL ?? SATELLITE_STYLE;
 
 /**
- * Centred on Paraguay (extent ≈ 62.6°W–54.3°W, 27.6°S–19.3°S) at a zoom that fits
- * the whole country in the default viewport.
- */
-export const INITIAL_VIEW_STATE = {
-  longitude: -58.44,
-  latitude: -23.44,
-  zoom: 5.5,
-} as const;
-
-/**
  * Camera limit — Paraguay's extent padded by roughly 4° so neighbouring context stays
  * reachable, without letting the map wander off to another continent. Intentionally
  * wider than the extent quoted above.

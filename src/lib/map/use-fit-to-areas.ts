@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 
 import { featuresBounds, FIT_PADDING, newlyAdded } from '@/lib/map/area-bounds';
-import { INITIAL_VIEW_STATE } from '@/lib/map/basemap';
+import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
 import { drawPolygonsAtom } from '@/store/draw';
 
 /** Close enough to see one farm's parcels; a single small polygon must not zoom to the rooftops. */
