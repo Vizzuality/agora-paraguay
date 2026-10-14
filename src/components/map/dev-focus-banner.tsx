@@ -1,3 +1,5 @@
+import { TriangleAlert } from 'lucide-react';
+
 /**
  * Temporary: the map opens on Alto Paraná (`INITIAL_VIEW_STATE`) while the cadastre
  * covers that department only. Remove with the view state when coverage is national.
@@ -6,9 +8,13 @@ export function DevFocusBanner() {
   return (
     <p
       role="note"
-      className="pointer-events-none absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs whitespace-nowrap text-white backdrop-blur-xs"
+      className="pointer-events-none absolute top-4 left-1/2 z-10 flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-start gap-2 rounded-2xl bg-amber-400 px-4 py-2 text-sm font-medium text-amber-950 shadow-md"
     >
-      Mapa centrado en Alto Paraná durante el desarrollo.
+      <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+      <span>
+        En desarrollo: el mapa se centra en Alto Paraná, la zona con datos. Con el catastro
+        completo, se centrará en todo Paraguay.
+      </span>
     </p>
   );
 }

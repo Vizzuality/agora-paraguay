@@ -9,7 +9,7 @@ test('opens on Alto Paraná with the development banner', async ({ page }) => {
   await page.goto('/');
   await expect(mapCanvas(page)).toBeVisible();
   await expect(page.getByRole('note')).toHaveText(
-    'Mapa centrado en Alto Paraná durante el desarrollo.',
+    'En desarrollo: el mapa se centra en Alto Paraná, la zona con datos. Con el catastro completo, se centrará en todo Paraguay.',
   );
 
   await panMap(page, { dx: 0, dy: -40 });
