@@ -52,18 +52,6 @@ export const BASEMAP_STYLE: string | StyleSpecification =
   env.VITE_BASEMAP_STYLE_URL ?? SATELLITE_STYLE;
 
 /**
- * Temporary opening view: Alto Paraná, the one department the cadastre covers today, so
- * a drawing lands on parcels instead of being rejected. `DevFocusBanner` says so on the
- * map. When national coverage arrives both go, and the view returns to the whole
- * country (extent ≈ 62.6°W–54.3°W, 27.6°S–19.3°S): -58.44, -23.44 at zoom 5.5.
- */
-export const INITIAL_VIEW_STATE = {
-  longitude: -54.95,
-  latitude: -25.3,
-  zoom: 8.5,
-} as const;
-
-/**
  * Camera limit — Paraguay's extent padded by roughly 4° so neighbouring context stays
  * reachable, without letting the map wander off to another continent. Intentionally
  * wider than the extent quoted above.

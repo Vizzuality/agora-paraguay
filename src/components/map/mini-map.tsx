@@ -7,10 +7,11 @@ import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { collapseAttribution } from '@/lib/map/attribution';
-import { BASEMAP_STYLE, INITIAL_VIEW_STATE } from '@/lib/map/basemap';
+import { BASEMAP_STYLE } from '@/lib/map/basemap';
 import { addDotPattern } from '@/lib/map/dot-pattern';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
+import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.

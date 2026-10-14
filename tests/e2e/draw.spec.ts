@@ -3,12 +3,15 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
+import { INITIAL_VIEW_STATE } from '../../src/lib/map/view-state';
 import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
 import {
+  cameraParams,
   COUNTRY_SCALE_URL,
   drawPolygon,
   FARM_SCALE_URL,
   mapCanvas,
+  OPENING_ZOOM,
   stubBasemap,
   yellowPixelCount,
   zoomToFarmScale,
@@ -72,10 +75,10 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
   await expect(draw).toBeHidden();
 
   // The camera flies to the new area: the first camera write of the session, with a
-  // zoom closer than the country-wide default (5.5).
+  // zoom closer than the opening view's.
   await expect
     .poll(() => Number(new URL(page.url()).searchParams.get('zoom')))
-    .toBeGreaterThan(5.5);
+    .toBeGreaterThan(OPENING_ZOOM);
 });
 
 test('cancelling an armed session stays on step 1', async ({ page }) => {
@@ -102,7 +105,7 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   // (stubbed) parcels painted over it.
   await expect
     .poll(() => Number(new URL(page.url()).searchParams.get('zoom')), { timeout: 5_000 })
-    .toBeGreaterThan(5.5);
+    .toBeGreaterThan(OPENING_ZOOM);
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
 
   await restart.click();
@@ -117,7 +120,7 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   // Back to the opening view (`INITIAL_VIEW_STATE`), written to the URL by `moveend`.
   await expect
     .poll(() => Object.fromEntries(new URL(page.url()).searchParams), { timeout: 5_000 })
-    .toEqual({ lng: '-58.44', lat: '-23.44', zoom: '5.5' });
+    .toEqual(cameraParams(INITIAL_VIEW_STATE));
 
   // A fresh session works exactly like the first one (zoomed in again: the opening view
   // makes the test triangle a department, over the area limit).

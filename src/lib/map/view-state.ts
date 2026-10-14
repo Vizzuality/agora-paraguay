@@ -47,6 +47,29 @@ export type MapViewState = {
   zoom: number;
 };
 
+/**
+ * The whole country in view: Paraguay's extent (≈ 62.6°W–54.3°W, 27.6°S–19.3°S) fits
+ * the default viewport at this zoom.
+ */
+export const PARAGUAY_VIEW_STATE = {
+  longitude: -58.44,
+  latitude: -23.44,
+  zoom: 5.5,
+} as const satisfies MapViewState;
+
+/**
+ * Where the map opens. Temporary: Alto Paraná, the one department the cadastre covers
+ * today, so a drawing lands on parcels instead of being rejected; `DevFocusBanner` says
+ * so on the map. When national coverage arrives, point this at `PARAGUAY_VIEW_STATE`
+ * and remove the banner — the e2e specs read this constant and assert the banner, so
+ * they fail until both are done.
+ */
+export const INITIAL_VIEW_STATE = {
+  longitude: -54.95,
+  latitude: -25.3,
+  zoom: 8.5,
+} as const satisfies MapViewState;
+
 export function normalizeViewState(viewState: MapViewState): MapViewState {
   return {
     longitude: normalizeLongitude(viewState.longitude),

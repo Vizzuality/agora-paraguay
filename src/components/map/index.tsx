@@ -14,8 +14,9 @@ import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
-import { BASEMAP_STYLE, INITIAL_VIEW_STATE, MAX_BOUNDS } from '@/lib/map/basemap';
+import { BASEMAP_STYLE, MAX_BOUNDS } from '@/lib/map/basemap';
 import { addDotPattern } from '@/lib/map/dot-pattern';
+import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
 import { normalizeViewState } from '@/lib/map/view-state';
 import { drawAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
