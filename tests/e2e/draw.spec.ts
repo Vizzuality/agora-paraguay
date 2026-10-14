@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
 import {
+  COUNTRY_SCALE_URL,
   drawPolygon,
   FARM_SCALE_URL,
   mapCanvas,
@@ -213,7 +214,7 @@ test('a rejected drawing does not taint the upload that follows', async ({ page 
   );
 });
 
-// The areas are measured before anything is asked: at the country-wide opening zoom the
+// The areas are measured before anything is asked: with the whole country in view the
 // test triangle covers hundreds of thousands of hectares, over the limit, and is
 // rejected the way an out-of-coverage answer is — but `filter-parcels` never runs.
 test('a drawing over the area limit is rejected back to step 1 without asking the API', async ({
@@ -232,7 +233,7 @@ test('a drawing over the area limit is rejected back to step 1 without asking th
     },
   );
 
-  await page.goto('/');
+  await page.goto(COUNTRY_SCALE_URL);
   await expect(draw).toBeEnabled();
   await expect(mapCanvas(page)).toBeVisible();
 

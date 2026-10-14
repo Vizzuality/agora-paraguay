@@ -2,6 +2,25 @@ import { expect, test } from '@playwright/test';
 
 import { mapCanvas, panMap, stubBasemap } from './fixtures/map';
 
+// Temporary while the cadastre covers Alto Paraná only: the map opens there, says so,
+// and the first camera write lands in the department.
+test('opens on Alto Paraná with the development banner', async ({ page }) => {
+  await stubBasemap(page);
+  await page.goto('/');
+  await expect(mapCanvas(page)).toBeVisible();
+  await expect(page.getByRole('note')).toHaveText(
+    'Mapa centrado en Alto Paraná durante el desarrollo.',
+  );
+
+  await panMap(page, { dx: 0, dy: -40 });
+
+  const params = new URL(page.url()).searchParams;
+
+  expect(Number(params.get('lng'))).toBeGreaterThan(-56);
+  expect(Number(params.get('lng'))).toBeLessThan(-54);
+  expect(Number(params.get('zoom'))).toBe(8.5);
+});
+
 /**
  * Regression: the nuqs TanStack Router adapter passes the camera's query string inside
  * `navigate({ to })`, and any router search middleware that retains params re-appends

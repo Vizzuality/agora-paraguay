@@ -15,16 +15,24 @@ const BLANK_TILE = Buffer.from(
  * dependent on someone else's uptime, and none of what they assert is about tiles.
  * The inline style loads regardless, and `load` is what starts Terra Draw.
  */
+/** The zoom the map opens at: Alto Paraná, while the cadastre covers that department only. */
+export const OPENING_ZOOM = 8.5;
+
 /**
- * The opening view zoomed to farm scale. At the country-wide default (zoom 5.5) a
- * sixty-pixel test triangle covers hundreds of thousands of hectares, over the area
- * limit, and would be rejected before `filter-parcels` is asked.
+ * The whole country in view (zoom 5.5): a sixty-pixel test triangle there covers
+ * hundreds of thousands of hectares, over the area limit, and is rejected before
+ * `filter-parcels` is asked.
+ */
+export const COUNTRY_SCALE_URL = '/?lng=-58.44&lat=-23.44&zoom=5.5';
+
+/**
+ * The opening view zoomed to farm scale, where the same triangle is a few farms.
  */
 export const FARM_SCALE_URL = '/?lng=-58.44&lat=-23.44&zoom=12';
 
 /** The camera zoom as the URL holds it; the opening view's when nothing is written yet. */
 function urlZoom(page: Page): number {
-  return Number(new URL(page.url()).searchParams.get('zoom') ?? 5.5);
+  return Number(new URL(page.url()).searchParams.get('zoom') ?? OPENING_ZOOM);
 }
 
 /**

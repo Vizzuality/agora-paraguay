@@ -8,6 +8,7 @@ import Map, {
   type ViewStateChangeEvent,
 } from 'react-map-gl/maplibre';
 
+import { DevFocusBanner } from '@/components/map/dev-focus-banner';
 import { DrawLayer } from '@/components/map/draw-layer';
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
@@ -106,6 +107,7 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       <ScaleControl position="bottom-left" />
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
+      <DevFocusBanner />
       {/*
        * The parcels filter-parcels answers for the drawn areas. Mounted only once Terra
        * Draw is bound: MapLibre paints layers in add order, and on a remount (back from
