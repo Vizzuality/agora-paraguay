@@ -81,4 +81,140 @@ describe('filterParcels', () => {
 
     await expect(filterParcels(request())).rejects.toThrow(ZodError);
   });
+
+  // The backend's answers by status, as `ApiError` exposes them to the UI: `status` tells
+  // the kind of failure apart, `detail` quotes Django's reason when the body carries one.
+  describe('error answers', () => {
+    it('400 invalid geometry: a DRF field error becomes the detail, without the field name', async () => {
+      fetchMock.mockResolvedValueOnce(
+        Response.json(
+          { filtering_polygons: ['Self-intersection at or near point -56.5 -25.0'] },
+          { status: 400 },
+        ),
+      );
+
+      await expect(filterParcels(request())).rejects.toMatchObject({
+        name: 'ApiError',
+        status: 400,
+        detail: 'Self-intersection at or near point -56.5 -25.0',
+      });
+    });
+
+    it('400 with a top-level `detail` quotes it', async () => {
+      fetchMock.mockResolvedValueOnce(
+        Response.json({ detail: 'JSON parse error - Expecting value' }, { status: 400 }),
+      );
+
+      await expect(filterParcels(request())).rejects.toMatchObject({
+        status: 400,
+        detail: 'JSON parse error - Expecting value',
+      });
+    });
+
+    it.each([
+      [401, 'Authentication credentials were not provided.'],
+      [403, 'CSRF Failed: CSRF token missing.'],
+      [405, 'Method "GET" not allowed.'],
+    ])('%i carries the DRF `detail`', async (status, detail) => {
+      fetchMock.mockResolvedValueOnce(Response.json({ detail }, { status }));
+
+      await expect(filterParcels(request())).rejects.toMatchObject({ status, detail });
+    });
+
+    it('404 on an HTML body (Django debug page, nginx) carries no detail', async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response('<!doctype html><title>Not Found</title>', {
+          status: 404,
+          headers: { 'Content-Type': 'text/html' },
+        }),
+      );
+
+      await expect(filterParcels(request())).rejects.toMatchObject({ status: 404, detail: null });
+    });
+
+    it.each([413, 500, 502, 504])(
+      '%i with an empty or HTML body is an ApiError without detail',
+      async (status) => {
+        fetchMock.mockResolvedValueOnce(
+          new Response(status === 413 ? '' : '<html>bad gateway</html>', { status }),
+        );
+
+        await expect(filterParcels(request())).rejects.toMatchObject({
+          name: 'ApiError',
+          status,
+          detail: null,
+        });
+      },
+    );
+
+    it('a network failure (backend down, proxy refused) is an ApiError with a null status', async () => {
+      fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
+
+      await expect(filterParcels(request())).rejects.toMatchObject({
+        name: 'ApiError',
+        status: null,
+        detail: null,
+      });
+    });
+
+    it('an empty polygon list is refused before any request goes out', async () => {
+      const empty = request();
+      empty.filtering_polygons.features = [];
+
+      await expect(filterParcels(empty)).rejects.toThrow(ZodError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  // HTTP 200 answers that are not a list of parcels.
+  describe('empty and malformed 200s', () => {
+    it('`status: "empty"` with `results: {}` (outside coverage) reads as no parcels, message kept', async () => {
+      fetchMock.mockResolvedValueOnce(
+        Response.json({
+          status: 'empty',
+          message: 'The submitted area is outside our current coverage.',
+          input: { features: [] },
+          results: {},
+        }),
+      );
+
+      await expect(filterParcels(request())).resolves.toMatchObject({
+        status: 'empty',
+        message: 'The submitted area is outside our current coverage.',
+        results: [],
+      });
+    });
+
+    it('`results: []` (parcels around, none intersecting) is a success with no parcels', async () => {
+      fetchMock.mockResolvedValueOnce(
+        Response.json({ status: 'success', message: '', input: {}, results: [] }),
+      );
+
+      await expect(filterParcels(request())).resolves.toMatchObject({ results: [] });
+    });
+
+    it('a parcel without `selected` or with a non-areal geometry fails the contract', async () => {
+      fetchMock.mockResolvedValueOnce(
+        Response.json({
+          ...response,
+          results: [
+            { parcel_id: 'D07D21P00000002', geometry: { type: 'Point', coordinates: [0, 0] } },
+          ],
+        }),
+      );
+
+      await expect(filterParcels(request())).rejects.toThrow(ZodError);
+    });
+
+    it('a 200 that is not JSON (a login page served by the proxy) fails to parse', async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response('<!doctype html><title>Login</title>', {
+          status: 200,
+          headers: { 'Content-Type': 'text/html' },
+        }),
+      );
+
+      await expect(filterParcels(request())).rejects.toThrow(SyntaxError);
+    });
+  });
 });

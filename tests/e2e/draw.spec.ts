@@ -170,6 +170,31 @@ test('a drawing outside the cadastre is rejected back to step 1 with the reason'
   await expect(draw).not.toHaveClass(/(^| )border-destructive( |$)/);
 });
 
+// `filter-parcels` failing (backend down, proxy timeout, a refused body) is not a
+// rejection: the drawing stays, the panel stays on step 2 with Analizar disabled and
+// one message under it, whatever the status — the user can Reiniciar or try again.
+test('a failed parcels request keeps the drawing and says so under Analizar', async ({ page }) => {
+  const { draw, analyze, currentStep, restart } = controls(page);
+
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
+    (route) =>
+      route.fulfill({ status: 502, contentType: 'text/html', body: '<html>Bad Gateway</html>' }),
+  );
+
+  await draw.click();
+  await drawPolygon(page, POLYGON);
+
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(analyze).toBeVisible();
+  await expect(analyze).toBeDisabled();
+  await expect(
+    page.getByText('No se pudieron cargar las parcelas. Intentá de nuevo más tarde.'),
+  ).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Aviso de área' })).toBeHidden();
+  await expect(restart).toBeEnabled();
+});
+
 // Starting over from a rejection clears it: the next entry point must not inherit the
 // previous areas' verdict, and its own answer decides.
 test('a rejected drawing does not taint the upload that follows', async ({ page }) => {
