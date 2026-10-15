@@ -337,11 +337,16 @@ test('Selección de parcelas resumes the selection on step 2 with the parcels', 
   const canvas = mapCanvas(page);
   const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
 
+  const urlBefore = page.url();
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await expect(analyze).toBeEnabled();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
-  await page.waitForTimeout(FIT_ANIMATION);
+  // The fit to the drawn area reaches the URL through `moveend`, so the camera write
+  // means the ease is over and the parcels sit where the click below expects them.
+  await page.waitForFunction((previous) => window.location.href !== previous, urlBefore, {
+    timeout: 5_000,
+  });
   const bothArea = await yellowPixelCount(page);
 
   // The camera fitted the areas, so the two stubbed parcels straddle the centre: a click
