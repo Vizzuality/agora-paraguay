@@ -8,7 +8,6 @@ import {
   mapCanvas,
   stubBasemap,
   yellowPixelCount,
-  zoomToFarmScale,
 } from './fixtures/map';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
@@ -37,6 +36,9 @@ function controls(page: Page) {
     // Step 2 only: it appears once an area is on the map.
     analyze: page.getByRole('button', { name: 'Analizar' }),
     restart: page.getByRole('button', { name: 'Reiniciar' }),
+    currentStep: page
+      .getByRole('list', { name: 'Pasos de la selección' })
+      .locator('[aria-current="step"]'),
   };
 }
 
@@ -327,46 +329,66 @@ test('veils the map with a spinner while the parcels are looked up', async ({ pa
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
 });
 
-test('Selección de parcelas starts a new selection with an empty map', async ({ page }) => {
-  const { draw, analyze, restart } = controls(page);
+// The header and footer link back to the selection resume it, like the browser's Back:
+// the areas and parcels are still there, the panel is on step 2, and a parcel the user
+// flipped before Analizar stays flipped. Starting over is Reiniciar's job.
+test('Selección de parcelas resumes the selection on step 2 with the parcels', async ({ page }) => {
+  const { draw, analyze, restart, currentStep } = controls(page);
+  const canvas = mapCanvas(page);
+  const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
 
-  await draw.click();
-  await drawPolygon(page, FIRST_POLYGON);
-  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
-  await analyze.click();
-  await expect(page).toHaveURL(/\/analisis/);
-  await expect(page.getByRole('group', { name: 'Parcela' })).toBeVisible();
-
-  // Unlike the browser's Back (which resumes the selection), the header link starts
-  // over: step 1 controls, nothing drawn, no parcels painted.
-  await page.getByRole('banner').getByRole('link', { name: 'Selección de parcelas' }).click();
-  await expect(page).toHaveURL(/\/(\?|$)/);
-  await expect(draw).toHaveText('Dibujar polígono');
-  await expect(analyze).toBeHidden();
-  await expect(restart).toBeHidden();
-  await expect(mapCanvas(page)).toBeVisible();
-  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
-
-  // The old run is gone for good: forward to /analisis lands back on / (empty selection).
-  await page.goForward();
-  await expect(page).toHaveURL(/\/(\?|$)/);
-  await expect(analyze).toBeHidden();
-
-  // A fresh drawing works as on a first visit, and its analysis lands on Todas again.
-  // (Zoomed in again: the reset put the camera back on the country-wide view.)
-  await zoomToFarmScale(page);
+  const urlBefore = page.url();
   await draw.click();
   await drawPolygon(page, FIRST_POLYGON);
   await expect(analyze).toBeEnabled();
+  await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  // The fit to the drawn area reaches the URL through `moveend`, so the camera write
+  // means the ease is over and the parcels sit where the click below expects them.
+  await page.waitForFunction((previous) => window.location.href !== previous, urlBefore, {
+    timeout: 5_000,
+  });
+  const bothArea = await yellowPixelCount(page);
+
+  // The camera fitted the areas, so the two stubbed parcels straddle the centre: a click
+  // left of it flips the west one off, leaving the east one selected.
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Map canvas has no bounding box');
+  await canvas.click({ position: { x: box.width / 2 - box.height * 0.15, y: box.height / 2 } });
+  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
+  const oneArea = await yellowPixelCount(page);
+
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
-  const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
-  await expect(tabs.first()).toHaveText('Todas');
-  await expect(tabs.first().getByRole('button')).toHaveAttribute('aria-current', 'true');
+  // A single parcel stands alone: no Todas tab to combine it with.
+  await expect(parcelTabs).toHaveText(['Parcela 1']);
 
-  // The footer repeats the link with the same reset.
+  // The header link: step 2, Analizar ready, the one selected parcel painted again.
+  await page.getByRole('banner').getByRole('link', { name: 'Selección de parcelas' }).click();
+  await expect(page).toHaveURL(/\/(\?|$)/);
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(analyze).toBeEnabled();
+  await expect(restart).toBeVisible();
+  await expect(canvas).toBeVisible();
+  await expect
+    .poll(() => yellowPixelCount(page), { timeout: 10_000 })
+    .toBeGreaterThan(oneArea * 0.8);
+  await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
+
+  // Analizar again submits the same parcels: still that one parcel, alone.
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+  await expect(parcelTabs).toHaveText(['Parcela 1']);
+
+  // The footer link resumes the same way.
   await page.getByRole('contentinfo').getByRole('link', { name: 'Selección de parcelas' }).click();
   await expect(page).toHaveURL(/\/(\?|$)/);
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(analyze).toBeEnabled();
+
+  // Reiniciar is what starts over: step 1, nothing painted.
+  await restart.click();
+  await expect(currentStep).toContainText('Paso 1');
+  await expect(draw).toHaveText('Dibujar polígono');
   await expect(analyze).toBeHidden();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
 });
