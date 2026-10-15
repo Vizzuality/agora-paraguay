@@ -149,7 +149,7 @@ describe('size', () => {
 
   it('rejects a file whose polygons cover more than the area limit', () => {
     expect(() => normalizeFeatures(collection(polygon({}, oversized)))).toThrow(
-      /supera el máximo de 100\.000 ha/,
+      /supera el máximo de 200\.000 ha/,
     );
     expect(code(() => normalizeFeatures(collection(polygon({}, oversized))))).toBe('oversized');
   });
