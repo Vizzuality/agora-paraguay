@@ -354,7 +354,8 @@ test('Selección de parcelas resumes the selection on step 2 with the parcels', 
 
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
-  await expect(parcelTabs).toHaveCount(2);
+  // A single parcel stands alone: no Todas tab to combine it with.
+  await expect(parcelTabs).toHaveText(['Parcela 1']);
 
   // The header link: step 2, Analizar ready, the one selected parcel painted again.
   await page.getByRole('banner').getByRole('link', { name: 'Selección de parcelas' }).click();
@@ -368,10 +369,10 @@ test('Selección de parcelas resumes the selection on step 2 with the parcels', 
     .toBeGreaterThan(oneArea * 0.8);
   await expect.poll(() => yellowPixelCount(page)).toBeLessThan(bothArea * 0.75);
 
-  // Analizar again submits the same parcels: still one tab besides Todas.
+  // Analizar again submits the same parcels: still that one parcel, alone.
   await analyze.click();
   await expect(page).toHaveURL(/\/analisis/);
-  await expect(parcelTabs).toHaveCount(2);
+  await expect(parcelTabs).toHaveText(['Parcela 1']);
 
   // The footer link resumes the same way.
   await page.getByRole('contentinfo').getByRole('link', { name: 'Selección de parcelas' }).click();
