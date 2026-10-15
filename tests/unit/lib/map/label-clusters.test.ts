@@ -93,44 +93,49 @@ describe('projectToWorld / unprojectFromWorld', () => {
 });
 
 describe('placeLabelClusters', () => {
+  // ~0.0002° of longitude is ~5px at zoom 14 and ~75px at zoom 18.
   const anchors = [
     { number: 1, lngLat: [-58.4, -23.4] as [number, number], highlighted: true },
-    { number: 2, lngLat: [-58.39, -23.4] as [number, number], highlighted: false },
+    { number: 2, lngLat: [-58.3998, -23.4] as [number, number], highlighted: false },
   ];
 
+  it('draws nothing under zoom 14, whatever the parcels', () => {
+    expect(placeLabelClusters(anchors, 13.99)).toEqual([]);
+    expect(placeLabelClusters(anchors, 14)).toHaveLength(1);
+  });
+
   it('merges neighbours zoomed out and keeps them apart zoomed in', () => {
-    // ~0.01° of longitude is ~2px at zoom 7 and ~580px at zoom 15.
-    expect(placeLabelClusters(anchors, 7).map((cluster) => cluster.numbers)).toEqual([[1, 2]]);
-    expect(placeLabelClusters(anchors, 15).map((cluster) => cluster.numbers)).toEqual([[1], [2]]);
+    expect(placeLabelClusters(anchors, 14).map((cluster) => cluster.numbers)).toEqual([[1, 2]]);
+    expect(placeLabelClusters(anchors, 18).map((cluster) => cluster.numbers)).toEqual([[1], [2]]);
   });
 
   it('pins a merged chip between its members and keeps the highlight', () => {
-    const [cluster] = placeLabelClusters(anchors, 7);
+    const [cluster] = placeLabelClusters(anchors, 14);
 
     expect(cluster.highlighted).toBe(true);
-    expect(cluster.lngLat[0]).toBeCloseTo(-58.395, 6);
+    expect(cluster.lngLat[0]).toBeCloseTo(-58.3999, 6);
     expect(cluster.lngLat[1]).toBeCloseTo(-23.4, 6);
   });
 
   it('leaves out a chip that would list more numbers than it can read, until zoom splits it', () => {
-    // Six parcels in a row, ~0.01° apart: one unreadable chip zoomed out, six chips
-    // zoomed in, and nothing in between that is not a short label.
+    // Six parcels in a row, ~0.0002° apart: one unreadable chip at zoom 14, six chips at
+    // zoom 18, and nothing in between that is not a short label.
     const row = Array.from({ length: 6 }, (_, index) => ({
       number: index + 1,
-      lngLat: [-58.4 + index * 0.01, -23.4] as [number, number],
+      lngLat: [-58.4 + index * 0.0002, -23.4] as [number, number],
       highlighted: false,
     }));
 
-    expect(placeLabelClusters(row, 7)).toEqual([]);
-    expect(placeLabelClusters(row, 15).map((cluster) => cluster.numbers)).toEqual(
+    expect(placeLabelClusters(row, 14)).toEqual([]);
+    expect(placeLabelClusters(row, 18).map((cluster) => cluster.numbers)).toEqual(
       row.map(({ number }) => [number]),
     );
-    // A readable merge next to an unreadable one stays: only the long chip goes.
+    // A readable chip next to an unreadable one stays: only the long chip goes.
     const mixed = [
       ...row,
       { number: 7, lngLat: [-57, -23.4] as [number, number], highlighted: true },
     ];
 
-    expect(placeLabelClusters(mixed, 7).map((cluster) => cluster.numbers)).toEqual([[7]]);
+    expect(placeLabelClusters(mixed, 14).map((cluster) => cluster.numbers)).toEqual([[7]]);
   });
 });

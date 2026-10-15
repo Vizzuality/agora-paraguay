@@ -87,6 +87,13 @@ export const CLUSTER_RADIUS = 40;
  */
 const MAX_CHIP_NUMBERS = 4;
 
+/**
+ * The zoom under which no chip is drawn at all: further out a farm-size parcel is a
+ * few pixels and a number sits on nothing. From here a 10 ha parcel is about 36 px
+ * wide at Paraguay's latitude, a chip's height.
+ */
+const MIN_CHIP_ZOOM = 14;
+
 /** MapLibre's world size in px at a zoom: 512px tiles, doubling per level. */
 const worldSize = (zoom: number) => 512 * 2 ** zoom;
 
@@ -114,17 +121,22 @@ export function unprojectFromWorld(x: number, y: number, zoom: number): LngLat {
 }
 
 /**
- * Where the chips go at a zoom: anchors projected, grouped by `clusterLabels`, groups
- * too big to read (`MAX_CHIP_NUMBERS`) dropped, each remaining group's centre put back
- * on the map. Pure, so the caller only has to feed it the camera's zoom (the mini map's
- * `onMoveEnd`).
+ * Where the chips go at a zoom: none under `MIN_CHIP_ZOOM`; above it the anchors
+ * projected, grouped by `clusterLabels`, groups too big to read (`MAX_CHIP_NUMBERS`)
+ * dropped, each remaining group's centre put back on the map. Pure, so the caller only
+ * has to feed it the camera's zoom (the mini map's `onMoveEnd`).
  */
 export function placeLabelClusters(
   anchors: readonly { number: number; lngLat: LngLat; highlighted: boolean }[],
   zoom: number,
-  radius = CLUSTER_RADIUS,
-  maxNumbers = MAX_CHIP_NUMBERS,
+  {
+    radius = CLUSTER_RADIUS,
+    maxNumbers = MAX_CHIP_NUMBERS,
+    minZoom = MIN_CHIP_ZOOM,
+  }: { radius?: number; maxNumbers?: number; minZoom?: number } = {},
 ): PlacedCluster[] {
+  if (zoom < minZoom) return [];
+
   const points = anchors.map(({ number, lngLat, highlighted }) => ({
     number,
     highlighted,
