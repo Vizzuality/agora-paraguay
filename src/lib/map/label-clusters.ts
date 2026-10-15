@@ -79,6 +79,14 @@ export type PlacedCluster = Pick<LabelCluster, 'numbers' | 'highlighted'> & { ln
  */
 export const CLUSTER_RADIUS = 40;
 
+/**
+ * The most numbers one chip still reads as a label ("1–4", "2, 5, 8, 11"). A chip that
+ * would merge more is a list, not a label: it is not drawn, and it comes back as the
+ * zoom splits the cluster. Keeps a large analysis from tiling its map with number
+ * lists at the framing zoom.
+ */
+const MAX_CHIP_NUMBERS = 4;
+
 /** MapLibre's world size in px at a zoom: 512px tiles, doubling per level. */
 const worldSize = (zoom: number) => 512 * 2 ** zoom;
 
@@ -106,14 +114,16 @@ export function unprojectFromWorld(x: number, y: number, zoom: number): LngLat {
 }
 
 /**
- * Where the chips go at a zoom: anchors projected, grouped by `clusterLabels`, each
- * group's centre put back on the map. Pure, so the caller only has to feed it the
- * camera's zoom (the mini map's `onMoveEnd`).
+ * Where the chips go at a zoom: anchors projected, grouped by `clusterLabels`, groups
+ * too big to read (`MAX_CHIP_NUMBERS`) dropped, each remaining group's centre put back
+ * on the map. Pure, so the caller only has to feed it the camera's zoom (the mini map's
+ * `onMoveEnd`).
  */
 export function placeLabelClusters(
   anchors: readonly { number: number; lngLat: LngLat; highlighted: boolean }[],
   zoom: number,
   radius = CLUSTER_RADIUS,
+  maxNumbers = MAX_CHIP_NUMBERS,
 ): PlacedCluster[] {
   const points = anchors.map(({ number, lngLat, highlighted }) => ({
     number,
@@ -121,9 +131,11 @@ export function placeLabelClusters(
     ...projectToWorld(lngLat, zoom),
   }));
 
-  return clusterLabels(points, radius).map(({ numbers, x, y, highlighted }) => ({
-    numbers,
-    highlighted,
-    lngLat: unprojectFromWorld(x, y, zoom),
-  }));
+  return clusterLabels(points, radius)
+    .filter(({ numbers }) => numbers.length <= maxNumbers)
+    .map(({ numbers, x, y, highlighted }) => ({
+      numbers,
+      highlighted,
+      lngLat: unprojectFromWorld(x, y, zoom),
+    }));
 }

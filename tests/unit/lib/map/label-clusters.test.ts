@@ -111,4 +111,26 @@ describe('placeLabelClusters', () => {
     expect(cluster.lngLat[0]).toBeCloseTo(-58.395, 6);
     expect(cluster.lngLat[1]).toBeCloseTo(-23.4, 6);
   });
+
+  it('leaves out a chip that would list more numbers than it can read, until zoom splits it', () => {
+    // Six parcels in a row, ~0.01° apart: one unreadable chip zoomed out, six chips
+    // zoomed in, and nothing in between that is not a short label.
+    const row = Array.from({ length: 6 }, (_, index) => ({
+      number: index + 1,
+      lngLat: [-58.4 + index * 0.01, -23.4] as [number, number],
+      highlighted: false,
+    }));
+
+    expect(placeLabelClusters(row, 7)).toEqual([]);
+    expect(placeLabelClusters(row, 15).map((cluster) => cluster.numbers)).toEqual(
+      row.map(({ number }) => [number]),
+    );
+    // A readable merge next to an unreadable one stays: only the long chip goes.
+    const mixed = [
+      ...row,
+      { number: 7, lngLat: [-57, -23.4] as [number, number], highlighted: true },
+    ];
+
+    expect(placeLabelClusters(mixed, 7).map((cluster) => cluster.numbers)).toEqual([[7]]);
+  });
 });
