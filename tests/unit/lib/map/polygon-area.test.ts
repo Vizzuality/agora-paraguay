@@ -93,18 +93,19 @@ describe('areasHectares / exceedsMaxArea', () => {
   });
 
   it('is a limit on the total, not on each area', () => {
-    // About 0.3° × 0.25°: 85 000 ha, under the limit alone, over it doubled.
-    const half = polygon([square(-58.3, -23.25, -58, -23)]);
+    // About 0.3° × 0.25°: 85 000 ha, under the limit alone, over it tripled.
+    const part = polygon([square(-58.3, -23.25, -58, -23)]);
 
-    expect(areasHectares([half])).toBeLessThan(MAX_AREA_HECTARES);
-    expect(exceedsMaxArea([half, half])).toBe(true);
+    expect(areasHectares([part])).toBeLessThan(MAX_AREA_HECTARES);
+    expect(exceedsMaxArea([part, part])).toBe(false);
+    expect(exceedsMaxArea([part, part, part])).toBe(true);
   });
 });
 
 describe('oversizedAreasMessage', () => {
   it('prints the hectares and the limit the platform way, no decimals', () => {
     expect(oversizedAreasMessage(4_512_345.6)).toBe(
-      'El área seleccionada abarca 4.512.346 ha y supera el máximo de 100.000 ha. Seleccione un área menor.',
+      'El área seleccionada abarca 4.512.346 ha y supera el máximo de 200.000 ha. Seleccione un área menor.',
     );
   });
 });
