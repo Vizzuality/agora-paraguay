@@ -156,7 +156,7 @@ test('a file over the area limit fails with the hectares, not the country check'
   await upload(page, 'farms-oversized.geojson');
 
   await expect(notices).toContainText('Ha habido un error.');
-  await expect(notices).toContainText(/supera el máximo de 100\.000 ha/);
+  await expect(notices).toContainText(/supera el máximo de 200\.000 ha/);
   await expect(analyze).toBeHidden();
   await expect(uploadButton).toHaveClass(/(^| )border-destructive( |$)/);
   expect(requests).toBe(0);

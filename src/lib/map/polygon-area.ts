@@ -6,7 +6,7 @@
  */
 
 /** The most the drawn or uploaded areas may cover together, in hectares. */
-export const MAX_AREA_HECTARES = 100_000;
+export const MAX_AREA_HECTARES = 200_000;
 
 /** WGS84 equatorial radius, metres. */
 const EARTH_RADIUS = 6_378_137;

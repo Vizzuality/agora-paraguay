@@ -246,7 +246,7 @@ test('a drawing over the area limit is rejected back to step 1 without asking th
   await expect(currentStep).toContainText('Paso 1');
   await expect(analyze).toBeHidden();
   await expect(notice).toContainText('Ha habido un error.');
-  await expect(notice).toContainText(/supera el máximo de 100\.000 ha/);
+  await expect(notice).toContainText(/supera el máximo de 200\.000 ha/);
   await expect(draw).toHaveClass(/(^| )border-destructive( |$)/);
   expect(requests).toBe(0);
 
