@@ -14,7 +14,7 @@ const LINK_CLASS =
  */
 export function Footer() {
   return (
-    <footer className="flex w-full flex-col items-center gap-10 bg-primary p-10 md:flex-row md:justify-between">
+    <footer className="flex w-full flex-col items-center gap-10 bg-primary p-10 md:flex-row md:justify-between print:hidden">
       <Link to="/" aria-label="Inicio">
         <Logo className="h-[30px] w-auto text-primary-foreground" />
       </Link>

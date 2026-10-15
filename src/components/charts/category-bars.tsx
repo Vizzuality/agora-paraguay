@@ -9,6 +9,7 @@ import {
   HitAreas,
   parcelCount,
   Responsive,
+  SVG_CLASS,
   ToneGradients,
 } from '@/components/charts/plot';
 import type { CategoryColumn } from '@/lib/analysis/category-counts';
@@ -70,7 +71,7 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
   const bandwidth = xScale.bandwidth();
 
   return (
-    <svg width={width} height={COLUMNS_HEIGHT + 1} className="block overflow-visible">
+    <svg data-slot="chart" viewBox={`0 0 ${width} ${COLUMNS_HEIGHT + 1}`} className={SVG_CLASS}>
       <ToneGradients id={gradientId} />
 
       {columns.map((column) => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatArea, isAreaIndicator, parcelArea } from '@/lib/analysis/area';
+import { formatArea, isAreaIndicator, parcelArea, parcelAreaRows } from '@/lib/analysis/area';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
@@ -71,5 +71,24 @@ describe('formatArea', () => {
     expect(formatArea({ value: 17.5, unit: 'ha' })).toBe('17,5 ha');
     expect(formatArea({ value: 1234.56, unit: 'ha' })).toBe('1.234,6 ha');
     expect(formatArea({ value: 3, unit: null })).toBe('3');
+  });
+});
+
+describe('parcelAreaRows', () => {
+  it('lists every analysed parcel in selection order, with null where it carries no area', () => {
+    const blank = parcel('B', { Asian_rust: 2 });
+
+    expect(parcelAreaRows([west, east, blank], ['E', 'B', 'W'], [area])).toEqual([
+      { parcelId: 'E', area: { value: 7.3, unit: 'ha' } },
+      { parcelId: 'B', area: null },
+      { parcelId: 'W', area: { value: 10.2, unit: 'ha' } },
+    ]);
+  });
+
+  it('is all null without an area indicator', () => {
+    expect(parcelAreaRows([west, east], ['W', 'E'], [rust])).toEqual([
+      { parcelId: 'W', area: null },
+      { parcelId: 'E', area: null },
+    ]);
   });
 });

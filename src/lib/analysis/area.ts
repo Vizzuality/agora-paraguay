@@ -53,3 +53,20 @@ export function formatArea({ value, unit }: ParcelArea): string {
 
   return unit ? `${number} ${unit}` : number;
 }
+
+export type ParcelAreaRow = { parcelId: string; area: ParcelArea | null };
+
+/**
+ * One row per analysed parcel, in selection order, for the report's table: the parcel's
+ * own area, `null` where it carries none. The total is `parcelArea(..., null, ...)`.
+ */
+export function parcelAreaRows(
+  parcels: AnalysisParcel[],
+  parcelIds: readonly string[],
+  indicators: Indicators | undefined,
+): ParcelAreaRow[] {
+  return parcelIds.map((parcelId) => ({
+    parcelId,
+    area: parcelArea(parcels, parcelId, indicators),
+  }));
+}

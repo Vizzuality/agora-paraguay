@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatArea } from '@/lib/analysis/area';
+import { formatArea, parcelArea, parcelAreaRows } from '@/lib/analysis/area';
 import { describeWithFilters } from '@/lib/analysis/describe';
 import { CROP_FILTER_ID, orderHeroFilters } from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
@@ -35,23 +35,27 @@ import {
   scrollLeftForTab,
   type ScrollDirection,
 } from '@/lib/analysis/parcel-tabs-scroll';
+import { useAnalysis } from '@/lib/analysis/use-analysis';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { useParcelArea } from '@/lib/analysis/use-parcel-area';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import { activeParcelIdAtom, activeParcelTabAtom, setAnalysisFilterAtom } from '@/store/analysis';
+import { reportMapAtom } from '@/store/report';
 
 /**
  * The analysed parcels as tabs, and the filters the API offers for that side of the
  * analysis: the filters are asked for that `riesgo`.
  */
 export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
+  // The report keeps the wide layout: the map beside the parcels and filters.
   return (
-    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row">
+    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row print:flex-row paper:flex-row">
       <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <ParcelTabs parcels={parcels} />
+        <ParcelTable parcels={parcels} />
 
         <HeroFilters riesgo={riesgo} />
       </div>
@@ -83,30 +87,56 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   }
 
   return (
-    <div className="grid gap-x-3 gap-y-6 md:grid-cols-2">
-      {filters ? (
-        orderHeroFilters(filters).map((filter) => (
-          <HeroField
-            key={filter.id}
-            filter={filter}
-            description={
-              filter.description && describeWithFilters(filter.description, filters, resolved)
-            }
-            value={resolved[filter.id] ?? ''}
-            onChange={(value) => setFilter({ id: filter.id, value })}
-            // The crop closes the grid on a row of its own.
-            className={filter.id === CROP_FILTER_ID ? 'md:col-span-2' : undefined}
-          />
-        ))
-      ) : (
-        // Placeholder: two disabled selects hold the layout until the filters land.
-        <>
-          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
-          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
-        </>
+    <>
+      {/* The report's info zone: the filters in force as plain text, in place of the
+          controls (agreed with design in lieu of a PDF layout). */}
+      {filters && (
+        <dl className="hidden grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm print:grid">
+          {orderHeroFilters(filters).map((filter) => (
+            <div key={filter.id} className="contents">
+              <dt className="text-muted-foreground">{filter.name}</dt>
+              <dd>{filterValueLabel(filter, resolved[filter.id] ?? '')}</dd>
+            </div>
+          ))}
+        </dl>
       )}
-    </div>
+
+      <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 print:hidden">
+        {filters ? (
+          orderHeroFilters(filters).map((filter) => (
+            <HeroField
+              key={filter.id}
+              filter={filter}
+              description={
+                filter.description && describeWithFilters(filter.description, filters, resolved)
+              }
+              value={resolved[filter.id] ?? ''}
+              onChange={(value) => setFilter({ id: filter.id, value })}
+              // The crop closes the grid on a row of its own.
+              className={filter.id === CROP_FILTER_ID ? 'md:col-span-2' : undefined}
+            />
+          ))
+        ) : (
+          // Placeholder: two disabled selects hold the layout until the filters land.
+          <>
+            <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+            <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+          </>
+        )}
+      </div>
+    </>
   );
+}
+
+/** What the report prints for a filter: the option's label for a category, the date as is. */
+function filterValueLabel(filter: Filter, value: string): string {
+  const field = filter.field_type;
+
+  if (field.type === 'category') {
+    return field.options.find((option) => option.value === value)?.label ?? value;
+  }
+
+  return value;
 }
 
 /** The control a filter's `field_type` calls for. */
@@ -194,18 +224,96 @@ function HeroDate({
  */
 function MiniMapThumbnail() {
   const area = useParcelArea();
+  const reportMap = useAtomValue(reportMapAtom);
 
   return (
-    <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px]">
-      <MiniMap />
-      {area && (
-        <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
-          <span className="text-[36px] font-light tracking-[0.408px] text-white">
-            {formatArea(area)}
-          </span>
-        </div>
+    <>
+      {/* The map does not print (a WebGL canvas comes out blank): the report gets the
+          image `printReport` had it render instead. */}
+      {reportMap && (
+        <img
+          src={reportMap}
+          alt="Mapa de las parcelas analizadas"
+          className="hidden h-[335px] min-w-0 flex-1 rounded-md object-cover print:block"
+        />
       )}
-    </div>
+      <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px] print:hidden">
+        <MiniMap />
+        {area && (
+          <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
+            <span className="text-[36px] font-light tracking-[0.408px] text-white">
+              {formatArea(area)}
+            </span>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
+ * The report's stand-in for the tabs and the mini map, following the open tab like the
+ * widgets do: under Todas every analysed parcel with its area and the total; with a
+ * parcel's tab open, that parcel alone. A single parcel is one line, not a table. Same
+ * answer the thumbnail reads (`useParcelArea`): the sanitario analysis carries the area
+ * column.
+ */
+function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
+  const { analysis, indicators } = useAnalysis('sanitario');
+  const activeId = useAtomValue(activeParcelIdAtom);
+  const answered = (analysis.data?.indicators ?? []).filter((parcel) =>
+    parcels.includes(String(parcel.parcel_id)),
+  );
+  const rows = parcelAreaRows(answered, parcels, indicators).filter(
+    (row) => activeId === null || row.parcelId === activeId,
+  );
+  const total = rows.length > 1 ? parcelArea(answered, null, indicators) : null;
+
+  if (rows.length === 1) {
+    const [{ parcelId, area }] = rows;
+
+    return (
+      <p className="hidden text-sm print:block">
+        <span className="text-muted-foreground">{parcelLabel(parcelId, parcels)} </span>
+        {area ? formatArea(area) : '—'}
+      </p>
+    );
+  }
+
+  return (
+    <table className="hidden w-full text-sm print:table">
+      <caption className="mb-1 text-left text-muted-foreground">Parcelas analizadas</caption>
+      <thead>
+        <tr className="border-b text-left text-muted-foreground">
+          <th scope="col" className="py-1 font-normal">
+            Parcela
+          </th>
+          <th scope="col" className="py-1 text-right font-normal">
+            Área
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ parcelId, area }) => (
+          <tr
+            key={parcelId}
+            aria-current={parcelId === activeId || undefined}
+            className={cn('border-b', parcelId === activeId && 'font-semibold text-primary')}
+          >
+            <td className="py-1">{parcelLabel(parcelId, parcels)}</td>
+            <td className="py-1 text-right">{area ? formatArea(area) : '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+      {total && (
+        <tfoot>
+          <tr className={cn(activeId === null && 'font-semibold text-primary')}>
+            <td className="py-1">Todas</td>
+            <td className="py-1 text-right">{formatArea(total)}</td>
+          </tr>
+        </tfoot>
+      )}
+    </table>
   );
 }
 
@@ -303,7 +411,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   };
 
   return (
-    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1">
+    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:hidden">
       <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
       {/* Clipped on the fieldset's own radius, so a tab scrolled under the rounded
           corner does not show its underline outside the border. */}
