@@ -38,9 +38,8 @@ export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => 
 
 /**
  * Starts the selection over: polygons, tool and session state (parcel flips, upload
- * notice, analysis, mode) all reset. Reiniciar and "Selección de parcelas" route through
- * here. Also works without a map (/analisis): the stored polygons are dropped, so the
- * next bind restores nothing.
+ * notice, analysis, mode) all reset. Reiniciar routes through here. Also works without
+ * a map (/analisis): the stored polygons are dropped, so the next bind restores nothing.
  */
 export const restartSelectionAtom = atom(null, (get, set) => {
   const draw = get(drawInstanceAtom);
