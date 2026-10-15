@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import {
   INITIAL_VIEW_STATE,
@@ -80,6 +80,16 @@ export async function stubBasemap(page: Page) {
 /** The MapLibre canvas, which is what draw interactions click on. */
 export function mapCanvas(page: Page) {
   return page.locator('canvas.maplibregl-canvas');
+}
+
+/**
+ * Scroll-zooms the canvas in by one wheel notch and lets the ease land — the only way
+ * in on a map without zoom buttons (the hero mini map).
+ */
+export async function wheelZoomIn(page: Page, canvas: Locator): Promise<void> {
+  await canvas.hover();
+  await page.mouse.wheel(0, -240);
+  await page.waitForTimeout(300);
 }
 
 /** Pans the camera by dragging from the canvas centre, then waits for the URL to update. */

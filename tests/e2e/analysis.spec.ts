@@ -7,6 +7,7 @@ import {
   FARM_SCALE_URL,
   mapCanvas,
   stubBasemap,
+  wheelZoomIn,
   yellowPixelCount,
 } from './fixtures/map';
 
@@ -112,14 +113,22 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page).toHaveURL(/\/analisis/);
   await expect(page.getByRole('heading', { name: 'Riesgo sanitario' })).toBeVisible();
 
-  // The hero mini map numbers the analysed parcels as their tabs do: two chips, or one
-  // reading "1, 2" when the camera puts the two centroids too close to keep apart.
+  // The hero mini map numbers the analysed parcels as their tabs do, from zoom 14 up,
+  // where a parcel is wide enough to carry a chip: scrolling in brings them — two chips,
+  // or one reading "1, 2" while the camera puts the two centroids too close to keep apart.
+  const miniMap = mapCanvas(page);
+  await expect(miniMap).toBeVisible();
   await expect
-    .poll(async () => {
-      const chips = await page.locator('[data-slot=parcel-number]').allTextContents();
+    .poll(
+      async () => {
+        await wheelZoomIn(page, miniMap);
 
-      return chips.join(', ');
-    })
+        const chips = await page.locator('[data-slot=parcel-number]').allTextContents();
+
+        return chips.join(', ');
+      },
+      { timeout: 20_000 },
+    )
     .toBe('1, 2');
 
   // The hero renders one field per filter the public side returned, named after it: a
