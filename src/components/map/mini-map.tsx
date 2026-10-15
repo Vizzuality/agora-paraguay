@@ -76,7 +76,6 @@ export function MiniMap() {
         zoom={zoom}
       />
       <MiniMapBehaviour />
-      {zoom !== undefined && <ZoomReadout zoom={zoom} />}
       {(parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
           <Layer type="fill" paint={{ 'fill-color': AREA_COLOR, 'fill-opacity': 0.5 }} />
@@ -84,18 +83,6 @@ export function MiniMap() {
         </Source>
       )}
     </Map>
-  );
-}
-
-/** The camera's zoom, so the user can tell when the parcel numbers come in (zoom 14). */
-function ZoomReadout({ zoom }: Readonly<{ zoom: number }>) {
-  return (
-    <output
-      aria-label="Nivel de zoom"
-      className="pointer-events-none absolute top-2 right-2 z-10 rounded-full bg-black/70 px-2 py-0.5 font-sans text-xs text-white tabular-nums"
-    >
-      Zoom {new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 }).format(zoom)}
-    </output>
   );
 }
 
