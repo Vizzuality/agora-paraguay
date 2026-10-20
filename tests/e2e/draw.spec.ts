@@ -16,6 +16,7 @@ import {
   yellowPixelCount,
   zoomToFarmScale,
 } from './fixtures/map';
+import { savedPolygonCount } from './fixtures/saved-selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -138,6 +139,7 @@ test('keeps the drawing across a reload', async ({ page }) => {
   await draw.click();
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
 
   await page.reload();
 

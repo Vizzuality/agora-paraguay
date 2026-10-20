@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { mapCanvas, stubBasemap } from './fixtures/map';
+import { savedPolygonCount } from './fixtures/saved-selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -207,6 +208,7 @@ test('rejects a corrupt zip with a readable error', async ({ page }) => {
 test('keeps the upload across a reload', async ({ page }) => {
   await upload(page, 'farms.geojson');
   await expect(controls(page).analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
 
   await page.reload();
 
@@ -223,9 +225,11 @@ test('a reload after Reiniciar starts from step 1', async ({ page }) => {
 
   await upload(page, 'farms.geojson');
   await expect(analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
 
   await restart.click();
   await expect(analyze).toBeHidden();
+  await expect.poll(() => savedPolygonCount(page)).toBe(0);
 
   await page.reload();
 
