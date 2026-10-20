@@ -8,8 +8,10 @@ import { cn } from '@/lib/utils';
 
 /**
  * The parcels' numbers over the map, one chip per parcel at the centroid of its largest
- * ring, chips that would overlap merged into one ("1–3"). The highlighted parcel's chip
- * is in the parcel yellow, the others' white. DOM markers rather than a symbol layer:
+ * ring, none under zoom 14, chips that would overlap merged into one ("1–3") and a
+ * merge too long to read left out until the zoom splits it. The highlighted parcel's
+ * chip is in the parcel
+ * yellow, the others' white. DOM markers rather than a symbol layer:
  * the satellite style has no glyphs, so MapLibre could not draw text. The chips let
  * clicks through to the parcel underneath. A parcel outside `parcelIds` gets no number.
  * `zoom` is the camera's, from the map's `onMoveEnd`: overlap depends on it alone, so

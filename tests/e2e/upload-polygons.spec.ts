@@ -46,11 +46,9 @@ test('imports a GeoJSON upload, exploding its MultiPolygon', async ({ page }) =>
   await expect(uploadStatus).toHaveText('Se importaron 3 áreas de farms.geojson.');
   await expect(notices).toContainText('Se omitió 1 entidad que no es un polígono.');
 
-  // The camera flies to the imported areas: the first camera write of the session, with
-  // a zoom closer than the country-wide default (5.5).
-  await expect
-    .poll(() => Number(new URL(page.url()).searchParams.get('zoom')))
-    .toBeGreaterThan(5.5);
+  // The camera flies to the imported areas: the first camera write of the session lands
+  // between the two farms (59.4°W and 56.9°W), away from the opening view.
+  await expect.poll(() => Number(new URL(page.url()).searchParams.get('lng'))).toBeLessThan(-57);
 });
 
 // A successful upload moves the panel to step 2, where the entry points are gone:
@@ -158,7 +156,7 @@ test('a file over the area limit fails with the hectares, not the country check'
   await upload(page, 'farms-oversized.geojson');
 
   await expect(notices).toContainText('Ha habido un error.');
-  await expect(notices).toContainText(/supera el máximo de 100\.000 ha/);
+  await expect(notices).toContainText(/supera el máximo de 200\.000 ha/);
   await expect(analyze).toBeHidden();
   await expect(uploadButton).toHaveClass(/(^| )border-destructive( |$)/);
   expect(requests).toBe(0);
