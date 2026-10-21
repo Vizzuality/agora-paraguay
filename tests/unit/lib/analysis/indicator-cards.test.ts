@@ -110,6 +110,18 @@ describe('indicatorCards', () => {
     expect(cards.map((card) => [card.id, card.level])).toEqual([['asian_rust', 'Moderado']]);
   });
 
+  it('reads an unreadable column as "Sin datos": that indicator fails alone', () => {
+    const cards = indicatorCards(
+      { parcel_id: 'D07D21P00000001', properties: { brown_spot: 1 }, unreadable: ['Asian_rust'] },
+      [asianRust, brownSpot],
+    );
+
+    expect(cards.map((card) => [card.id, card.level])).toEqual([
+      ['asian_rust', 'Sin datos'],
+      ['brown_spot', 'Sin riesgo'],
+    ]);
+  });
+
   it('matches a column to its indicator ignoring case — the backend answers Asian_rust', () => {
     const [card] = indicatorCards(parcel({ Asian_rust: 3 }), [asianRust]);
 
@@ -361,6 +373,27 @@ describe('generalInfo', () => {
 
   it('reads a number for a text indicator as "Sin datos"', () => {
     expect(generalInfo(parcel({ weather_station: 12 }), [station])[0].value).toBe('Sin datos');
+  });
+
+  it('lists an unreadable column as "Sin datos", known or not, beside the readable facts', () => {
+    expect(
+      generalInfo(
+        {
+          parcel_id: 'D07D21P00000001',
+          properties: { weather_station: 'Hohenau' },
+          unreadable: ['phenology_stage', 'possible_phenology_stages'],
+        },
+        [station, phenology],
+      ),
+    ).toEqual([
+      { id: 'weather_station', label: 'Estación', value: 'Hohenau' },
+      { id: 'phenology_stage', label: 'Momento fenológico', value: 'Sin datos' },
+      {
+        id: 'possible_phenology_stages',
+        label: 'possible_phenology_stages',
+        value: 'Sin datos',
+      },
+    ]);
   });
 
   it("groups a parcel's station, crop and phenology", () => {

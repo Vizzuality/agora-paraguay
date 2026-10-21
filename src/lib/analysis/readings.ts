@@ -41,11 +41,21 @@ export function numberOf(parcel: AnalysisParcel, id: string): number | undefined
   return Number.isNaN(number) ? undefined : number;
 }
 
-/** Whether the answer carries the column for this parcel at all, whatever it holds (NA included). */
+/** Whether the answer carries the column for this parcel at all, whatever it holds (NA and unreadable included). */
 export function hasColumn(parcel: AnalysisParcel, id: string): boolean {
   const wanted = id.toLowerCase();
 
-  return Object.keys(parcel.properties).some((column) => column.toLowerCase() === wanted);
+  return (
+    Object.keys(parcel.properties).some((column) => column.toLowerCase() === wanted) ||
+    isUnreadable(parcel, id)
+  );
+}
+
+/** Whether the backend answered the column with a value no reading can come from (an array). */
+export function isUnreadable(parcel: AnalysisParcel, id: string): boolean {
+  const wanted = id.toLowerCase();
+
+  return (parcel.unreadable ?? []).some((column) => column.toLowerCase() === wanted);
 }
 
 function columnIgnoringCase(parcel: AnalysisParcel, id: string): ParcelValue | undefined {

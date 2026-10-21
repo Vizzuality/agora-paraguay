@@ -6,7 +6,7 @@ import {
 import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 import { isAreaIndicator } from './area';
-import { asReading, isNoReading, readingOf } from './readings';
+import { asReading, isNoReading, isUnreadable, readingOf } from './readings';
 import {
   categoryAxis,
   categoryClasses,
@@ -67,7 +67,13 @@ export function combinedParcel(
     properties[column] = combineReadings(readings, typeOf.get(column.toLowerCase()));
   }
 
-  return { parcel_id: COMBINED_PARCEL_ID, properties };
+  const unreadable = [...new Set(parcels.flatMap((parcel) => parcel.unreadable ?? []))].filter(
+    (column) => !(column in properties),
+  );
+
+  return unreadable.length > 0
+    ? { parcel_id: COMBINED_PARCEL_ID, properties, unreadable }
+    : { parcel_id: COMBINED_PARCEL_ID, properties };
 }
 
 function combineReadings(readings: (string | number)[], type: string | undefined): ParcelValue {
@@ -186,10 +192,10 @@ export function indicatorCards(
 
     const value = readingOf(parcel, indicator.id);
 
-    if (value === undefined) return [];
+    if (value === undefined && !isUnreadable(parcel, indicator.id)) return [];
 
     return [
-      toCard(indicator, value) ?? {
+      (value !== undefined && toCard(indicator, value)) || {
         id: indicator.id,
         label: indicator.name,
         description: indicator.description,
@@ -216,9 +222,9 @@ export function generalInfo(
 
     const value = readingOf(parcel, indicator.id);
 
-    if (value === undefined) return [];
+    if (value === undefined && !isUnreadable(parcel, indicator.id)) return [];
 
-    const typed = typedReading(indicator, value);
+    const typed = value === undefined ? undefined : typedReading(indicator, value);
 
     return [
       {
@@ -246,19 +252,24 @@ function factText(value: string | number | undefined, unit: string | null | unde
   return typeof value === 'number' ? formatValue(value, unit) : value;
 }
 
-/** The parcel's readable columns no indicator in the metadata claims, ignoring case. */
+/** The parcel's readable and unreadable columns no indicator in the metadata claims, ignoring case. */
 function unknownColumns(
   parcel: AnalysisParcel,
   indicators: Indicators,
-): [string, string | number][] {
+): [string, string | number | undefined][] {
   const claimed = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
+  const unclaimed = (column: string) => !claimed.has(column.toLowerCase());
 
-  return Object.entries(parcel.properties).flatMap(([column, value]) => {
-    if (claimed.has(column.toLowerCase())) return [];
-    if (isNoReading(value)) return [];
+  const readable = Object.entries(parcel.properties).flatMap(([column, value]) => {
+    if (!unclaimed(column) || isNoReading(value)) return [];
 
     return [[column, value] as [string, string | number]];
   });
+  const unreadable = (parcel.unreadable ?? [])
+    .filter(unclaimed)
+    .map((column): [string, undefined] => [column, undefined]);
+
+  return [...readable, ...unreadable];
 }
 
 function toCard(indicator: Indicator, value: string | number): IndicatorCard | null {

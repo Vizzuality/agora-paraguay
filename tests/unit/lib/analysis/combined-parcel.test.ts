@@ -100,6 +100,19 @@ describe('combinedParcel', () => {
     expect(combined?.properties).toEqual({ Asian_rust: 3, crop_type: 'Soja' });
   });
 
+  it('keeps a column unreadable only where no parcel reads it', () => {
+    const combined = combinedParcel(
+      [
+        { parcel_id: 'A', properties: { Asian_rust: 3 }, unreadable: ['crop_type', 'stages'] },
+        { parcel_id: 'B', properties: { crop_type: 'Soja' }, unreadable: ['stages'] },
+      ],
+      INDICATORS,
+    );
+
+    expect(combined?.properties).toEqual({ Asian_rust: 3, crop_type: 'Soja' });
+    expect(combined?.unreadable).toEqual(['stages']);
+  });
+
   it('combines columns the metadata does not know by the shape of their values', () => {
     const combined = combinedParcel(
       [parcel('A', { yield: 10, station: 'Norte' }), parcel('B', { yield: 20, station: 'Sur' })],
