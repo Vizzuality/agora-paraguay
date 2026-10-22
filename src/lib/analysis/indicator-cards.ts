@@ -257,8 +257,8 @@ function unknownColumns(
   parcel: AnalysisParcel,
   indicators: Indicators,
 ): [string, Reading | undefined][] {
-  const knownIds = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
-  const isUnknown = (column: string) => !knownIds.has(column.toLowerCase());
+  const knownIndicatorIds = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
+  const isUnknown = (column: string) => !knownIndicatorIds.has(column.toLowerCase());
 
   const readable = Object.entries(parcel.properties).flatMap(([column, value]) => {
     if (!isUnknown(column) || isNoReading(value)) return [];
