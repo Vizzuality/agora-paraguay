@@ -2,8 +2,8 @@ import { classIndexAt, type RiskClass } from './widget-config';
 
 /** One band of the risk ruler: a class, and the marker when the reading falls in it. */
 export type RulerBand = RiskClass & {
-  /** This class or one below it holds the reading: its label prints strong. */
-  reached: boolean;
+  /** This class holds the reading: its label prints strong. */
+  current: boolean;
   /**
    * Flex weights for the track either side of the marker, only on the band the reading
    * falls in. `before` is where the marker lands within the band, as a percentage.
@@ -26,7 +26,7 @@ export function rulerBands(position: number, classes: readonly RiskClass[]): Rul
 
   return classes.map((riskClass, index) => ({
     ...riskClass,
-    reached: index <= active,
+    current: index === active,
     ...(index === active ? { marker: { before: within, after: 100 - within } } : {}),
   }));
 }

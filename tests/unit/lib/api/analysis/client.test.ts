@@ -71,6 +71,36 @@ describe('analysisResponseSchema', () => {
     expect(parsed.indicators[1].properties.Asian_rust).toBe('1');
   });
 
+  it('reads the diseases shape: disease columns beside parcel_id, the rest under properties', () => {
+    const parsed = analysisResponseSchema.parse({
+      ...response,
+      indicators: [
+        {
+          parcel_id: 'D1001P00000001',
+          anublo_bacteriano: 0,
+          mancha_parda: 0,
+          properties: {
+            temperature_avg: 19.6,
+            weather_station: 'Santa Teresa',
+            phenology_stage: null,
+            possible_phenology_stages: [],
+          },
+        },
+      ],
+    });
+
+    expect(parsed.indicators[0]).toEqual({
+      parcel_id: 'D1001P00000001',
+      properties: {
+        anublo_bacteriano: 0,
+        mancha_parda: 0,
+        temperature_avg: 19.6,
+        weather_station: 'Santa Teresa',
+        phenology_stage: null,
+      },
+    });
+  });
+
   it('rejects a parcel without parcel_id, and the old FeatureCollection shape', () => {
     expect(
       analysisResponseSchema.safeParse({

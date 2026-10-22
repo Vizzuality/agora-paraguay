@@ -10,6 +10,7 @@ import {
   wheelZoomIn,
   yellowPixelCount,
 } from './fixtures/map';
+import { savedAnalysedParcelCount } from './fixtures/saved-selection';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
 // ~640px wide).
@@ -435,6 +436,25 @@ test('opens the metadata description from the info icon on hero fields and cards
   await expect(popover).toContainText('previas a 17/09/2026.');
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
+});
+
+// The analysed parcels are saved with the selection: a reload on /analisis stays on the
+// page with the same parcels instead of bouncing back to /.
+test('keeps the analysis across a reload', async ({ page }) => {
+  await analyzeFirstPolygon(page);
+
+  const tabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
+  const card = page.getByRole('heading', { name: 'Phakopsora pachyrhizi' });
+
+  await expect(tabs.filter({ hasText: 'Parcela 2' })).toBeVisible();
+  await expect.poll(() => savedAnalysedParcelCount(page)).toBe(2);
+
+  await page.reload();
+
+  await expect(page).toHaveURL(/\/analisis\/sanitario/);
+  await expect(tabs.filter({ hasText: 'Parcela 1' })).toBeVisible();
+  await expect(tabs.filter({ hasText: 'Parcela 2' })).toBeVisible();
+  await expect(card).toBeVisible();
 });
 
 test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
