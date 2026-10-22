@@ -165,9 +165,22 @@ describe('fetchIndicators', () => {
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
   });
 
-  it('rejects an indicator type it has no card for', async () => {
+  it('skips an indicator type it has no card for and keeps the rest of the list', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     fetchMock.mockResolvedValueOnce(
-      Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'unknown' } }]),
+      Response.json([...indicators, { id: 'x', name: 'X', indicator_type: { type: 'unknown' } }]),
+    );
+
+    await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"x"'));
+
+    warn.mockRestore();
+  });
+
+  it('still rejects an entry that is malformed otherwise', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([...indicators, { name: 'No id', indicator_type: { type: 'text' } }]),
     );
 
     await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);
