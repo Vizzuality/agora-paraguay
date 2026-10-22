@@ -165,17 +165,12 @@ describe('fetchIndicators', () => {
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
   });
 
-  it('skips an indicator type it has no card for and keeps the rest of the list', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
+  it('leaves out an indicator of a type it draws no widget for, and keeps the rest', async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json([...indicators, { id: 'x', name: 'X', indicator_type: { type: 'unknown' } }]),
     );
 
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"x"'));
-
-    warn.mockRestore();
   });
 
   it('still rejects an entry that is malformed otherwise', async () => {

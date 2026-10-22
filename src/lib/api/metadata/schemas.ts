@@ -78,8 +78,8 @@ const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric'
 
 /**
  * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in
- * `analysis/schemas.ts`. An unknown type fails this parse; the list then skips that
- * indicator (`indicatorsSchema`) until the kind has a card.
+ * `analysis/schemas.ts`. Only these types are drawn: `indicatorsSchema` leaves any
+ * other out of the list.
  */
 export const indicatorTypeSchema = z.discriminatedUnion('type', [
   rangeIndicatorTypeSchema,
@@ -123,46 +123,30 @@ export const indicatorSchema = z.preprocess(
 
 export type Indicator = z.infer<typeof indicatorSchema>;
 
-/** The only failure is an `indicator_type.type` no card exists for. */
-function isUnknownIndicatorType(error: z.ZodError): boolean {
-  return error.issues.every(
-    (issue) =>
-      issue.code === 'invalid_union' &&
-      issue.path.length === 2 &&
-      issue.path[0] === 'indicator_type' &&
-      issue.path[1] === 'type',
-  );
+/** The indicator types the app draws a widget for, one per `indicatorTypeSchema` branch. */
+const DRAWN_INDICATOR_TYPES: ReadonlySet<string> = new Set<IndicatorType['type']>([
+  'range',
+  'category',
+  'text',
+  'numeric',
+]);
+
+function isDrawnType(raw: unknown): boolean {
+  const type = (asSpecIndicator(raw) as { indicator_type?: { type?: unknown } } | null)
+    ?.indicator_type?.type;
+
+  return typeof type === 'string' && DRAWN_INDICATOR_TYPES.has(type);
 }
 
 /**
- * The list, minus indicators of a type the app has no card for: the backend adding a
- * kind must not take every other indicator down with it. Any other malformed entry
- * still fails the whole list.
+ * The list, filtered to the types the app draws (`DRAWN_INDICATOR_TYPES`). The API also
+ * lists types with no widget; those are left out, not a failure. A kept entry that is
+ * malformed still fails the whole list.
  */
-export const indicatorsSchema = z.array(z.unknown()).transform((entries, ctx) => {
-  const indicators: Indicator[] = [];
-
-  for (const [index, entry] of entries.entries()) {
-    const result = indicatorSchema.safeParse(entry);
-
-    if (result.success) {
-      indicators.push(result.data);
-    } else if (isUnknownIndicatorType(result.error)) {
-      const { id, indicator_type: type } = (entry ?? {}) as Record<string, unknown>;
-      console.warn(
-        `Skipping indicator ${JSON.stringify(id)}: unknown type ${JSON.stringify(type)}`,
-      );
-    } else {
-      for (const issue of result.error.issues) {
-        ctx.addIssue({ code: 'custom', message: issue.message, path: [index, ...issue.path] });
-      }
-
-      return z.NEVER;
-    }
-  }
-
-  return indicators;
-});
+export const indicatorsSchema = z
+  .array(z.unknown())
+  .transform((entries) => entries.filter(isDrawnType))
+  .pipe(z.array(indicatorSchema));
 
 export type Indicators = Indicator[];
 
