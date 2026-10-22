@@ -252,21 +252,21 @@ function factText(value: Reading | undefined, unit: string | null | undefined): 
   return typeof value === 'number' ? formatValue(value, unit) : value;
 }
 
-/** The parcel's readable and unreadable columns no indicator in the metadata claims, ignoring case. */
+/** The parcel's columns, readable or not, whose name matches no indicator id in the metadata (ignoring case). */
 function unknownColumns(
   parcel: AnalysisParcel,
   indicators: Indicators,
 ): [string, Reading | undefined][] {
-  const claimed = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
-  const unclaimed = (column: string) => !claimed.has(column.toLowerCase());
+  const knownIds = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
+  const isUnknown = (column: string) => !knownIds.has(column.toLowerCase());
 
   const readable = Object.entries(parcel.properties).flatMap(([column, value]) => {
-    if (!unclaimed(column) || isNoReading(value)) return [];
+    if (!isUnknown(column) || isNoReading(value)) return [];
 
     return [[column, value] as [string, Reading]];
   });
   const unreadable = (parcel.unreadable ?? [])
-    .filter(unclaimed)
+    .filter(isUnknown)
     .map((column): [string, undefined] => [column, undefined]);
 
   return [...readable, ...unreadable];
