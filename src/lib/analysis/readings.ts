@@ -1,5 +1,8 @@
 import type { AnalysisParcel, ParcelValue } from '@/lib/api/analysis/schemas';
 
+/** A parcel's reading of an indicator: a number or a text, once "no reading" is filtered out. */
+export type Reading = string | number;
+
 /**
  * The spellings of "no reading" seen from the backend, compared trimmed and case-blind:
  * the spec's "NA", plus the variants pandas and Django serialisers produce.
@@ -15,7 +18,7 @@ export function isNoReading(value: ParcelValue | undefined): boolean {
 }
 
 /** The wire value as a reading, or `undefined` when it means there is none. */
-export function asReading(value: ParcelValue | undefined): string | number | undefined {
+export function asReading(value: ParcelValue | undefined): Reading | undefined {
   return value === null || value === undefined || isNoReading(value) ? undefined : value;
 }
 
@@ -24,7 +27,7 @@ export function asReading(value: ParcelValue | undefined): string | number | und
  * `Asian_rust` to a request for `asian_rust`. `undefined` when the parcel has no reading
  * (`isNoReading`).
  */
-export function readingOf(parcel: AnalysisParcel, id: string): string | number | undefined {
+export function readingOf(parcel: AnalysisParcel, id: string): Reading | undefined {
   const value = parcel.properties[id] ?? columnIgnoringCase(parcel, id);
 
   return asReading(value);

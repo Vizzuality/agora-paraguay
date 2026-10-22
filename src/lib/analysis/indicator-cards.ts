@@ -6,7 +6,7 @@ import {
 import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 import { isAreaIndicator } from './area';
-import { asReading, isNoReading, isUnreadable, readingOf } from './readings';
+import { asReading, isNoReading, isUnreadable, readingOf, type Reading } from './readings';
 import {
   categoryAxis,
   categoryClasses,
@@ -161,7 +161,7 @@ export function isRiskClass(
  * column must carry a number, a `text` one a string, and so on. `undefined` when the
  * backend answered something else — the card then reads "Sin datos".
  */
-function typedReading(indicator: Indicator, value: string | number): string | number | undefined {
+function typedReading(indicator: Indicator, value: Reading): Reading | undefined {
   const parsed = indicatorReadingSchema(indicator.indicator_type).safeParse(value);
 
   return parsed.success ? parsed.data : undefined;
@@ -246,7 +246,7 @@ export function generalInfo(
 }
 
 /** A fact as printed: numbers in the platform's locale with the unit, text as is, "Sin datos" when unreadable. */
-function factText(value: string | number | undefined, unit: string | null | undefined): string {
+function factText(value: Reading | undefined, unit: string | null | undefined): string {
   if (value === undefined) return NO_READING;
 
   return typeof value === 'number' ? formatValue(value, unit) : value;
@@ -256,14 +256,14 @@ function factText(value: string | number | undefined, unit: string | null | unde
 function unknownColumns(
   parcel: AnalysisParcel,
   indicators: Indicators,
-): [string, string | number | undefined][] {
+): [string, Reading | undefined][] {
   const claimed = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
   const unclaimed = (column: string) => !claimed.has(column.toLowerCase());
 
   const readable = Object.entries(parcel.properties).flatMap(([column, value]) => {
     if (!unclaimed(column) || isNoReading(value)) return [];
 
-    return [[column, value] as [string, string | number]];
+    return [[column, value] as [string, Reading]];
   });
   const unreadable = (parcel.unreadable ?? [])
     .filter(unclaimed)
