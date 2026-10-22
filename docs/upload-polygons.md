@@ -8,8 +8,9 @@ Written 2026-08-20; everything here is client-side because the API does not exis
 One file per upload — a zipped shapefile, KML/KMZ, or GeoJSON — containing any number
 of farm polygons. They are injected into the Terra Draw store, so they behave exactly
 like hand-drawn polygons: select, edit, delete and clear all apply. A new upload
-replaces the previous upload's polygons; hand-drawn ones survive. Nothing persists
-across a reload, matching drawn-polygon behaviour.
+replaces the previous upload's polygons; hand-drawn ones survive. Like drawn polygons,
+they are saved to IndexedDB as they change and restored on reload
+(`src/lib/saved-selection.ts`); the upload notice itself is not.
 
 Every polygon (drawn or uploaded) appears in the panel's "Areas of interest" list, and
 one at a time can be picked for analysis (`analysisId` in `draw-state.ts`). The

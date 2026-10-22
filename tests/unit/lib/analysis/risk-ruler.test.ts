@@ -24,10 +24,14 @@ describe('rulerBands', () => {
     expect(first.marker?.before).toBeCloseTo(36);
   });
 
-  it('marks the classes up to the reading as reached, for the strong labels', () => {
-    expect(rulerBands(0, RANGE_CLASSES).map((band) => band.reached)).toEqual([true, false, false]);
-    expect(rulerBands(50, RANGE_CLASSES).map((band) => band.reached)).toEqual([true, true, false]);
-    expect(rulerBands(100, RANGE_CLASSES).map((band) => band.reached)).toEqual([true, true, true]);
+  it('marks only the class the reading falls in as current, for the strong label', () => {
+    expect(rulerBands(0, RANGE_CLASSES).map((band) => band.current)).toEqual([true, false, false]);
+    expect(rulerBands(50, RANGE_CLASSES).map((band) => band.current)).toEqual([false, true, false]);
+    expect(rulerBands(100, RANGE_CLASSES).map((band) => band.current)).toEqual([
+      false,
+      false,
+      true,
+    ]);
   });
 
   it('keeps the two weights of the marked band summing to 100 so the offset stays proportional', () => {
