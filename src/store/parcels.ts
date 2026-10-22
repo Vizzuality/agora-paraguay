@@ -35,3 +35,8 @@ export const toggleParcelAtom = atom(null, (get, set, id: string) => {
 export const resetParcelTogglesAtom = atom(null, (_get, set) => {
   set(toggledParcelIdsBaseAtom, []);
 });
+
+/** The flips a previous session saved (`hydrateSavedSelectionAtom`). */
+export const restoreParcelTogglesAtom = atom(null, (_get, set, ids: string[]) => {
+  set(toggledParcelIdsBaseAtom, ids);
+});

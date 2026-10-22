@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { mapCanvas, stubBasemap } from './fixtures/map';
+import { savedPolygonCount } from './fixtures/saved-selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -46,11 +47,9 @@ test('imports a GeoJSON upload, exploding its MultiPolygon', async ({ page }) =>
   await expect(uploadStatus).toHaveText('Se importaron 3 áreas de farms.geojson.');
   await expect(notices).toContainText('Se omitió 1 entidad que no es un polígono.');
 
-  // The camera flies to the imported areas: the first camera write of the session, with
-  // a zoom closer than the country-wide default (5.5).
-  await expect
-    .poll(() => Number(new URL(page.url()).searchParams.get('zoom')))
-    .toBeGreaterThan(5.5);
+  // The camera flies to the imported areas: the first camera write of the session lands
+  // between the two farms (59.4°W and 56.9°W), away from the opening view.
+  await expect.poll(() => Number(new URL(page.url()).searchParams.get('lng'))).toBeLessThan(-57);
 });
 
 // A successful upload moves the panel to step 2, where the entry points are gone:
@@ -158,7 +157,7 @@ test('a file over the area limit fails with the hectares, not the country check'
   await upload(page, 'farms-oversized.geojson');
 
   await expect(notices).toContainText('Ha habido un error.');
-  await expect(notices).toContainText(/supera el máximo de 100\.000 ha/);
+  await expect(notices).toContainText(/supera el máximo de 200\.000 ha/);
   await expect(analyze).toBeHidden();
   await expect(uploadButton).toHaveClass(/(^| )border-destructive( |$)/);
   expect(requests).toBe(0);
@@ -204,14 +203,36 @@ test('rejects a corrupt zip with a readable error', async ({ page }) => {
   await expect(notices).toContainText('No se pudo leer el archivo como archivo zip.');
 });
 
-// Uploads live in the same in-memory store as drawn polygons, and only the camera is
-// persisted — so a reload clears them, consistently with `draw.spec.ts`.
-test('loses the upload on reload', async ({ page }) => {
+// Uploaded areas are saved like drawn ones: a reload lands on step 2 with the areas
+// back, and the analysis still goes through. The upload notice itself is not kept.
+test('keeps the upload across a reload', async ({ page }) => {
   await upload(page, 'farms.geojson');
   await expect(controls(page).analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
 
   await page.reload();
 
-  await expect(controls(page).upload).toBeEnabled();
-  await expect(controls(page).analyze).toBeHidden();
+  await expect(controls(page).analyze).toBeEnabled();
+  await expect(controls(page).upload).toBeHidden();
+
+  await controls(page).analyze.click();
+  await expect(page).toHaveURL(/\/analisis/);
+});
+
+// Reiniciar removes the saved record too: a reload after it starts from nothing.
+test('a reload after Reiniciar starts from step 1', async ({ page }) => {
+  const { upload: uploadButton, analyze, restart } = controls(page);
+
+  await upload(page, 'farms.geojson');
+  await expect(analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
+
+  await restart.click();
+  await expect(analyze).toBeHidden();
+  await expect.poll(() => savedPolygonCount(page)).toBe(0);
+
+  await page.reload();
+
+  await expect(uploadButton).toBeEnabled();
+  await expect(analyze).toBeHidden();
 });

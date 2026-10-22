@@ -71,6 +71,52 @@ describe('analysisResponseSchema', () => {
     expect(parsed.indicators[1].properties.Asian_rust).toBe('1');
   });
 
+  it('reads the diseases shape: disease columns beside parcel_id, the rest under properties', () => {
+    const parsed = analysisResponseSchema.parse({
+      ...response,
+      indicators: [
+        {
+          parcel_id: 'D1001P00000001',
+          anublo_bacteriano: 0,
+          mancha_parda: 0,
+          properties: {
+            temperature_avg: 19.6,
+            weather_station: 'Santa Teresa',
+            phenology_stage: null,
+            possible_phenology_stages: [],
+          },
+        },
+      ],
+    });
+
+    expect(parsed.indicators[0]).toEqual({
+      parcel_id: 'D1001P00000001',
+      properties: {
+        anublo_bacteriano: 0,
+        mancha_parda: 0,
+        temperature_avg: 19.6,
+        weather_station: 'Santa Teresa',
+        phenology_stage: null,
+      },
+      unreadable: ['possible_phenology_stages'],
+    });
+  });
+
+  it('marks a non-scalar column unreadable instead of failing the whole analysis', () => {
+    const parsed = analysisResponseSchema.parse({
+      ...response,
+      indicators: [
+        {
+          parcel_id: 'D07D21P00000002',
+          properties: { Asian_rust: 2, possible_phenology_stages: ['V1', 'V2'] },
+        },
+      ],
+    });
+
+    expect(parsed.indicators[0].properties).toEqual({ Asian_rust: 2 });
+    expect(parsed.indicators[0].unreadable).toEqual(['possible_phenology_stages']);
+  });
+
   it('rejects a parcel without parcel_id, and the old FeatureCollection shape', () => {
     expect(
       analysisResponseSchema.safeParse({

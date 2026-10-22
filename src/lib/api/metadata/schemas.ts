@@ -78,7 +78,8 @@ const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric'
 
 /**
  * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in
- * `analysis/schemas.ts`. Unknown types fail the parse: a new kind needs a card first.
+ * `analysis/schemas.ts`. Only these types are drawn: `indicatorsSchema` leaves any
+ * other out of the list.
  */
 export const indicatorTypeSchema = z.discriminatedUnion('type', [
   rangeIndicatorTypeSchema,
@@ -122,9 +123,32 @@ export const indicatorSchema = z.preprocess(
 
 export type Indicator = z.infer<typeof indicatorSchema>;
 
-export const indicatorsSchema = z.array(indicatorSchema);
+/** The indicator types the app draws a widget for, one per `indicatorTypeSchema` branch. */
+const DRAWN_INDICATOR_TYPES: ReadonlySet<string> = new Set<IndicatorType['type']>([
+  'range',
+  'category',
+  'text',
+  'numeric',
+]);
 
-export type Indicators = z.infer<typeof indicatorsSchema>;
+function isDrawnType(raw: unknown): boolean {
+  const type = (asSpecIndicator(raw) as { indicator_type?: { type?: unknown } } | null)
+    ?.indicator_type?.type;
+
+  return typeof type === 'string' && DRAWN_INDICATOR_TYPES.has(type);
+}
+
+/**
+ * The list, filtered to the types the app draws (`DRAWN_INDICATOR_TYPES`). The API also
+ * lists types with no widget; those are left out, not a failure. A kept entry that is
+ * malformed still fails the whole list.
+ */
+export const indicatorsSchema = z
+  .array(z.unknown())
+  .transform((entries) => entries.filter(isDrawnType))
+  .pipe(z.array(indicatorSchema));
+
+export type Indicators = Indicator[];
 
 /**
  * What the list request answers: the array itself, or the analysis envelope with the

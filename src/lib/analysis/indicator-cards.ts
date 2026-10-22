@@ -6,7 +6,7 @@ import {
 import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
 
 import { isAreaIndicator } from './area';
-import { asReading, isNoReading, readingOf } from './readings';
+import { asReading, isNoReading, isUnreadable, readingOf, type Reading } from './readings';
 import {
   categoryAxis,
   categoryClasses,
@@ -67,7 +67,13 @@ export function combinedParcel(
     properties[column] = combineReadings(readings, typeOf.get(column.toLowerCase()));
   }
 
-  return { parcel_id: COMBINED_PARCEL_ID, properties };
+  const unreadable = [...new Set(parcels.flatMap((parcel) => parcel.unreadable ?? []))].filter(
+    (column) => !(column in properties),
+  );
+
+  return unreadable.length > 0
+    ? { parcel_id: COMBINED_PARCEL_ID, properties, unreadable }
+    : { parcel_id: COMBINED_PARCEL_ID, properties };
 }
 
 function combineReadings(readings: (string | number)[], type: string | undefined): ParcelValue {
@@ -155,7 +161,7 @@ export function isRiskClass(
  * column must carry a number, a `text` one a string, and so on. `undefined` when the
  * backend answered something else — the card then reads "Sin datos".
  */
-function typedReading(indicator: Indicator, value: string | number): string | number | undefined {
+function typedReading(indicator: Indicator, value: Reading): Reading | undefined {
   const parsed = indicatorReadingSchema(indicator.indicator_type).safeParse(value);
 
   return parsed.success ? parsed.data : undefined;
@@ -186,10 +192,10 @@ export function indicatorCards(
 
     const value = readingOf(parcel, indicator.id);
 
-    if (value === undefined) return [];
+    if (value === undefined && !isUnreadable(parcel, indicator.id)) return [];
 
     return [
-      toCard(indicator, value) ?? {
+      (value !== undefined && toCard(indicator, value)) || {
         id: indicator.id,
         label: indicator.name,
         description: indicator.description,
@@ -216,9 +222,9 @@ export function generalInfo(
 
     const value = readingOf(parcel, indicator.id);
 
-    if (value === undefined) return [];
+    if (value === undefined && !isUnreadable(parcel, indicator.id)) return [];
 
-    const typed = typedReading(indicator, value);
+    const typed = value === undefined ? undefined : typedReading(indicator, value);
 
     return [
       {
@@ -240,25 +246,30 @@ export function generalInfo(
 }
 
 /** A fact as printed: numbers in the platform's locale with the unit, text as is, "Sin datos" when unreadable. */
-function factText(value: string | number | undefined, unit: string | null | undefined): string {
+function factText(value: Reading | undefined, unit: string | null | undefined): string {
   if (value === undefined) return NO_READING;
 
   return typeof value === 'number' ? formatValue(value, unit) : value;
 }
 
-/** The parcel's readable columns no indicator in the metadata claims, ignoring case. */
+/** The parcel's columns, readable or not, whose name matches no indicator id in the metadata (ignoring case). */
 function unknownColumns(
   parcel: AnalysisParcel,
   indicators: Indicators,
-): [string, string | number][] {
-  const claimed = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
+): [string, Reading | undefined][] {
+  const knownIndicatorIds = new Set(indicators.map((indicator) => indicator.id.toLowerCase()));
+  const isUnknown = (column: string) => !knownIndicatorIds.has(column.toLowerCase());
 
-  return Object.entries(parcel.properties).flatMap(([column, value]) => {
-    if (claimed.has(column.toLowerCase())) return [];
-    if (isNoReading(value)) return [];
+  const readable = Object.entries(parcel.properties).flatMap(([column, value]) => {
+    if (!isUnknown(column) || isNoReading(value)) return [];
 
-    return [[column, value] as [string, string | number]];
+    return [[column, value] as [string, Reading]];
   });
+  const unreadable = (parcel.unreadable ?? [])
+    .filter(isUnknown)
+    .map((column): [string, undefined] => [column, undefined]);
+
+  return [...readable, ...unreadable];
 }
 
 function toCard(indicator: Indicator, value: string | number): IndicatorCard | null {

@@ -96,19 +96,59 @@ export function indicatorReadingSchema(type: IndicatorType): z.ZodType<string | 
   }
 }
 
+function isParcelValue(value: unknown): value is ParcelValue {
+  return value === null || typeof value === 'string' || typeof value === 'number';
+}
+
+/**
+ * The diseases answer puts the disease columns beside `parcel_id` and the rest under
+ * `properties`; production puts everything under `properties`. Both become one
+ * `properties` record.
+ */
+function asFlatParcel(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+
+  const { parcel_id, properties, ...columns } = raw as Record<string, unknown>;
+  const nested = typeof properties === 'object' && properties !== null ? properties : {};
+
+  return { parcel_id, properties: { ...columns, ...nested } };
+}
+
 /**
  * One analysed parcel: the id `filter-parcels` gave it and the indicators it was scored
  * on, as property columns. The backend writes the column names in its own casing
  * (`Asian_rust` for the id `asian_rust` that was requested), so readers match ids to
  * columns case-insensitively (`indicator-cards.ts`).
  */
-const analysisParcelSchema = z.looseObject({
-  /** Echo of a requested parcel: the cadastral code, or a number in older samples. */
-  parcel_id: z.union([z.string().min(1), z.number().int()]),
-  properties: z.record(z.string(), parcelValueSchema),
-});
+const analysisParcelSchema = z.preprocess(
+  asFlatParcel,
+  z
+    .object({
+      /** Echo of a requested parcel: the cadastral code, or a number in older samples. */
+      parcel_id: z.union([z.string().min(1), z.number().int()]),
+      properties: z.record(z.string(), z.unknown()),
+    })
+    .transform(({ parcel_id, properties }): AnalysisParcel => {
+      const readable: Record<string, ParcelValue> = {};
+      const unreadable: string[] = [];
 
-export type AnalysisParcel = z.infer<typeof analysisParcelSchema>;
+      for (const [column, value] of Object.entries(properties)) {
+        if (isParcelValue(value)) readable[column] = value;
+        else unreadable.push(column);
+      }
+
+      return unreadable.length > 0
+        ? { parcel_id, properties: readable, unreadable }
+        : { parcel_id, properties: readable };
+    }),
+);
+
+export type AnalysisParcel = {
+  parcel_id: string | number;
+  properties: Record<string, ParcelValue>;
+  /** Columns whose value is no scalar (`possible_phenology_stages` arrives as an array): each fails alone, as "Sin datos". */
+  unreadable?: string[];
+};
 
 /**
  * The envelope `POST /api/parcels/analysis/{diseases|production}/` answers:

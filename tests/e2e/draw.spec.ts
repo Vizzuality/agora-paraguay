@@ -3,15 +3,20 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
+import { INITIAL_VIEW_STATE } from '../../src/lib/map/view-state';
 import { OUT_OF_COVERAGE_MESSAGE, stubAnalysisApi, stubUncoveredArea } from './fixtures/api';
 import {
+  cameraParams,
+  COUNTRY_SCALE_URL,
   drawPolygon,
   FARM_SCALE_URL,
   mapCanvas,
+  OPENING_ZOOM,
   stubBasemap,
   yellowPixelCount,
   zoomToFarmScale,
 } from './fixtures/map';
+import { savedPolygonCount } from './fixtures/saved-selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -71,10 +76,10 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
   await expect(draw).toBeHidden();
 
   // The camera flies to the new area: the first camera write of the session, with a
-  // zoom closer than the country-wide default (5.5).
+  // zoom closer than the opening view's.
   await expect
     .poll(() => Number(new URL(page.url()).searchParams.get('zoom')))
-    .toBeGreaterThan(5.5);
+    .toBeGreaterThan(OPENING_ZOOM);
 });
 
 test('cancelling an armed session stays on step 1', async ({ page }) => {
@@ -101,7 +106,7 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   // (stubbed) parcels painted over it.
   await expect
     .poll(() => Number(new URL(page.url()).searchParams.get('zoom')), { timeout: 5_000 })
-    .toBeGreaterThan(5.5);
+    .toBeGreaterThan(OPENING_ZOOM);
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
 
   await restart.click();
@@ -116,7 +121,7 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   // Back to the opening view (`INITIAL_VIEW_STATE`), written to the URL by `moveend`.
   await expect
     .poll(() => Object.fromEntries(new URL(page.url()).searchParams), { timeout: 5_000 })
-    .toEqual({ lng: '-58.44', lat: '-23.44', zoom: '5.5' });
+    .toEqual(cameraParams(INITIAL_VIEW_STATE));
 
   // A fresh session works exactly like the first one (zoomed in again: the opening view
   // makes the test triangle a department, over the area limit).
@@ -126,19 +131,21 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   await expect(analyze).toBeEnabled();
 });
 
-// The geometry is in-memory global state by design: only the camera is persisted, and it
-// lives in the URL.
-test('loses the drawing on reload', async ({ page }) => {
-  const { draw, analyze } = controls(page);
+// The drawing is saved on disk as it changes and restored when the page comes back:
+// the panel is on step 2 again, with the parcels for the same area.
+test('keeps the drawing across a reload', async ({ page }) => {
+  const { draw, analyze, currentStep } = controls(page);
 
   await draw.click();
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
 
   await page.reload();
 
-  await expect(controls(page).draw).toBeEnabled();
-  await expect(controls(page).analyze).toBeHidden();
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(controls(page).analyze).toBeEnabled();
+  await expect(controls(page).draw).toBeHidden();
 });
 
 // The cadastre does not cover the drawn area: the API answers `empty` (HTTP 200) and the
@@ -213,7 +220,7 @@ test('a rejected drawing does not taint the upload that follows', async ({ page 
   );
 });
 
-// The areas are measured before anything is asked: at the country-wide opening zoom the
+// The areas are measured before anything is asked: with the whole country in view the
 // test triangle covers hundreds of thousands of hectares, over the limit, and is
 // rejected the way an out-of-coverage answer is — but `filter-parcels` never runs.
 test('a drawing over the area limit is rejected back to step 1 without asking the API', async ({
@@ -232,7 +239,7 @@ test('a drawing over the area limit is rejected back to step 1 without asking th
     },
   );
 
-  await page.goto('/');
+  await page.goto(COUNTRY_SCALE_URL);
   await expect(draw).toBeEnabled();
   await expect(mapCanvas(page)).toBeVisible();
 
@@ -242,7 +249,7 @@ test('a drawing over the area limit is rejected back to step 1 without asking th
   await expect(currentStep).toContainText('Paso 1');
   await expect(analyze).toBeHidden();
   await expect(notice).toContainText('Ha habido un error.');
-  await expect(notice).toContainText(/supera el máximo de 100\.000 ha/);
+  await expect(notice).toContainText(/supera el máximo de 200\.000 ha/);
   await expect(draw).toHaveClass(/(^| )border-destructive( |$)/);
   expect(requests).toBe(0);
 
