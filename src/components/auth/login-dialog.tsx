@@ -64,9 +64,11 @@ function LoginPopover() {
       <PopoverContent
         align="end"
         sideOffset={20}
+        // Same 8px gutter as the page on a phone, where 411px is wider than the screen.
+        collisionPadding={8}
         // Radix gives the content role="dialog"; the label names it for AT.
         aria-label="Iniciar sesión"
-        className="w-[411px] rounded-3xl border-0 p-0 shadow-lg"
+        className="w-[411px] max-w-(--radix-popover-content-available-width) rounded-3xl border-0 p-0 shadow-lg"
         // Not modal, and only the backdrop dismisses: a modal popover disables pointer
         // events on the page and closes on any pointer-down or focus outside its content —
         // which is what a password manager's inline suggestion is, so it could never be

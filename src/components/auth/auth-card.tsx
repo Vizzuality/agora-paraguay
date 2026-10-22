@@ -1,11 +1,14 @@
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-/** The one card shell the login and reset views share. */
+/** The one card shell the login and reset views share. Full width on a phone, fixed beside the placeholders from `md` up. */
 export function AuthCard({ className, ...props }: Readonly<React.ComponentProps<typeof Card>>) {
   return (
     <Card
-      className={cn('w-[411px] shrink-0 gap-0 rounded-3xl border-0 py-0 shadow-none', className)}
+      className={cn(
+        'w-full gap-0 rounded-3xl border-0 py-0 shadow-none md:w-[411px] md:shrink-0',
+        className,
+      )}
       {...props}
     />
   );

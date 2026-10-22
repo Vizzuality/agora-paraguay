@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { stubBasemap } from './fixtures/map';
@@ -40,6 +40,35 @@ test('the nav links sit under the bar, once each, and the risk tabs switch pages
   await navbar.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+});
+
+/** No sideways scroll, and the box sits inside the 8px gutters of a 390px screen. */
+async function expectFitsPhone(page: Page, box: Locator) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(0);
+
+  // Polled: the popover zooms in, so its box grows until the animation ends.
+  await expect.poll(async () => Math.round((await box.boundingBox())?.width ?? 0)).toBe(374);
+  expect(Math.round((await box.boundingBox())?.x ?? 0)).toBe(8);
+}
+
+test('the login card of riesgo productivo fits the width', async ({ page }) => {
+  await page.getByRole('banner').getByRole('link', { name: 'Riesgo productivo' }).click();
+
+  const form = page
+    .locator('main form')
+    .filter({ has: page.getByRole('heading', { name: 'Iniciar sesión' }) });
+  await expect(form).toBeVisible();
+
+  await expectFitsPhone(page, form);
+});
+
+test('the header login popover fits the width', async ({ page }) => {
+  await page.getByRole('banner').getByRole('button', { name: 'Iniciar sesión' }).click();
+
+  await expectFitsPhone(page, page.getByRole('dialog', { name: 'Iniciar sesión' }));
 });
 
 test('the hero and the title row actions fit the width', async ({ page }) => {
