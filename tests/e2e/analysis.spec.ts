@@ -488,6 +488,8 @@ test('opens a parcel tab from the list dropdown and from the mini map', async ({
   // Lands on Todas: the parcels counted per class (indices 3 and 1), no single figure.
   await expect(allTab).toHaveAttribute('aria-current', 'true');
   await expect(counts).toHaveText(['Sin riesgo: 1', 'Moderado: 0', 'Severo: 1']);
+  // The list carries the counts for assistive tech; the chart over it is decoration.
+  await expect(card.locator('svg[data-slot="chart"]')).toHaveAttribute('aria-hidden', 'true');
   await expect(level).toHaveCount(0);
   await expect(page.getByText('17,5 ha').filter({ visible: true })).toBeVisible();
   await expect.poll(() => analysisRuns.length).toBe(1);

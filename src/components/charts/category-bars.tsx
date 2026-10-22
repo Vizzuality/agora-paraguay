@@ -71,7 +71,12 @@ function BarsSvg({ width, columns }: Readonly<CategoryBarsProps & { width: numbe
   const bandwidth = xScale.bandwidth();
 
   return (
-    <svg data-slot="chart" viewBox={`0 0 ${width} ${COLUMNS_HEIGHT + 1}`} className={SVG_CLASS}>
+    <svg
+      data-slot="chart"
+      aria-hidden
+      viewBox={`0 0 ${width} ${COLUMNS_HEIGHT + 1}`}
+      className={SVG_CLASS}
+    >
       <ToneGradients id={gradientId} />
 
       {columns.map((column) => {

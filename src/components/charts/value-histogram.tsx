@@ -70,6 +70,7 @@ function HistogramSvg({
   return (
     <svg
       data-slot="chart"
+      aria-hidden
       viewBox={`0 0 ${width} ${HISTOGRAM_HEIGHT + 1 + TICK_ROW}`}
       className={SVG_CLASS}
     >
