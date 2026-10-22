@@ -51,7 +51,7 @@
     "shpjs": "6.2.0",
     "tailwind-merge": "3.7.0",
     "terra-draw": "1.36.0",
-    "terra-draw-maplibre-gl-adapter": "1.4.1",
+    "terra-draw-maplibre-gl-adapter": "1.5.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
