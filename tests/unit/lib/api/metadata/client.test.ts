@@ -165,9 +165,17 @@ describe('fetchIndicators', () => {
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
   });
 
-  it('rejects an indicator type it has no card for', async () => {
+  it('leaves out an indicator of a type it draws no widget for, and keeps the rest', async () => {
     fetchMock.mockResolvedValueOnce(
-      Response.json([{ id: 'x', name: 'X', indicator_type: { type: 'unknown' } }]),
+      Response.json([...indicators, { id: 'x', name: 'X', indicator_type: { type: 'unknown' } }]),
+    );
+
+    await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
+  });
+
+  it('still rejects an entry that is malformed otherwise', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([...indicators, { name: 'No id', indicator_type: { type: 'text' } }]),
     );
 
     await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);

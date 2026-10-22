@@ -16,6 +16,7 @@ import {
   yellowPixelCount,
   zoomToFarmScale,
 } from './fixtures/map';
+import { savedPolygonCount } from './fixtures/saved-selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -130,19 +131,21 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   await expect(analyze).toBeEnabled();
 });
 
-// The geometry is in-memory global state by design: only the camera is persisted, and it
-// lives in the URL.
-test('loses the drawing on reload', async ({ page }) => {
-  const { draw, analyze } = controls(page);
+// The drawing is saved on disk as it changes and restored when the page comes back:
+// the panel is on step 2 again, with the parcels for the same area.
+test('keeps the drawing across a reload', async ({ page }) => {
+  const { draw, analyze, currentStep } = controls(page);
 
   await draw.click();
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
+  await expect.poll(() => savedPolygonCount(page)).toBeGreaterThan(0);
 
   await page.reload();
 
-  await expect(controls(page).draw).toBeEnabled();
-  await expect(controls(page).analyze).toBeHidden();
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(controls(page).analyze).toBeEnabled();
+  await expect(controls(page).draw).toBeHidden();
 });
 
 // The cadastre does not cover the drawn area: the API answers `empty` (HTTP 200) and the

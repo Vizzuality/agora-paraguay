@@ -95,13 +95,13 @@ function RiskRuler({ classes, position, value }: Readonly<RiskScale>) {
           ),
         )}
       </div>
-      <div className="flex w-full text-center text-[12px] leading-[17.4px] opacity-70">
+      <div className="flex w-full text-center text-[12px] leading-[17.4px]">
         {bands.map((band) => (
           <span
             key={band.label}
             className={cn(
               'min-w-0 flex-1',
-              band.reached ? 'font-bold text-foreground' : 'text-muted-foreground',
+              band.current ? 'font-bold text-foreground' : 'text-muted-foreground',
             )}
           >
             {band.label}

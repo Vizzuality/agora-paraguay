@@ -6,7 +6,9 @@ import { Footer } from '@/components/footer';
 import { HeaderNav, PhoneAnalysisNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { useNarrowScreen } from '@/lib/use-narrow-screen';
-import { drawPolygonsAtom } from '@/store/draw';
+import { useSavedSelection } from '@/lib/use-saved-selection';
+import { analysedParcelIdsAtom } from '@/store/analysis';
+import { savedSelectionHydratedAtom } from '@/store/saved-selection';
 
 /**
  * Layout of the analysis pages: the nav with the risk tabs, the footer, and the guard
@@ -47,13 +49,18 @@ function AnalysisLayout() {
 }
 
 /**
- * A hard reload or a direct visit starts a fresh module store: selection mode, zero
- * areas — a blank analysis page. Send the user back to build a selection instead.
+ * A hard reload starts a fresh module store, so the saved selection is read here too:
+ * the analysed parcels come back and the page shows the same analysis. Only once that
+ * read is done, with still no parcels (nothing saved, expired, or a direct visit), is
+ * the user sent back to build a selection.
  */
 function EmptySelectionRedirect() {
-  const polygons = useAtomValue(drawPolygonsAtom);
+  useSavedSelection();
+
+  const parcelIds = useAtomValue(analysedParcelIdsAtom);
+  const hydrated = useAtomValue(savedSelectionHydratedAtom);
   const navigate = useNavigate();
-  const empty = polygons.length === 0;
+  const empty = hydrated && parcelIds.length === 0;
 
   useEffect(() => {
     if (empty) void navigate({ to: '/', replace: true });
