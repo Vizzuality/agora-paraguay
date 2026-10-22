@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 
 import { restoreFeatures } from '@/lib/map/import-features';
 import type { SavedSelection } from '@/lib/saved-selection';
-import { selectAnalysisPolygonAtom } from '@/store/analysis';
+import { analysedParcelIdsAtom, selectAnalysisPolygonAtom } from '@/store/analysis';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { restoreParcelTogglesAtom, toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -21,11 +21,16 @@ const hydratedBaseAtom = atom(false);
  */
 export const savedSelectionHydratedAtom = atom((get) => get(hydratedBaseAtom));
 
-/** What survives a reload: the areas, the analysis pick, the parcel flips. */
+/** What survives a reload: the areas, the analysis pick, the parcel flips, the analysed parcels. */
 export const savedSelectionAtom = atom<SavedSelection>((get) => {
   const { polygons, analysisId } = get(drawStateAtom);
 
-  return { polygons, analysisId, toggledParcelIds: get(toggledParcelIdsAtom) };
+  return {
+    polygons,
+    analysisId,
+    toggledParcelIds: get(toggledParcelIdsAtom),
+    analysedParcelIds: get(analysedParcelIdsAtom),
+  };
 });
 
 /**
@@ -50,4 +55,6 @@ export const hydrateSavedSelectionAtom = atom(null, (get, set, saved: SavedSelec
   set(restoreParcelTogglesAtom, saved.toggledParcelIds);
 
   if (saved.analysisId !== null) set(selectAnalysisPolygonAtom, saved.analysisId);
+
+  set(analysedParcelIdsAtom, saved.analysedParcelIds);
 });

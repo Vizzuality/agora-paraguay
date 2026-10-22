@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { DrawnPolygon } from '@/lib/map/draw-features';
 import type { SavedSelection } from '@/lib/saved-selection';
+import { analysedParcelIdsAtom } from '@/store/analysis';
 import { bindDrawAtom, drawAtom, drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
 import { drawStateAtom } from '@/store/draw-core';
 import { toggledParcelIdsAtom } from '@/store/parcels';
@@ -41,6 +42,7 @@ function saved(overrides: Partial<SavedSelection> = {}): SavedSelection {
     polygons: [polygon(A), polygon(B, { analysis: true })],
     analysisId: B,
     toggledParcelIds: ['D07D23P00000008'],
+    analysedParcelIds: ['D07D21P00000002'],
     ...overrides,
   };
 }
@@ -55,6 +57,7 @@ describe('hydrateSavedSelectionAtom', () => {
     expect(store.get(drawPolygonsAtom).map((p) => p.id)).toEqual([A, B]);
     expect(store.get(drawAtom).analysisId).toBe(B);
     expect(store.get(toggledParcelIdsAtom)).toEqual(['D07D23P00000008']);
+    expect(store.get(analysedParcelIdsAtom)).toEqual(['D07D21P00000002']);
 
     const draw = startedDraw();
     store.set(bindDrawAtom, draw);
@@ -83,6 +86,7 @@ describe('hydrateSavedSelectionAtom', () => {
 
     expect(store.get(drawPolygonsAtom).map((p) => p.id)).toHaveLength(1);
     expect(store.get(toggledParcelIdsAtom)).toEqual([]);
+    expect(store.get(analysedParcelIdsAtom)).toEqual([]);
     expect(store.get(savedSelectionHydratedAtom)).toBe(true);
   });
 
@@ -115,6 +119,7 @@ describe('savedSelectionAtom', () => {
       polygons: store.get(drawPolygonsAtom),
       analysisId: B,
       toggledParcelIds: ['D07D23P00000008'],
+      analysedParcelIds: ['D07D21P00000002'],
     });
   });
 
@@ -128,6 +133,7 @@ describe('savedSelectionAtom', () => {
       polygons: [],
       analysisId: null,
       toggledParcelIds: [],
+      analysedParcelIds: [],
     });
   });
 });

@@ -14,10 +14,18 @@ export type SavedSelection = {
   polygons: DrawnPolygon[];
   analysisId: FeatureId | null;
   toggledParcelIds: string[];
+  /** The parcels Analizar submitted, so a reload on /analisis shows the same analysis. */
+  analysedParcelIds: string[];
 };
 
-/** What sits in the database: the selection plus when it was written. */
-type SavedRecord = SavedSelection & { savedAt: number };
+/**
+ * What sits in the database: the selection plus when it was written. Records saved
+ * before `analysedParcelIds` existed lack it, and read as no analysis run.
+ */
+type SavedRecord = Omit<SavedSelection, 'analysedParcelIds'> & {
+  analysedParcelIds?: string[];
+  savedAt: number;
+};
 
 export const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -92,6 +100,9 @@ export function isSavedRecord(value: unknown): value is SavedRecord {
     (record.analysisId === null || isFeatureId(record.analysisId)) &&
     Array.isArray(record.toggledParcelIds) &&
     record.toggledParcelIds.every((id) => typeof id === 'string') &&
+    (record.analysedParcelIds === undefined ||
+      (Array.isArray(record.analysedParcelIds) &&
+        record.analysedParcelIds.every((id) => typeof id === 'string'))) &&
     typeof record.savedAt === 'number'
   );
 }
@@ -100,9 +111,9 @@ export function isSavedRecord(value: unknown): value is SavedRecord {
 export function unexpired(record: SavedRecord, now = Date.now()): SavedSelection | null {
   if (now - record.savedAt > MAX_AGE_MS) return null;
 
-  const { savedAt: _savedAt, ...selection } = record;
+  const { savedAt: _savedAt, analysedParcelIds = [], ...selection } = record;
 
-  return selection;
+  return { ...selection, analysedParcelIds };
 }
 
 /** The saved selection, or `null` when there is none, it expired, or storage is unusable. */

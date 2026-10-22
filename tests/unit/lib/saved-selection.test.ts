@@ -23,6 +23,16 @@ describe('isSavedRecord', () => {
     expect(
       isSavedRecord({ polygons: [], analysisId: null, toggledParcelIds: [], savedAt: 1 }),
     ).toBe(true);
+    // With the parcels Analizar submitted, and without them (saved by an older build).
+    expect(
+      isSavedRecord({
+        polygons: [polygon],
+        analysisId: 'a',
+        toggledParcelIds: [],
+        analysedParcelIds: ['p'],
+        savedAt: 1,
+      }),
+    ).toBe(true);
   });
 
   it('rejects anything else, so an older or tampered record reads as nothing saved', () => {
@@ -39,6 +49,15 @@ describe('isSavedRecord', () => {
     expect(
       isSavedRecord({ polygons: [polygon], analysisId: null, toggledParcelIds: [1], savedAt: 1 }),
     ).toBe(false);
+    expect(
+      isSavedRecord({
+        polygons: [polygon],
+        analysisId: null,
+        toggledParcelIds: [],
+        analysedParcelIds: [1],
+        savedAt: 1,
+      }),
+    ).toBe(false);
     // A record from before the timestamp existed is dropped rather than kept forever.
     expect(isSavedRecord({ polygons: [polygon], analysisId: null, toggledParcelIds: [] })).toBe(
       false,
@@ -54,7 +73,14 @@ describe('unexpired', () => {
       polygons: [],
       analysisId: null,
       toggledParcelIds: [],
+      analysedParcelIds: [],
     });
+  });
+
+  it('keeps the analysed parcels when the record has them', () => {
+    expect(
+      unexpired({ ...record, analysedParcelIds: ['p'] } as never, 1_000)?.analysedParcelIds,
+    ).toEqual(['p']);
   });
 
   it('drops a record older than seven days', () => {
@@ -67,7 +93,12 @@ describe('without IndexedDB', () => {
   it('reads nothing and writes without throwing', async () => {
     await expect(readSavedSelection()).resolves.toBeNull();
     await expect(
-      writeSavedSelection({ polygons: [], analysisId: null, toggledParcelIds: [] }),
+      writeSavedSelection({
+        polygons: [],
+        analysisId: null,
+        toggledParcelIds: [],
+        analysedParcelIds: [],
+      }),
     ).resolves.toBeUndefined();
   });
 });

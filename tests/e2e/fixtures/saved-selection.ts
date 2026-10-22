@@ -1,14 +1,14 @@
 import type { Page } from '@playwright/test';
 
 /**
- * How many polygons the saved selection record holds in the page's IndexedDB, 0 when
- * there is none. The app saves 250 ms after the last change, so a reload test polls this
- * before reloading; otherwise the reload can land first and nothing is restored.
- * Names mirror `src/lib/saved-selection.ts`.
+ * How many entries one list of the saved selection record holds in the page's
+ * IndexedDB, 0 when there is no record. The app saves 250 ms after the last change, so a
+ * reload test polls this before reloading; otherwise the reload can land first and
+ * nothing is restored. Names mirror `src/lib/saved-selection.ts`.
  */
-export function savedPolygonCount(page: Page): Promise<number> {
+function savedListLength(page: Page, list: 'polygons' | 'analysedParcelIds'): Promise<number> {
   return page.evaluate(
-    () =>
+    (key) =>
       new Promise<number>((resolve) => {
         const request = indexedDB.open('parcels', 1);
 
@@ -24,7 +24,7 @@ export function savedPolygonCount(page: Page): Promise<number> {
 
           read.onsuccess = () => {
             database.close();
-            resolve(read.result?.polygons?.length ?? 0);
+            resolve(read.result?.[key]?.length ?? 0);
           };
           read.onerror = () => {
             database.close();
@@ -32,5 +32,14 @@ export function savedPolygonCount(page: Page): Promise<number> {
           };
         };
       }),
+    list,
   );
+}
+
+export function savedPolygonCount(page: Page): Promise<number> {
+  return savedListLength(page, 'polygons');
+}
+
+export function savedAnalysedParcelCount(page: Page): Promise<number> {
+  return savedListLength(page, 'analysedParcelIds');
 }
