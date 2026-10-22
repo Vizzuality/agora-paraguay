@@ -98,7 +98,23 @@ describe('analysisResponseSchema', () => {
         weather_station: 'Santa Teresa',
         phenology_stage: null,
       },
+      unreadable: ['possible_phenology_stages'],
     });
+  });
+
+  it('marks a non-scalar column unreadable instead of failing the whole analysis', () => {
+    const parsed = analysisResponseSchema.parse({
+      ...response,
+      indicators: [
+        {
+          parcel_id: 'D07D21P00000002',
+          properties: { Asian_rust: 2, possible_phenology_stages: ['V1', 'V2'] },
+        },
+      ],
+    });
+
+    expect(parsed.indicators[0].properties).toEqual({ Asian_rust: 2 });
+    expect(parsed.indicators[0].unreadable).toEqual(['possible_phenology_stages']);
   });
 
   it('rejects a parcel without parcel_id, and the old FeatureCollection shape', () => {
