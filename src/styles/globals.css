@@ -243,7 +243,8 @@
    colours are kept rather than bleached by the browser's ink saving. */
 @media print {
   @page {
-    margin: 12mm;
+    /* Narrow sides: the report's cards and charts get the width; top and bottom keep room. */
+    margin: 12mm 8mm;
   }
 
   body {
@@ -252,11 +253,11 @@
 }
 
 /* The page at paper width on screen while the print dialog is up (`printReport`): A4
-   portrait less the page margins, so the charts measure the width they will print at,
+   portrait less the page's side margins (210mm − 2 × 8mm), so the charts measure the width they will print at,
    and the mini map renders its image at the size the report shows it (`paper:`). */
 @custom-variant paper (&:is(.paper-layout *));
 
 html.paper-layout body {
-  width: 186mm;
+  width: 194mm;
   margin-inline: auto;
 }
