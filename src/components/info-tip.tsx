@@ -19,7 +19,7 @@ export function InfoTip({ description, subject, className }: Readonly<InfoTipPro
           type="button"
           aria-label={`Más información sobre ${subject}`}
           className={cn(
-            'pointer-events-auto inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring',
+            'pointer-events-auto inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring print:hidden',
             className,
           )}
         >

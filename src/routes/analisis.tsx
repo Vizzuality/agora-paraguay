@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 
 import { Footer } from '@/components/footer';
+import { Logo } from '@/components/logo';
 import { HeaderNav, PhoneAnalysisNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { useNarrowScreen } from '@/lib/use-narrow-screen';
@@ -38,11 +39,14 @@ function AnalysisLayout() {
       <NavBar below={narrow && <PhoneAnalysisNav />}>
         <HeaderNav compact={narrow} />
       </NavBar>
+      {/* The report (the page printed) carries the brand where the nav and footer were. */}
+      <ReportBrand />
 
-      <main className="flex flex-1 flex-col gap-6 px-2 pt-6 pb-10 md:px-10 md:pt-10 md:pb-12">
+      <main className="flex flex-1 flex-col gap-6 px-2 pt-6 pb-10 md:px-10 md:pt-10 md:pb-12 print:p-0">
         <Outlet />
       </main>
 
+      <ReportBrand />
       <Footer />
     </div>
   );
@@ -67,4 +71,13 @@ function EmptySelectionRedirect() {
   }, [empty, navigate]);
 
   return null;
+}
+
+/** Print only: the logo at the top and the bottom of the report. */
+function ReportBrand() {
+  return (
+    <div className="hidden px-2 py-6 md:px-10 print:block print:px-0">
+      <Logo className="h-[30px] w-auto text-primary" />
+    </div>
+  );
 }

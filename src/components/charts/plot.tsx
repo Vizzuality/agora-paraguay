@@ -40,9 +40,18 @@ export function parcelCount(count: number): string {
   return count === 1 ? '1 parcela' : `${count} parcelas`;
 }
 
+/** The width a chart is laid out at before its card has been measured: the design's card. */
+const NOMINAL_WIDTH = 341;
+
 /**
  * The chart at the width its card gives it, `height` tall. Presentational: every card
  * lists its readings for assistive tech itself, so the drawing is hidden from it.
+ *
+ * The measured width is a layout hint, not a size: the SVGs draw into a `viewBox` of it
+ * and fill their card with CSS, so when the card changes width without a measurement
+ * — the report, laid out for paper while the page keeps its screen width — the drawing
+ * scales with the card instead of running past it. The nominal width covers the first
+ * paint for the same reason.
  */
 export function Responsive({
   height,
@@ -50,12 +59,19 @@ export function Responsive({
 }: Readonly<{ height: number; children: (width: number) => ReactNode }>) {
   return (
     <div aria-hidden>
-      <ParentSize debounceTime={50} style={{ height }}>
+      <ParentSize
+        debounceTime={50}
+        initialSize={{ width: NOMINAL_WIDTH, height }}
+        style={{ height }}
+      >
         {({ width }) => (width > 0 ? children(width) : null)}
       </ParentSize>
     </div>
   );
 }
+
+/** The SVG's sizing: its `viewBox` is the measured width, its box the card's (see `Responsive`). */
+export const SVG_CLASS = 'block h-auto w-full overflow-visible';
 
 type AxisTicksProps = {
   ticks: number[];
