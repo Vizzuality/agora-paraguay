@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.6.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.5.0...v0.6.0) (2026-10-23)
+
+
+### Features
+
+* areas over 100 000 ha are rejected before their parcels are asked for (AGP-73) ([#160](https://github.com/Vizzuality/agora-paraguay/issues/160)) ([70a388e](https://github.com/Vizzuality/agora-paraguay/commit/70a388e808f0a62e88ce702866b32621715f04f1))
+* chart tones from the theme's custom colours, one value per mode (AGP-72) ([#159](https://github.com/Vizzuality/agora-paraguay/issues/159)) ([88c0455](https://github.com/Vizzuality/agora-paraguay/commit/88c04553cf49528599b465c271de338b090c89b0))
+* Exportar informe prints Riesgo productivo as a PDF report (AGP-77) ([#164](https://github.com/Vizzuality/agora-paraguay/issues/164)) ([44cc555](https://github.com/Vizzuality/agora-paraguay/commit/44cc55589192ca4140d919ef11a01c57a4f5a279))
+* Selección de parcelas resumes the selection on step 2 with the parcels (AGP-82) ([#180](https://github.com/Vizzuality/agora-paraguay/issues/180)) ([cafd656](https://github.com/Vizzuality/agora-paraguay/commit/cafd656b450729b731a4e575d5b131a7c66b7cdf))
+* the drawn or uploaded areas may cover up to 200 000 ha, up from 100 000 ([#181](https://github.com/Vizzuality/agora-paraguay/issues/181)) ([1eb94fc](https://github.com/Vizzuality/agora-paraguay/commit/1eb94fc7d545d45258ea88ec01fad8289d60b3da))
+* the map opens on Alto Paraná, with a banner saying so, while the cadastre covers that department only (AGP-81) ([#166](https://github.com/Vizzuality/agora-paraguay/issues/166)) ([8fc2a1c](https://github.com/Vizzuality/agora-paraguay/commit/8fc2a1c94e50a94db42aae636f214fa80fb99417))
+* the selected areas survive a page reload (AGP-78) ([#163](https://github.com/Vizzuality/agora-paraguay/issues/163)) ([5dc4ef3](https://github.com/Vizzuality/agora-paraguay/commit/5dc4ef31b67116db5226d85321dbc461248e0509))
+
+
+### Bug Fixes
+
+* a parcel column the analysis cannot read shows "Sin datos" instead of disappearing ([#196](https://github.com/Vizzuality/agora-paraguay/issues/196)) ([c20afb6](https://github.com/Vizzuality/agora-paraguay/commit/c20afb626c0d692503aa230b9d815f03d256feb7))
+* an upload outside Paraguay says so, instead of the drawing's no-parcel message ([#162](https://github.com/Vizzuality/agora-paraguay/issues/162)) ([6153c19](https://github.com/Vizzuality/agora-paraguay/commit/6153c194f647517656e914d0d9ad1fcd3e924d5b))
+* parcel number chips on the mini map are left out while they would be unreadable (AGP-83) ([#179](https://github.com/Vizzuality/agora-paraguay/issues/179)) ([46e3ce5](https://github.com/Vizzuality/agora-paraguay/commit/46e3ce5ba17b9a937e8d3eb01d665702dd65c820))
+* the login card and popover fit a phone screen ([#195](https://github.com/Vizzuality/agora-paraguay/issues/195)) ([8ce9fd6](https://github.com/Vizzuality/agora-paraguay/commit/8ce9fd65b4aa930812628815d1f2217b5600ef40))
+
 ## [0.5.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.4.0...v0.5.0) (2026-10-08)
 
 
