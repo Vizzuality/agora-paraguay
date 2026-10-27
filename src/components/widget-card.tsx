@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 
 /*
  * What the analysis widgets share, from the design's widget frame: the light card, the
- * header (title, info tip, a subtitle line), the 66px figure, and the pieces of a track
- * with a marker. Each card composes these and owns only what it draws.
+ * header (title, info tip, a subtitle line), the figure (40px beside the side column,
+ * 66px when the page stacks), and the pieces of a track with a marker. Each card composes these and owns only what it draws.
  */
 
 /** The widget's surface: 254px tall at least, the content pinned top and bottom. */
@@ -71,7 +71,10 @@ export function WidgetFigure({
   children,
 }: Readonly<{ slot?: string; children: ReactNode }>) {
   return (
-    <p data-slot={slot} className="text-[66px] leading-normal font-extralight tracking-[0.408px]">
+    <p
+      data-slot={slot}
+      className="text-[66px] leading-normal font-extralight tracking-[0.408px] lg:text-[40px] print:text-[66px] paper:text-[66px]"
+    >
       {children}
     </p>
   );

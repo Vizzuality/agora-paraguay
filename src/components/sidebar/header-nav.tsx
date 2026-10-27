@@ -9,21 +9,17 @@ import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
 
 /**
- * The analysis nav bar's right side: the way back to the selection, the risk tabs,
- * the theme switch and the account. On a mobile device the first two do not fit
- * beside the logo and move to a row of their own under the bar (`PhoneAnalysisNav`):
- * `compact` leaves them out once the screen is known to be narrow, and the CSS hides
- * them before that, so they are never shown twice.
+ * The analysis nav bar's right side: the risk tabs, the theme switch and the account.
+ * On a wide screen the way back to the selection is the analysis card's Editar. On a
+ * mobile device the tabs do not fit beside the logo and move, with the selection link,
+ * to a row of their own under the bar (`PhoneAnalysisNav`): `compact` leaves them out
+ * once the screen is known to be narrow, and the CSS hides them before that, so they
+ * are never shown twice.
  */
 export function HeaderNav({ compact = false }: Readonly<{ compact?: boolean }>) {
   return (
     <>
-      {!compact && (
-        <>
-          <SelectionButton className="max-md:hidden" />
-          <RiskTabs className="max-md:hidden" />
-        </>
-      )}
+      {!compact && <RiskTabs className="max-md:hidden" />}
 
       <ClientOnly fallback={<ThemeTogglePlaceholder />}>
         <ThemeToggle />

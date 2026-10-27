@@ -1,9 +1,10 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, ChevronDown, SquarePen } from 'lucide-react';
+import { type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { InfoTip } from '@/components/info-tip';
 import { MiniMap } from '@/components/map/mini-map';
+import { SelectionLink } from '@/components/selection-link';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -44,20 +45,42 @@ import { activeParcelIdAtom, activeParcelTabAtom, setAnalysisFilterAtom } from '
 import { reportMapAtom } from '@/store/report';
 
 /**
- * The analysed parcels as tabs, and the filters the API offers for that side of the
- * analysis: the filters are asked for that `riesgo`.
+ * The analysed parcels as tabs beside the way back to edit them, the filters the API
+ * offers for that side of the analysis (asked for that `riesgo`), then the page's
+ * `actions` closing the card.
  */
-export function AnalysisHero({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
-  // The report keeps the wide layout: the map beside the parcels and filters.
+export function AnalysisHero({
+  riesgo,
+  parcels,
+  actions,
+}: Readonly<{ riesgo: Riesgo; parcels: string[]; actions?: ReactNode }>) {
+  // On screen the map tops the card (the page's side column); the report keeps the wide
+  // layout, the map beside the parcels and filters.
   return (
-    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 lg:flex-row print:flex-row paper:flex-row">
+    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 print:flex-row paper:flex-row">
       <MiniMapThumbnail />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <ParcelTabs parcels={parcels} />
+        <div className="flex items-center gap-6 print:hidden">
+          <ParcelTabs parcels={parcels} />
+          {/* A phone keeps the selection link under the nav bar instead. */}
+          <Button
+            asChild
+            variant="secondary"
+            className="h-12 shrink-0 rounded-2xl border px-8 font-normal text-accent-foreground max-md:hidden"
+          >
+            {/* Visible text first in the name, so voice control can say "Editar". */}
+            <SelectionLink aria-label="Editar selección de parcelas">
+              <SquarePen aria-hidden />
+              Editar
+            </SelectionLink>
+          </Button>
+        </div>
         <ParcelTable parcels={parcels} />
 
         <HeroFilters riesgo={riesgo} />
+
+        {actions}
       </div>
     </div>
   );
@@ -234,13 +257,14 @@ function MiniMapThumbnail() {
         <img
           src={reportMap}
           alt="Mapa de las parcelas analizadas"
-          className="hidden h-[335px] min-w-0 flex-1 rounded-md object-cover print:block"
+          className="hidden h-[280px] min-w-0 flex-1 rounded-md object-cover print:block"
         />
       )}
-      <div className="relative h-[335px] min-w-0 flex-1 overflow-hidden rounded-md bg-muted md:h-64 lg:h-[335px] print:hidden">
+      <div className="relative h-[335px] min-w-0 shrink-0 overflow-hidden rounded-md bg-muted md:h-[280px] print:hidden paper:flex-1">
         <MiniMap />
         {area && (
-          <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur">
+          // A phone keeps the figure bottom right: its map has no zoom buttons.
+          <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur md:right-auto md:left-0 md:bg-black/50 md:px-3 md:py-1 md:backdrop-blur-xs">
             <span className="text-[36px] font-light tracking-[0.408px] text-white">
               {formatArea(area)}
             </span>
@@ -411,7 +435,7 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
   };
 
   return (
-    <fieldset className="relative flex h-13 min-w-0 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:hidden">
+    <fieldset className="relative flex h-13 min-w-0 flex-1 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:hidden">
       <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
       {/* Clipped on the fieldset's own radius, so a tab scrolled under the rounded
           corner does not show its underline outside the border. */}

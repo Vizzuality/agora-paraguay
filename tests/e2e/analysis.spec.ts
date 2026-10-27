@@ -177,10 +177,11 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(analysisBodies[3]).toMatchObject({ date: '2026-09-10', sowing_date: '2026-05-01' });
 
   // The hero mini map paints the selected parcel over the (stubbed) satellite basemap —
-  // the same layer as the main map, without Terra Draw and without the zoom buttons.
+  // the same layer as the main map, without Terra Draw, with its own zoom buttons.
   await expect(mapCanvas(page)).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
-  await expect(page.getByRole('button', { name: 'Acercar' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Alejar' })).toBeVisible();
 
   // Todas first, then one hero tab per parcel the (stubbed) analysis answered, numbered
   // in submission order rather than by cadastral id; the page lands on Todas.
@@ -202,13 +203,13 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     'Severo: 1',
   ]);
 
-  // Its text facts (crop, station, phenology) share one general-info card instead.
-  const info = page.getByRole('heading', { name: 'Información general' }).locator('..');
+  // Its text facts (crop, station, phenology) share one summary card instead.
+  const info = page.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
   await expect(info).toContainText('Tipo de cultivo');
   await expect(info).toContainText('Soja');
 
-  // Personalizar indicadores: the title-row button opens a checklist of the measured
-  // indicators. General info is not in it — it is always shown.
+  // Personalizar indicadores: the button closing the hero opens a checklist of the
+  // measured indicators. General info is not in it — it is always shown.
   await page.getByRole('button', { name: 'Personalizar indicadores' }).click();
   const list = page.getByRole('list', { name: 'Indicadores' });
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).toBeChecked();
@@ -222,7 +223,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await page.getByRole('searchbox', { name: 'Buscar indicador' }).fill('');
 
   // Unchecking an indicator re-runs the analysis without it and removes its card; the
-  // general-info card stays. The input is visually hidden (the check glyph is the cue),
+  // summary card stays. The input is visually hidden (the check glyph is the cue),
   // so the label row is what gets clicked.
   await list.getByText('Phakopsora pachyrhizi').click();
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).not.toBeChecked();
@@ -231,12 +232,13 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(analysisBodies[4].indicators).not.toContain('asian_rust');
   expect(analysisBodies[4].indicators).toContain('crop_type');
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
-  await expect(page.getByRole('heading', { name: 'Información general' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
 
-  // The navbar offers the way back and the login entry point.
+  // The hero offers the way back (Editar), the navbar the login entry point.
   // Locators are scoped to the header because the footer repeats the same link names.
   const navbar = page.getByRole('banner');
-  await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('link', { name: 'Editar' })).toBeVisible();
+  await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
 
   // Analizar lands on riesgo sanitario, which is public: no login gate.
@@ -339,7 +341,7 @@ test('veils the map with a spinner while the parcels are looked up', async ({ pa
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
 });
 
-// The header and footer link back to the selection resume it, like the browser's Back:
+// The hero's Editar and the footer link back to the selection resume it, like the browser's Back:
 // the areas and parcels are still there, the panel is on step 2, and a parcel the user
 // flipped before Analizar stays flipped. Starting over is Reiniciar's job.
 test('Selección de parcelas resumes the selection on step 2 with the parcels', async ({ page }) => {
@@ -372,8 +374,8 @@ test('Selección de parcelas resumes the selection on step 2 with the parcels', 
   // A single parcel stands alone: no Todas tab to combine it with.
   await expect(parcelTabs).toHaveText(['Parcela 1']);
 
-  // The header link: step 2, Analizar ready, the one selected parcel painted again.
-  await page.getByRole('banner').getByRole('link', { name: 'Selección de parcelas' }).click();
+  // Editar: step 2, Analizar ready, the one selected parcel painted again.
+  await page.getByRole('main').getByRole('link', { name: 'Editar' }).click();
   await expect(page).toHaveURL(/\/(\?|$)/);
   await expect(currentStep).toContainText('Paso 2');
   await expect(analyze).toBeEnabled();
@@ -409,7 +411,7 @@ test('opens the metadata description from the info icon on hero fields and cards
   await analyzeFirstPolygon(page);
 
   // Only what the metadata describes gets an icon, named after its subject: the crop
-  // filter (in the hero and, echoed as a text indicator, in the general-info card) and
+  // filter (in the hero and, echoed as a text indicator, in the summary card) and
   // the rust indicator. The dates and the area carry no description: no icon.
   const infoButtons = page.getByRole('button', { name: /^Más información sobre / });
   await expect(infoButtons).toHaveCount(3);
