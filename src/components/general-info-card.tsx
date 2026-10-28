@@ -18,18 +18,19 @@ type GeneralInfoCardProps = {
 
 /**
  * Widget for the parcel's context — station, crop, phenology — as one list of
- * facts. These are not risks, so no figure and no ruler; the heading sits right in the
- * card, no subtitle, and the list is not pinned to the bottom.
+ * facts, the analysis summary heading the content column. These are not risks, so no
+ * figure and no ruler; the heading sits right in the card, no subtitle, and the facts
+ * flow top to bottom through as many columns as the card's width holds.
  */
 export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
   return (
-    <WidgetCard className={cn('justify-start', className)}>
-      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Información general</h3>
+    <WidgetCard className={cn('min-h-0 justify-start gap-2', className)}>
+      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
 
-      <dl className="flex flex-col gap-3">
+      <dl className="columns-[172px] gap-8">
         {items.map((item) => (
-          <div key={item.id} className="flex flex-col gap-0.5">
-            <dt className="flex items-center gap-2 text-[12px] leading-[17.4px] text-muted-foreground">
+          <div key={item.id} className="mb-4 flex break-inside-avoid flex-col gap-1">
+            <dt className="flex items-center gap-2 text-sm text-muted-foreground">
               {item.label}
               <InfoTip
                 description={item.description}
@@ -37,7 +38,7 @@ export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardPr
                 className="text-accent-foreground"
               />
             </dt>
-            <dd className="text-[16px] leading-[20.3px] font-medium">{item.value}</dd>
+            <dd className="text-base">{item.value}</dd>
           </div>
         ))}
       </dl>

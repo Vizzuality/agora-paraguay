@@ -81,7 +81,7 @@ nothing pre-aggregated. Reading rules (`src/lib/analysis/readings.ts`):
   the figure on the mini map thumbnail (one parcel's area, or the parcels summed under Todas).
   Matched by id ignoring case (`src/lib/analysis/area.ts`).
 - **General info** (text, and open numbers on sanitario): always requested, always rendered
-  in the single "Información general" card on sanitario, never in the picker. Productivo has no
+  in the single "Resumen del análisis" card on sanitario, never in the picker. Productivo has no
   general-info card today; its text indicators are facts in theory but nothing renders them.
 
 ## 2. Behaviour per riesgo
