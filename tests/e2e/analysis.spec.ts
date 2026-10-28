@@ -258,9 +258,17 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
+  // Exposición climática is a header tab only, a placeholder page for now.
+  await navbar.getByRole('link', { name: 'Exposición climática' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
+  await expect(page.getByRole('heading', { name: 'Exposición climática' })).toBeVisible();
+  await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await expect(page).toHaveURL(/\/analisis\/sanitario/);
+
   // The footer repeats the brand and the three destinations.
   const footer = page.getByRole('contentinfo');
   await expect(footer.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'Exposición climática' })).toHaveCount(0);
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
   await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();

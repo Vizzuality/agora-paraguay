@@ -5,11 +5,11 @@ import { LoginDialog, UserButton } from '@/components/auth/login-dialog';
 import { SelectionLink } from '@/components/selection-link';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { RISK_TABS, SELECTION_LINK } from '@/lib/nav-links';
+import { HEADER_TABS, SELECTION_LINK } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
 
 /**
- * The analysis nav bar's right side: the risk tabs, the theme switch and the account.
+ * The analysis nav bar's right side: the section tabs, the theme switch and the account.
  * On a wide screen the way back to the selection is the analysis card's Editar. On a
  * mobile device the tabs do not fit beside the logo and move, with the selection link,
  * to a row of their own under the bar (`PhoneAnalysisNav`): `compact` leaves them out
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 export function HeaderNav({ compact = false }: Readonly<{ compact?: boolean }>) {
   return (
     <>
-      {!compact && <RiskTabs className="max-md:hidden" />}
+      {!compact && <HeaderTabs className="max-md:hidden" />}
 
       <ClientOnly fallback={<ThemeTogglePlaceholder />}>
         <ThemeToggle />
@@ -32,12 +32,12 @@ export function HeaderNav({ compact = false }: Readonly<{ compact?: boolean }>) 
   );
 }
 
-/** The selection link and the risk tabs stacked full width under the mobile nav bar. */
+/** The selection link and the section tabs stacked full width under the mobile nav bar. */
 export function PhoneAnalysisNav() {
   return (
     <div className="flex flex-col gap-2 p-2">
       <SelectionButton className="w-full" />
-      <RiskTabs className="w-full" stretch />
+      <HeaderTabs className="w-full" stretch />
     </div>
   );
 }
@@ -57,8 +57,8 @@ function SelectionButton({ className }: Readonly<{ className?: string }>) {
   );
 }
 
-/** The two risk views as tabs; `stretch` shares the row between them (the mobile menu). */
-function RiskTabs({
+/** The section tabs (`HEADER_TABS`); `stretch` shares the row between them (the mobile menu). */
+function HeaderTabs({
   className,
   stretch = false,
 }: Readonly<{ className?: string; stretch?: boolean }>) {
@@ -69,7 +69,7 @@ function RiskTabs({
         className,
       )}
     >
-      {RISK_TABS.map(({ label, to }) => (
+      {HEADER_TABS.map(({ label, to }) => (
         <RiskTab key={label} to={to} className={cn(stretch && 'flex-1 text-center')}>
           {label}
         </RiskTab>
@@ -78,7 +78,7 @@ function RiskTabs({
   );
 }
 
-/** A tab is a link to its riesgo's route; the router marks the matching one (`aria-current="page"`). */
+/** A tab is a link to its section's route; the router marks the matching one (`aria-current="page"`). */
 function RiskTab({
   to,
   className,
