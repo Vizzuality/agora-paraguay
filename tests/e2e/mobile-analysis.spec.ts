@@ -27,6 +27,7 @@ test('the nav links sit under the bar, once each, and the risk tabs switch pages
   const navbar = page.getByRole('banner');
 
   await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toHaveCount(1);
+  await expect(navbar.getByRole('link', { name: 'Exposición climática' })).toHaveCount(1);
   await expect(navbar.getByRole('link', { name: 'Riesgo sanitario' })).toHaveCount(1);
   await expect(navbar.getByRole('link', { name: 'Riesgo productivo' })).toBeVisible();
   await expect(navbar.getByRole('button', { name: 'Cambiar tema' })).toBeVisible();
