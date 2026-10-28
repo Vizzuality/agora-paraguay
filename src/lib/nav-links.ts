@@ -20,6 +20,12 @@ export const RISK_TABS: { label: string; riesgo: Riesgo; to: LinkProps['to'] }[]
   { label: 'Riesgo productivo', riesgo: 'productivo', to: '/analisis/productivo' },
 ];
 
+/** The top nav's tabs: Exposición climática, then the risk views. The footer keeps `RISK_LINKS`. */
+export const HEADER_TABS: { label: string; to: LinkProps['to'] }[] = [
+  { label: 'Exposición climática', to: '/analisis/exposicion-climatica' },
+  ...RISK_TABS,
+];
+
 /**
  * `RISK_TABS` as plain router links (for the footer). Switching risk views must
  * not stack history entries, or the browser's Back stops leaving the page —
