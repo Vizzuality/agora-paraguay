@@ -1,6 +1,7 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 
-import { AnalysisHeader } from '@/components/analysis-header';
+import { AnalysisShell } from '@/components/analysis-shell';
+import { AnalysisSidebar } from '@/components/analysis-sidebar';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
@@ -8,27 +9,29 @@ import { WidgetGrid } from '@/components/widget-grid';
 import { generalInfo } from '@/lib/analysis/indicator-cards';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
 
-/** Riesgo sanitario is public: hero, title row and the cards, no gate. */
+/** Riesgo sanitario is public: the hero beside the summary and the cards, no gate. */
 export const Route = createFileRoute('/analisis/sanitario')({
   component: SanitarioPage,
 });
 
 function SanitarioPage() {
   return (
-    <>
-      <ClientOnly>
-        <AnalysisHeader riesgo="sanitario" />
-      </ClientOnly>
-
+    <AnalysisShell
+      side={
+        <ClientOnly>
+          <AnalysisSidebar riesgo="sanitario" />
+        </ClientOnly>
+      }
+    >
       <ClientOnly fallback={<WidgetGrid />}>
         <SanitarioWidgets />
       </ClientOnly>
-    </>
+    </AnalysisShell>
   );
 }
 
 /**
- * The open tab's text facts in the general-info card (always on), then the widgets
+ * The open tab's text facts in the summary card (always on), then the widgets
  * (`useRiesgoWidgets`): under Todas the facts read the parcels combined.
  */
 function SanitarioWidgets() {
