@@ -11,6 +11,7 @@ import Map, {
 import { DevFocusBanner } from '@/components/map/dev-focus-banner';
 import { DrawLayer } from '@/components/map/draw-layer';
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
+import { GlobalLayer } from '@/components/map/global-layer';
 import { ParcelPattern } from '@/components/map/parcel-pattern';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
@@ -107,6 +108,7 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       <ScaleControl position="bottom-left" />
       <AttributionControl compact position="bottom-left" />
       <ZoomControl />
+      <GlobalLayer />
       <DevFocusBanner />
       {/*
        * The parcels filter-parcels answers for the drawn areas. Mounted only once Terra

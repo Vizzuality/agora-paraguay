@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { fetchGlobalLayers } from '@/lib/api/layers/client';
+import { fetchGlobalLayers, globalLayerVectorUrl } from '@/lib/api/layers/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -44,5 +44,11 @@ describe('fetchGlobalLayers', () => {
     fetchMock.mockResolvedValueOnce(Response.json([{ id: 1, type: 0 }]));
 
     await expect(fetchGlobalLayers()).rejects.toBeInstanceOf(ZodError);
+  });
+});
+
+describe('globalLayerVectorUrl', () => {
+  it('points at global_layer_vector/ with the layer id', () => {
+    expect(globalLayerVectorUrl(9)).toBe('/api/parcels/global_layer_vector/?id=9');
   });
 });
