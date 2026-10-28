@@ -141,16 +141,16 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('combobox')).toHaveCount(1);
   await expect(page.getByLabel('Fecha de siembra')).toHaveValue(TODAY);
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
-  // Asked for the riesgo alone: with no crop picked yet, the API's default crop applies.
+  // With no crop picked yet, the filters are asked for rice.
   expect(filtersRequests).toBe(1);
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=rice']);
 
-  // Picking the crop already shown asks nothing: that answer seeded the default crop's
-  // entry, so only another crop would fetch again.
+  // Picking the crop already shown asks nothing: rice's list is already the one in hand,
+  // so only another crop would fetch again.
   await cultivo.click();
   await page.getByRole('option', { name: 'Arroz' }).click();
   await expect(cultivo).toHaveText('Arroz');
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=rice']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.

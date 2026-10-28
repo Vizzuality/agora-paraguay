@@ -42,10 +42,12 @@ describe('fetchFilters', () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
 
     await expect(fetchFilters({ riesgo: 'productivo' })).resolves.toEqual(filters);
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?riesgo=productivo');
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      '/api/parcels/filters/?riesgo=productivo&crop_type=rice',
+    );
   });
 
-  it('passes the crop as crop_type when given, and leaves it off the query otherwise', async () => {
+  it('passes the crop as crop_type when given, and asks for rice otherwise', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({ riesgo: 'productivo', crop_type: 'soy' });
     expect(String(fetchMock.mock.calls[0][0])).toBe(
@@ -54,17 +56,23 @@ describe('fetchFilters', () => {
 
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({ riesgo: 'productivo', crop_type: undefined });
-    expect(String(fetchMock.mock.calls[1][0])).toBe('/api/parcels/filters/?riesgo=productivo');
+    expect(String(fetchMock.mock.calls[1][0])).toBe(
+      '/api/parcels/filters/?riesgo=productivo&crop_type=rice',
+    );
   });
 
   it('asks for sanitario, the public side, when no riesgo is given', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters();
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/parcels/filters/?riesgo=sanitario');
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      '/api/parcels/filters/?riesgo=sanitario&crop_type=rice',
+    );
 
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({});
-    expect(String(fetchMock.mock.calls[1][0])).toBe('/api/parcels/filters/?riesgo=sanitario');
+    expect(String(fetchMock.mock.calls[1][0])).toBe(
+      '/api/parcels/filters/?riesgo=sanitario&crop_type=rice',
+    );
   });
 
   it('rejects a field type it has no control for, and a non-ISO date default', async () => {

@@ -1,6 +1,7 @@
 import { getJson } from '@/lib/api/http';
 
 import {
+  DEFAULT_CROP,
   filtersSchema,
   indicatorsListResponseSchema,
   type Filters,
@@ -22,11 +23,11 @@ const DEFAULT_FILTERS_RIESGO = 'sanitario';
  * `GET /api/parcels/filters/?riesgo={sanitario|productivo}&crop_type={value}` — the
  * filters of that side of the analysis and their values. `riesgo` is mandatory on the
  * wire; sanitario (public) unless asked otherwise. `crop_type` narrows the other filters
- * to the crop picked in the hero; left out, the API answers for its default crop.
+ * to the crop picked in the hero; rice unless asked otherwise.
  */
 export async function fetchFilters({
   riesgo = DEFAULT_FILTERS_RIESGO,
-  crop_type,
+  crop_type = DEFAULT_CROP,
 }: FiltersParams = {}): Promise<Filters> {
   return filtersSchema.parse(await getJson('/api/parcels/filters/', { riesgo, crop_type }));
 }

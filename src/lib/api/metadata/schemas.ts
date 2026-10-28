@@ -46,14 +46,26 @@ export type Filters = z.infer<typeof filtersSchema>;
 /** The two analysis tabs; each is one side of `/api/parcels/analysis/{diseases|production}/`. */
 export type Riesgo = 'sanitario' | 'productivo';
 
+/** The crops the analysis covers, as `crop_type` values. */
+export const CROPS = ['rice', 'soy'] as const;
+
+export type Crop = (typeof CROPS)[number];
+
+/** The crop the filters are asked for until the user picks another. */
+export const DEFAULT_CROP: Crop = 'rice';
+
+export function isCrop(value: string | undefined): value is Crop {
+  return CROPS.includes(value as Crop);
+}
+
 /**
  * Which riesgo the filters are asked for: sanitario is the public side, productivo the
  * private one. Left out, the client asks for sanitario.
  */
 export type FiltersParams = {
   riesgo?: Riesgo;
-  /** The crop the other filters are asked for (`crop_type`'s option value); the API's default when absent. */
-  crop_type?: string;
+  /** The crop the other filters are asked for; rice when absent. */
+  crop_type?: Crop;
 };
 
 /** What the indicator list is asked for: the riesgo, as a query parameter. */
