@@ -52,7 +52,7 @@
     "tailwind-merge": "3.7.0",
     "terra-draw": "1.36.0",
     "terra-draw-maplibre-gl-adapter": "1.5.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@j178/prek": "0.5.6",
