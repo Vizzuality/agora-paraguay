@@ -1,4 +1,4 @@
-import type { Filter, Filters } from '@/lib/api/metadata/schemas';
+import { DEFAULT_CROP, type Filter, type Filters } from '@/lib/api/metadata/schemas';
 
 /**
  * The analysis hero fields: one per filter `GET /api/parcels/filters/` returns, keyed by
@@ -39,7 +39,8 @@ export function todayIso(now: Date = new Date()): string {
 
 /**
  * Every filter resolved to what the hero displays and Analizar sends. A category keeps a
- * pick still among its options, else takes the first one; a date keeps whatever was typed,
+ * pick still among its options, else takes the first one — the crop takes `DEFAULT_CROP`
+ * when offered, so the hero shows the crop the filters were first asked for; a date keeps whatever was typed,
  * else the API's default, else today — so every date always has a value and the analysis
  * never waits on one. A category with no options is left out, so the request omits it.
  * Runs on every render against whatever the query returned.
@@ -58,8 +59,11 @@ export function resolveFilterSelection(
       case 'category': {
         const values = field.options.map((option) => option.value);
 
+        const fallback =
+          filter.id === CROP_FILTER_ID && values.includes(DEFAULT_CROP) ? DEFAULT_CROP : values[0];
+
         if (pick !== undefined && values.includes(pick)) resolved[filter.id] = pick;
-        else if (values.length > 0) resolved[filter.id] = values[0];
+        else if (fallback !== undefined) resolved[filter.id] = fallback;
         break;
       }
       case 'date': {
