@@ -5,6 +5,7 @@ import { drawnPolygons } from '@/lib/map/draw-features';
 import { terraDrawMode, type DrawTool } from '@/lib/map/draw-state';
 import { restoreFeatures } from '@/lib/map/import-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
+import { areaRejectionAtom } from '@/store/selection';
 import { resetSelectionSessionAtom } from '@/store/upload';
 
 /**
@@ -66,6 +67,22 @@ export const startDrawAtom = atom(null, (get, set) => {
 
   set(restartSelectionAtom);
   set(drawStateAtom, { type: 'tool', tool: 'draw' });
+});
+
+/**
+ * A press on the map after a rejected drawing: the error goes (via `startDraw`) and a new
+ * drawing starts with that press as its first vertex. It fires on pointerdown, before
+ * Terra Draw turns the pointerup into a click, so the mode is set here: `useTerraDraw`'s
+ * effect would only apply it after the click had landed in static mode. A rejected upload
+ * keeps its own dismissals.
+ */
+export const redrawAfterRejectionAtom = atom(null, (get, set) => {
+  const draw = get(drawInstanceAtom);
+
+  if (get(areaRejectionAtom)?.source !== 'draw' || !draw?.enabled) return;
+
+  set(startDrawAtom);
+  draw.setMode(get(drawModeAtom));
 });
 
 /**

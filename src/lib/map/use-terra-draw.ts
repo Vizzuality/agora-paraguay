@@ -110,7 +110,9 @@ export function useTerraDraw() {
   // only when the mode changes: without it, a toggle pressed during style load is
   // swallowed and never reaches Terra Draw.
   useEffect(() => {
-    if (!draw?.enabled) return;
+    // Skipped when the mode is already on: `setMode` restarts it, and restarting polygon
+    // mode drops a ring in progress — the first vertex `redrawAfterRejectionAtom` arms.
+    if (!draw?.enabled || draw.getMode() === mode) return;
 
     draw.setMode(mode);
   }, [draw, mode]);
