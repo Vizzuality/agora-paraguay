@@ -17,6 +17,7 @@ import {
   zoomToFarmScale,
 } from './fixtures/map';
 import { savedPolygonCount } from './fixtures/saved-selection';
+import { pickAnalysisType } from './fixtures/selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -33,7 +34,7 @@ function controls(page: Page) {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
     upload: page.getByRole('button', { name: 'Subir archivo' }),
-    // Step 2 only: Analizar appearing is the observable signal that an area landed.
+    // Step 3 only: Analizar appearing is the observable signal that an area landed.
     analyze: page.getByRole('button', { name: 'Analizar' }),
     restart: page.getByRole('button', { name: 'Reiniciar' }),
     currentStep: page
@@ -48,6 +49,7 @@ test.beforeEach(async ({ page }) => {
   // Zoomed in to farm scale: at the opening zoom the test triangle covers a department,
   // over the area limit (see 'a drawing over the area limit').
   await page.goto(FARM_SCALE_URL);
+  await pickAnalysisType(page);
 
   // Terra Draw starts on the style's `load` event, and the Draw button is disabled until
   // it has: waiting on that is what makes the rest of the spec deterministic.
@@ -57,10 +59,10 @@ test.beforeEach(async ({ page }) => {
 
 // One área de interés per session: closing the polygon parks the tool and the panel
 // moves on to confirmation.
-test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }) => {
+test('finishing a polygon leaves draw mode and moves to step 3', async ({ page }) => {
   const { draw, analyze, currentStep } = controls(page);
 
-  await expect(currentStep).toContainText('Paso 1');
+  await expect(currentStep).toContainText('Paso 2');
   await expect(analyze).toBeHidden();
 
   await draw.click();
@@ -71,7 +73,7 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
 
   await drawPolygon(page, POLYGON);
 
-  await expect(currentStep).toContainText('Paso 2');
+  await expect(currentStep).toContainText('Paso 3');
   await expect(analyze).toBeEnabled();
   await expect(draw).toBeHidden();
 
@@ -82,7 +84,23 @@ test('finishing a polygon leaves draw mode and moves to step 2', async ({ page }
     .toBeGreaterThan(OPENING_ZOOM);
 });
 
-test('cancelling an armed session stays on step 1', async ({ page }) => {
+// The analysis type is picked first (Paso 1); Paso 2 offers Reiniciar to change it.
+test('Reiniciar on step 2 returns to the analysis type', async ({ page }) => {
+  const { draw, upload, restart, currentStep } = controls(page);
+
+  await expect(currentStep).toContainText('Paso 2');
+  await restart.click();
+
+  await expect(currentStep).toContainText('Paso 1');
+  await expect(draw).toBeHidden();
+  await expect(upload).toBeHidden();
+
+  await pickAnalysisType(page, 'Riesgo productivo');
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(draw).toBeEnabled();
+});
+
+test('cancelling an armed session stays on step 2', async ({ page }) => {
   const { draw, currentStep } = controls(page);
 
   await draw.click();
@@ -90,11 +108,11 @@ test('cancelling an armed session stays on step 1', async ({ page }) => {
 
   await expect(draw).toHaveAccessibleName('Dibujar polígono');
   await expect(draw).toHaveAttribute('aria-pressed', 'false');
-  await expect(currentStep).toContainText('Paso 1');
+  await expect(currentStep).toContainText('Paso 2');
 });
 
-// Reiniciar starts over: whatever is on the map goes, the entry points come back and the
-// camera returns to the opening view.
+// Reiniciar starts over: whatever is on the map goes, the panel is back on the analysis
+// type and the camera returns to the opening view.
 test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   const { draw, analyze, restart, currentStep } = controls(page);
 
@@ -113,7 +131,7 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
 
   await expect(currentStep).toContainText('Paso 1');
   await expect(analyze).toBeHidden();
-  await expect(draw).toHaveAccessibleName('Dibujar polígono');
+  await expect(draw).toBeHidden();
 
   // The parcels go with the drawing: nothing stays painted from the previous answer.
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
@@ -126,13 +144,14 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
   // A fresh session works exactly like the first one (zoomed in again: the opening view
   // makes the test triangle a department, over the area limit).
   await zoomToFarmScale(page);
+  await pickAnalysisType(page);
   await draw.click();
   await drawPolygon(page, POLYGON);
   await expect(analyze).toBeEnabled();
 });
 
 // The drawing is saved on disk as it changes and restored when the page comes back:
-// the panel is on step 2 again, with the parcels for the same area.
+// the panel is on step 3 again, with the parcels for the same area.
 test('keeps the drawing across a reload', async ({ page }) => {
   const { draw, analyze, currentStep } = controls(page);
 
@@ -143,15 +162,15 @@ test('keeps the drawing across a reload', async ({ page }) => {
 
   await page.reload();
 
-  await expect(currentStep).toContainText('Paso 2');
+  await expect(currentStep).toContainText('Paso 3');
   await expect(controls(page).analyze).toBeEnabled();
   await expect(controls(page).draw).toBeHidden();
 });
 
 // The cadastre does not cover the drawn area: the API answers `empty` (HTTP 200) and the
-// drawing is rejected — back to step 1 with the reason in the error toast and the entry
+// drawing is rejected — back to step 2 with the reason in the error toast and the entry
 // point that made it outlined until dismissed.
-test('a drawing outside the cadastre is rejected back to step 1 with the reason', async ({
+test('a drawing outside the cadastre is rejected back to step 2 with the reason', async ({
   page,
 }) => {
   const { draw, analyze, currentStep } = controls(page);
@@ -162,7 +181,7 @@ test('a drawing outside the cadastre is rejected back to step 1 with the reason'
   await draw.click();
   await drawPolygon(page, POLYGON);
 
-  await expect(currentStep).toContainText('Paso 1');
+  await expect(currentStep).toContainText('Paso 2');
   await expect(analyze).toBeHidden();
   await expect(notice).toContainText('Ha habido un error.');
   await expect(notice).toContainText(OUT_OF_COVERAGE_MESSAGE);
@@ -245,7 +264,7 @@ test('a click on the map after a rejected drawing starts the next one there', as
   // Two more vertices close it: the first came from the click that dismissed the error.
   await drawPolygon(page, rest);
 
-  await expect(currentStep).toContainText('Paso 2');
+  await expect(currentStep).toContainText('Paso 3');
   await expect(analyze).toBeEnabled();
 });
 
@@ -268,7 +287,7 @@ test('a click on the map leaves the error of a rejected upload', async ({ page }
 // The areas are measured before anything is asked: with the whole country in view the
 // test triangle covers hundreds of thousands of hectares, over the limit, and is
 // rejected the way an out-of-coverage answer is — but `filter-parcels` never runs.
-test('a drawing over the area limit is rejected back to step 1 without asking the API', async ({
+test('a drawing over the area limit is rejected back to step 2 without asking the API', async ({
   page,
 }) => {
   const { draw, analyze, currentStep } = controls(page);
@@ -285,13 +304,14 @@ test('a drawing over the area limit is rejected back to step 1 without asking th
   );
 
   await page.goto(COUNTRY_SCALE_URL);
+  await pickAnalysisType(page);
   await expect(draw).toBeEnabled();
   await expect(mapCanvas(page)).toBeVisible();
 
   await draw.click();
   await drawPolygon(page, POLYGON);
 
-  await expect(currentStep).toContainText('Paso 1');
+  await expect(currentStep).toContainText('Paso 2');
   await expect(analyze).toBeHidden();
   await expect(notice).toContainText('Ha habido un error.');
   await expect(notice).toContainText(/supera el máximo de 200\.000 ha/);

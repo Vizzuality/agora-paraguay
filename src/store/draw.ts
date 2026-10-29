@@ -5,7 +5,7 @@ import { drawnPolygons } from '@/lib/map/draw-features';
 import { terraDrawMode, type DrawTool } from '@/lib/map/draw-state';
 import { restoreFeatures } from '@/lib/map/import-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
-import { areaRejectionAtom } from '@/store/selection';
+import { analysisTypeAtom, areaRejectionAtom } from '@/store/selection';
 import { resetSelectionSessionAtom } from '@/store/upload';
 
 /**
@@ -61,6 +61,12 @@ export const restartSelectionAtom = atom(null, (get, set) => {
   set(resetSelectionSessionAtom);
 });
 
+/** Reiniciar: the selection starts over from Paso 1, the analysis type included. */
+export const restartAnalysisAtom = atom(null, (_get, set) => {
+  set(restartSelectionAtom);
+  set(analysisTypeAtom, null);
+});
+
 /** Activates the draw tool. A drawing session always starts from scratch. */
 export const startDrawAtom = atom(null, (get, set) => {
   if (!get(drawInstanceAtom)?.enabled) return;
@@ -87,7 +93,7 @@ export const redrawAfterRejectionAtom = atom(null, (get, set) => {
 
 /**
  * A finished polygon ends the draw session (one área de interés per session, AGP-36):
- * the geometry is reported and the tool parked, which moves the panel to step 2.
+ * the geometry is reported and the tool parked, which moves the panel to step 3.
  */
 export const finishDrawAtom = atom(null, (_get, set, snapshot: GeoJSONStoreFeatures[]) => {
   set(drawStateAtom, { type: 'geometry', polygons: drawnPolygons(snapshot) });

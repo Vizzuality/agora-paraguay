@@ -1,4 +1,5 @@
 import type { LinkProps } from '@tanstack/react-router';
+import { Bug, ChartPie, ThermometerSun, type LucideIcon } from 'lucide-react';
 
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 
@@ -9,22 +10,31 @@ export type NavLink = {
 };
 
 /** Way back to the selection screen, shared by the top nav and the footer. */
-export const SELECTION_LINK: NavLink = { label: 'Selección de parcelas', to: '/' };
+export const SELECTION_LINK: NavLink = { label: 'Personalización del análisis', to: '/' };
 
 /**
  * The two risk views, in display order, each its own route under `/analisis`. The top
  * nav renders them as tabs; the pages take their title from here.
  */
-export const RISK_TABS: { label: string; riesgo: Riesgo; to: LinkProps['to'] }[] = [
-  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/analisis/sanitario' },
-  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/analisis/productivo' },
+export const RISK_TABS: {
+  label: string;
+  riesgo: Riesgo;
+  to: LinkProps['to'];
+  icon: LucideIcon;
+}[] = [
+  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/analisis/sanitario', icon: Bug },
+  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/analisis/productivo', icon: ChartPie },
 ];
 
+/** Exposición climática: by district, no parcel selection. */
+export const EXPOSURE_TAB = {
+  label: 'Exposición climática',
+  to: '/analisis/exposicion-climatica',
+  icon: ThermometerSun,
+} satisfies { label: string; to: LinkProps['to']; icon: LucideIcon };
+
 /** The top nav's tabs: Exposición climática, then the risk views. The footer keeps `RISK_LINKS`. */
-export const HEADER_TABS: { label: string; to: LinkProps['to'] }[] = [
-  { label: 'Exposición climática', to: '/analisis/exposicion-climatica' },
-  ...RISK_TABS,
-];
+export const HEADER_TABS: { label: string; to: LinkProps['to'] }[] = [EXPOSURE_TAB, ...RISK_TABS];
 
 /**
  * `RISK_TABS` as plain router links (for the footer). Switching risk views must

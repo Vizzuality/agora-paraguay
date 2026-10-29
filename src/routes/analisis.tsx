@@ -1,4 +1,10 @@
-import { ClientOnly, createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
+import {
+  ClientOnly,
+  createFileRoute,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 
@@ -6,6 +12,7 @@ import { Footer } from '@/components/footer';
 import { Logo } from '@/components/logo';
 import { HeaderNav, PhoneAnalysisNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
+import { sendsBackToSelection } from '@/lib/analysis/empty-selection';
 import { useNarrowScreen } from '@/lib/use-narrow-screen';
 import { useSavedSelection } from '@/lib/use-saved-selection';
 import { analysedParcelIdsAtom } from '@/store/analysis';
@@ -56,7 +63,8 @@ function AnalysisLayout() {
  * A hard reload starts a fresh module store, so the saved selection is read here too:
  * the analysed parcels come back and the page shows the same analysis. Only once that
  * read is done, with still no parcels (nothing saved, expired, or a direct visit), is
- * the user sent back to build a selection.
+ * the user sent back to build a selection (`sendsBackToSelection`: never from
+ * Exposición climática, which does not depend on it).
  */
 function EmptySelectionRedirect() {
   useSavedSelection();
@@ -64,7 +72,10 @@ function EmptySelectionRedirect() {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
   const hydrated = useAtomValue(savedSelectionHydratedAtom);
   const navigate = useNavigate();
-  const empty = hydrated && parcelIds.length === 0;
+  // The live pathname, not `useMatchRoute`: while the navigation from `/` is still
+  // pending, that matches against the resolved location (`/`) and would redirect.
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const empty = sendsBackToSelection({ pathname, hydrated, parcelCount: parcelIds.length });
 
   useEffect(() => {
     if (empty) void navigate({ to: '/', replace: true });

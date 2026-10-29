@@ -7,19 +7,23 @@ import {
   NO_PARCEL_INTERSECTION_MESSAGE,
   PARCELS_REQUEST_FAILED_MESSAGE,
 } from '@/components/error-toast';
-import { ActionCardButton } from '@/components/sidebar/action-card-button';
+import { ACTION_CARDS_ENTER, ActionCardButton } from '@/components/sidebar/action-card-button';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
-import { drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
+import { RISK_TABS } from '@/lib/nav-links';
+import { cn } from '@/lib/utils';
+import { drawPolygonsAtom, restartAnalysisAtom } from '@/store/draw';
 import { startAnalysisAtom } from '@/store/mode';
 import { toggledParcelIdsAtom } from '@/store/parcels';
+import { analysisTypeAtom } from '@/store/selection';
 
 /**
- * Step 2 of the selection: start over, or analyse the parcels the drawn or uploaded
+ * Step 3 of the selection: start over, or analyse the parcels the drawn or uploaded
  * areas selected. `filter-parcels` already ran when the areas landed
  * (`parcelQueries.filtered`, painted on the map), and the user may have flipped some by
  * clicking them; Analizar sends the parcels selected after those flips to the analysis
- * page, which runs it (`useAnalysis`) and lands on riesgo sanitario, the public side.
+ * page, which runs it (`useAnalysis`) and lands on the riesgo picked on step 1 — sanitario,
+ * the public side, when a reload restored the areas without it.
  * Renders inside `<ClientOnly>` (it reads the draw atoms). `layout` is the buttons':
  * the panel's cards, or the phone's bar under the map.
  */
@@ -27,14 +31,15 @@ export function ConfirmActions({ layout = 'card' }: Readonly<{ layout?: 'card' |
   const polygons = useAtomValue(drawPolygonsAtom);
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data: parcels, isError, isSuccess } = useQuery(parcelQueries.filtered(polygons));
-  const restart = useSetAtom(restartSelectionAtom);
+  const analysisType = useAtomValue(analysisTypeAtom);
+  const restart = useSetAtom(restartAnalysisAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
   const navigate = useNavigate();
 
   const parcelIds = parcels ? selectedParcelIds(applyToggles(parcels.results, toggled)) : [];
 
   // Parcels around the areas, none over the threshold: the user can still click one.
-  // (No parcel at all is `useRejectUncoveredAreas`: the areas go, back to step 1.)
+  // (No parcel at all is `useRejectUncoveredAreas`: the areas go, back to step 2.)
   // `isSuccess`, not `parcels`: a re-keyed query shows the previous parcels as
   // placeholder while the answer is not in yet.
   const noIntersection = isSuccess && parcelIds.length === 0;
@@ -42,11 +47,16 @@ export function ConfirmActions({ layout = 'card' }: Readonly<{ layout?: 'card' |
   // Entering the mode before navigating keeps the store consistent even if navigation fails.
   function analyze() {
     startAnalysis(parcelIds);
-    void navigate({ to: '/analisis/sanitario' });
+    const tab = RISK_TABS.find(({ riesgo }) => riesgo === (analysisType ?? 'sanitario'));
+    void navigate({ to: tab?.to ?? '/analisis/sanitario' });
   }
   return (
     <section aria-live="polite" className="flex w-full flex-col gap-2">
-      <div className={layout === 'card' ? 'grid grid-cols-2 gap-1.5' : 'flex gap-2'}>
+      <div
+        className={
+          layout === 'card' ? cn('grid grid-cols-2 gap-1.5', ACTION_CARDS_ENTER) : 'flex gap-2'
+        }
+      >
         <ActionCardButton icon={Undo2} layout={layout} onClick={() => restart()}>
           Reiniciar
         </ActionCardButton>

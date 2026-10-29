@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { mapCanvas, stubBasemap } from './fixtures/map';
+import { pickAnalysisType } from './fixtures/selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -13,7 +14,7 @@ test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true
 
 function controls(page: Page) {
   return {
-    heading: page.getByRole('heading', { name: 'Selección de parcelas' }),
+    heading: page.getByRole('heading', { name: 'Personalización del análisis' }),
     upload: page.getByRole('button', { name: 'Subir archivo' }),
     draw: page.getByRole('button', { name: 'Dibujar polígono' }),
     cancel: page.getByRole('button', { name: 'Cancelar' }),
@@ -28,6 +29,7 @@ test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await page.goto('/');
+  await pickAnalysisType(page);
 
   // The map mounts under the panel, so Terra Draw binds while the panel is up.
   await expect(controls(page).upload).toBeEnabled();
@@ -56,10 +58,11 @@ test('an upload hands the screen to the map, with Reiniciar and Analizar under i
   await expect(restart).toBeVisible();
   await expect(analyze).toBeEnabled();
 
-  // Reiniciar clears the areas: back to the panel.
+  // Reiniciar clears the areas: back to the panel, on the analysis type.
   await restart.click();
   await expect(heading).toBeVisible();
   await expect(mapCanvas(page)).toBeHidden();
+  await pickAnalysisType(page);
 
   await input.setInputFiles(join(FIXTURES, 'farms.kml'));
   await expect(analyze).toBeEnabled();

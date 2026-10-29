@@ -11,6 +11,7 @@ import {
   yellowPixelCount,
 } from './fixtures/map';
 import { savedAnalysedParcelCount } from './fixtures/saved-selection';
+import { pickAnalysisType } from './fixtures/selection';
 
 // Canvas-relative coordinates (the canvas is the right half of the viewport,
 // ~640px wide).
@@ -35,7 +36,7 @@ function controls(page: Page) {
   return {
     // Tolerant of both labels: the button reads "Cancelar" while a session is armed.
     draw: page.getByRole('button', { name: /Dibujar polígono|Cancelar/ }),
-    // Step 2 only: it appears once an area is on the map.
+    // Step 3 only: it appears once an area is on the map.
     analyze: page.getByRole('button', { name: 'Analizar' }),
     restart: page.getByRole('button', { name: 'Reiniciar' }),
     currentStep: page
@@ -71,6 +72,7 @@ test.beforeEach(async ({ page }) => {
   // Zoomed in to farm scale: at the opening zoom the test triangle covers a department,
   // over the area limit (see 'a drawing over the area limit').
   await page.goto(FARM_SCALE_URL);
+  await pickAnalysisType(page);
 
   await expect(controls(page).draw).toBeEnabled();
   await expect(mapCanvas(page)).toBeVisible();
@@ -95,7 +97,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     }
   });
 
-  // Nothing on the map yet: step 1, no Analizar.
+  // Nothing on the map yet: step 2, no Analizar.
   await expect(analyze).toBeHidden();
 
   await draw.click();
@@ -238,7 +240,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   // Locators are scoped to the header because the footer repeats the same link names.
   const navbar = page.getByRole('banner');
   await expect(page.getByRole('main').getByRole('link', { name: 'Editar' })).toBeVisible();
-  await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toHaveCount(0);
+  await expect(navbar.getByRole('link', { name: 'Personalización del análisis' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
 
   // Analizar lands on riesgo sanitario, which is public: no login gate.
@@ -271,7 +273,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(footer.getByRole('link', { name: 'Exposición climática' })).toHaveCount(0);
   await footer.getByRole('link', { name: 'Riesgo productivo' }).click();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
-  await expect(footer.getByRole('link', { name: 'Selección de parcelas' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'Personalización del análisis' })).toBeVisible();
 
   // Stubbed login (`stubAuth`): any credentials open the private indicators in place.
   await page.getByLabel('Email').fill('analista@example.com');
@@ -280,7 +282,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
 
-  // Going back remounts the map; the selection survives, so the panel resumes on step 2
+  // Going back remounts the map; the selection survives, so the panel resumes on step 3
   // and the parcels are painted again from the cached answer.
   await page.goBack();
   await expect(controls(page).restart).toBeVisible();
@@ -350,9 +352,11 @@ test('veils the map with a spinner while the parcels are looked up', async ({ pa
 });
 
 // The hero's Editar and the footer link back to the selection resume it, like the browser's Back:
-// the areas and parcels are still there, the panel is on step 2, and a parcel the user
+// the areas and parcels are still there, the panel is on step 3, and a parcel the user
 // flipped before Analizar stays flipped. Starting over is Reiniciar's job.
-test('Selección de parcelas resumes the selection on step 2 with the parcels', async ({ page }) => {
+test('Personalización del análisis resumes the selection on step 3 with the parcels', async ({
+  page,
+}) => {
   const { draw, analyze, restart, currentStep } = controls(page);
   const canvas = mapCanvas(page);
   const parcelTabs = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
@@ -382,10 +386,10 @@ test('Selección de parcelas resumes the selection on step 2 with the parcels', 
   // A single parcel stands alone: no Todas tab to combine it with.
   await expect(parcelTabs).toHaveText(['Parcela 1']);
 
-  // Editar: step 2, Analizar ready, the one selected parcel painted again.
+  // Editar: step 3, Analizar ready, the one selected parcel painted again.
   await page.getByRole('main').getByRole('link', { name: 'Editar' }).click();
   await expect(page).toHaveURL(/\/(\?|$)/);
-  await expect(currentStep).toContainText('Paso 2');
+  await expect(currentStep).toContainText('Paso 3');
   await expect(analyze).toBeEnabled();
   await expect(restart).toBeVisible();
   await expect(canvas).toBeVisible();
@@ -400,17 +404,52 @@ test('Selección de parcelas resumes the selection on step 2 with the parcels', 
   await expect(parcelTabs).toHaveText(['Parcela 1']);
 
   // The footer link resumes the same way.
-  await page.getByRole('contentinfo').getByRole('link', { name: 'Selección de parcelas' }).click();
+  await page
+    .getByRole('contentinfo')
+    .getByRole('link', { name: 'Personalización del análisis' })
+    .click();
   await expect(page).toHaveURL(/\/(\?|$)/);
-  await expect(currentStep).toContainText('Paso 2');
+  await expect(currentStep).toContainText('Paso 3');
   await expect(analyze).toBeEnabled();
 
-  // Reiniciar is what starts over: step 1, nothing painted.
+  // Reiniciar is what starts over: back to the analysis type, nothing painted.
   await restart.click();
   await expect(currentStep).toContainText('Paso 1');
-  await expect(draw).toHaveText('Dibujar polígono');
+  await expect(draw).toBeHidden();
   await expect(analyze).toBeHidden();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBe(0);
+});
+
+// Step 1 picks the analysis: Exposición climática needs no parcels and opens its page,
+// a riesgo walks through the área de interés and Analizar lands on that riesgo's page.
+test('the analysis type picked on step 1 decides where the selection leads', async ({ page }) => {
+  const { draw, analyze, restart, currentStep } = controls(page);
+
+  // Paso 2's Reiniciar goes back to the analysis type.
+  await expect(currentStep).toContainText('Paso 2');
+  await restart.click();
+  await expect(currentStep).toContainText('Paso 1');
+
+  await pickAnalysisType(page, 'Riesgo productivo');
+  await expect(currentStep).toContainText('Paso 2');
+  await draw.click();
+  await drawPolygon(page, FIRST_POLYGON);
+  await analyze.click();
+  await expect(page).toHaveURL(/\/analisis\/productivo/);
+
+  await page.goto('/');
+  await expect(currentStep).toContainText('Paso 3');
+  await restart.click();
+  await page.getByRole('button', { name: 'Exposición climática' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
+  // No parcels behind it: the empty-selection guard must leave this page alone.
+  await expect(page.getByRole('heading', { name: 'Exposición climática' })).toBeVisible();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
+
+  // A direct visit with nothing saved stays too.
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Exposición climática' })).toBeVisible();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
 });
 
 test('opens the metadata description from the info icon on hero fields and cards', async ({
