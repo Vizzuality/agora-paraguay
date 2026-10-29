@@ -1,7 +1,8 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 
-import { AnalysisHeader } from '@/components/analysis-header';
+import { AnalysisShell } from '@/components/analysis-shell';
+import { AnalysisSidebar } from '@/components/analysis-sidebar';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { LoginGate } from '@/components/auth/login-gate';
@@ -12,9 +13,9 @@ import { useSession } from '@/lib/auth/use-session';
 import { analysedParcelIdsAtom } from '@/store/analysis';
 
 /**
- * Riesgo productivo needs an account: login gate until a session exists, with neither
- * hero nor title above it (the login screen design has none). Behind it, the AI summary
- * widget and the widgets.
+ * Riesgo productivo needs an account: login gate until a session exists, full width
+ * with no hero beside it (the login screen design has none). Behind it, the hero beside
+ * the AI summary widget and the widgets.
  */
 export const Route = createFileRoute('/analisis/productivo')({
   component: ProductivoPage,
@@ -22,25 +23,10 @@ export const Route = createFileRoute('/analisis/productivo')({
 
 function ProductivoPage() {
   return (
-    <>
-      <ClientOnly>
-        <ProductivoHeader />
-      </ClientOnly>
-
-      <ClientOnly fallback={<LoginGate hydrating />}>
-        <ProductivoGate />
-      </ClientOnly>
-    </>
+    <ClientOnly fallback={<LoginGate hydrating />}>
+      <ProductivoGate />
+    </ClientOnly>
   );
-}
-
-/** Hero and title only for a logged-in analyst. */
-function ProductivoHeader() {
-  const session = useSession();
-
-  if (!session) return null;
-
-  return <AnalysisHeader riesgo="productivo" />;
 }
 
 function ProductivoGate() {
@@ -50,10 +36,10 @@ function ProductivoGate() {
   if (!session) return <LoginGate />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <AnalysisShell side={<AnalysisSidebar riesgo="productivo" />}>
       <WidgetAI parcels={parcelIds} />
       <ProductivoWidgets />
-    </div>
+    </AnalysisShell>
   );
 }
 

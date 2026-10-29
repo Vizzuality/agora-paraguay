@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Map, { AttributionControl, Layer, Source, useMap } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
+import { ZoomControl } from '@/components/map/zoom-control';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { collapseAttribution } from '@/lib/map/attribution';
@@ -12,6 +13,7 @@ import { addDotPattern } from '@/lib/map/dot-pattern';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
 import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
+import { useNarrowScreen } from '@/lib/use-narrow-screen';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
 import { paperLayoutAtom, reportMapAtom } from '@/store/report';
@@ -30,9 +32,9 @@ const AREA_COLOR = '#F1FF28';
  * outlined; clicking one opens its tab. The parcels stand in for the drawn areas as on
  * the main map; the areas themselves only paint while no parcels exist. Framed by the
  * analysed parcels' combined bounds on mount,
- * re-framed on the open tab's parcel(s) when it changes, the user's in between: pan and
- * scroll-zoom work as on the main map, without the zoom buttons. The camera is not written to the URL —
- * that is the main map's, and this one is gone with the page.
+ * re-framed on the open tab's parcel(s) when it changes, the user's in between: pan,
+ * scroll-zoom and the zoom buttons work as on the main map. The camera is not written to
+ * the URL — that is the main map's, and this one is gone with the page.
  */
 export function MiniMap() {
   const areas = useAtomValue(drawPolygonsAtom);
@@ -42,6 +44,7 @@ export function MiniMap() {
   // The camera's zoom once known, for the parcel number chips: `initialViewState` fits
   // bounds, so the real zoom only exists after load, then follows each finished move.
   const [zoom, setZoom] = useState<number>();
+  const narrow = useNarrowScreen();
 
   const bounds = featuresBounds([
     ...areas,
@@ -69,13 +72,20 @@ export function MiniMap() {
       touchPitch={false}
       style={{ width: '100%', height: '100%' }}
     >
-      <AttributionControl compact position="bottom-left" />
+      {/* Wide, the bottom corners hold the area figure and the zoom buttons. */}
+      {/* Keyed: a control reads its position only when added. */}
+      <AttributionControl
+        key={narrow ? 'narrow' : 'wide'}
+        compact
+        position={narrow ? 'bottom-left' : 'top-right'}
+      />
       <FilteredParcelsLayer
         parcelIds={analysedIds}
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
         variant="analysis"
         zoom={zoom}
       />
+      <ZoomControl variant="overlay" />
       <MiniMapBehaviour />
       <ReportSnapshot />
       {(parcels?.results.length ?? 0) === 0 && (
