@@ -26,9 +26,9 @@ const FILTERS: Filters = [
 ];
 
 describe('resolveFilterSelection', () => {
-  it('defaults a category to its first option, a date to the API default, else to today', () => {
+  it('defaults the crop to soy, a date to the API default, else to today', () => {
     expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toEqual({
-      crop_type: 'rice',
+      crop_type: 'soy',
       sowing_date: todayIso(),
       date: '2026-09-17',
     });
@@ -41,7 +41,7 @@ describe('resolveFilterSelection', () => {
   });
 
   it('falls back when a category pick is no longer among the options', () => {
-    expect(resolveFilterSelection({ crop_type: 'wheat' }, FILTERS).crop_type).toBe('rice');
+    expect(resolveFilterSelection({ crop_type: 'wheat' }, FILTERS).crop_type).toBe('soy');
   });
 
   it('ignores picks for filters the API no longer lists', () => {
