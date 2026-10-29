@@ -1,30 +1,21 @@
 import { useAtom } from 'jotai';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { useRef, useState } from 'react';
-import Map, {
-  AttributionControl,
-  type MapLayerMouseEvent,
-  type MapRef,
-} from 'react-map-gl/maplibre';
+import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 
-import { GlobalLayer, globalLayerFillId, globalLayerSourceId } from '@/components/map/global-layer';
+import { GlobalLayer } from '@/components/map/global-layer';
 import { MapLoading } from '@/components/map/map-loading';
-import { ZoomControl } from '@/components/map/zoom-control';
-import { collapseAttribution } from '@/lib/map/attribution';
-import { BASEMAP_STYLE, dimBasemap } from '@/lib/map/basemap';
+import { PanelMap } from '@/components/map/panel-map';
 import {
   districtFromProperties,
   EXPOSURE_FILL,
   exposureLabel,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
+import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
 import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
 import { selectedDistrictAtom } from '@/store/exposure';
-// Worker setup (see worker.ts) — without it the style never loads and the map is blank.
-import '@/components/map/worker';
-
-import 'maplibre-gl/dist/maplibre-gl.css';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
 export type ExposureMapView = 'exposicion' | 'capas';
@@ -53,9 +44,9 @@ const EXPOSURE_CLASSES = [
 ];
 
 /**
- * Satellite map of the whole country for Exposición climática, dimmed so the data reads
- * first. Nivel de exposición paints the exposure layer with its legend; Capas paints the
- * reference layers, soy among them. One map for both views, so switching keeps the camera.
+ * The whole country on the panel map, for Exposición climática. Nivel de exposición
+ * paints the exposure layer with its legend; Capas paints the reference layers, soy among
+ * them. One map for both views, so switching keeps the camera.
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it and Capas paints only its features. Clicking it again clears the pick.
  */
@@ -83,7 +74,7 @@ export function ExposureMap({ view }: Readonly<{ view: ExposureMapView }>) {
     districtFromProperties(event.features?.[0]?.properties);
 
   return (
-    <Map
+    <PanelMap
       ref={mapRef}
       interactiveLayerIds={exposure ? [globalLayerFillId(EXPOSURE_LAYER.id)] : []}
       cursor={hovered ? 'pointer' : 'grab'}
@@ -97,22 +88,11 @@ export function ExposureMap({ view }: Readonly<{ view: ExposureMapView }>) {
         if (district) setSelected(district.id === selected?.id ? null : district);
       }}
       initialViewState={PARAGUAY_VIEW_STATE}
-      mapStyle={BASEMAP_STYLE}
-      attributionControl={false}
-      onLoad={(event) => {
-        collapseAttribution(event.target);
-        dimBasemap(event.target);
-      }}
       onSourceData={(event) => checkLoaded(event.target)}
       onIdle={(event) => checkLoaded(event.target)}
-      dragRotate={false}
-      touchPitch={false}
-      style={{ width: '100%', height: '100%' }}
     >
-      <AttributionControl compact position="top-right" />
       <MapLegend items={exposure ? EXPOSURE_CLASSES : REFERENCE_LAYERS} />
       {exposure && hovered && <DistrictTooltip {...hovered} />}
-      <ZoomControl variant="panel" />
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
       {exposure ? (
         <GlobalLayer {...EXPOSURE_LAYER} highlightedId={selected?.id} />
@@ -121,7 +101,7 @@ export function ExposureMap({ view }: Readonly<{ view: ExposureMapView }>) {
           <GlobalLayer key={id} id={id} color={color} districtId={selected?.id} />
         ))
       )}
-    </Map>
+    </PanelMap>
   );
 }
 

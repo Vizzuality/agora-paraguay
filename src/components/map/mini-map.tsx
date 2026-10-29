@@ -1,32 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
-import Map, { AttributionControl, Layer, Source, useMap } from 'react-map-gl/maplibre';
+import { Layer, Source, useMap } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
-import { ZoomControl } from '@/components/map/zoom-control';
+import { PanelMap } from '@/components/map/panel-map';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
-import { collapseAttribution } from '@/lib/map/attribution';
-import { BASEMAP_STYLE } from '@/lib/map/basemap';
 import { addDotPattern } from '@/lib/map/dot-pattern';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
 import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
-import { useNarrowScreen } from '@/lib/use-narrow-screen';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
 import { paperLayoutAtom, reportMapAtom } from '@/store/report';
-// Worker setup (see worker.ts) — without it the style never loads and the map is blank.
-import '@/components/map/worker';
-
-import 'maplibre-gl/dist/maplibre-gl.css';
 
 /** The drawing yellow of `draw-styles.ts`, for the areas while no parcels exist yet. */
 const AREA_COLOR = '#F1FF28';
 
 /**
- * Satellite map for the analysis hero, showing what Analizar submitted: the analysed
+ * The panel map for the analysis hero, showing what Analizar submitted: the analysed
  * parcels only (the main map's layer, restricted — the neighbours the user left out stay
  * behind), with the open tab's parcel in yellow — every one under Todas — and the rest
  * outlined; clicking one opens its tab. The parcels stand in for the drawn areas as on
@@ -44,7 +37,6 @@ export function MiniMap() {
   // The camera's zoom once known, for the parcel number chips: `initialViewState` fits
   // bounds, so the real zoom only exists after load, then follows each finished move.
   const [zoom, setZoom] = useState<number>();
-  const narrow = useNarrowScreen();
 
   const bounds = featuresBounds([
     ...areas,
@@ -54,38 +46,24 @@ export function MiniMap() {
   ]);
 
   return (
-    <Map
+    <PanelMap
       initialViewState={
         bounds === null
           ? INITIAL_VIEW_STATE
           : { bounds, fitBoundsOptions: { padding: FIT_PADDING } }
       }
-      mapStyle={BASEMAP_STYLE}
-      attributionControl={false}
       onLoad={(event) => {
-        collapseAttribution(event.target);
         addDotPattern(event.target);
         setZoom(event.target.getZoom());
       }}
       onMoveEnd={(event) => setZoom(event.viewState.zoom)}
-      dragRotate={false}
-      touchPitch={false}
-      style={{ width: '100%', height: '100%' }}
     >
-      {/* Wide, the bottom corners hold the area figure and the zoom buttons. */}
-      {/* Keyed: a control reads its position only when added. */}
-      <AttributionControl
-        key={narrow ? 'narrow' : 'wide'}
-        compact
-        position={narrow ? 'bottom-left' : 'top-right'}
-      />
       <FilteredParcelsLayer
         parcelIds={analysedIds}
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
         variant="analysis"
         zoom={zoom}
       />
-      <ZoomControl variant="panel" />
       <MiniMapBehaviour />
       <ReportSnapshot />
       {(parcels?.results.length ?? 0) === 0 && (
@@ -94,7 +72,7 @@ export function MiniMap() {
           <Layer type="line" paint={{ 'line-color': AREA_COLOR, 'line-width': 2 }} />
         </Source>
       )}
-    </Map>
+    </PanelMap>
   );
 }
 

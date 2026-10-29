@@ -12,7 +12,7 @@ const VARIANTS = {
     out: 'rounded-b-full',
   },
   // Light tiles with primary icons in one rounded block, inset from the corner: the
-  // exposure map and the analysis mini map. A phone pinches instead.
+  // panel map (`PanelMap`). A phone pinches instead.
   panel: {
     group: 'right-2 bottom-2 overflow-hidden rounded-2xl max-md:hidden',
     button: 'size-11 bg-background text-primary backdrop-blur-xs hover:bg-accent',
