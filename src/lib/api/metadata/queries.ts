@@ -1,17 +1,21 @@
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 
 import { fetchFilters, fetchIndicators } from './client';
-import type { FiltersParams, IndicatorsParams } from './schemas';
+import { DEFAULT_CROP, type FiltersParams, type IndicatorsParams } from './schemas';
 
 export const metadataQueries = {
   /**
-   * The hero filters for a riesgo and crop, one entry per crop (`useHeroFilters` seeds the
-   * default's). Picking another crop asks again; the previous list stands in meanwhile, so
-   * the hero keeps its fields and the analysis its request.
+   * The hero filters for a riesgo and crop, one entry per crop; no crop is soy's entry.
+   * Picking another crop asks again; the previous list stands in meanwhile, so the hero
+   * keeps its fields and the analysis its request.
    */
   filters: (params: FiltersParams) =>
     queryOptions({
-      queryKey: ['metadata', 'filters', params] as const,
+      queryKey: [
+        'metadata',
+        'filters',
+        { ...params, crop_type: params.crop_type ?? DEFAULT_CROP },
+      ] as const,
       queryFn: () => fetchFilters(params),
       staleTime: 5 * 60 * 1000,
       placeholderData: keepPreviousData,
