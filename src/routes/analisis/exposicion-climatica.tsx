@@ -4,7 +4,7 @@ import { useSetAtom } from 'jotai';
 import { AnalysisShell } from '@/components/analysis-shell';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { ExposureMapCard } from '@/components/exposure-map-card';
-import { GeneralInfoCard } from '@/components/general-info-card';
+import { GeneralInfoList } from '@/components/general-info-card';
 import { Button } from '@/components/ui/button';
 import { WidgetGrid } from '@/components/widget-grid';
 import { useExposureWidgets } from '@/lib/analysis/use-exposure-widgets';
@@ -51,18 +51,21 @@ function DistrictPanel() {
       aria-labelledby="distrito-seleccionado"
       className="flex min-h-108 flex-1 flex-col gap-4"
     >
-      <div className="flex items-start justify-between gap-4 rounded-3xl bg-card p-6">
-        <div className="flex flex-col gap-1">
-          <h2 id="distrito-seleccionado" className="text-2xl font-semibold">
-            {district.name}
-          </h2>
-          {district.department && (
-            <p className="text-sm text-muted-foreground">{district.department}</p>
-          )}
+      <div className="flex flex-col gap-6 rounded-3xl bg-card p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 id="distrito-seleccionado" className="text-2xl font-semibold">
+              {district.name}
+            </h2>
+            {district.department && (
+              <p className="text-sm text-muted-foreground">{district.department}</p>
+            )}
+          </div>
+          <Button variant="secondary" className="rounded-2xl" onClick={() => setDistrict(null)}>
+            Limpiar
+          </Button>
         </div>
-        <Button variant="secondary" className="rounded-2xl" onClick={() => setDistrict(null)}>
-          Limpiar
-        </Button>
+        {info.length > 0 && <GeneralInfoList items={info} />}
       </div>
 
       {indicators.isPending && (
@@ -71,7 +74,6 @@ function DistrictPanel() {
       {indicators.isError && (
         <p className="text-sm text-destructive">No se pudieron cargar los indicadores.</p>
       )}
-      {info.length > 0 && <GeneralInfoCard title="Datos del distrito" items={info} />}
       <WidgetGrid>
         {widgets.map((widget) => (
           <AnalysisWidgetCard key={widget.id} widget={widget} />
