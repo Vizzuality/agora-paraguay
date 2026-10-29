@@ -10,7 +10,7 @@ export function sendsBackToSelection({
   hydrated,
   parcelCount,
 }: Readonly<{ pathname: string; hydrated: boolean; parcelCount: number }>): boolean {
-  if (pathname.replace(/\/+$/, '') === EXPOSURE_TAB.to) return false;
+  if (pathname === EXPOSURE_TAB.to || pathname === `${EXPOSURE_TAB.to}/`) return false;
 
   // Before the saved selection is read, an empty store says nothing yet.
   return hydrated && parcelCount === 0;
