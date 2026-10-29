@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { FILTER_PARCELS_PATH, filterParcels } from '@/lib/api/parcels/client';
+import {
+  FILTER_PARCELS_PATH,
+  filterParcels,
+  GLOBAL_LAYER_VECTOR_PATH,
+  globalLayerVectorUrl,
+} from '@/lib/api/parcels/client';
 import type { FilterParcelsRequest } from '@/lib/api/parcels/schemas';
 
 const SQUARE: [number, number][] = [
@@ -80,5 +85,12 @@ describe('filterParcels', () => {
     fetchMock.mockResolvedValueOnce(Response.json({ type: 'FeatureCollection', features: [] }));
 
     await expect(filterParcels(request())).rejects.toThrow(ZodError);
+  });
+});
+
+describe('globalLayerVectorUrl', () => {
+  it('points at the slashed endpoint with the layer id', () => {
+    expect(globalLayerVectorUrl(8)).toBe(`${GLOBAL_LAYER_VECTOR_PATH}?id=8`);
+    expect(GLOBAL_LAYER_VECTOR_PATH.endsWith('/')).toBe(true);
   });
 });

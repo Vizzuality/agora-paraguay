@@ -13,6 +13,7 @@ export type GeneralInfoItem = {
 type GeneralInfoCardProps = {
   /** Label/value pairs, in the order to list them. */
   items: GeneralInfoItem[];
+  title?: string;
   className?: string;
 };
 
@@ -22,10 +23,14 @@ type GeneralInfoCardProps = {
  * figure and no ruler; the heading sits right in the card, no subtitle, and the facts
  * flow top to bottom through as many columns as the card's width holds.
  */
-export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
+export function GeneralInfoCard({
+  items,
+  title = 'Resumen del análisis',
+  className,
+}: Readonly<GeneralInfoCardProps>) {
   return (
     <WidgetCard className={cn('min-h-0 justify-start gap-2', className)}>
-      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
+      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">{title}</h3>
 
       <dl className="columns-[172px] gap-8">
         {items.map((item) => (

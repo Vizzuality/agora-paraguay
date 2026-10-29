@@ -38,7 +38,6 @@ import {
 } from '@/lib/analysis/parcel-tabs-scroll';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
-import { useParcelArea } from '@/lib/analysis/use-parcel-area';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import { activeParcelIdAtom, activeParcelTabAtom, setAnalysisFilterAtom } from '@/store/analysis';
@@ -240,13 +239,8 @@ function HeroDate({
   );
 }
 
-/**
- * Satellite mini map in the thumbnail slot, the open tab's area over it: the parcel's,
- * or the selection summed under Todas. Nothing until the analysis has answered it. The
- * same on both pages (`useParcelArea`).
- */
+/** Satellite mini map in the thumbnail slot, the same on both pages. */
 function MiniMapThumbnail() {
-  const area = useParcelArea();
   const reportMap = useAtomValue(reportMapAtom);
 
   return (
@@ -262,14 +256,6 @@ function MiniMapThumbnail() {
       )}
       <div className="relative h-[335px] min-w-0 shrink-0 overflow-hidden rounded-md bg-muted md:h-[280px] print:hidden paper:flex-1">
         <MiniMap />
-        {area && (
-          // A phone keeps the figure bottom right: its map has no zoom buttons.
-          <div className="pointer-events-none absolute right-0 bottom-0 rounded-md bg-black/80 px-4 py-2 backdrop-blur md:right-auto md:left-0 md:bg-black/50 md:px-3 md:py-1 md:backdrop-blur-xs">
-            <span className="text-[36px] font-light tracking-[0.408px] text-white">
-              {formatArea(area)}
-            </span>
-          </div>
-        )}
       </div>
     </>
   );
@@ -278,9 +264,8 @@ function MiniMapThumbnail() {
 /**
  * The report's stand-in for the tabs and the mini map, following the open tab like the
  * widgets do: under Todas every analysed parcel with its area and the total; with a
- * parcel's tab open, that parcel alone. A single parcel is one line, not a table. Same
- * answer the thumbnail reads (`useParcelArea`): the sanitario analysis carries the area
- * column.
+ * parcel's tab open, that parcel alone. A single parcel is one line, not a table. The
+ * sanitario analysis carries the area column.
  */
 function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
   const { analysis, indicators } = useAnalysis('sanitario');

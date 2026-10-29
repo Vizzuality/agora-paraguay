@@ -57,7 +57,10 @@ export type FiltersParams = {
 };
 
 /** What the indicator list is asked for: the riesgo, as a query parameter. */
-export type IndicatorsParams = { riesgo: Riesgo };
+/** Exposición climática has its own indicator list; it is not a riesgo page. */
+export type IndicatorsRiesgo = Riesgo | 'exposicion_climatica';
+
+export type IndicatorsParams = { riesgo: IndicatorsRiesgo };
 
 const rangeIndicatorTypeSchema = z.looseObject({
   type: z.literal('range'),

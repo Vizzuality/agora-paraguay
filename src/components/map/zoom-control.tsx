@@ -11,11 +11,11 @@ const VARIANTS = {
     in: '-mb-px rounded-t-full',
     out: 'rounded-b-full',
   },
-  // Square dark glass tiles flush in the corner, over the mini map's satellite imagery;
-  // a phone pinches instead.
-  overlay: {
-    group: 'right-0 bottom-0 max-md:hidden',
-    button: 'size-11 bg-black/50 text-white backdrop-blur-xs hover:bg-black/70',
+  // Light tiles with primary icons in one rounded block, inset from the corner: the
+  // exposure map and the analysis mini map. A phone pinches instead.
+  panel: {
+    group: 'right-2 bottom-2 overflow-hidden rounded-2xl max-md:hidden',
+    button: 'size-11 bg-background text-primary backdrop-blur-xs hover:bg-accent',
     in: '',
     out: '',
   },

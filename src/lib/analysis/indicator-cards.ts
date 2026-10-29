@@ -3,7 +3,7 @@ import {
   type AnalysisParcel,
   type ParcelValue,
 } from '@/lib/api/analysis/schemas';
-import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 import { isAreaIndicator } from './area';
 import { asReading, isNoReading, isUnreadable, readingOf, type Reading } from './readings';
@@ -142,18 +142,24 @@ export type GeneralInfoRow = {
  * Facts, not risks: text always, open numbers on sanitario (`widgetFor`). The riesgo
  * defaults to sanitario, the page where the general-info card lives.
  */
-export function isGeneralInfo(indicator: Indicator, riesgo: Riesgo = 'sanitario'): boolean {
+export function isGeneralInfo(
+  indicator: Indicator,
+  riesgo: IndicatorsRiesgo = 'sanitario',
+): boolean {
   // A fact is a fact under any scope; the scope only moves the classed types.
-  return widgetFor(indicator.indicator_type, { riesgo, scope: 'individual' }) === 'fact';
+  return (
+    widgetFor(indicator.indicator_type, { riesgo, scope: 'individual', unit: indicator.unit }) ===
+    'fact'
+  );
 }
 
 /** Classed indicators (a range, a category read for one parcel): the ones that get a risk card. */
 export function isRiskClass(
   indicator: Indicator,
-  riesgo: Riesgo = 'sanitario',
+  riesgo: IndicatorsRiesgo = 'sanitario',
   scope: ParcelScope = 'individual',
 ): boolean {
-  return widgetFor(indicator.indicator_type, { riesgo, scope }) === 'ruler';
+  return widgetFor(indicator.indicator_type, { riesgo, scope, unit: indicator.unit }) === 'ruler';
 }
 
 /**
@@ -181,7 +187,7 @@ export const NO_READING = 'Sin datos';
 export function indicatorCards(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
-  riesgo: Riesgo = 'sanitario',
+  riesgo: IndicatorsRiesgo = 'sanitario',
   scope: ParcelScope = 'individual',
 ): IndicatorCard[] {
   if (!parcel || !indicators) return [];
@@ -213,7 +219,7 @@ export function indicatorCards(
 export function generalInfo(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
-  riesgo: Riesgo = 'sanitario',
+  riesgo: IndicatorsRiesgo = 'sanitario',
 ): GeneralInfoRow[] {
   if (!parcel || !indicators) return [];
 

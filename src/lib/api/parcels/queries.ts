@@ -10,6 +10,9 @@ import {
   type FilterParcelsOptions,
 } from './schemas';
 
+/** A reference layer's GeoJSON URL; MapLibre loads it (see `globalLayerVectorUrl`). */
+export { globalLayerVectorUrl } from './client';
+
 export const parcelQueries = {
   /**
    * The cadastral parcels around the drawn or uploaded polygons (`filter-parcels`),

@@ -85,7 +85,7 @@ export function MiniMap() {
         variant="analysis"
         zoom={zoom}
       />
-      <ZoomControl variant="overlay" />
+      <ZoomControl variant="panel" />
       <MiniMapBehaviour />
       <ReportSnapshot />
       {(parcels?.results.length ?? 0) === 0 && (

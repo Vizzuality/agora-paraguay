@@ -1,4 +1,4 @@
-import type { IndicatorType, Riesgo } from '@/lib/api/metadata/schemas';
+import type { IndicatorType, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * What each indicator type renders as, and how a classed one is read. The analysis
@@ -44,11 +44,13 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * several binned (the "Numerical multiple" design) — an open number on the set's scale,
  * a range on its own (`min`–`max`, one bin per step when short): a productivo range is a
  * count or a percentage, not a risk, so it never gets the ruler's classes. Text is a fact
- * on both.
+ * on both. Exposición climática charts only what has a scale of its own: a percentage
+ * on 0–100 as a number card; its hectares are facts, since the only scale they could
+ * take is the largest district's, which leaves almost every marker at zero.
  */
 export function widgetFor(
   type: IndicatorType,
-  { riesgo, scope }: { riesgo: Riesgo; scope: ParcelScope },
+  { riesgo, scope, unit }: { riesgo: IndicatorsRiesgo; scope: ParcelScope; unit?: string | null },
 ): WidgetKind {
   switch (type.type) {
     case 'range':
@@ -58,6 +60,8 @@ export function widgetFor(
     case 'text':
       return 'fact';
     case 'numeric':
+      if (riesgo === 'exposicion_climatica' && unit !== '%') return 'fact';
+
       return numberWidget(riesgo, scope, 'number', 'histogram');
   }
 }
@@ -65,10 +69,10 @@ export function widgetFor(
 /** A range: a number on productivo; on sanitario one parcel on the ruler, several per class or binned. */
 function rangeWidget(
   type: { min: number; max: number },
-  riesgo: Riesgo,
+  riesgo: IndicatorsRiesgo,
   scope: ParcelScope,
 ): WidgetKind {
-  if (riesgo === 'productivo') return numberWidget(riesgo, scope, 'number', 'histogram');
+  if (riesgo !== 'sanitario') return numberWidget(riesgo, scope, 'number', 'histogram');
   if (scope === 'individual') return 'ruler';
 
   return isShortRange(type) ? 'bar-chart' : 'histogram';
@@ -76,12 +80,12 @@ function rangeWidget(
 
 /** A number of any kind: productivo draws it per scope (`one` parcel, `many` under Todas); sanitario reads it as a fact. */
 function numberWidget(
-  riesgo: Riesgo,
+  riesgo: IndicatorsRiesgo,
   scope: ParcelScope,
   one: WidgetKind,
   many: WidgetKind,
 ): WidgetKind {
-  if (riesgo !== 'productivo') return 'fact';
+  if (riesgo === 'sanitario') return 'fact';
 
   return scope === 'individual' ? one : many;
 }

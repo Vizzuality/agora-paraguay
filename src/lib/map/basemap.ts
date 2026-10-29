@@ -1,4 +1,4 @@
-import type { StyleSpecification } from 'maplibre-gl';
+import type { Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
 
 import { env } from '@/env';
 
@@ -59,3 +59,16 @@ export const BASEMAP_STYLE: string | StyleSpecification =
  * MapLibre expects a flat [west, south, east, north] tuple.
  */
 export const MAX_BOUNDS: [number, number, number, number] = [-66, -31, -51, -15];
+
+/**
+ * Dims and desaturates the basemap's raster layers, so data painted over the imagery
+ * reads first. Applied to the rasters only — a CSS veil over the canvas would dim the
+ * data layers too.
+ */
+export function dimBasemap(map: MapLibreMap) {
+  for (const layer of map.getStyle().layers) {
+    if (layer.type !== 'raster') continue;
+    map.setPaintProperty(layer.id, 'raster-saturation', -0.5);
+    map.setPaintProperty(layer.id, 'raster-brightness-max', 0.8);
+  }
+}

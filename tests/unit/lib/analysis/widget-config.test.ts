@@ -57,6 +57,28 @@ describe('widgetFor', () => {
   });
 });
 
+describe('widgetFor on exposición climática', () => {
+  const exposure = { riesgo: 'exposicion_climatica', scope: 'individual' } as const;
+
+  it("charts a district's percentages and reads its hectares as facts", () => {
+    expect(widgetFor({ type: 'numeric' }, { ...exposure, unit: '%' })).toBe('number');
+    expect(widgetFor({ type: 'numeric' }, { ...exposure, unit: 'ha' })).toBe('fact');
+  });
+
+  it("leaves productivo's numbers charted whatever their unit", () => {
+    const productivo = { riesgo: 'productivo', scope: 'individual', unit: 'ha' } as const;
+
+    expect(widgetFor({ type: 'numeric' }, productivo)).toBe('number');
+  });
+
+  it('reads its exposure class on the ruler and its codes as facts', () => {
+    expect(widgetFor({ type: 'category', categories: ['Bajo', 'Medio', 'Alto'] }, exposure)).toBe(
+      'ruler',
+    );
+    expect(widgetFor({ type: 'text' }, exposure)).toBe('fact');
+  });
+});
+
 describe('isShortRange', () => {
   it('reads up to the design cut of 10 as a handful of values', () => {
     expect(isShortRange({ min: 1, max: 3 })).toBe(true);
