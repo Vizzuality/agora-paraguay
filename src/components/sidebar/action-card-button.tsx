@@ -10,6 +10,13 @@ type Props = ComponentProps<typeof Button> & {
   layout?: 'card' | 'bar';
 };
 
+/**
+ * How a step's group of cards enters: up 16px from transparent, replayed each time a
+ * step opens (the group mounts with it). Still for users who ask for reduced motion.
+ */
+export const ACTION_CARDS_ENTER =
+  'animate-in fade-in-0 slide-in-from-bottom-4 duration-500 ease-out motion-reduce:animate-none';
+
 /** The big icon-over-label card the selection panel uses for every action. */
 export function ActionCardButton({
   icon: Icon,

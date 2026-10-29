@@ -25,7 +25,7 @@ export const uploadResultAtom = atom<UploadResult | null>(null);
  * The shared start of a new selection session: drops the user's parcel flips, dismisses
  * the previous upload notice, forgets the previous analysis (its parcels, tab, filters
  * and indicator picks) and returns the app to selection mode — an upload, a fresh
- * drawing after Analizar, Reiniciar or "Selección de parcelas". `startDrawAtom`,
+ * drawing after Analizar, Reiniciar or "Personalización del análisis". `startDrawAtom`,
  * `uploadFeaturesAtom` and `restartSelectionAtom` all route through here. Lives in this
  * file because it owns `uploadResultAtom` (any other home would create an import cycle).
  */

@@ -5,6 +5,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { stubBasemap } from './fixtures/map';
+import { pickAnalysisType } from './fixtures/selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -15,6 +16,7 @@ test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await page.goto('/');
+  await pickAnalysisType(page);
   await expect(page.getByRole('button', { name: 'Subir archivo' })).toBeEnabled();
   await page.locator('input[type="file"]').setInputFiles(join(FIXTURES, 'farms.geojson'));
   await page.getByRole('button', { name: 'Analizar' }).click();
@@ -26,7 +28,7 @@ test('the nav links sit under the bar, once each, and the risk tabs switch pages
 }) => {
   const navbar = page.getByRole('banner');
 
-  await expect(navbar.getByRole('link', { name: 'Selección de parcelas' })).toHaveCount(1);
+  await expect(navbar.getByRole('link', { name: 'Personalización del análisis' })).toHaveCount(1);
   await expect(navbar.getByRole('link', { name: 'Exposición climática' })).toHaveCount(1);
   await expect(navbar.getByRole('link', { name: 'Riesgo sanitario' })).toHaveCount(1);
   await expect(navbar.getByRole('link', { name: 'Riesgo productivo' })).toBeVisible();

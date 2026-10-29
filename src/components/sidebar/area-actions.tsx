@@ -1,20 +1,21 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { SquarePen, Upload } from 'lucide-react';
+import { SquarePen, Undo2, Upload } from 'lucide-react';
 import { useRef, type ChangeEvent } from 'react';
 
-import { ActionCardButton } from '@/components/sidebar/action-card-button';
+import { ACTION_CARDS_ENTER, ActionCardButton } from '@/components/sidebar/action-card-button';
 import { parseUploadFile, UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { UploadError } from '@/lib/upload/types';
 import { cn } from '@/lib/utils';
-import { drawAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
+import { drawAtom, restartAnalysisAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
 import { modeAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
 import { failUploadAtom, uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
 
 /**
- * Step 1 of the selection: the two ways to bring an área de interés onto the map —
- * upload a file of polygons or draw one. Upload outcomes are reported by
- * `UploadFeedback`, which outlives this component into step 2.
+ * Step 2 of the selection: the two ways to bring an área de interés onto the map —
+ * upload a file of polygons or draw one — after Reiniciar, the way back to the
+ * analysis type (the panel only; the phone's bar keeps the two entry points). Upload outcomes are reported by
+ * `UploadFeedback`, which outlives this component into step 3.
  *
  * Rendered inside `<ClientOnly>`: it reads the draw atoms. `layout` is the buttons':
  * the panel's cards, or the phone's bar under the map.
@@ -26,6 +27,7 @@ export function AreaActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'b
   const [rejection, setRejection] = useAtom(areaRejectionAtom);
   const setTool = useSetAtom(setDrawToolAtom);
   const startDraw = useSetAtom(startDrawAtom);
+  const restart = useSetAtom(restartAnalysisAtom);
   const uploadFeatures = useSetAtom(uploadFeaturesAtom);
   const failUpload = useSetAtom(failUploadAtom);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,8 +60,18 @@ export function AreaActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'b
   };
 
   return (
-    <fieldset className={layout === 'card' ? 'grid grid-cols-2 gap-1.5' : 'flex gap-2'}>
+    <fieldset
+      className={
+        layout === 'card' ? cn('grid grid-cols-3 gap-1.5', ACTION_CARDS_ENTER) : 'flex gap-2'
+      }
+    >
       <legend className="sr-only">Seleccionar parcelas para análisis</legend>
+
+      {layout === 'card' && (
+        <ActionCardButton icon={Undo2} onClick={() => restart()}>
+          Reiniciar
+        </ActionCardButton>
+      )}
 
       <ActionCardButton
         icon={Upload}

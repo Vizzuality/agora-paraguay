@@ -70,7 +70,7 @@ export function AnalysisHero({
             className="h-12 shrink-0 rounded-2xl border px-8 font-normal text-accent-foreground max-md:hidden"
           >
             {/* Visible text first in the name, so voice control can say "Editar". */}
-            <SelectionLink aria-label="Editar selección de parcelas">
+            <SelectionLink aria-label="Editar personalización del análisis">
               <SquarePen aria-hidden />
               Editar
             </SelectionLink>

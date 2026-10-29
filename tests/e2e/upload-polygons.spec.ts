@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { stubAnalysisApi } from './fixtures/api';
 import { mapCanvas, stubBasemap } from './fixtures/map';
 import { savedPolygonCount } from './fixtures/saved-selection';
+import { pickAnalysisType } from './fixtures/selection';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'uploads');
 
@@ -13,10 +14,10 @@ function controls(page: Page) {
   return {
     upload: page.getByRole('button', { name: 'Subir archivo' }),
     input: page.locator('input[type="file"]'),
-    // The upload outcome announces from the panel's live region, in both steps.
+    // The upload outcome announces from the panel's live region, on steps 2 and 3.
     uploadStatus: page.getByRole('status', { name: 'Estado de la selección' }),
     notices: page.getByRole('region', { name: 'Avisos de subida' }),
-    // Step 2 only: it appears once an area is on the map.
+    // Step 3 only: it appears once an area is on the map.
     analyze: page.getByRole('button', { name: 'Analizar' }),
     restart: page.getByRole('button', { name: 'Reiniciar' }),
   };
@@ -30,6 +31,7 @@ test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await page.goto('/');
+  await pickAnalysisType(page);
 
   // Terra Draw starts on the style's `load` event; the Upload button is disabled until
   // it has, and waiting on that is what makes the rest of the spec deterministic.
@@ -52,7 +54,7 @@ test('imports a GeoJSON upload, exploding its MultiPolygon', async ({ page }) =>
   await expect.poll(() => Number(new URL(page.url()).searchParams.get('lng'))).toBeLessThan(-57);
 });
 
-// A successful upload moves the panel to step 2, where the entry points are gone:
+// A successful upload moves the panel to step 3, where the entry points are gone:
 // the only way to a second upload is Reiniciar, which clears the first one.
 test('Reiniciar clears an upload so the next one starts fresh', async ({ page }) => {
   const { uploadStatus, analyze, restart } = controls(page);
@@ -61,8 +63,10 @@ test('Reiniciar clears an upload so the next one starts fresh', async ({ page })
   await expect(uploadStatus).toHaveText('Se importaron 3 áreas de farms.geojson.');
   await expect(analyze).toBeEnabled();
 
+  // Reiniciar goes back to the analysis type; pick it again to reach the upload.
   await restart.click();
   await expect(analyze).toBeHidden();
+  await pickAnalysisType(page);
 
   await upload(page, 'farms.kml');
   await expect(uploadStatus).toHaveText('Se importaron 2 áreas de farms.kml.');
@@ -92,8 +96,8 @@ test('imports a UTM 21S shapefile, reprojected via its .prj', async ({ page }) =
   await expect(uploadStatus).toHaveText('Se importaron 2 áreas de farms-utm21s.zip.');
 });
 
-// A file that never parsed reports its error and leaves the panel on step 1.
-test('a failed upload shows its error and stays on step 1', async ({ page }) => {
+// A file that never parsed reports its error and leaves the panel on step 2.
+test('a failed upload shows its error and stays on step 2', async ({ page }) => {
   const { notices, analyze } = controls(page);
 
   await upload(page, 'points.geojson');
@@ -107,7 +111,7 @@ test('a failed upload shows its error and stays on step 1', async ({ page }) => 
 test('accepted upload polygons can be analysed', async ({ page }) => {
   const { analyze } = controls(page);
 
-  // Nothing on the map yet: step 1, no Analizar.
+  // Nothing on the map yet: step 2, no Analizar.
   await expect(analyze).toBeHidden();
 
   await upload(page, 'farms.geojson');
@@ -203,7 +207,7 @@ test('rejects a corrupt zip with a readable error', async ({ page }) => {
   await expect(notices).toContainText('No se pudo leer el archivo como archivo zip.');
 });
 
-// Uploaded areas are saved like drawn ones: a reload lands on step 2 with the areas
+// Uploaded areas are saved like drawn ones: a reload lands on step 3 with the areas
 // back, and the analysis still goes through. The upload notice itself is not kept.
 test('keeps the upload across a reload', async ({ page }) => {
   await upload(page, 'farms.geojson');
@@ -221,7 +225,7 @@ test('keeps the upload across a reload', async ({ page }) => {
 
 // Reiniciar removes the saved record too: a reload after it starts from nothing.
 test('a reload after Reiniciar starts from step 1', async ({ page }) => {
-  const { upload: uploadButton, analyze, restart } = controls(page);
+  const { analyze, restart } = controls(page);
 
   await upload(page, 'farms.geojson');
   await expect(analyze).toBeEnabled();
@@ -233,6 +237,6 @@ test('a reload after Reiniciar starts from step 1', async ({ page }) => {
 
   await page.reload();
 
-  await expect(uploadButton).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Riesgo sanitario' })).toBeVisible();
   await expect(analyze).toBeHidden();
 });

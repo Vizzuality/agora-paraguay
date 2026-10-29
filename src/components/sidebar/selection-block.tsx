@@ -1,18 +1,27 @@
 import { useAtomValue } from 'jotai';
 import type { ReactNode } from 'react';
 
+import { AnalysisTypeActions } from '@/components/sidebar/analysis-type-actions';
 import { AreaActions } from '@/components/sidebar/area-actions';
 import { ConfirmActions } from '@/components/sidebar/confirm-actions';
 import { SelectionSteps } from '@/components/sidebar/selection-steps';
 import { UploadFeedback } from '@/components/sidebar/upload-feedback';
-import type { PanelStep } from '@/lib/selection-steps';
+import type { SelectionStep } from '@/lib/selection-steps';
 import { drawAtom } from '@/store/draw';
 import { selectionStepAtom } from '@/store/selection';
 import { uploadResultAtom } from '@/store/upload';
 
-const DESCRIPTIONS: Record<PanelStep, string> = {
-  1: 'Suba un archivo con su área de interés o dibuje un polígono en el mapa para visualizar las parcelas disponibles.',
-  2: 'Verifique que estas son las parcelas que desea y pulse Analizar. Use el mapa para seleccionar y deseleccionar parcelas.',
+const DESCRIPTIONS: Record<SelectionStep, ReactNode> = {
+  1: (
+    <>
+      Elija un tipo de análisis. El análisis de <em>Exposición climática</em> permite identificar
+      qué distritos de Paraguay presentan soja expuesta a sequía o inundación. Los análisis de{' '}
+      <em>Riesgo sanitario</em> y <em>Riesgo productivo</em> presentan diferentes riesgos por
+      parcelas.
+    </>
+  ),
+  2: 'Suba un archivo con su área de interés o dibuje un polígono en el mapa para visualizar las parcelas disponibles.',
+  3: 'Verifique que estas son las parcelas que desea y pulse Analizar. Use el mapa para seleccionar y deseleccionar parcelas.',
 };
 
 /**
@@ -24,14 +33,14 @@ export function SelectionBlock() {
 
   return (
     <SelectionBlockLayout step={step}>
-      {step === 1 ? (
+      {step === 1 && <AnalysisTypeActions />}
+      {step === 2 && (
         <>
           <AreaActions />
           <DrawInstructions />
         </>
-      ) : (
-        <ConfirmActions />
       )}
+      {step === 3 && <ConfirmActions />}
 
       <UploadFeedback />
     </SelectionBlockLayout>
@@ -42,10 +51,10 @@ export function SelectionBlock() {
 export function SelectionBlockLayout({
   step,
   children,
-}: Readonly<{ step: PanelStep; children?: ReactNode }>) {
+}: Readonly<{ step: SelectionStep; children?: ReactNode }>) {
   return (
     <section className="flex flex-col gap-10 px-2 py-6 md:px-10 md:pt-0">
-      <h1 className="text-4xl font-semibold tracking-[-0.015em]">Selección de parcelas</h1>
+      <h1 className="text-4xl font-semibold tracking-[-0.015em]">Personalización del análisis</h1>
 
       <SelectionSteps current={step} />
 

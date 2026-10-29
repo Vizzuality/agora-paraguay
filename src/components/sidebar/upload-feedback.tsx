@@ -12,10 +12,10 @@ import { uploadResultAtom } from '@/store/upload';
 const MAX_VISIBLE_WARNINGS = 5;
 
 /**
- * What the panel says about the map and the last upload, in both steps: a live region
- * for screen readers plus the visible error toast or warning list. Separate from the
- * step-1 buttons so an import with warnings keeps its notice once the panel moves on
- * to step 2.
+ * What the panel says about the map and the last upload, on the area and confirmation
+ * steps: a live region for screen readers plus the visible error toast or warning list.
+ * Separate from the step-2 buttons so an import with warnings keeps its notice once the
+ * panel moves on to step 3.
  */
 export function UploadFeedback() {
   const draw = useAtomValue(drawAtom);

@@ -18,5 +18,5 @@ test('an unknown URL gets the 404 page, bare, with a way back', async ({ page })
 
   await page.getByRole('link', { name: 'Volver al inicio' }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('button', { name: 'Subir archivo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Riesgo sanitario' })).toBeVisible();
 });
