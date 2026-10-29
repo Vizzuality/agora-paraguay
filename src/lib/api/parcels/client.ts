@@ -1,4 +1,4 @@
-import { API_URL, postJson } from '@/lib/api/http';
+import { postJson } from '@/lib/api/http';
 
 import {
   filterParcelsRequestSchema,
@@ -24,16 +24,4 @@ export async function filterParcels(request: FilterParcelsRequest): Promise<Filt
   const parsed = filterParcelsRequestSchema.parse(request);
 
   return filterParcelsResponseSchema.parse(await postJson(FILTER_PARCELS_PATH, parsed));
-}
-
-/** Trailing slash as Django routes it — without one the API answers 301. */
-export const GLOBAL_LAYER_VECTOR_PATH = '/api/parcels/global_layer_vector/';
-
-/**
- * `GET /api/parcels/global_layer_vector/?id={id}` — a reference layer as GeoJSON. Only the
- * URL leaves here: a layer runs to hundreds of MB, so MapLibre fetches and parses it in
- * its worker instead of the main thread going through `getJson` and Zod.
- */
-export function globalLayerVectorUrl(id: number): string {
-  return `${API_URL}${GLOBAL_LAYER_VECTOR_PATH}?${new URLSearchParams({ id: String(id) })}`;
 }

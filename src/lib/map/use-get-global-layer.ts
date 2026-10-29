@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { globalLayerVectorUrl } from '@/lib/api/parcels/queries';
+import { globalLayerVectorUrl } from '@/lib/api/layers/queries';
 
 /**
  * A reference layer's GeoJSON source by id (`global_layer_vector`): the URL, which
