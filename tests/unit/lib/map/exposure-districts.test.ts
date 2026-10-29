@@ -42,6 +42,11 @@ describe('districtFromProperties', () => {
     expect(districtFromProperties({ DIST_DESC_: 'ASUNCION' })).toBeNull();
     expect(districtFromProperties(null)).toBeNull();
   });
+
+  it('is null for a key that is neither text nor a number', () => {
+    expect(districtFromProperties({ CLAVE: '' })).toBeNull();
+    expect(districtFromProperties({ CLAVE: { code: 1508 } })).toBeNull();
+  });
 });
 
 describe('exposureLabel', () => {

@@ -75,17 +75,24 @@ export function districtFromProperties(
   properties: Record<string, unknown> | null | undefined,
 ): ExposureDistrict | null {
   const get = caseInsensitive(properties ?? {});
-  const id = get('clave');
+  const id = districtKey(get('clave'));
 
-  if (id === undefined || id === null || id === '') return null;
+  if (id === null) return null;
 
   return {
-    id: String(id),
-    name: text(get('dist_desc_')) ?? `Distrito ${String(id)}`,
+    id,
+    name: text(get('dist_desc_')) ?? `Distrito ${id}`,
     department: text(get('dpto_desc')),
     exposure: typeof get('ex_class') === 'string' ? (get('ex_class') as string) : null,
     properties: properties ?? {},
   };
+}
+
+/** The district key as text: layers store it as a number or a string; anything else is none. */
+function districtKey(value: unknown): string | null {
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'string' && value !== '') return value;
+  return null;
 }
 
 function caseInsensitive(properties: Record<string, unknown>) {
