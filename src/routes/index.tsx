@@ -6,7 +6,6 @@ import { useEffect, type ReactNode } from 'react';
 import { LoginDialog, UserButton } from '@/components/auth/login-dialog';
 import { MapView } from '@/components/map';
 import { MapLoading } from '@/components/map/map-loading';
-import { GlobalLayersList } from '@/components/sidebar/global-layers-list';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectionBar } from '@/components/sidebar/selection-bar';
 import { SelectionBlock, SelectionBlockLayout } from '@/components/sidebar/selection-block';
@@ -63,14 +62,7 @@ function LiveLayout() {
     <Layout
       mapView={mapView}
       nav={narrow && <PhoneNav />}
-      panel={
-        !mapView && (
-          <>
-            <SelectionBlock />
-            <GlobalLayersList />
-          </>
-        )
-      }
+      panel={!mapView && <SelectionBlock />}
       bar={mapView && <SelectionBar />}
       map={
         <>
