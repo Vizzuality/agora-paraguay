@@ -135,29 +135,29 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
     .toBe('1, 2');
 
   // The hero renders one field per filter the public side returned, named after it: a
-  // dropdown for the category with its first option preselected, a date input per date
+  // dropdown for the crop with soy preselected, a date input per date
   // (the API's default, else today).
   const cultivo = page.getByRole('combobox', { name: 'Tipo de cultivo' });
   await expect(cultivo).toBeEnabled();
-  await expect(cultivo).toHaveText('Arroz');
+  await expect(cultivo).toHaveText('Soja');
   await expect(page.getByRole('combobox')).toHaveCount(1);
   await expect(page.getByLabel('Fecha de siembra')).toHaveValue(TODAY);
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
-  // Asked for the riesgo alone: with no crop picked yet, the API's default crop applies.
+  // With no crop picked yet, the filters are asked for soy.
   expect(filtersRequests).toBe(1);
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soy']);
 
-  // Picking the crop already shown asks nothing: that answer seeded the default crop's
-  // entry, so only another crop would fetch again.
+  // Picking the crop already shown asks nothing: soy's list is already the one in hand,
+  // so only another crop would fetch again.
   await cultivo.click();
-  await page.getByRole('option', { name: 'Arroz' }).click();
-  await expect(cultivo).toHaveText('Arroz');
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario']);
+  await page.getByRole('option', { name: 'Soja' }).click();
+  await expect(cultivo).toHaveText('Soja');
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soy']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.
   await expect.poll(() => analysisBodies.length).toBe(1);
-  expect(analysisBodies[0]).toMatchObject({ crop_type: 'rice', sowing_date: TODAY });
+  expect(analysisBodies[0]).toMatchObject({ crop_type: 'soy', sowing_date: TODAY });
   expect(analysisBodies[0].indicators).toContain('asian_rust');
 
   // Typing a sowing date re-runs it with that date.
@@ -168,10 +168,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
 
   // Picking another crop re-runs it with the new filter.
   await cultivo.click();
-  await page.getByRole('option', { name: 'Soja' }).click();
-  await expect(cultivo).toHaveText('Soja');
+  await page.getByRole('option', { name: 'Arroz' }).click();
+  await expect(cultivo).toHaveText('Arroz');
   await expect.poll(() => analysisBodies.length).toBe(3);
-  expect(analysisBodies[2]).toMatchObject({ crop_type: 'soy' });
+  expect(analysisBodies[2]).toMatchObject({ crop_type: 'rice' });
 
   // So does changing the defaulted date: the value is part of the query key.
   await page.getByLabel('Fecha', { exact: true }).fill('2026-09-10');
@@ -718,18 +718,8 @@ test('logs in from the header dialog', async ({ page }) => {
   // read the whole selection: the base production bins both parcels' values on a 0–4 t/ha
   // scale (the "Numerical multiple" design; 3,55 and 3,81 fall in the 3,4–3,6 and 3,8–4
   // bins), the resilience proxy counts them per class (Widget03), and the thumbnail
-  // prints the summed area. Soja is picked: the indicators follow the crop, and so do the
-  // filters — the list is asked again for that crop.
-  const filtersUrls: string[] = [];
-  page.on('request', (request) => {
-    const { pathname, search } = new URL(request.url());
-    if (pathname === '/api/parcels/filters/') filtersUrls.push(pathname + search);
-  });
-  await page.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
-  await page.getByRole('option', { name: 'Soja' }).click();
-  await expect
-    .poll(() => filtersUrls)
-    .toContain('/api/parcels/filters/?riesgo=productivo&crop_type=soy');
+  // prints the summed area. Soja is the default crop, and the indicators follow it.
+  await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toHaveText('Soja');
   const production = page
     .getByRole('heading', { name: 'Producción base histórica de soja' })
     .locator('..')
