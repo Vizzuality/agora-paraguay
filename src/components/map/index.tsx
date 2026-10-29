@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { parseAsFloat, useQueryStates } from 'nuqs';
 import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
 import Map, {
@@ -17,7 +17,7 @@ import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, MAX_BOUNDS } from '@/lib/map/basemap';
 import { addDotPattern } from '@/lib/map/dot-pattern';
 import { INITIAL_VIEW_STATE, normalizeViewState } from '@/lib/map/view-state';
-import { drawAtom } from '@/store/draw';
+import { drawAtom, redrawAfterRejectionAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
@@ -86,6 +86,8 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
     [navigate],
   );
 
+  const redraw = useSetAtom(redrawAfterRejectionAtom);
+
   return (
     <Map
       initialViewState={{
@@ -100,6 +102,10 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
         addDotPattern(event.target);
       }}
       onMoveEnd={handleMoveEnd}
+      // A press after a rejected drawing starts the next one there (the atom checks for the
+      // rejection). On the press, not `click`: by then Terra Draw has handled it in static mode.
+      onMouseDown={(event) => event.originalEvent.button === 0 && redraw()}
+      onTouchStart={(event) => event.originalEvent.touches.length === 1 && redraw()}
       style={{ width: '100%', height: '100%' }}
       attributionControl={false}
     >

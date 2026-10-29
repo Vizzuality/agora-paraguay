@@ -177,14 +177,8 @@ test('a drawing outside the cadastre is rejected back to step 1 with the reason'
   await expect(draw).not.toHaveClass(/(^| )border-destructive( |$)/);
 });
 
-// Starting over from a rejection clears it: the next entry point must not inherit the
-// previous areas' verdict, and its own answer decides.
-test('a rejected drawing does not taint the upload that follows', async ({ page }) => {
-  const { draw, analyze, upload } = controls(page);
-  const notice = page.getByRole('region', { name: 'Aviso de área' });
-
-  // Only the drawing is outside coverage: the first `filter-parcels` answers empty, the
-  // upload's request falls through to the regular stub.
+/** Only the first areas are outside coverage: later `filter-parcels` calls fall through to the regular stub. */
+async function stubFirstAreasUncovered(page: Page) {
   let requests = 0;
   await page.route(
     (url) => url.pathname === '/api/parcels/filter-parcels/',
@@ -203,6 +197,15 @@ test('a rejected drawing does not taint the upload that follows', async ({ page 
       });
     },
   );
+}
+
+// Starting over from a rejection clears it: the next entry point must not inherit the
+// previous areas' verdict, and its own answer decides.
+test('a rejected drawing does not taint the upload that follows', async ({ page }) => {
+  const { draw, analyze, upload } = controls(page);
+  const notice = page.getByRole('region', { name: 'Aviso de área' });
+
+  await stubFirstAreasUncovered(page);
 
   await draw.click();
   await drawPolygon(page, POLYGON);
@@ -218,6 +221,48 @@ test('a rejected drawing does not taint the upload that follows', async ({ page 
   await expect(page.getByRole('status', { name: 'Estado de la selección' })).toContainText(
     'Se importaron 3 áreas de farms.geojson.',
   );
+});
+
+// After a rejected drawing the next move is to draw again: a click on the map dismisses
+// the error and is the first vertex of the new polygon, so two more clicks close it.
+test('a click on the map after a rejected drawing starts the next one there', async ({ page }) => {
+  const { draw, analyze, currentStep } = controls(page);
+  const notice = page.getByRole('region', { name: 'Aviso de área' });
+
+  await stubFirstAreasUncovered(page);
+
+  await draw.click();
+  await drawPolygon(page, POLYGON);
+  await expect(notice).toContainText(OUT_OF_COVERAGE_MESSAGE);
+
+  const [first, ...rest] = POLYGON;
+  await mapCanvas(page).click({ position: first });
+
+  await expect(notice).toBeHidden();
+  await expect(draw).toHaveAccessibleName('Cancelar');
+  await expect(draw).not.toHaveClass(/(^| )border-destructive( |$)/);
+
+  // Two more vertices close it: the first came from the click that dismissed the error.
+  await drawPolygon(page, rest);
+
+  await expect(currentStep).toContainText('Paso 2');
+  await expect(analyze).toBeEnabled();
+});
+
+// A rejected upload is not a drawing: the map click does not dismiss its error.
+test('a click on the map leaves the error of a rejected upload', async ({ page }) => {
+  const { upload } = controls(page);
+  const notice = page.getByRole('region', { name: 'Aviso de área' });
+
+  await stubUncoveredArea(page);
+
+  await page.locator('input[type="file"]').setInputFiles(join(FIXTURES, 'farms.geojson'));
+  await expect(notice).toContainText(OUT_OF_COVERAGE_MESSAGE);
+
+  await mapCanvas(page).click({ position: POLYGON[0] });
+
+  await expect(notice).toContainText(OUT_OF_COVERAGE_MESSAGE);
+  await expect(upload).toHaveClass(/(^| )border-destructive( |$)/);
 });
 
 // The areas are measured before anything is asked: with the whole country in view the
