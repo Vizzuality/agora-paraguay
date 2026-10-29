@@ -77,10 +77,11 @@ export const startDrawAtom = atom(null, (get, set) => {
 
 /**
  * A press on the map after a rejected drawing: the error goes (via `startDraw`) and a new
- * drawing starts with that press as its first vertex. It fires on pointerdown, before
- * Terra Draw turns the pointerup into a click, so the mode is set here: `useTerraDraw`'s
- * effect would only apply it after the click had landed in static mode. A rejected upload
- * keeps its own dismissals.
+ * drawing starts with that press as its first vertex. The map calls it on every press
+ * (`MapView`'s mousedown and touchstart), before Terra Draw turns the release into a
+ * click, so the mode is set here: `useTerraDraw`'s effect would only apply it after the
+ * click had landed in static mode. Does nothing unless a drawing was rejected; a rejected
+ * upload keeps its own dismissals.
  */
 export const redrawAfterRejectionAtom = atom(null, (get, set) => {
   const draw = get(drawInstanceAtom);
