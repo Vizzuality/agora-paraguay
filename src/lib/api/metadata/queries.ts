@@ -5,7 +5,7 @@ import { DEFAULT_CROP, type FiltersParams, type IndicatorsParams } from './schem
 
 export const metadataQueries = {
   /**
-   * The hero filters for a riesgo and crop, one entry per crop; no crop is rice's entry.
+   * The hero filters for a riesgo and crop, one entry per crop; no crop is soy's entry.
    * Picking another crop asks again; the previous list stands in meanwhile, so the hero
    * keeps its fields and the analysis its request.
    */

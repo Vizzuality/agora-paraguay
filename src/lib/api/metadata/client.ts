@@ -23,7 +23,7 @@ const DEFAULT_FILTERS_RIESGO = 'sanitario';
  * `GET /api/parcels/filters/?riesgo={sanitario|productivo}&crop_type={value}` — the
  * filters of that side of the analysis and their values. `riesgo` is mandatory on the
  * wire; sanitario (public) unless asked otherwise. `crop_type` narrows the other filters
- * to the crop picked in the hero; rice unless asked otherwise.
+ * to the crop picked in the hero; soy unless asked otherwise.
  */
 export async function fetchFilters({
   riesgo = DEFAULT_FILTERS_RIESGO,

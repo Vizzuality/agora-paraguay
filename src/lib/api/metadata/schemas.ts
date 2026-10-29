@@ -52,7 +52,7 @@ export const CROPS = ['rice', 'soy'] as const;
 export type Crop = (typeof CROPS)[number];
 
 /** The crop the filters are asked for until the user picks another. */
-export const DEFAULT_CROP: Crop = 'rice';
+export const DEFAULT_CROP: Crop = 'soy';
 
 export function isCrop(value: string | undefined): value is Crop {
   return CROPS.includes(value as Crop);
@@ -64,7 +64,7 @@ export function isCrop(value: string | undefined): value is Crop {
  */
 export type FiltersParams = {
   riesgo?: Riesgo;
-  /** The crop the other filters are asked for; rice when absent. */
+  /** The crop the other filters are asked for; soy when absent. */
   crop_type?: Crop;
 };
 

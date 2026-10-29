@@ -43,21 +43,21 @@ describe('fetchFilters', () => {
 
     await expect(fetchFilters({ riesgo: 'productivo' })).resolves.toEqual(filters);
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/parcels/filters/?riesgo=productivo&crop_type=rice',
+      '/api/parcels/filters/?riesgo=productivo&crop_type=soy',
     );
   });
 
-  it('passes the crop as crop_type when given, and asks for rice otherwise', async () => {
+  it('passes the crop as crop_type when given, and asks for soy otherwise', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
-    await fetchFilters({ riesgo: 'productivo', crop_type: 'soy' });
+    await fetchFilters({ riesgo: 'productivo', crop_type: 'rice' });
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/parcels/filters/?riesgo=productivo&crop_type=soy',
+      '/api/parcels/filters/?riesgo=productivo&crop_type=rice',
     );
 
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({ riesgo: 'productivo', crop_type: undefined });
     expect(String(fetchMock.mock.calls[1][0])).toBe(
-      '/api/parcels/filters/?riesgo=productivo&crop_type=rice',
+      '/api/parcels/filters/?riesgo=productivo&crop_type=soy',
     );
   });
 
@@ -65,13 +65,13 @@ describe('fetchFilters', () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters();
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/parcels/filters/?riesgo=sanitario&crop_type=rice',
+      '/api/parcels/filters/?riesgo=sanitario&crop_type=soy',
     );
 
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({});
     expect(String(fetchMock.mock.calls[1][0])).toBe(
-      '/api/parcels/filters/?riesgo=sanitario&crop_type=rice',
+      '/api/parcels/filters/?riesgo=sanitario&crop_type=soy',
     );
   });
 

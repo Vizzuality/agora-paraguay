@@ -9,9 +9,9 @@ import { analysisFiltersAtom } from '@/store/analysis';
 /**
  * The hero filters of a riesgo and what they resolve to — the user's picks over the
  * API's defaults (`resolveFilterSelection`). The list depends on the crop, so it is keyed
- * by the crop in force: the user's pick, else rice. Rice's list is the first one asked,
- * so landing makes one request, re-picking rice makes none (same key), and only another
- * crop asks again. A crop value the app does not know reads as rice. `resolvedFilters`
+ * by the crop in force: the user's pick, else soy. Soy's list is the first one asked,
+ * so landing makes one request, re-picking soy makes none (same key), and only another
+ * crop asks again. A crop value the app does not know reads as soy. `resolvedFilters`
  * is `null` until the list has loaded. Reads an atom, so callers render inside
  * `<ClientOnly>`.
  */
