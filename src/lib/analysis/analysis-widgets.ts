@@ -4,7 +4,7 @@ import { numberWidgets, type NumberWidget } from '@/lib/analysis/number-widget';
 import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
 import type { ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 export type AnalysisWidget =
   | ({ kind: 'ruler' } & IndicatorCard)
@@ -18,7 +18,7 @@ export type AnalysisWidgetsInput = {
   /** The parcels Analizar submitted, in submission order. */
   parcelIds: string[];
   indicators: Indicators | undefined;
-  riesgo: Riesgo;
+  riesgo: IndicatorsRiesgo;
   /** One parcel (a parcel tab) or the whole selection (Todas). */
   scope: ParcelScope;
   /**

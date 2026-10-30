@@ -1,50 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useState } from 'react';
-import Map, { AttributionControl, Layer, Source, useMap } from 'react-map-gl/maplibre';
+import { useEffect, useEffectEvent, useState } from 'react';
+import { Layer, Source, useMap } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
-import { ZoomControl } from '@/components/map/zoom-control';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
-import { collapseAttribution } from '@/lib/map/attribution';
-import { BASEMAP_STYLE } from '@/lib/map/basemap';
-import { addDotPattern } from '@/lib/map/dot-pattern';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
-import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
-import { useNarrowScreen } from '@/lib/use-narrow-screen';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
 import { paperLayoutAtom, reportMapAtom } from '@/store/report';
-// Worker setup (see worker.ts) — without it the style never loads and the map is blank.
-import '@/components/map/worker';
-
-import 'maplibre-gl/dist/maplibre-gl.css';
 
 /** The drawing yellow of `draw-styles.ts`, for the areas while no parcels exist yet. */
 const AREA_COLOR = '#F1FF28';
 
 /**
- * Satellite map for the analysis hero, showing what Analizar submitted: the analysed
- * parcels only (the main map's layer, restricted — the neighbours the user left out stay
- * behind), with the open tab's parcel in yellow — every one under Todas — and the rest
- * outlined; clicking one opens its tab. The parcels stand in for the drawn areas as on
- * the main map; the areas themselves only paint while no parcels exist. Framed by the
- * analysed parcels' combined bounds on mount,
- * re-framed on the open tab's parcel(s) when it changes, the user's in between: pan,
- * scroll-zoom and the zoom buttons work as on the main map. The camera is not written to
- * the URL — that is the main map's, and this one is gone with the page.
+ * The analysis hero's layers for the panel map, showing what Analizar submitted: the
+ * analysed parcels only (the main map's layer, restricted — the neighbours the user left
+ * out stay behind), with the open tab's parcel in yellow — every one under Todas — and
+ * the rest outlined; clicking one opens its tab. The parcels stand in for the drawn
+ * areas as on the main map; the areas themselves only paint while no parcels exist.
+ * Framed by the analysed parcels' combined bounds on mount, re-framed on the open tab's
+ * parcel(s) when it changes, the user's in between. The camera is not written to the
+ * URL — that is the main map's, and this one is gone with the page.
  */
-export function MiniMap() {
+export function AnalysedParcelsLayers() {
   const areas = useAtomValue(drawPolygonsAtom);
   const analysedIds = useAtomValue(analysedParcelIdsAtom);
   const activeParcelId = useAtomValue(activeParcelIdAtom);
   const { data: parcels } = useQuery(parcelQueries.filtered(areas));
-  // The camera's zoom once known, for the parcel number chips: `initialViewState` fits
-  // bounds, so the real zoom only exists after load, then follows each finished move.
-  const [zoom, setZoom] = useState<number>();
-  const narrow = useNarrowScreen();
+  const zoom = useZoom();
 
   const bounds = featuresBounds([
     ...areas,
@@ -53,40 +39,17 @@ export function MiniMap() {
       .flatMap((parcel) => parcel.geometry.features) ?? []),
   ]);
 
+  useFrameOnMount(bounds);
+
   return (
-    <Map
-      initialViewState={
-        bounds === null
-          ? INITIAL_VIEW_STATE
-          : { bounds, fitBoundsOptions: { padding: FIT_PADDING } }
-      }
-      mapStyle={BASEMAP_STYLE}
-      attributionControl={false}
-      onLoad={(event) => {
-        collapseAttribution(event.target);
-        addDotPattern(event.target);
-        setZoom(event.target.getZoom());
-      }}
-      onMoveEnd={(event) => setZoom(event.viewState.zoom)}
-      dragRotate={false}
-      touchPitch={false}
-      style={{ width: '100%', height: '100%' }}
-    >
-      {/* Wide, the bottom corners hold the area figure and the zoom buttons. */}
-      {/* Keyed: a control reads its position only when added. */}
-      <AttributionControl
-        key={narrow ? 'narrow' : 'wide'}
-        compact
-        position={narrow ? 'bottom-left' : 'top-right'}
-      />
+    <>
       <FilteredParcelsLayer
         parcelIds={analysedIds}
         highlightedIds={activeParcelId === null ? analysedIds : [activeParcelId]}
         variant="analysis"
         zoom={zoom}
       />
-      <ZoomControl variant="overlay" />
-      <MiniMapBehaviour />
+      <AnalysedParcelsBehaviour />
       <ReportSnapshot />
       {(parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
@@ -94,12 +57,44 @@ export function MiniMap() {
           <Layer type="line" paint={{ 'line-color': AREA_COLOR, 'line-width': 2 }} />
         </Source>
       )}
-    </Map>
+    </>
   );
 }
 
+/** The camera's zoom, following each finished move: the parcel number chips size by it. */
+function useZoom(): number | undefined {
+  const { current: mapRef } = useMap();
+  const [zoom, setZoom] = useState(() => mapRef?.getZoom());
+
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    if (!map) return;
+
+    const update = () => setZoom(map.getZoom());
+    map.on('moveend', update);
+    return () => {
+      map.off('moveend', update);
+    };
+  }, [mapRef]);
+
+  return zoom;
+}
+
+/**
+ * Jumps to what Analizar submitted when the layers mount, before the first tiles: the
+ * panel map opens on the whole country, and this page's first view is the parcels.
+ */
+function useFrameOnMount(bounds: ReturnType<typeof featuresBounds>) {
+  const { current: mapRef } = useMap();
+  const frame = useEffectEvent(() => {
+    if (bounds) mapRef?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
+  });
+
+  useEffect(() => frame(), [mapRef]);
+}
+
 /** Hook carrier: click and fit need react-map-gl's context, so they live under `<Map>`. */
-function MiniMapBehaviour() {
+function AnalysedParcelsBehaviour() {
   useAnalysedParcelClick();
   useFitActiveParcel();
 

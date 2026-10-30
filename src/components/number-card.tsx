@@ -5,7 +5,7 @@ import {
   WidgetFigure,
   WidgetHeader,
 } from '@/components/widget-card';
-import { formatNumber } from '@/lib/analysis/number-scale';
+import { formatTick, thinTickLabels } from '@/lib/analysis/number-scale';
 import type { NumberWidget } from '@/lib/analysis/number-widget';
 
 type NumberCardProps = Omit<NumberWidget, 'id'> & { className?: string };
@@ -43,7 +43,7 @@ export function NumberCard({
               marker="bg-risk-medium"
             />
           </div>
-          <TrackTicks labels={ticks.map(formatNumber)} />
+          <TrackTicks labels={thinTickLabels(ticks.map(formatTick))} />
         </div>
       </div>
     </WidgetCard>

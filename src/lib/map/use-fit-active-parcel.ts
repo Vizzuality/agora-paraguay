@@ -10,9 +10,9 @@ import { drawPolygonsAtom } from '@/store/draw';
 
 /**
  * Frames the hero mini map on the open tab: the parcel's own bounds, or every analysed
- * parcel for Todas. Animated, so the eye follows the change. The mount is left to
- * `initialViewState` — only a tab change moves the camera, never the first paint.
- * Runs inside `<Map>`, mounted from `MiniMap`.
+ * parcel for Todas. Animated, so the eye follows the change. The mount is framed by
+ * `AnalysedParcelsLayers` — only a tab change moves the camera here, never the first
+ * paint. Runs inside `<Map>`, mounted from `AnalysedParcelsLayers`.
  */
 export function useFitActiveParcel() {
   const { current: mapRef } = useMap();

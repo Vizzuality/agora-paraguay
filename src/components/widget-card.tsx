@@ -119,9 +119,10 @@ export function TrackTicks({
   slot,
 }: Readonly<{ labels: string[]; slot?: { index: number; name: string } }>) {
   return (
-    <ul className="flex w-full justify-between text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
+    <ul className="flex w-full justify-between text-[12px] leading-[17.4px] whitespace-nowrap text-muted-foreground opacity-70">
       {labels.map((label, index) => (
-        <li key={label} data-slot={slot?.index === index ? slot.name : undefined}>
+        // A thinned label is blank but keeps its slot, so the printed ones stay on their ticks.
+        <li key={`${index}-${label}`} data-slot={slot?.index === index ? slot.name : undefined}>
           {label}
         </li>
       ))}

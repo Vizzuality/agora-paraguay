@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { TONE_COLOR, TONES } from '@/components/charts/tones';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatNumber } from '@/lib/analysis/number-scale';
+import { formatTick } from '@/lib/analysis/number-scale';
 import type { RiskTone } from '@/lib/analysis/widget-config';
 
 /*
@@ -94,7 +94,7 @@ export function AxisTicks({ ticks, x, y, min, max }: Readonly<AxisTicksProps>) {
       dominantBaseline="text-after-edge"
       className="fill-muted-foreground text-[12px] opacity-70"
     >
-      {formatNumber(tick)}
+      {formatTick(tick)}
     </text>
   ));
 }
