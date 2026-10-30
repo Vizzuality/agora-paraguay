@@ -2,7 +2,8 @@ import { ClientOnly } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { InfoTip } from '@/components/info-tip';
-import { ExposureMap, type ExposureMapView } from '@/components/map/exposure-map';
+import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
+import { PanelMap } from '@/components/map/panel-map';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const TRIGGER_CLASS =
@@ -47,7 +48,9 @@ export function ExposureMapCard() {
 
       <div className="relative h-108 overflow-hidden rounded-md bg-muted">
         <ClientOnly>
-          <ExposureMap view={view} />
+          <PanelMap>
+            <ExposureLayers view={view} />
+          </PanelMap>
         </ClientOnly>
       </div>
     </section>

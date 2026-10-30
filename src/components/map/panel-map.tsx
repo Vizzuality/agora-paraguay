@@ -1,36 +1,32 @@
-import type { ReactNode, Ref } from 'react';
-import Map, { AttributionControl, type MapProps, type MapRef } from 'react-map-gl/maplibre';
+import type { ReactNode } from 'react';
+import Map, { AttributionControl } from 'react-map-gl/maplibre';
 
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, dimBasemap } from '@/lib/map/basemap';
+import { addDotPattern } from '@/lib/map/dot-pattern';
+import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-type PanelMapProps = Omit<
-  MapProps,
-  'mapStyle' | 'attributionControl' | 'dragRotate' | 'touchPitch' | 'style'
-> & { ref?: Ref<MapRef>; children?: ReactNode };
-
 /**
- * The satellite map inside a page's card, shared by Exposición climática and the analysis
- * hero: dimmed basemap so the data reads first, credits collapsed top right, the panel
- * zoom bottom right, no rotation or pitch. Each map brings only its camera, its layers
- * and its behaviour, as props and children.
+ * The satellite map inside a page's card, the same on every analysis page: the whole
+ * country on a dimmed basemap, credits collapsed top right, the panel zoom bottom right,
+ * no rotation or pitch. What it shows is its children: a page injects its layers, and
+ * they bring their own camera moves and pointer events through `useMap`.
  */
-export function PanelMap({ ref, onLoad, children, ...props }: Readonly<PanelMapProps>) {
+export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <Map
-      ref={ref}
-      {...props}
+      initialViewState={PARAGUAY_VIEW_STATE}
       mapStyle={BASEMAP_STYLE}
       attributionControl={false}
       onLoad={(event) => {
         collapseAttribution(event.target);
         dimBasemap(event.target);
-        onLoad?.(event);
+        addDotPattern(event.target);
       }}
       dragRotate={false}
       touchPitch={false}

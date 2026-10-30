@@ -1,11 +1,10 @@
 import { useAtom } from 'jotai';
-import type { Map as MapLibreMap } from 'maplibre-gl';
-import { useRef, useState } from 'react';
-import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
+import type { MapLayerMouseEvent } from 'maplibre-gl';
+import { useEffect, useEffectEvent, useState } from 'react';
+import { useMap } from 'react-map-gl/maplibre';
 
 import { GlobalLayer } from '@/components/map/global-layer';
 import { MapLoading } from '@/components/map/map-loading';
-import { PanelMap } from '@/components/map/panel-map';
 import {
   districtFromProperties,
   EXPOSURE_FILL,
@@ -14,7 +13,7 @@ import {
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
 import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
-import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
+import { useLayerPointer } from '@/lib/map/use-layer-pointer';
 import { selectedDistrictAtom } from '@/store/exposure';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
@@ -44,53 +43,41 @@ const EXPOSURE_CLASSES = [
 ];
 
 /**
- * The whole country on the panel map, for Exposición climática. Nivel de exposición
- * paints the exposure layer with its legend; Capas paints the reference layers, soy among
- * them. One map for both views, so switching keeps the camera.
+ * Exposición climática's layers for the panel map. Nivel de exposición paints the
+ * exposure layer with its legend; Capas paints the reference layers, soy among them.
  * A district on the exposure layer names itself on hover and is picked on click: the
- * panel shows it and Capas paints only its features. Clicking it again clears the pick.
+ * panel shows it, the camera flies to it, and Capas paints only its features. Clicking
+ * it again clears the pick.
  */
-export function ExposureMap({ view }: Readonly<{ view: ExposureMapView }>) {
+export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const [selected, setSelected] = useAtom(selectedDistrictAtom);
   const [hovered, setHovered] = useState<Hovered | null>(null);
-  const mapRef = useRef<MapRef>(null);
-
-  useFlyToDistrict(mapRef, globalLayerSourceId(EXPOSURE_LAYER.id), selected?.id ?? null);
   const exposure = view === 'exposicion';
 
-  // The layers are tens of MB: parsing them takes seconds, so the wait shows.
-  const sourceIds = (exposure ? [EXPOSURE_LAYER] : REFERENCE_LAYERS).map(({ id }) =>
-    globalLayerSourceId(id),
-  );
-  // Which view's sources last finished: a tab switch is loading until its own do.
-  const [loadedView, setLoadedView] = useState<ExposureMapView | null>(null);
-  const loading = loadedView !== view;
-  const checkLoaded = (map: MapLibreMap) => {
-    const ready = sourceIds.every((id) => map.getSource(id) && map.isSourceLoaded(id));
-    setLoadedView(ready ? view : null);
-  };
+  useFlyToDistrict(globalLayerSourceId(EXPOSURE_LAYER.id), selected?.id ?? null);
 
   const districtAt = (event: MapLayerMouseEvent) =>
     districtFromProperties(event.features?.[0]?.properties);
 
+  useLayerPointer(exposure ? globalLayerFillId(EXPOSURE_LAYER.id) : null, {
+    onMove: (event) => {
+      const district = districtAt(event);
+      setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
+    },
+    onLeave: () => setHovered(null),
+    onClick: (event) => {
+      const district = districtAt(event);
+      if (district) setSelected(district.id === selected?.id ? null : district);
+    },
+  });
+
+  const loading = useViewLoading(
+    view,
+    (exposure ? [EXPOSURE_LAYER] : REFERENCE_LAYERS).map(({ id }) => globalLayerSourceId(id)),
+  );
+
   return (
-    <PanelMap
-      ref={mapRef}
-      interactiveLayerIds={exposure ? [globalLayerFillId(EXPOSURE_LAYER.id)] : []}
-      cursor={hovered ? 'pointer' : 'grab'}
-      onMouseMove={(event) => {
-        const district = districtAt(event);
-        setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
-      }}
-      onMouseLeave={() => setHovered(null)}
-      onClick={(event) => {
-        const district = districtAt(event);
-        if (district) setSelected(district.id === selected?.id ? null : district);
-      }}
-      initialViewState={PARAGUAY_VIEW_STATE}
-      onSourceData={(event) => checkLoaded(event.target)}
-      onIdle={(event) => checkLoaded(event.target)}
-    >
+    <>
       <MapLegend items={exposure ? EXPOSURE_CLASSES : REFERENCE_LAYERS} />
       {exposure && hovered && <DistrictTooltip {...hovered} />}
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
@@ -101,8 +88,41 @@ export function ExposureMap({ view }: Readonly<{ view: ExposureMapView }>) {
           <GlobalLayer key={id} id={id} color={color} districtId={selected?.id} />
         ))
       )}
-    </PanelMap>
+    </>
   );
+}
+
+/**
+ * Whether the open view's sources are still loading. The layers are tens of MB, so
+ * parsing them takes seconds and the wait shows; a tab switch is loading until its own
+ * sources finish.
+ */
+function useViewLoading(view: ExposureMapView, sourceIds: string[]): boolean {
+  const { current: mapRef } = useMap();
+  // Which view's sources last finished.
+  const [loadedView, setLoadedView] = useState<ExposureMapView | null>(null);
+
+  const check = useEffectEvent(() => {
+    const map = mapRef?.getMap();
+    if (!map) return;
+    const ready = sourceIds.every((id) => map.getSource(id) && map.isSourceLoaded(id));
+    setLoadedView(ready ? view : null);
+  });
+
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    if (!map) return;
+
+    map.on('sourcedata', check);
+    map.on('idle', check);
+
+    return () => {
+      map.off('sourcedata', check);
+      map.off('idle', check);
+    };
+  }, [mapRef]);
+
+  return loadedView !== view;
 }
 
 type Hovered = { district: ExposureDistrict; x: number; y: number };

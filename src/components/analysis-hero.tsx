@@ -3,7 +3,8 @@ import { ArrowLeft, ArrowRight, ChevronDown, SquarePen } from 'lucide-react';
 import { type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { InfoTip } from '@/components/info-tip';
-import { MiniMap } from '@/components/map/mini-map';
+import { AnalysedParcelsLayers } from '@/components/map/analysed-parcels-layers';
+import { PanelMap } from '@/components/map/panel-map';
 import { SelectionLink } from '@/components/selection-link';
 import { Button } from '@/components/ui/button';
 import {
@@ -255,7 +256,9 @@ function MiniMapThumbnail() {
         />
       )}
       <div className="relative h-[335px] min-w-0 shrink-0 overflow-hidden rounded-md bg-muted md:h-[280px] print:hidden paper:flex-1">
-        <MiniMap />
+        <PanelMap>
+          <AnalysedParcelsLayers />
+        </PanelMap>
       </div>
     </>
   );
