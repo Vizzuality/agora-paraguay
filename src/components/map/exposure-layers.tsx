@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
@@ -14,7 +14,7 @@ import {
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
 import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
-import { selectedDistrictAtom } from '@/store/exposure';
+import { selectedDistrictAtom, selectedLayerFeatureAtom } from '@/store/exposure';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
 export type ExposureMapView = 'exposicion' | 'capas';
@@ -36,6 +36,10 @@ const REFERENCE_LAYERS = [
   { id: 8, color: '#1AF807', label: 'Soja', swatch: 'border-chart-5 bg-chart-5/50' },
 ];
 
+// Stable arrays, so the pointer listeners subscribe once per view.
+const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
+const REFERENCE_FILL_IDS = REFERENCE_LAYERS.map(({ id }) => globalLayerFillId(id));
+
 const EXPOSURE_CLASSES = [
   { label: 'Baja exposición', swatch: 'border-risk-low bg-risk-low/50' },
   { label: 'Media exposición', swatch: 'border-risk-medium bg-risk-medium/50' },
@@ -47,10 +51,11 @@ const EXPOSURE_CLASSES = [
  * exposure layer with its legend; Capas paints the reference layers, soy among them.
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it, the camera flies to it, and Capas paints only its features. Clicking
- * it again clears the pick.
+ * it again clears the pick. On Capas, a clicked feature goes to the panel instead.
  */
 export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const [selected, setSelected] = useAtom(selectedDistrictAtom);
+  const setLayerFeature = useSetAtom(selectedLayerFeatureAtom);
   const [hovered, setHovered] = useState<Hovered | null>(null);
   const exposure = view === 'exposicion';
 
@@ -59,7 +64,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const districtAt = (event: MapLayerMouseEvent) =>
     districtFromProperties(event.features?.[0]?.properties);
 
-  useLayerPointer(exposure ? globalLayerFillId(EXPOSURE_LAYER.id) : null, {
+  useLayerPointer(exposure ? EXPOSURE_FILL_ID : null, {
     onMove: (event) => {
       const district = districtAt(event);
       setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
@@ -68,6 +73,16 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     onClick: (event) => {
       const district = districtAt(event);
       if (district) setSelected(district.id === selected?.id ? null : district);
+    },
+  });
+
+  useLayerPointer(exposure ? null : REFERENCE_FILL_IDS, {
+    onClick: (event) => {
+      const feature = event.features?.[0];
+      const layer = REFERENCE_LAYERS.find(({ id }) => globalLayerFillId(id) === feature?.layer.id);
+      if (feature && layer) {
+        setLayerFeature({ layerId: layer.id, layer: layer.label, properties: feature.properties });
+      }
     },
   });
 

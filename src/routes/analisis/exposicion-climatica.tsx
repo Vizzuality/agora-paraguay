@@ -1,33 +1,47 @@
 import { ClientOnly, createFileRoute, Link } from '@tanstack/react-router';
-import { useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
+import { useState } from 'react';
 
 import { AnalysisShell } from '@/components/analysis-shell';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { ExposureMapCard } from '@/components/exposure-map-card';
 import { GeneralInfoList } from '@/components/general-info-card';
+import type { ExposureMapView } from '@/components/map/exposure-layers';
 import { Button } from '@/components/ui/button';
 import { WidgetGrid } from '@/components/widget-grid';
 import { useExposureWidgets } from '@/lib/analysis/use-exposure-widgets';
+import { useIndicators } from '@/lib/analysis/use-indicators';
+import { districtFromProperties } from '@/lib/map/exposure-districts';
+import { layerFeatureFacts } from '@/lib/map/layer-feature';
 import { RISK_TABS } from '@/lib/nav-links';
-import { selectedDistrictAtom } from '@/store/exposure';
+import { selectedDistrictAtom, selectedLayerFeatureAtom } from '@/store/exposure';
 
 /**
  * Exposición climática: the country map beside the district panel, then the way to the
- * risk analyses. A district picked on the map heads the panel with its exposure indicators.
+ * risk analyses. A district picked on the map heads the panel with its exposure indicators;
+ * on the map's Capas tab, the panel shows the clicked layer feature's data instead.
  */
 export const Route = createFileRoute('/analisis/exposicion-climatica')({
   component: ExposicionClimaticaPage,
 });
 
 function ExposicionClimaticaPage() {
+  const [view, setView] = useState<ExposureMapView>('exposicion');
+
   return (
     <div className="flex flex-col gap-12">
       <h1 className="sr-only">Exposición climática</h1>
 
-      <AnalysisShell side={<ExposureMapCard />} stretch>
-        <ClientOnly fallback={<DistrictPrompt />}>
-          <DistrictPanel />
-        </ClientOnly>
+      <AnalysisShell side={<ExposureMapCard view={view} onViewChange={setView} />} stretch>
+        {view === 'capas' ? (
+          <ClientOnly fallback={<LayerFeaturePrompt />}>
+            <LayerFeaturePanel />
+          </ClientOnly>
+        ) : (
+          <ClientOnly fallback={<DistrictPrompt />}>
+            <DistrictPanel />
+          </ClientOnly>
+        )}
       </AnalysisShell>
 
       <OtherRiskAnalyses />
@@ -80,6 +94,57 @@ function DistrictPanel() {
         ))}
       </WidgetGrid>
     </section>
+  );
+}
+
+/**
+ * The feature clicked on a Capas layer: the layer, the district it lies in when it has
+ * one, and every property it carries, named by the indicator metadata where it knows them.
+ */
+function LayerFeaturePanel() {
+  const [feature, setFeature] = useAtom(selectedLayerFeatureAtom);
+  const indicators = useIndicators('exposicion_climatica');
+
+  if (!feature) return <LayerFeaturePrompt />;
+
+  const district = districtFromProperties(feature.properties);
+  const facts = layerFeatureFacts(feature.properties, indicators.data);
+
+  return (
+    <section aria-labelledby="capa-seleccionada" className="flex min-h-108 flex-1 flex-col gap-4">
+      <div className="flex flex-col gap-6 rounded-3xl bg-card p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 id="capa-seleccionada" className="text-2xl font-semibold">
+              {feature.layer}
+            </h2>
+            {district && (
+              <p className="text-sm text-muted-foreground">
+                {[district.name, district.department].filter(Boolean).join(', ')}
+              </p>
+            )}
+          </div>
+          <Button variant="secondary" className="rounded-2xl" onClick={() => setFeature(null)}>
+            Limpiar
+          </Button>
+        </div>
+        {facts.length > 0 ? (
+          <GeneralInfoList items={facts} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Este elemento no tiene datos.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LayerFeaturePrompt() {
+  return (
+    <div className="flex min-h-108 flex-1 items-center justify-center rounded-3xl border-3 border-border p-6">
+      <p className="max-w-md text-center text-sm text-muted-foreground">
+        Seleccione un elemento de una capa en el mapa para ver su información.
+      </p>
+    </div>
   );
 }
 
