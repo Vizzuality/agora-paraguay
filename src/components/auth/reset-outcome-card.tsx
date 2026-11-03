@@ -31,7 +31,7 @@ export function ResetOutcomeCard({
     <AuthCard className={className}>
       <div className="flex flex-col gap-6 py-10">
         <CardHeader className="gap-1.5 px-10">
-          <CardTitle className="text-4xl font-semibold tracking-[-0.015em]">
+          <CardTitle className="text-4xl leading-[normal] font-semibold tracking-[-0.015em] text-foreground">
             <h2>{copy.title}</h2>
           </CardTitle>
           <CardDescription>{copy.description}</CardDescription>
