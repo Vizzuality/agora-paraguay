@@ -4,7 +4,15 @@ import { globalLayersResponseSchema, type GlobalLayer } from './schemas';
 
 /** Trailing slash as Django routes it — without one the API answers 301. */
 export const GLOBAL_LAYERS_PATH = '/api/parcels/global_layers/';
-export const GLOBAL_LAYER_VECTOR_PATH = '/api/parcels/global_layer_vector/';
+export const GLOBAL_LAYER_TILES_PATH = '/api/parcels/global_layer_tiles/';
+
+/**
+ * The layer name inside every global layer tile (MapLibre's `source-layer`), as the tiles
+ * encode it. A name the tiles lack draws nothing and raises no error.
+ */
+export const GLOBAL_LAYER_SOURCE_LAYER = 'layer';
+/** The deepest zoom the API tiles; MapLibre overzooms these beyond it. */
+export const GLOBAL_LAYER_MAX_ZOOM = 14;
 
 /** `GET /api/parcels/global_layers/` — the layers offered over the whole country. */
 export async function fetchGlobalLayers(): Promise<GlobalLayer[]> {
@@ -12,10 +20,11 @@ export async function fetchGlobalLayers(): Promise<GlobalLayer[]> {
 }
 
 /**
- * `GET /api/parcels/global_layer_vector/?id={id}` — a layer's features as GeoJSON. Tens
- * of megabytes, so the app never fetches it: MapLibre loads this URL itself and parses
- * it in its worker, off the main thread and outside the query cache.
+ * `GET /api/parcels/global_layer_tiles/{id}/{z}/{x}/{y}.pbf` — a layer as vector tiles,
+ * which MapLibre requests per tile in view. MapLibre needs an absolute template, so a
+ * same-origin API (no `VITE_API_URL`) takes the page's `origin`. The placeholders stay
+ * literal: MapLibre fills in `{z}/{x}/{y}`.
  */
-export function globalLayerVectorUrl(id: number): string {
-  return `${API_URL}${GLOBAL_LAYER_VECTOR_PATH}?${new URLSearchParams({ id: String(id) })}`;
+export function globalLayerTilesUrl(id: number, origin: string): string {
+  return `${API_URL || origin}${GLOBAL_LAYER_TILES_PATH}${id}/{z}/{x}/{y}.pbf`;
 }

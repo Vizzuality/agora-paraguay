@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 
-import { globalLayerVectorUrl } from '@/lib/api/layers/queries';
+import { globalLayerTilesUrl } from '@/lib/api/layers/queries';
 
 /**
- * A reference layer's GeoJSON source by id (`global_layer_vector`): the URL, which
- * MapLibre fetches and parses off the main thread. Not a query: the layers are too big
- * to parse in the page and hold in the query cache.
+ * A reference layer's tile template by id (`global_layer_tiles`), which MapLibre fetches
+ * tile by tile. Not a query: MapLibre loads and caches the tiles itself. Reads
+ * `window.location`, so callers render inside `<ClientOnly>`.
  */
 export function useGetGlobalLayer(id: number): string {
-  return useMemo(() => globalLayerVectorUrl(id), [id]);
+  return useMemo(() => globalLayerTilesUrl(id, window.location.origin), [id]);
 }

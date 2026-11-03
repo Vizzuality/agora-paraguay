@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { GLOBAL_LAYER_SOURCE_LAYER } from '@/lib/api/layers/queries';
 import { DISTRICT_KEY_EXPRESSION } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerStyles } from '@/lib/map/global-layer-styles';
 
@@ -69,6 +70,17 @@ describe('globalLayerStyles', () => {
     ]);
     expect([...hidden, ...outline].every((style) => style.layout?.visibility === 'none')).toBe(
       true,
+    );
+  });
+
+  it("reads the tiles' layer on every style, outline mode included", () => {
+    const styles = [
+      ...globalLayerStyles({ id: 8, color: '#000' }),
+      ...globalLayerStyles({ id: 9, color: '#fff', outline: true }),
+    ];
+
+    expect(styles.map((style) => style['source-layer'])).toEqual(
+      styles.map(() => GLOBAL_LAYER_SOURCE_LAYER),
     );
   });
 });

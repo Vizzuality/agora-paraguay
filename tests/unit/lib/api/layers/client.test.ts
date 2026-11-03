@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { fetchGlobalLayers, globalLayerVectorUrl } from '@/lib/api/layers/client';
+import { fetchGlobalLayers, globalLayerTilesUrl } from '@/lib/api/layers/client';
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -47,8 +47,10 @@ describe('fetchGlobalLayers', () => {
   });
 });
 
-describe('globalLayerVectorUrl', () => {
-  it('points at global_layer_vector/ with the layer id', () => {
-    expect(globalLayerVectorUrl(9)).toBe('/api/parcels/global_layer_vector/?id=9');
+describe('globalLayerTilesUrl', () => {
+  it("points at the layer's tiles on the page origin, placeholders left for MapLibre", () => {
+    expect(globalLayerTilesUrl(9, 'http://localhost:3000')).toBe(
+      'http://localhost:3000/api/parcels/global_layer_tiles/9/{z}/{x}/{y}.pbf',
+    );
   });
 });
