@@ -47,6 +47,40 @@ describe('fetchFilters', () => {
     );
   });
 
+  it("reads productivo's numeric year list as a category of its digits", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([
+        {
+          id: 'year',
+          name: 'Año',
+          field_type: { type: 'number', options: [2027, 2028] },
+        },
+      ]),
+    );
+
+    await expect(fetchFilters({ riesgo: 'productivo' })).resolves.toEqual([
+      {
+        id: 'year',
+        name: 'Año',
+        field_type: {
+          type: 'category',
+          options: [
+            { value: '2027', label: '2027' },
+            { value: '2028', label: '2028' },
+          ],
+        },
+      },
+    ]);
+  });
+
+  it('still rejects a number filter without options', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([{ id: 'year', name: 'Año', field_type: { type: 'number' } }]),
+    );
+
+    await expect(fetchFilters({ riesgo: 'productivo' })).rejects.toThrow(ZodError);
+  });
+
   it('passes the crop as crop_type when given, and asks for soy otherwise', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({ riesgo: 'productivo', crop_type: 'rice' });

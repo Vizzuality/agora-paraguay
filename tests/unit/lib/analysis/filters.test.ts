@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   EMPTY_ANALYSIS_FILTERS,
+  heroFieldSpansRow,
   orderHeroFilters,
   resolveFilterSelection,
   todayIso,
@@ -73,6 +74,20 @@ describe('todayIso', () => {
   });
 });
 
+describe('heroFieldSpansRow', () => {
+  it("gives sanitario's crop, the odd last of three, a row of its own", () => {
+    expect([0, 1, 2].map((index) => heroFieldSpansRow(index, 3))).toEqual([false, false, true]);
+  });
+
+  it("pairs productivo's year and crop on one row", () => {
+    expect([0, 1].map((index) => heroFieldSpansRow(index, 2))).toEqual([false, false]);
+  });
+
+  it('lets a lone field take the row', () => {
+    expect(heroFieldSpansRow(0, 1)).toBe(true);
+  });
+});
+
 describe('orderHeroFilters', () => {
   const date: Filters[number] = { id: 'date', name: 'Fecha', field_type: { type: 'date' } };
   const sowing: Filters[number] = {
@@ -99,7 +114,18 @@ describe('orderHeroFilters', () => {
     ]);
   });
 
-  it('keeps anything else after the known three, in the API order', () => {
+  it("puts productivo's year before the crop, where the date goes", () => {
+    const year: Filters[number] = {
+      id: 'year',
+      name: 'Año',
+      field_type: { type: 'category', options: [{ value: '2027', label: '2027' }] },
+    };
+
+    expect(orderHeroFilters([crop, year]).map((f) => f.id)).toEqual(['year', 'crop_type']);
+    expect(resolveFilterSelection({}, [crop, year])).toEqual({ year: '2027' });
+  });
+
+  it('keeps anything else after the known filters, in the API order', () => {
     expect(orderHeroFilters([other, crop, date]).map((f) => f.id)).toEqual([
       'date',
       'crop_type',
