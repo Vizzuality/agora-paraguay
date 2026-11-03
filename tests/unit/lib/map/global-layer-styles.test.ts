@@ -37,4 +37,38 @@ describe('globalLayerStyles', () => {
     expect(fill.paint).toMatchObject({ 'fill-opacity': ['case', isHighlighted, 0.85, 0.7] });
     expect(line.paint).toMatchObject({ 'line-width': ['case', isHighlighted, 2.5, 1.5] });
   });
+
+  it('traces only the highlighted district in outline mode, over a clickable clear fill', () => {
+    const styles = globalLayerStyles({
+      id: 9,
+      color: '#fff',
+      highlightedId: '0101',
+      outline: true,
+    });
+    const [fill, line] = styles;
+
+    expect(styles.map((style) => style.type)).toEqual(['fill', 'line']);
+    expect(fill.id).toBe(globalLayerFillId(9));
+    expect(fill.paint).toMatchObject({ 'fill-opacity': 0 });
+    expect(line.filter).toEqual([
+      'all',
+      ['!=', ['geometry-type'], 'Point'],
+      ['==', DISTRICT_KEY_EXPRESSION, '0101'],
+    ]);
+  });
+
+  it('hides every layer when hidden, so the source stays loaded', () => {
+    const shown = globalLayerStyles({ id: 8, color: '#000' });
+    const hidden = globalLayerStyles({ id: 8, color: '#000', hidden: true });
+    const outline = globalLayerStyles({ id: 9, color: '#fff', outline: true, hidden: true });
+
+    expect(shown.map((style) => style.layout?.visibility)).toEqual([
+      'visible',
+      'visible',
+      'visible',
+    ]);
+    expect([...hidden, ...outline].every((style) => style.layout?.visibility === 'none')).toBe(
+      true,
+    );
+  });
 });

@@ -21,6 +21,13 @@ export type GlobalLayerStyleOptions = {
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
   highlightedId?: string | null;
+  /**
+   * Trace only the highlighted district, in `color`; the fill stays transparent but still
+   * reports clicks. How Capas shows the pick over the reference layers.
+   */
+  outline?: boolean;
+  /** Hide the layer without removing its source, so showing it again needs no reload. */
+  hidden?: boolean;
 };
 
 /** The source's id, for `querySourceFeatures`. */
@@ -42,8 +49,11 @@ export function globalLayerStyles({
   color,
   districtId,
   highlightedId,
+  outline = false,
+  hidden = false,
 }: GlobalLayerStyleOptions): GlobalLayerStyle[] {
   const source = globalLayerSourceId(id);
+  const visibility = hidden ? 'none' : 'visible';
 
   const inDistrict = (geometry: ExpressionSpecification): ExpressionSpecification =>
     districtId
@@ -61,11 +71,31 @@ export function globalLayerStyles({
     highlightedId ?? '',
   ];
 
+  if (outline) {
+    return [
+      {
+        id: globalLayerFillId(id),
+        type: 'fill',
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        layout: { visibility },
+        paint: { 'fill-color': color, 'fill-opacity': 0 },
+      },
+      {
+        id: `${source}-line`,
+        type: 'line',
+        filter: ['all', ['!=', ['geometry-type'], 'Point'], isHighlighted],
+        layout: { visibility },
+        paint: { 'line-color': color, 'line-width': 2.5 },
+      },
+    ];
+  }
+
   return [
     {
       id: globalLayerFillId(id),
       type: 'fill',
       filter: inDistrict(['==', ['geometry-type'], 'Polygon']),
+      layout: { visibility },
       paint: {
         'fill-color': color,
         'fill-opacity': ['case', isHighlighted, 0.85, 0.7],
@@ -76,7 +106,7 @@ export function globalLayerStyles({
       type: 'line',
       filter: inDistrict(['!=', ['geometry-type'], 'Point']),
       // The picked district's outline draws last, so its neighbours never cover it.
-      layout: { 'line-sort-key': ['case', isHighlighted, 1, 0] },
+      layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
       paint: {
         'line-color': color,
         'line-width': ['case', isHighlighted, 2.5, 1.5],
@@ -86,6 +116,7 @@ export function globalLayerStyles({
       id: `${source}-point`,
       type: 'circle',
       filter: inDistrict(['==', ['geometry-type'], 'Point']),
+      layout: { visibility },
       paint: { 'circle-color': color, 'circle-radius': 3 },
     },
   ];

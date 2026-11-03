@@ -1,6 +1,8 @@
 import type { ExpressionSpecification } from 'maplibre-gl';
 
+import { categoryClasses, type RiskClass, type RiskTone } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel, ParcelValue } from '@/lib/api/analysis/schemas';
+import type { IndicatorType } from '@/lib/api/metadata/schemas';
 
 /** A district on the exposure layer, read from its feature's properties. */
 export type ExposureDistrict = {
@@ -23,13 +25,6 @@ export const DISTRICT_KEY_EXPRESSION: ExpressionSpecification = [
   ['coalesce', ['get', 'CLAVE'], ['get', 'clave'], ''],
 ];
 
-/** The exposure classes in legend order, with the fill each paints (chart-1/3/4). */
-const EXPOSURE_CLASS_COLORS = {
-  Bajo: '#4C95FF',
-  Medio: '#FF871F',
-  Alto: '#FF3838',
-} as const;
-
 /** How the tooltip words a class: the legend's labels, the layer's other classes as given. */
 export function exposureLabel(exposure: string): string {
   const labels: Record<string, string> = {
@@ -41,21 +36,58 @@ export function exposureLabel(exposure: string): string {
   return labels[exposure] ?? exposure;
 }
 
-/**
- * The exposure layer's fill: its class colour, grey for the classes the legend lacks
- * ("Sin soja", "Sin exposición identificada").
- */
-export const EXPOSURE_FILL: ExpressionSpecification = [
-  'match',
-  ['get', 'Ex_class'],
-  'Bajo',
-  EXPOSURE_CLASS_COLORS.Bajo,
-  'Medio',
-  EXPOSURE_CLASS_COLORS.Medio,
-  'Alto',
-  EXPOSURE_CLASS_COLORS.Alto,
-  '#96A3B5',
+/** The indicator whose classes colour the exposure layer, as the panel's ruler reads it. */
+const EXPOSURE_CLASS_INDICATOR = 'ex_class';
+
+/** Until the metadata answers: the three classes the legend has always shown. */
+const FALLBACK_CLASSES: readonly RiskClass[] = [
+  { label: 'Bajo', tone: 'low' },
+  { label: 'Medio', tone: 'elevated' },
+  { label: 'Alto', tone: 'high' },
 ];
+
+/**
+ * The hex each ruler tone paints on the map, the dark chart values the map has always
+ * used: MapLibre cannot read the CSS tokens the widgets paint with.
+ */
+const TONE_HEX: Record<RiskTone, string> = {
+  none: '#1AF807',
+  low: '#4C95FF',
+  medium: '#96A3B5',
+  elevated: '#FF871F',
+  high: '#FF3838',
+};
+
+/** A class the metadata does not list paints the ruler's grey. */
+const UNLISTED_FILL = TONE_HEX.medium;
+
+/**
+ * The exposure classes as the panel's ruler colours them: `Ex_class`'s categories from
+ * the indicator metadata, through `categoryClasses` ("Sin soja" green first when listed).
+ */
+export function exposureClasses(
+  indicators: readonly { id: string; indicator_type: IndicatorType }[] | undefined,
+): readonly RiskClass[] {
+  const type = indicators?.find(
+    (indicator) => indicator.id.toLowerCase() === EXPOSURE_CLASS_INDICATOR,
+  )?.indicator_type;
+
+  return type?.type === 'category' && type.categories.length > 0
+    ? categoryClasses(type.categories)
+    : FALLBACK_CLASSES;
+}
+
+/** The exposure layer's fill: each feature's `Ex_class` in its class colour, grey unlisted. */
+export function exposureFill(classes: readonly RiskClass[]): ExpressionSpecification | string {
+  if (classes.length === 0) return UNLISTED_FILL;
+
+  return [
+    'match',
+    ['get', 'Ex_class'],
+    ...classes.flatMap(({ label, tone }) => [label, TONE_HEX[tone]]),
+    UNLISTED_FILL,
+  ] as unknown as ExpressionSpecification;
+}
 
 /** A district as the analysis widgets read a parcel: its key and its scalar properties. */
 export function asDistrictParcel(district: ExposureDistrict): AnalysisParcel {

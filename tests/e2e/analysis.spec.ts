@@ -264,11 +264,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await navbar.getByRole('link', { name: 'Exposición climática' }).click();
   await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
   await expect(page.getByRole('heading', { name: 'Exposición climática' })).toBeVisible();
-  // The panel follows the map's tab: districts on the exposure base, layer data on Capas.
+  // The district panel holds across the map's tabs; Capas does not swap it out.
   await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
   await page.getByRole('tab', { name: 'Capas' }).click();
-  await expect(page.getByText('Seleccione un elemento de una capa en el mapa')).toBeVisible();
-  await expect(page.getByText('Seleccione un distrito en el mapa')).toBeHidden();
+  await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
   await page.getByRole('tab', { name: 'Nivel de exposición' }).click();
   await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
   await navbar.getByRole('link', { name: 'Riesgo sanitario' }).click();
