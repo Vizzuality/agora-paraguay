@@ -1,5 +1,5 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
-import { formatNumber, linearTicks, numberScale } from '@/lib/analysis/number-scale';
+import { formatNumber, linearTicks, openNumberScale } from '@/lib/analysis/number-scale';
 import { hasColumn, numberOf } from '@/lib/analysis/readings';
 import {
   classIndexAt,
@@ -11,7 +11,7 @@ import {
   type RiskTone,
 } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The value-histogram widget: one indicator's scale cut in equal bins, each bin as tall as
@@ -129,14 +129,14 @@ export function steppedBins(
  * One widget per indicator that bins under this riesgo and scope (`widgetFor`), in
  * metadata order, over the parcels Analizar submitted. A sanitario range is binned over
  * its own scale in its classes; a productivo one over its own scale in one tone, per step
- * when short; an open number over `numberScale` of the values, in one tone. Every bin is
+ * when short; an open number over `openNumberScale` (0–100 for a percentage), in one tone. Every bin is
  * kept, empty ones included; only an indicator the answer has no column for gets no widget.
  */
 export function valueHistogramWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
-  riesgo: Riesgo,
+  riesgo: IndicatorsRiesgo,
   scope: ParcelScope,
 ): ValueHistogramWidget[] {
   if (!indicators) return [];
@@ -147,7 +147,7 @@ export function valueHistogramWidgets(
     const type = indicator.indicator_type;
 
     if (isAreaIndicator(indicator)) return [];
-    if (widgetFor(type, { riesgo, scope }) !== 'histogram') return [];
+    if (widgetFor(type, { riesgo, scope, unit: indicator.unit }) !== 'histogram') return [];
 
     const submitted = parcelIds.flatMap((parcelId) => byId.get(parcelId) ?? []);
 
@@ -161,7 +161,7 @@ export function valueHistogramWidgets(
       unit: indicator.unit ?? null,
     };
 
-    if (type.type === 'range' && riesgo === 'productivo') {
+    if (type.type === 'range' && riesgo !== 'sanitario') {
       const ticks = linearTicks(type.min, type.max);
 
       if (isShortRange(type)) return [{ ...widget, ticks, ...steppedBins(values, type) }];
@@ -190,7 +190,7 @@ export function valueHistogramWidgets(
       ];
     }
 
-    const scale = numberScale(values);
+    const scale = openNumberScale(values, indicator.unit);
 
     return [{ ...widget, ...scale, bins: histogramBins(values, scale, { tone: 'elevated' }) }];
   });

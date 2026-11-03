@@ -38,7 +38,7 @@ const ANALYSIS_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'
  *   design's dot texture over every fill, and outlines one step thicker so they read on
  *   a small map.
  * - `zoom`: the camera's zoom, which the analysis chips need to know when they overlap.
- *   The mini map feeds it from `onMoveEnd`; chips wait for it.
+ *   The mini map feeds it after each finished move; chips wait for it.
  */
 export function FilteredParcelsLayer({
   parcelIds,

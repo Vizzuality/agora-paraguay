@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatNumber, linearTicks, numberScale, tickStep } from '@/lib/analysis/number-scale';
+import {
+  formatNumber,
+  formatTick,
+  linearTicks,
+  numberScale,
+  openNumberScale,
+  thinTickLabels,
+  tickStep,
+} from '@/lib/analysis/number-scale';
 
 describe('tickStep', () => {
   it('picks a power of ten times 1, 2 or 5, as d3 does', () => {
@@ -38,6 +46,57 @@ describe('numberScale', () => {
   it('reads 0–1 when nothing is above zero', () => {
     expect(numberScale([])).toMatchObject({ min: 0, max: 1 });
     expect(numberScale([0, -2])).toMatchObject({ min: 0, max: 1 });
+  });
+});
+
+describe('openNumberScale', () => {
+  it('spans a percentage over the whole 0–100, whatever the set holds', () => {
+    expect(openNumberScale([12, 73.81], '%')).toEqual({
+      min: 0,
+      max: 100,
+      ticks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    });
+  });
+
+  it('scales any other unit to the set', () => {
+    expect(openNumberScale([12, 73.81], 'ha')).toEqual(numberScale([12, 73.81]));
+    expect(openNumberScale([12, 73.81], null).max).toBe(80);
+  });
+});
+
+describe('thinTickLabels', () => {
+  it('prints every label that fits', () => {
+    const labels = ['0', '10', '20', '30', '40', '50', '60', '70', '80', '90', '100'];
+
+    expect(thinTickLabels(labels)).toEqual(labels);
+  });
+
+  it('keeps every k-th label of a long row, both ends included', () => {
+    const labels = Array.from({ length: 13 }, (_, index) => `${index * 100} mil`);
+    const thinned = thinTickLabels(labels);
+
+    expect(thinned[0]).toBe('0 mil');
+    expect(thinned[12]).toBe('1200 mil');
+    expect(thinned.filter(Boolean).join(' ').length).toBeLessThanOrEqual(40);
+    expect(thinned).toHaveLength(13);
+  });
+
+  it('falls back to the two ends when no even step fits', () => {
+    expect(
+      thinTickLabels(['0', 'xxxxxxxxxxxxxxxxxxxxxxx', 'yyyyyyyyyyyyyyyyyyyyyyyy', '3']),
+    ).toEqual(['0', '', '', '3']);
+  });
+});
+
+describe('formatTick', () => {
+  it('prints short figures as formatNumber does', () => {
+    expect(formatTick(2500)).toBe('2.500');
+    expect(formatTick(0.5)).toBe('0,5');
+  });
+
+  it("prints long ones compact, so a hectare scale's ticks stay apart", () => {
+    expect(formatTick(500_000)).toBe('500 mil');
+    expect(formatTick(1_500_000)).toBe('1,5 M');
   });
 });
 

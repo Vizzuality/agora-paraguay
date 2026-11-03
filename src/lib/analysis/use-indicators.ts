@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { metadataQueries } from '@/lib/api/metadata/queries';
-import type { Riesgo } from '@/lib/api/metadata/schemas';
+import type { IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /**
  * TODO(api-filters): once the API filters the list itself, key this query by the hero
@@ -12,6 +12,6 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
  * and the hero (same key). It does not follow the hero filters yet: the crop reaches the
  * API in the analysis request, which is what re-runs on a crop change.
  */
-export function useIndicators(riesgo: Riesgo) {
+export function useIndicators(riesgo: IndicatorsRiesgo) {
   return useQuery(metadataQueries.indicators({ riesgo }));
 }

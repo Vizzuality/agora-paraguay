@@ -124,7 +124,7 @@ export function unprojectFromWorld(x: number, y: number, zoom: number): LngLat {
  * Where the chips go at a zoom: none under `MIN_CHIP_ZOOM`; above it the anchors
  * projected, grouped by `clusterLabels`, groups too big to read (`MAX_CHIP_NUMBERS`)
  * dropped, each remaining group's centre put back on the map. Pure, so the caller only
- * has to feed it the camera's zoom (the mini map's `onMoveEnd`).
+ * has to feed it the camera's zoom (`AnalysedParcelsLayers` follows each finished move).
  */
 export function placeLabelClusters(
   anchors: readonly { number: number; lngLat: LngLat; highlighted: boolean }[],

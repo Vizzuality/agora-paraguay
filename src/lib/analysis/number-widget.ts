@@ -2,13 +2,13 @@ import { isAreaIndicator } from '@/lib/analysis/area';
 import {
   formatNumber,
   linearTicks,
-  numberScale,
+  openNumberScale,
   type NumberScale,
 } from '@/lib/analysis/number-scale';
 import { numberOf } from '@/lib/analysis/readings';
 import { widgetFor, type ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { IndicatorType, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { IndicatorType, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The number widget (the "Numerical individual" design): one parcel's number as the
@@ -34,13 +34,13 @@ export type NumberWidget = {
   position: number;
 };
 
-/** The scale a number is drawn on: the range's own, else the set's (`numberScale`). */
-export function scaleFor(type: IndicatorType, values: number[]): NumberScale {
+/** The scale a number is drawn on: the range's own, else by its unit (`openNumberScale`). */
+export function scaleFor(type: IndicatorType, values: number[], unit?: string | null): NumberScale {
   if (type.type === 'range') {
     return { min: type.min, max: type.max, ticks: linearTicks(type.min, type.max) };
   }
 
-  return numberScale(values);
+  return openNumberScale(values, unit);
 }
 
 /**
@@ -53,7 +53,7 @@ export function numberWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
-  riesgo: Riesgo,
+  riesgo: IndicatorsRiesgo,
   scope: ParcelScope,
   parcel: AnalysisParcel | null | undefined,
 ): NumberWidget[] {
@@ -64,7 +64,8 @@ export function numberWidgets(
 
   return indicators.flatMap((indicator) => {
     if (isAreaIndicator(indicator)) return [];
-    if (widgetFor(indicator.indicator_type, { riesgo, scope }) !== 'number') return [];
+    if (widgetFor(indicator.indicator_type, { riesgo, scope, unit: indicator.unit }) !== 'number')
+      return [];
 
     const value = numberOf(parcel, indicator.id);
 
@@ -73,6 +74,7 @@ export function numberWidgets(
     const scale = scaleFor(
       indicator.indicator_type,
       submitted.flatMap((entry) => numberOf(entry, indicator.id) ?? []),
+      indicator.unit,
     );
     const span = scale.max - scale.min;
     const position = span > 0 ? ((value - scale.min) / span) * 100 : 0;

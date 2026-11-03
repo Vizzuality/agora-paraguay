@@ -10,7 +10,7 @@ import { drawPolygonsAtom } from '@/store/draw';
 /**
  * The hero mini map's click: a parcel Analizar submitted opens its tab in the hero
  * (`selectAnalysedParcelAtom`); the neighbouring parcels the API answered but the user
- * left out are not clickable. Runs inside `<Map>`, mounted from `MiniMap`.
+ * left out are not clickable. Runs inside `<Map>`, mounted from `AnalysedParcelsLayers`.
  */
 export function useAnalysedParcelClick() {
   const polygons = useAtomValue(drawPolygonsAtom);

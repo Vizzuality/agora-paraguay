@@ -12,7 +12,7 @@ import {
   type RiskTone,
 } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The class-count widget (the "Categorical multiple" design): one indicator, one column
@@ -94,7 +94,7 @@ export function categoryCountWidgets(
   parcels: AnalysisParcel[],
   parcelIds: string[],
   indicators: Indicators | undefined,
-  riesgo: Riesgo,
+  riesgo: IndicatorsRiesgo,
   scope: ParcelScope,
 ): CategoryCountWidget[] {
   if (!indicators) return [];
@@ -103,7 +103,10 @@ export function categoryCountWidgets(
 
   return indicators.flatMap((indicator) => {
     if (isAreaIndicator(indicator)) return [];
-    if (widgetFor(indicator.indicator_type, { riesgo, scope }) !== 'bar-chart') return [];
+    if (
+      widgetFor(indicator.indicator_type, { riesgo, scope, unit: indicator.unit }) !== 'bar-chart'
+    )
+      return [];
 
     const counting = countingFor(indicator);
 

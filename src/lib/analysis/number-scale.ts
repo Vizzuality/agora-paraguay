@@ -59,6 +59,55 @@ export function numberScale(values: number[]): NumberScale {
   return { min: 0, max, ticks: linearTicks(0, max) };
 }
 
+/** Characters a widget's tick row holds at its narrowest (278px of 12px figures, with gaps). */
+const TICK_ROW_CHARS = 40;
+
+/**
+ * The tick labels a narrow row can print: all of them when they fit, else every k-th, the
+ * rest blanked so the kept ones stay on their ticks. `k` divides the gaps evenly, so both
+ * ends always print.
+ */
+export function thinTickLabels(labels: string[], budget = TICK_ROW_CHARS): string[] {
+  const gaps = labels.length - 1;
+  const width = (shown: string[]) => shown.reduce((sum, label) => sum + label.length + 1, 0);
+
+  if (gaps <= 1 || width(labels) <= budget) return labels;
+
+  for (let every = 2; every < gaps; every += 1) {
+    if (gaps % every !== 0) continue;
+
+    const kept = labels.filter((_, index) => index % every === 0);
+
+    if (width(kept) <= budget)
+      return labels.map((label, index) => (index % every === 0 ? label : ''));
+  }
+
+  return labels.map((label, index) => (index === 0 || index === gaps ? label : ''));
+}
+
+/** From here a tick reads compact ("500 mil", "1,5 M"): full digits run into each other. */
+const COMPACT_TICK_FROM = 10_000;
+
+/** A scale's tick as printed: like `formatNumber`, compact once the figures get long. */
+export function formatTick(value: number): string {
+  if (Math.abs(value) < COMPACT_TICK_FROM) return formatNumber(value);
+
+  // Spelled out rather than `notation: 'compact'`, whose Spanish words vary by ICU build.
+  const tenths = (scaled: number) => formatNumber(Math.round(scaled * 10) / 10);
+
+  return Math.abs(value) >= 1_000_000
+    ? `${tenths(value / 1_000_000)} M`
+    : `${tenths(value / 1000)} mil`;
+}
+
+/** A percentage's scale: the whole 0–100, so 60 % reads as 60 % whatever the set holds. */
+const PERCENT_SCALE: NumberScale = { min: 0, max: 100, ticks: linearTicks(0, 100) };
+
+/** An open number's scale by its unit: a percentage always spans 0–100, the rest the set's values. */
+export function openNumberScale(values: number[], unit: string | null | undefined): NumberScale {
+  return unit === '%' ? PERCENT_SCALE : numberScale(values);
+}
+
 /** A figure as printed: platform locale, two decimals at most. */
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(value);

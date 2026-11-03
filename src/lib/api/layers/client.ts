@@ -4,6 +4,7 @@ import { globalLayersResponseSchema, type GlobalLayer } from './schemas';
 
 /** Trailing slash as Django routes it — without one the API answers 301. */
 export const GLOBAL_LAYERS_PATH = '/api/parcels/global_layers/';
+export const GLOBAL_LAYER_VECTOR_PATH = '/api/parcels/global_layer_vector/';
 
 /** `GET /api/parcels/global_layers/` — the layers offered over the whole country. */
 export async function fetchGlobalLayers(): Promise<GlobalLayer[]> {
@@ -16,5 +17,5 @@ export async function fetchGlobalLayers(): Promise<GlobalLayer[]> {
  * it in its worker, off the main thread and outside the query cache.
  */
 export function globalLayerVectorUrl(id: number): string {
-  return `${API_URL}/api/parcels/global_layer_vector/?${new URLSearchParams({ id: String(id) })}`;
+  return `${API_URL}${GLOBAL_LAYER_VECTOR_PATH}?${new URLSearchParams({ id: String(id) })}`;
 }
