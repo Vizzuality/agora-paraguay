@@ -26,6 +26,27 @@ const dateFieldSchema = z.looseObject({
 });
 
 /**
+ * A pick from a list of numbers (productivo's `year`: `{ type: 'number', options: [2027,
+ * …] }`) is a category whose values and labels are the numbers' digits, so the hero
+ * draws it as a dropdown and the request sends it as text like every other filter.
+ */
+function numberOptionsAsCategory(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+
+  const field = raw as Record<string, unknown>;
+
+  if (field.type !== 'number' || !Array.isArray(field.options)) return raw;
+
+  return {
+    ...field,
+    type: 'category',
+    options: field.options.map((option) =>
+      typeof option === 'number' ? { value: String(option), label: String(option) } : option,
+    ),
+  };
+}
+
+/**
  * A filter of the analysis hero. Unknown `field_type.type`s fail the parse on purpose: a
  * new kind needs a control before it can be shown.
  */
@@ -33,7 +54,10 @@ export const filterSchema = z.looseObject({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
-  field_type: z.discriminatedUnion('type', [categoryFieldSchema, dateFieldSchema]),
+  field_type: z.preprocess(
+    numberOptionsAsCategory,
+    z.discriminatedUnion('type', [categoryFieldSchema, dateFieldSchema]),
+  ),
 });
 
 export type Filter = z.infer<typeof filterSchema>;

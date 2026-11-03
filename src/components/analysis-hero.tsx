@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { formatArea, parcelArea, parcelAreaRows } from '@/lib/analysis/area';
 import { describeWithFilters } from '@/lib/analysis/describe';
-import { CROP_FILTER_ID, orderHeroFilters } from '@/lib/analysis/filters';
+import { heroFieldSpansRow, orderHeroFilters } from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import {
   nextScrollLeft,
@@ -126,7 +126,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 
       <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 print:hidden">
         {filters ? (
-          orderHeroFilters(filters).map((filter) => (
+          orderHeroFilters(filters).map((filter, index, ordered) => (
             <HeroField
               key={filter.id}
               filter={filter}
@@ -135,8 +135,7 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
               }
               value={resolved[filter.id] ?? ''}
               onChange={(value) => setFilter({ id: filter.id, value })}
-              // The crop closes the grid on a row of its own.
-              className={filter.id === CROP_FILTER_ID ? 'md:col-span-2' : undefined}
+              className={heroFieldSpansRow(index, ordered.length) ? 'md:col-span-2' : undefined}
             />
           ))
         ) : (
