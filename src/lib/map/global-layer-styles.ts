@@ -5,9 +5,13 @@ import type {
   LineLayerSpecification,
 } from 'maplibre-gl';
 
+import { GLOBAL_LAYER_SOURCE_LAYER } from '@/lib/api/layers/queries';
 import { DISTRICT_KEY_EXPRESSION } from '@/lib/map/exposure-districts';
 
-/** A layer spec without its source: the `<Source>` it renders under supplies it. */
+/**
+ * A layer spec without its source: the `<Source>` it renders under supplies it. Every
+ * layer reads the tiles' one layer, `GLOBAL_LAYER_SOURCE_LAYER`.
+ */
 export type GlobalLayerStyle =
   | Omit<FillLayerSpecification, 'source'>
   | Omit<LineLayerSpecification, 'source'>
@@ -76,6 +80,7 @@ export function globalLayerStyles({
       {
         id: globalLayerFillId(id),
         type: 'fill',
+        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
         filter: ['==', ['geometry-type'], 'Polygon'],
         layout: { visibility },
         paint: { 'fill-color': color, 'fill-opacity': 0 },
@@ -83,6 +88,7 @@ export function globalLayerStyles({
       {
         id: `${source}-line`,
         type: 'line',
+        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
         filter: ['all', ['!=', ['geometry-type'], 'Point'], isHighlighted],
         layout: { visibility },
         paint: { 'line-color': color, 'line-width': 2.5 },
@@ -94,6 +100,7 @@ export function globalLayerStyles({
     {
       id: globalLayerFillId(id),
       type: 'fill',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
       filter: inDistrict(['==', ['geometry-type'], 'Polygon']),
       layout: { visibility },
       paint: {
@@ -104,6 +111,7 @@ export function globalLayerStyles({
     {
       id: `${source}-line`,
       type: 'line',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
       filter: inDistrict(['!=', ['geometry-type'], 'Point']),
       // The picked district's outline draws last, so its neighbours never cover it.
       layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
@@ -115,6 +123,7 @@ export function globalLayerStyles({
     {
       id: `${source}-point`,
       type: 'circle',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
       filter: inDistrict(['==', ['geometry-type'], 'Point']),
       layout: { visibility },
       paint: { 'circle-color': color, 'circle-radius': 3 },
