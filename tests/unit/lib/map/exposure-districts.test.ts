@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { districtFromProperties, exposureLabel } from '@/lib/map/exposure-districts';
+import {
+  districtFromProperties,
+  exposureClasses,
+  exposureFill,
+  exposureLabel,
+} from '@/lib/map/exposure-districts';
 
 describe('districtFromProperties', () => {
   it('reads the exposure layer, which spells its keys in capitals', () => {
@@ -53,5 +58,49 @@ describe('exposureLabel', () => {
   it('words the legend classes as the legend does and passes the others through', () => {
     expect(exposureLabel('Medio')).toBe('Media exposición');
     expect(exposureLabel('Sin soja')).toBe('Sin soja');
+  });
+});
+
+describe('exposureClasses', () => {
+  const exClass = (categories: string[]) => [
+    { id: 'Ex_class', indicator_type: { type: 'category' as const, categories } },
+  ];
+
+  it("colours Ex_class's categories as the ruler does, Sin soja green first", () => {
+    expect(
+      exposureClasses(
+        exClass(['Sin soja', 'Sin exposición identificada', 'Bajo', 'Medio', 'Alto']),
+      ),
+    ).toEqual([
+      { label: 'Sin soja', tone: 'none' },
+      { label: 'Sin exposición identificada', tone: 'low' },
+      { label: 'Bajo', tone: 'medium' },
+      { label: 'Medio', tone: 'elevated' },
+      { label: 'Alto', tone: 'high' },
+    ]);
+  });
+
+  it('falls back to Bajo, Medio and Alto until the metadata lists Ex_class', () => {
+    expect(exposureClasses(undefined).map(({ label }) => label)).toEqual(['Bajo', 'Medio', 'Alto']);
+    expect(exposureClasses(exClass([])).map(({ label }) => label)).toEqual([
+      'Bajo',
+      'Medio',
+      'Alto',
+    ]);
+  });
+});
+
+describe('exposureFill', () => {
+  it("matches each class's label to its tone's colour, grey for any other", () => {
+    expect(
+      exposureFill([
+        { label: 'Sin soja', tone: 'none' },
+        { label: 'Alto', tone: 'high' },
+      ]),
+    ).toEqual(['match', ['get', 'Ex_class'], 'Sin soja', '#1AF807', 'Alto', '#FF3838', '#96A3B5']);
+  });
+
+  it('paints everything grey with no classes, since match needs a label', () => {
+    expect(exposureFill([])).toBe('#96A3B5');
   });
 });

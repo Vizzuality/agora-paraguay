@@ -9,12 +9,13 @@ type LayerPointerHandlers = {
 };
 
 /**
- * Pointer events on one layer of the surrounding `<Map>`, with the pointer cursor over
- * it: what `interactiveLayerIds` does on the map's props, for layers injected as
- * children. `null` listens to nothing (a view where the layer is not interactive).
+ * Pointer events on layers of the surrounding `<Map>`, with the pointer cursor over
+ * them: what `interactiveLayerIds` does on the map's props, for layers injected as
+ * children. Several ids act as one. `null` listens to nothing (a view where no layer is
+ * interactive). Pass a stable array, or the listeners re-subscribe every render.
  */
 export function useLayerPointer(
-  layerId: string | null,
+  layerId: string | string[] | null,
   { onMove, onLeave, onClick }: LayerPointerHandlers,
 ) {
   const { current: mapRef } = useMap();
@@ -26,6 +27,8 @@ export function useLayerPointer(
   useEffect(() => {
     const map = mapRef?.getMap();
     if (!map || layerId === null) return;
+    // MapLibre's overloads take one id or an array, not the union.
+    const layerIds = [layerId].flat();
 
     const canvas = map.getCanvas();
     const over = (event: MapLayerMouseEvent) => {
@@ -38,14 +41,14 @@ export function useLayerPointer(
     };
     const press = (event: MapLayerMouseEvent) => click(event);
 
-    map.on('mousemove', layerId, over);
-    map.on('mouseleave', layerId, out);
-    map.on('click', layerId, press);
+    map.on('mousemove', layerIds, over);
+    map.on('mouseleave', layerIds, out);
+    map.on('click', layerIds, press);
 
     return () => {
-      map.off('mousemove', layerId, over);
-      map.off('mouseleave', layerId, out);
-      map.off('click', layerId, press);
+      map.off('mousemove', layerIds, over);
+      map.off('mouseleave', layerIds, out);
+      map.off('click', layerIds, press);
       canvas.style.cursor = '';
     };
   }, [mapRef, layerId]);

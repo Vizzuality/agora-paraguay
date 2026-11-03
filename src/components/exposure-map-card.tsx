@@ -1,5 +1,4 @@
 import { ClientOnly } from '@tanstack/react-router';
-import { useState } from 'react';
 
 import { InfoTip } from '@/components/info-tip';
 import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
@@ -11,11 +10,13 @@ const TRIGGER_CLASS =
 
 /**
  * Exposición climática's map widget: the title, two views, and one map under both.
- * The tabs choose what the map paints: the exposure base or the reference layers.
+ * The tabs choose what the map paints, the exposure base or the reference layers, and
+ * what the panel beside it shows; the page holds the open tab for both.
  */
-export function ExposureMapCard() {
-  const [view, setView] = useState<ExposureMapView>('exposicion');
-
+export function ExposureMapCard({
+  view,
+  onViewChange,
+}: Readonly<{ view: ExposureMapView; onViewChange: (view: ExposureMapView) => void }>) {
   return (
     <section
       aria-labelledby="mapa-exposicion"
@@ -23,7 +24,7 @@ export function ExposureMapCard() {
     >
       <Tabs
         value={view}
-        onValueChange={(value) => setView(value as ExposureMapView)}
+        onValueChange={(value) => onViewChange(value as ExposureMapView)}
         // The base `Tabs` stacks a horizontal list under its content; here they share a row.
         className="items-start justify-between gap-4 data-[orientation=horizontal]:flex-row"
       >
