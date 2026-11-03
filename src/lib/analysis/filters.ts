@@ -13,8 +13,11 @@ export const EMPTY_ANALYSIS_FILTERS: AnalysisFilterSelection = {};
 /** The hero filter whose value the indicator list is asked for: the crop. */
 export const CROP_FILTER_ID = 'crop_type';
 
-/** How the hero lays the filters out: the date, the sowing date, then the crop. */
-const HERO_FILTER_ORDER = ['date', 'sowing_date', CROP_FILTER_ID];
+/**
+ * How the hero lays the filters out: the date (productivo's is the `year`), the sowing
+ * date, then the crop.
+ */
+const HERO_FILTER_ORDER = ['date', 'year', 'sowing_date', CROP_FILTER_ID];
 
 /**
  * The filters in the hero's order rather than the API's: the two dates first, the crop
@@ -28,6 +31,15 @@ export function orderHeroFilters(filters: Filters): Filters {
   };
 
   return [...filters].sort((a, b) => rank(a) - rank(b));
+}
+
+/**
+ * Whether a hero field takes a whole row of the two-column grid: only an odd last one
+ * (sanitario's crop after its two dates), so an even set (productivo's year and crop)
+ * pairs up.
+ */
+export function heroFieldSpansRow(index: number, count: number): boolean {
+  return count % 2 === 1 && index === count - 1;
 }
 
 /** Today as the date inputs write it, `YYYY-MM-DD`, in the user's own calendar day. */
