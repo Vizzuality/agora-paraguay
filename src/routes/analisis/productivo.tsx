@@ -10,7 +10,7 @@ import { WidgetAI } from '@/components/widget-ai';
 import { WidgetGrid } from '@/components/widget-grid';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
 import { useSession } from '@/lib/auth/use-session';
-import { analysedParcelIdsAtom } from '@/store/analysis';
+import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 
 /**
  * Riesgo productivo needs an account: login gate until a session exists, full width
@@ -32,12 +32,14 @@ function ProductivoPage() {
 function ProductivoGate() {
   const session = useSession();
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
+  const activeId = useAtomValue(activeParcelIdAtom);
 
   if (!session) return <LoginGate />;
 
   return (
     <AnalysisShell side={<AnalysisSidebar riesgo="productivo" />}>
-      <WidgetAI parcels={parcelIds} />
+      {/* Keyed by the tab: a summary written for one tab never shows under another. */}
+      <WidgetAI key={activeId ?? 'todas'} parcels={parcelIds} />
       <ProductivoWidgets />
     </AnalysisShell>
   );

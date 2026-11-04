@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { IndicatorType } from '@/lib/api/metadata/schemas';
+import { CROPS, type IndicatorType } from '@/lib/api/metadata/schemas';
 
 /*
  * Analysis contract: `POST` runs the enumerated indicators over the selected parcels.
@@ -167,11 +167,16 @@ export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
 /*
  * The AI summary: `POST /api/parcels/analysis/summary/` writes a text over the selected
  * parcels with an LLM and answers it as Markdown, not JSON. Same CSRF and session rules
- * as the analysis runs.
+ * as the analysis runs. The body carries the hero's year (YYYY) and crop, under their
+ * filter ids, as the analysis run sends them.
  */
 export const SUMMARY_PATH = '/api/parcels/analysis/summary/';
 
-export const summaryRequestSchema = z.object({ parcels: idListSchema });
+export const summaryRequestSchema = z.looseObject({
+  parcels: idListSchema,
+  year: z.string().trim().min(4).max(4),
+  crop_type: z.enum(CROPS),
+});
 
 export type SummaryRequest = z.infer<typeof summaryRequestSchema>;
 
