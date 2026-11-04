@@ -148,8 +148,12 @@ export function isGeneralInfo(
 ): boolean {
   // A fact is a fact under any scope; the scope only moves the classed types.
   return (
-    widgetFor(indicator.indicator_type, { riesgo, scope: 'individual', unit: indicator.unit }) ===
-    'fact'
+    widgetFor(indicator.indicator_type, {
+      riesgo,
+      scope: 'individual',
+      unit: indicator.unit,
+      id: indicator.id,
+    }) === 'fact'
   );
 }
 
@@ -159,7 +163,14 @@ export function isRiskClass(
   riesgo: IndicatorsRiesgo = 'sanitario',
   scope: ParcelScope = 'individual',
 ): boolean {
-  return widgetFor(indicator.indicator_type, { riesgo, scope, unit: indicator.unit }) === 'ruler';
+  return (
+    widgetFor(indicator.indicator_type, {
+      riesgo,
+      scope,
+      unit: indicator.unit,
+      id: indicator.id,
+    }) === 'ruler'
+  );
 }
 
 /**
@@ -352,7 +363,7 @@ function categoryStem(label: string): string {
 }
 
 /**
- * Bounded number (`data_quality` 0–100 %, a disease index 0–3), read in the classes of
+ * Bounded number (a disease index 0–3, a 0–100 % range), read in the classes of
  * `RANGE_CLASSES`; the figure is the class. On a short range (max up to 10) an integer
  * reading is one of a handful of values, so the marker centres in the class it falls in
  * (the "Categorical individual" design): 1 in Sin riesgo, 2 in Moderado, 3 in Severo. Any

@@ -21,9 +21,9 @@ const rust: Indicator = {
   name: 'Phakopsora pachyrhizi',
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
 };
-const quality: Indicator = {
-  id: 'data_quality',
-  name: 'Calidad del dato',
+const coverage: Indicator = {
+  id: 'coverage_index',
+  name: 'Cobertura',
   unit: '%',
   indicator_type: { type: 'range', min: 0, max: 100 },
 };
@@ -36,7 +36,7 @@ const parcels: AnalysisParcel[] = [
       Resiliencia: 'Media',
       Pro_soja: 3.5,
       asian_rust: 3,
-      data_quality: 12,
+      coverage_index: 12,
     },
   },
   {
@@ -45,7 +45,7 @@ const parcels: AnalysisParcel[] = [
       Resiliencia: 'Alta',
       Pro_soja: 3.8,
       asian_rust: 1,
-      data_quality: 87,
+      coverage_index: 87,
     },
   },
 ];
@@ -93,16 +93,16 @@ describe('analysisWidgets', () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
-      indicators: [rust, resilience, quality, crop],
+      indicators: [rust, resilience, coverage, crop],
       riesgo: 'sanitario',
       scope: 'multiple',
-      parcel: combinedParcel(parcels, [rust, resilience, quality]),
+      parcel: combinedParcel(parcels, [rust, resilience, coverage]),
     });
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
       ['bar-chart', 'asian_rust'],
       ['bar-chart', 'Resiliencia'],
-      ['histogram', 'data_quality'],
+      ['histogram', 'coverage_index'],
     ]);
     expect(widgets[0]).toMatchObject({
       columns: [
@@ -133,7 +133,7 @@ describe('analysisWidgets', () => {
     const widgets = analysisWidgets({
       parcels,
       parcelIds: ['A', 'B'],
-      indicators: [rust, resilience, quality],
+      indicators: [rust, resilience, coverage],
       riesgo: 'sanitario',
       scope: 'individual',
       parcel: parcels[0],
@@ -142,7 +142,7 @@ describe('analysisWidgets', () => {
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
       ['ruler', 'asian_rust'],
       ['ruler', 'Resiliencia'],
-      ['ruler', 'data_quality'],
+      ['ruler', 'coverage_index'],
     ]);
     expect(widgets[0]).toMatchObject({ level: 'Severo' });
   });

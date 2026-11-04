@@ -16,9 +16,9 @@ const asianRust: Indicator = {
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
 };
 
-const dataQuality: Indicator = {
-  id: 'data_quality',
-  name: 'Calidad del dato',
+const coverage: Indicator = {
+  id: 'coverage_index',
+  name: 'Cobertura',
   unit: '%',
   indicator_type: { type: 'range', min: 0, max: 100 },
 };
@@ -64,12 +64,12 @@ const brownSpot: Indicator = {
 };
 
 /** The sanitario metadata as `GET /api/parcels/analysis/diseases/` lists it, in its order. */
-const sanitarioIndicators = [station, dataQuality, crop, phenology, asianRust, brownSpot];
+const sanitarioIndicators = [station, coverage, crop, phenology, asianRust, brownSpot];
 
 describe('range classes', () => {
-  /** The class a data-quality reading (0–100 %) is printed as. */
+  /** The class a data-coverage reading (0–100 %) is printed as. */
   const levelAt = (value: number) =>
-    indicatorCards(parcel({ data_quality: value }), [dataQuality])[0].level;
+    indicatorCards(parcel({ coverage_index: value }), [coverage])[0].level;
 
   it('splits the ruler in thirds, the cut points belonging to the higher class', () => {
     expect([0, 33, 34, 66, 67, 100].map(levelAt)).toEqual([
@@ -103,8 +103,8 @@ describe('indicatorCards', () => {
 
   it('shows only the indicators the response answered: missing, blank, null or "NA" get no card', () => {
     const cards = indicatorCards(
-      parcel({ data_quality: '', weather_station: null, Pro_soja: 'NA', asian_rust: 2 }),
-      [station, dataQuality, production, asianRust, itr],
+      parcel({ coverage_index: '', weather_station: null, Pro_soja: 'NA', asian_rust: 2 }),
+      [station, coverage, production, asianRust, itr],
     );
 
     expect(cards.map((card) => [card.id, card.level])).toEqual([['asian_rust', 'Moderado']]);
@@ -150,28 +150,28 @@ describe('indicatorCards', () => {
   });
 
   it('keeps metadata order, not column order', () => {
-    const cards = indicatorCards(parcel({ data_quality: 90, asian_rust: 1 }), [
+    const cards = indicatorCards(parcel({ coverage_index: 90, asian_rust: 1 }), [
       asianRust,
-      dataQuality,
+      coverage,
     ]);
 
-    expect(cards.map((card) => card.id)).toEqual(['asian_rust', 'data_quality']);
+    expect(cards.map((card) => card.id)).toEqual(['asian_rust', 'coverage_index']);
   });
 
   describe('range indicators', () => {
     it('places the value at its exact spot on a range with more values than classes, printing it', () => {
-      const [card] = indicatorCards(parcel({ data_quality: 92 }), [dataQuality]);
+      const [card] = indicatorCards(parcel({ coverage_index: 92 }), [coverage]);
 
       expect(card).toEqual({
-        id: 'data_quality',
-        label: 'Calidad del dato',
+        id: 'coverage_index',
+        label: 'Cobertura',
         level: 'Severo',
         scale: { classes: RANGE_CLASSES, position: 92, value: '92' },
       });
     });
 
     it('reads a number delivered as digits in a string — the production answer writes "92"', () => {
-      expect(indicatorCards(parcel({ data_quality: '92' }), [dataQuality])[0]).toMatchObject({
+      expect(indicatorCards(parcel({ coverage_index: '92' }), [coverage])[0]).toMatchObject({
         level: 'Severo',
         scale: { position: 92 },
       });
@@ -217,19 +217,19 @@ describe('indicatorCards', () => {
     });
 
     it('reads a non-numeric range value as no reading', () => {
-      expect(indicatorCards(parcel({ data_quality: 'alto' }), [dataQuality])[0].level).toBe(
+      expect(indicatorCards(parcel({ coverage_index: 'alto' }), [coverage])[0].level).toBe(
         'Sin datos',
       );
     });
 
     it('collapses a degenerate range to the left edge', () => {
-      const flat: Indicator = { ...dataQuality, indicator_type: { type: 'range', min: 5, max: 5 } };
+      const flat: Indicator = { ...coverage, indicator_type: { type: 'range', min: 5, max: 5 } };
 
       // An integer on a short flat range centres in the first class; a decimal sits at the edge.
-      expect(indicatorCards(parcel({ data_quality: 5 }), [flat])[0].scale?.position).toBeCloseTo(
+      expect(indicatorCards(parcel({ coverage_index: 5 }), [flat])[0].scale?.position).toBeCloseTo(
         50 / 3,
       );
-      expect(indicatorCards(parcel({ data_quality: 5.5 }), [flat])[0].scale).toMatchObject({
+      expect(indicatorCards(parcel({ coverage_index: 5.5 }), [flat])[0].scale).toMatchObject({
         position: 0,
         value: '5,5',
       });
@@ -304,11 +304,11 @@ describe('indicatorCards', () => {
   });
 
   it('turns an analysed parcel into one card per measured index, per parcel', () => {
-    const first = parcel({ data_quality: 92, asian_rust: 3, brown_spot: 2 });
-    const third = parcel({ data_quality: 78, asian_rust: 2, brown_spot: 3 });
+    const first = parcel({ coverage_index: 92, asian_rust: 3, brown_spot: 2 });
+    const third = parcel({ coverage_index: 78, asian_rust: 2, brown_spot: 3 });
 
     expect(indicatorCards(first, sanitarioIndicators).map((card) => card.id)).toEqual([
-      'data_quality',
+      'coverage_index',
       'asian_rust',
       'brown_spot',
     ]);
@@ -346,6 +346,23 @@ describe('generalInfo', () => {
     expect(generalInfo(parcel({ weather_station: 'NA' }), [station])).toEqual([]);
     expect(generalInfo(parcel({ weather_station: '' }), [station])).toEqual([]);
     expect(generalInfo(parcel({}), [station])).toEqual([]);
+  });
+
+  it('lists data quality as a fact on sanitario, with its unit, and gives it no risk card', () => {
+    const dataQuality: Indicator = {
+      id: 'data_quality',
+      name: 'Calidad del dato',
+      unit: '%',
+      indicator_type: { type: 'range', min: 0, max: 100 },
+    };
+    const answered = parcel({ data_quality: 92, asian_rust: 2 });
+
+    expect(generalInfo(answered, [asianRust, dataQuality])).toEqual([
+      { id: 'data_quality', label: 'Calidad del dato', value: '92 %' },
+    ]);
+    expect(indicatorCards(answered, [asianRust, dataQuality]).map((card) => card.id)).toEqual([
+      'asian_rust',
+    ]);
   });
 
   it('lists an open number as a fact, formatted with its unit', () => {
