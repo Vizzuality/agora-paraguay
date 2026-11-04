@@ -64,7 +64,14 @@ export function numberWidgets(
 
   return indicators.flatMap((indicator) => {
     if (isAreaIndicator(indicator)) return [];
-    if (widgetFor(indicator.indicator_type, { riesgo, scope, unit: indicator.unit }) !== 'number')
+    if (
+      widgetFor(indicator.indicator_type, {
+        riesgo,
+        scope,
+        unit: indicator.unit,
+        id: indicator.id,
+      }) !== 'number'
+    )
       return [];
 
     const value = numberOf(parcel, indicator.id);

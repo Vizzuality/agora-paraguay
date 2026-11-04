@@ -55,6 +55,23 @@ describe('widgetFor', () => {
     expect(widgetFor(category, { riesgo: 'sanitario', scope: 'multiple' })).toBe('bar-chart');
     expect(widgetFor(category, { riesgo: 'productivo', scope: 'multiple' })).toBe('bar-chart');
   });
+
+  it('data quality is a summary fact on sanitario, whatever the scope, and a widget on productivo', () => {
+    const range: IndicatorType = { type: 'range', min: 0, max: 100 };
+
+    expect(widgetFor(range, { riesgo: 'sanitario', scope: 'individual', id: 'data_quality' })).toBe(
+      'fact',
+    );
+    expect(widgetFor(range, { riesgo: 'sanitario', scope: 'multiple', id: 'data_quality' })).toBe(
+      'fact',
+    );
+    expect(
+      widgetFor(range, { riesgo: 'productivo', scope: 'individual', id: 'data_quality' }),
+    ).toBe('number');
+    expect(widgetFor(range, { riesgo: 'productivo', scope: 'multiple', id: 'data_quality' })).toBe(
+      'histogram',
+    );
+  });
 });
 
 describe('widgetFor on exposición climática', () => {
