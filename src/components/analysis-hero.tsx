@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatArea, parcelArea, parcelAreaRows } from '@/lib/analysis/area';
+import { formatArea, parcelArea } from '@/lib/analysis/area';
 import { describeWithFilters } from '@/lib/analysis/describe';
 import { heroFieldSpansRow, orderHeroFilters } from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
@@ -57,10 +57,11 @@ export function AnalysisHero({
   // On screen the map tops the card (the page's side column); the report keeps the wide
   // layout, the map beside the parcels and filters.
   return (
-    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 print:flex-row paper:flex-row">
+    <div className="flex flex-col gap-6 rounded-3xl bg-card p-6 print:flex-row print:border-2 print:bg-transparent paper:flex-row">
       <MiniMapThumbnail />
+      <ReportParameters riesgo={riesgo} parcels={parcels} />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-6">
+      <div className="flex min-w-0 flex-1 flex-col gap-6 print:hidden">
         <div className="flex items-center gap-6 print:hidden">
           <ParcelTabs parcels={parcels} />
           {/* A phone keeps the selection link under the nav bar instead. */}
@@ -76,8 +77,6 @@ export function AnalysisHero({
             </SelectionLink>
           </Button>
         </div>
-        <ParcelTable parcels={parcels} />
-
         <HeroFilters riesgo={riesgo} />
 
         {actions}
@@ -111,19 +110,6 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 
   return (
     <>
-      {/* The report's info zone: the filters in force as plain text, in place of the
-          controls (agreed with design in lieu of a PDF layout). */}
-      {filters && (
-        <dl className="hidden grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm print:grid">
-          {orderHeroFilters(filters).map((filter) => (
-            <div key={filter.id} className="contents">
-              <dt className="text-muted-foreground">{filter.name}</dt>
-              <dd>{filterValueLabel(filter, resolved[filter.id] ?? '')}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
       <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 print:hidden">
         {filters ? (
           orderHeroFilters(filters).map((filter, index, ordered) => (
@@ -264,67 +250,49 @@ function MiniMapThumbnail() {
 }
 
 /**
- * The report's stand-in for the tabs and the mini map, following the open tab like the
- * widgets do: under Todas every analysed parcel with its area and the total; with a
- * parcel's tab open, that parcel alone. A single parcel is one line, not a table. The
+ * The report's "Parámetros del análisis", beside the map in place of the tabs and the
+ * controls: each hero filter in force as label over value, then the area, following the
+ * open tab like the widgets do (that parcel's, or under Todas the parcels summed). The
  * sanitario analysis carries the area column.
  */
-function ParcelTable({ parcels }: Readonly<{ parcels: string[] }>) {
+function ReportParameters({ riesgo, parcels }: Readonly<{ riesgo: Riesgo; parcels: string[] }>) {
+  const {
+    filters: { data: filters },
+    resolvedFilters,
+  } = useHeroFilters(riesgo);
   const { analysis, indicators } = useAnalysis('sanitario');
   const activeId = useAtomValue(activeParcelIdAtom);
   const answered = (analysis.data?.indicators ?? []).filter((parcel) =>
     parcels.includes(String(parcel.parcel_id)),
   );
-  const rows = parcelAreaRows(answered, parcels, indicators).filter(
-    (row) => activeId === null || row.parcelId === activeId,
-  );
-  const total = rows.length > 1 ? parcelArea(answered, null, indicators) : null;
-
-  if (rows.length === 1) {
-    const [{ parcelId, area }] = rows;
-
-    return (
-      <p className="hidden text-sm print:block">
-        <span className="text-muted-foreground">{parcelLabel(parcelId, parcels)} </span>
-        {area ? formatArea(area) : '—'}
-      </p>
-    );
-  }
+  const area = parcelArea(answered, activeId, indicators);
+  const resolved = resolvedFilters ?? {};
+  const rows = [
+    ...(filters ? orderHeroFilters(filters) : []).map((filter) => ({
+      id: filter.id,
+      label: filter.name,
+      value: filterValueLabel(filter, resolved[filter.id] ?? ''),
+    })),
+    { id: 'area', label: 'Hectáreas', value: area ? formatArea(area) : '—' },
+  ];
 
   return (
-    <table className="hidden w-full text-sm print:table">
-      <caption className="mb-1 text-left text-muted-foreground">Parcelas analizadas</caption>
-      <thead>
-        <tr className="border-b text-left text-muted-foreground">
-          <th scope="col" className="py-1 font-normal">
-            Parcela
-          </th>
-          <th scope="col" className="py-1 text-right font-normal">
-            Área
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(({ parcelId, area }) => (
-          <tr
-            key={parcelId}
-            aria-current={parcelId === activeId || undefined}
-            className={cn('border-b', parcelId === activeId && 'font-semibold text-primary')}
-          >
-            <td className="py-1">{parcelLabel(parcelId, parcels)}</td>
-            <td className="py-1 text-right">{area ? formatArea(area) : '—'}</td>
-          </tr>
+    <section
+      aria-labelledby="parametros-del-analisis"
+      className="hidden min-w-0 flex-1 flex-col gap-4 print:flex"
+    >
+      <h2 id="parametros-del-analisis" className="text-[16px] leading-[20.3px] tracking-[0.28px]">
+        Parámetros del análisis
+      </h2>
+      <dl className="flex flex-col gap-4">
+        {rows.map(({ id, label, value }) => (
+          <div key={id} className="flex flex-col gap-1">
+            <dt className="text-sm text-muted-foreground">{label}</dt>
+            <dd className="text-base">{value}</dd>
+          </div>
         ))}
-      </tbody>
-      {total && (
-        <tfoot>
-          <tr className={cn(activeId === null && 'font-semibold text-primary')}>
-            <td className="py-1">Todas</td>
-            <td className="py-1 text-right">{formatArea(total)}</td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
+      </dl>
+    </section>
   );
 }
 

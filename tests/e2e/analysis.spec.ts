@@ -848,25 +848,22 @@ test('exports the productivo report as the page printed', async ({ page }) => {
   await expect(page.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Ver lista de parcelas' })).toBeHidden();
 
-  // The info zone: each filter as "name — value", the parcels with their areas in place
-  // of the tabs and the map, the date; the brand where the nav and footer were.
+  // Parámetros del análisis beside the map, in place of the tabs and the controls: each
+  // filter as label over value, then the hectares; the date by the title. No brand: the
+  // report has no header and no logo.
   const info = page.getByRole('main');
+  const parameters = info.getByRole('region', { name: 'Parámetros del análisis' });
+  await expect(parameters).toBeVisible();
   await expect(info.getByRole('term').filter({ hasText: 'Tipo de cultivo' })).toBeVisible();
   await expect(info.getByRole('definition').filter({ hasText: /Arroz|Soja/ })).toBeVisible();
   await expect(info.getByRole('definition').filter({ hasText: '2026-09-17' })).toBeVisible();
   await expect(info.getByText('Informe generado el')).toBeVisible();
   await expect(info.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
 
-  const table = info.getByRole('table', { name: 'Parcelas analizadas' });
-  await expect(table.getByRole('row')).toHaveText([
-    // Cell texts run together in a row's text, hence `\s*`.
-    /Parcela\s*Área/,
-    /Parcela 1\s*10,2 ha/,
-    /Parcela 2\s*7,3 ha/,
-    /Todas\s*17,5 ha/,
-  ]);
-  // Visible ones: the nav's and footer's logos are display-none, still in the DOM.
-  await expect(page.getByText('LOGO').filter({ visible: true })).toHaveCount(2);
+  // Under Todas the hectares are the parcels summed.
+  const hectares = parameters.getByRole('term').filter({ hasText: 'Hectáreas' }).locator('..');
+  await expect(hectares.getByRole('definition')).toHaveText('17,5 ha');
+  await expect(page.getByText('LOGO').filter({ visible: true })).toHaveCount(0);
   await expect(info.getByRole('img', { name: 'Mapa de las parcelas analizadas' })).toBeVisible();
 
   // Paper is narrower than the screen (A4 is under the `md` breakpoint) and the page is
@@ -896,8 +893,7 @@ test('exports the productivo report as the page printed', async ({ page }) => {
   const pdf = await page.pdf({ format: 'A4' });
   expect(pdf.byteLength).toBeGreaterThan(1_000);
 
-  // With a parcel's tab open the report follows it, like the widgets: that parcel and
-  // its area on one line, no table, no total.
+  // With a parcel's tab open the report follows it, like the widgets: that parcel's area.
   await page.emulateMedia({ media: 'screen' });
   await page.setViewportSize({ width: 1280, height: 720 });
   await page
@@ -907,7 +903,5 @@ test('exports the productivo report as the page printed', async ({ page }) => {
     .getByRole('button')
     .click();
   await page.emulateMedia({ media: 'print' });
-  await expect(table).toBeHidden();
-  await expect(info.getByText(/^Parcela 1\s*10,2 ha$/)).toBeVisible();
-  await expect(info.getByText('Todas')).toBeHidden();
+  await expect(hectares.getByRole('definition')).toHaveText('10,2 ha');
 });
