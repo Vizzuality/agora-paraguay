@@ -38,7 +38,7 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * get counted per class (the "Categorical multiple" design) — a category always, a range
  * on sanitario when it is short. A long range over several parcels bins their values
  * along the scale instead (the "Categorical and numerical multiple" design): counting a
- * 0–100 % quality in three classes would hide where the parcels sit. The other types
+ * 0–100 % range in three classes would hide where the parcels sit. The other types
  * follow the riesgo: sanitario reads text and open numbers as facts; productivo draws a
  * number per scope — one parcel as a number card (the "Numerical individual" design),
  * several binned (the "Numerical multiple" design) — an open number on the set's scale,
@@ -46,12 +46,22 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * count or a percentage, not a risk, so it never gets the ruler's classes. Text is a fact
  * on both. Exposición climática charts only what has a scale of its own: a percentage
  * on 0–100 as a number card; its hectares are facts, since the only scale they could
- * take is the largest district's, which leaves almost every marker at zero.
+ * take is the largest district's, which leaves almost every marker at zero. A few
+ * sanitario indicators are facts whatever their type (`SANITARIO_FACT_IDS`).
  */
 export function widgetFor(
   type: IndicatorType,
-  { riesgo, scope, unit }: { riesgo: IndicatorsRiesgo; scope: ParcelScope; unit?: string | null },
+  {
+    riesgo,
+    scope,
+    unit,
+    id,
+  }: { riesgo: IndicatorsRiesgo; scope: ParcelScope; unit?: string | null; id?: string },
 ): WidgetKind {
+  if (riesgo === 'sanitario' && id !== undefined && SANITARIO_FACT_IDS.has(id.toLowerCase())) {
+    return 'fact';
+  }
+
   switch (type.type) {
     case 'range':
       return rangeWidget(type, riesgo, scope);
@@ -65,6 +75,9 @@ export function widgetFor(
       return numberWidget(riesgo, scope, 'number', 'histogram');
   }
 }
+
+/** Sanitario indicators that describe the reading rather than a risk: summary facts, not widgets. */
+const SANITARIO_FACT_IDS: ReadonlySet<string> = new Set(['data_quality']);
 
 /** A range: a number on productivo; on sanitario one parcel on the ruler, several per class or binned. */
 function rangeWidget(
@@ -91,7 +104,7 @@ function numberWidget(
 }
 
 /**
- * How a range indicator (disease index 1–3, data quality 0–100 %) is read: three equal
+ * How a sanitario range indicator (a disease index 1–3) is read: three equal
  * classes over its scale. The metadata only gives min and max; the words and bands are
  * the product's.
  */

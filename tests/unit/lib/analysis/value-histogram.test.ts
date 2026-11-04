@@ -11,9 +11,9 @@ import type { Indicator } from '@/lib/api/metadata/schemas';
 
 import { parcel, seasons, stability } from './fixtures';
 
-const quality: Indicator = {
-  id: 'data_quality',
-  name: 'Calidad del dato',
+const coverage: Indicator = {
+  id: 'coverage_index',
+  name: 'Cobertura',
   unit: '%',
   indicator_type: { type: 'range', min: 0, max: 100 },
 };
@@ -95,9 +95,9 @@ describe('steppedBins', () => {
 
 describe('valueHistogramWidgets', () => {
   const parcels = [
-    parcel('A', { data_quality: 12, asian_rust: 2, N_soja: 5, IEP_H5_soja: 62 }),
-    parcel('B', { data_quality: '87', asian_rust: 1, N_soja: 3, IEP_H5_soja: '87' }),
-    parcel('C', { data_quality: 'NA', asian_rust: 3, N_soja: 'NA' }),
+    parcel('A', { coverage_index: 12, asian_rust: 2, N_soja: 5, IEP_H5_soja: 62 }),
+    parcel('B', { coverage_index: '87', asian_rust: 1, N_soja: 3, IEP_H5_soja: '87' }),
+    parcel('C', { coverage_index: 'NA', asian_rust: 3, N_soja: 'NA' }),
   ];
 
   it('bins a short productivo range per step on its own scale, no classes, one tone', () => {
@@ -142,14 +142,14 @@ describe('valueHistogramWidgets', () => {
     const [widget] = valueHistogramWidgets(
       parcels,
       ['A', 'B', 'C'],
-      [quality],
+      [coverage],
       'sanitario',
       'multiple',
     );
 
     expect(widget).toMatchObject({
-      id: 'data_quality',
-      label: 'Calidad del dato',
+      id: 'coverage_index',
+      label: 'Cobertura',
       min: 0,
       max: 100,
     });
@@ -196,7 +196,9 @@ describe('valueHistogramWidgets', () => {
 
   it('leaves short sanitario ranges and single parcels to other widgets', () => {
     expect(valueHistogramWidgets(parcels, ['A', 'B'], [rust], 'sanitario', 'multiple')).toEqual([]);
-    expect(valueHistogramWidgets(parcels, ['A'], [quality], 'sanitario', 'individual')).toEqual([]);
+    expect(valueHistogramWidgets(parcels, ['A'], [coverage], 'sanitario', 'individual')).toEqual(
+      [],
+    );
     expect(valueHistogramWidgets(parcels, ['A'], [seasons], 'productivo', 'individual')).toEqual(
       [],
     );
@@ -204,7 +206,7 @@ describe('valueHistogramWidgets', () => {
 
   it('makes no widget when the answer has no column for it or without metadata', () => {
     expect(
-      valueHistogramWidgets([parcel('D', {})], ['D'], [quality], 'sanitario', 'multiple'),
+      valueHistogramWidgets([parcel('D', {})], ['D'], [coverage], 'sanitario', 'multiple'),
     ).toEqual([]);
     expect(valueHistogramWidgets(parcels, ['A'], undefined, 'sanitario', 'multiple')).toEqual([]);
   });

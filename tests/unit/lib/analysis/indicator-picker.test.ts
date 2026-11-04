@@ -45,6 +45,19 @@ describe('selectableIndicators', () => {
       'ITR',
     ]);
   });
+
+  it('leaves data quality out on sanitario, where it is a summary fact, and offers it on productivo', () => {
+    const quality: Indicators = [
+      { id: 'asian_rust', name: 'Roya', indicator_type: range },
+      { id: 'data_quality', name: 'Calidad del dato', indicator_type: range },
+    ];
+
+    expect(selectableIndicators(quality, 'sanitario').map((i) => i.id)).toEqual(['asian_rust']);
+    expect(selectableIndicators(quality, 'productivo').map((i) => i.id)).toEqual([
+      'asian_rust',
+      'data_quality',
+    ]);
+  });
 });
 
 describe('visibleIndicatorIds', () => {
