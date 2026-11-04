@@ -104,7 +104,12 @@ export function categoryCountWidgets(
   return indicators.flatMap((indicator) => {
     if (isAreaIndicator(indicator)) return [];
     if (
-      widgetFor(indicator.indicator_type, { riesgo, scope, unit: indicator.unit }) !== 'bar-chart'
+      widgetFor(indicator.indicator_type, {
+        riesgo,
+        scope,
+        unit: indicator.unit,
+        id: indicator.id,
+      }) !== 'bar-chart'
     )
       return [];
 
