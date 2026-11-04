@@ -1,6 +1,6 @@
 import { ClientOnly, createFileRoute, Link } from '@tanstack/react-router';
-import { useAtom, useSetAtom } from 'jotai';
-import { useState, type ReactNode } from 'react';
+import { useSetAtom } from 'jotai';
+import { useState } from 'react';
 
 import { AnalysisShell } from '@/components/analysis-shell';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
@@ -10,15 +10,13 @@ import type { ExposureMapView } from '@/components/map/exposure-layers';
 import { Button } from '@/components/ui/button';
 import { WidgetGrid } from '@/components/widget-grid';
 import { useExposureWidgets } from '@/lib/analysis/use-exposure-widgets';
-import { useIndicators } from '@/lib/analysis/use-indicators';
-import { layerFeatureFacts } from '@/lib/map/layer-feature';
 import { RISK_TABS } from '@/lib/nav-links';
-import { pickDistrictAtom, selectedLayerFeatureAtom } from '@/store/exposure';
+import { pickDistrictAtom } from '@/store/exposure';
 
 /**
  * Exposición climática: the country map beside the district panel, then the way to the
  * risk analyses. A district picked on the map heads the panel with its exposure indicators
- * on both map tabs; on Capas, the clicked layer feature's data joins it.
+ * on both map tabs.
  */
 export const Route = createFileRoute('/analisis/exposicion-climatica')({
   component: ExposicionClimaticaPage,
@@ -33,7 +31,7 @@ function ExposicionClimaticaPage() {
 
       <AnalysisShell side={<ExposureMapCard view={view} onViewChange={setView} />} stretch>
         <ClientOnly fallback={<DistrictPrompt />}>
-          <DistrictPanel>{view === 'capas' && <LayerFeatureCard />}</DistrictPanel>
+          <DistrictPanel />
         </ClientOnly>
       </AnalysisShell>
 
@@ -47,7 +45,7 @@ function ExposicionClimaticaPage() {
  * draw theirs (`useExposureWidgets`), or the prompt to pick one. The indicator list
  * loads with the page, so a pick shows its widgets at once.
  */
-function DistrictPanel({ children }: Readonly<{ children?: ReactNode }>) {
+function DistrictPanel() {
   const pickDistrict = useSetAtom(pickDistrictAtom);
   const { indicators, district, info, widgets } = useExposureWidgets();
 
@@ -75,8 +73,6 @@ function DistrictPanel({ children }: Readonly<{ children?: ReactNode }>) {
         {info.length > 0 && <GeneralInfoList items={info} />}
       </div>
 
-      {children}
-
       {indicators.isPending && (
         <p className="text-sm text-muted-foreground">Cargando indicadores…</p>
       )}
@@ -88,46 +84,6 @@ function DistrictPanel({ children }: Readonly<{ children?: ReactNode }>) {
           <AnalysisWidgetCard key={widget.id} widget={widget} />
         ))}
       </WidgetGrid>
-    </section>
-  );
-}
-
-/**
- * The feature clicked on a Capas layer, under the district it lies in: the layer and every
- * property it carries, named by the indicator metadata where it knows them.
- */
-function LayerFeatureCard() {
-  const [feature, setFeature] = useAtom(selectedLayerFeatureAtom);
-  const indicators = useIndicators('exposicion_climatica');
-
-  if (!feature) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Seleccione un elemento de una capa en el mapa para ver su información.
-      </p>
-    );
-  }
-
-  const facts = layerFeatureFacts(feature.properties, indicators.data);
-
-  return (
-    <section
-      aria-labelledby="capa-seleccionada"
-      className="flex flex-col gap-4 rounded-3xl bg-card p-6"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <h3 id="capa-seleccionada" className="text-base font-semibold">
-          {feature.layer}
-        </h3>
-        <Button variant="secondary" className="rounded-2xl" onClick={() => setFeature(null)}>
-          Cerrar
-        </Button>
-      </div>
-      {facts.length > 0 ? (
-        <GeneralInfoList items={facts} />
-      ) : (
-        <p className="text-sm text-muted-foreground">Este elemento no tiene datos.</p>
-      )}
     </section>
   );
 }
