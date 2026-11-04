@@ -49,7 +49,6 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
   const activeId = useAtomValue(activeParcelIdAtom);
   const { resolvedFilters } = useHeroFilters('productivo');
   const request = toSummaryRequest(parcels, activeId, resolvedFilters);
-  console.log(resolvedFilters, request);
   const generate = () => request && mutation.mutate(request);
 
   return (
