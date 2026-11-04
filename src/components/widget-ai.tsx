@@ -1,13 +1,17 @@
 import { type MutationStatus, useMutation } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
 import { ListPlus, Loader, RefreshCw } from 'lucide-react';
 import Markdown from 'react-markdown';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SkeletonParagraph } from '@/components/ui/skeleton-paragraph';
+import { toSummaryRequest } from '@/lib/analysis/request';
+import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { analysisMutations } from '@/lib/api/analysis/queries';
 import { errorReason } from '@/lib/api/http';
 import { cn } from '@/lib/utils';
+import { activeParcelIdAtom } from '@/store/analysis';
 
 type WidgetAIProps = Readonly<{
   parcels: string[];
@@ -36,8 +40,17 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
   );
 }
 
+/**
+ * Productivo's AI summary for the hero's crop: of the open tab's parcel, or under Todas of
+ * every analysed one. Reads atoms, so render inside `<ClientOnly>`.
+ */
 export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
   const mutation = useMutation(analysisMutations.summary());
+  const activeId = useAtomValue(activeParcelIdAtom);
+  const { resolvedFilters } = useHeroFilters('productivo');
+  const request = toSummaryRequest(parcels, activeId, resolvedFilters);
+  console.log(resolvedFilters, request);
+  const generate = () => request && mutation.mutate(request);
 
   return (
     <Card
@@ -67,7 +80,8 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
             type="button"
             variant="outline"
             className="h-11 shrink-0 rounded-2xl px-8 font-normal print:hidden"
-            onClick={() => mutation.mutate({ parcels })}
+            disabled={request === null}
+            onClick={generate}
           >
             <RefreshCw aria-hidden />
             Reintentar
@@ -75,13 +89,13 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
         ) : (
           <Button
             type="button"
-            // Generando is disabled against a double request but stays full-strength.
+            // Disabled against a double request but stays full-strength.
             className={cn(
               'h-11 shrink-0 rounded-2xl px-8 font-normal print:hidden',
               mutation.isPending && 'disabled:opacity-100',
             )}
-            disabled={mutation.isPending || parcels.length === 0}
-            onClick={() => mutation.mutate({ parcels })}
+            disabled={mutation.isPending || request === null}
+            onClick={generate}
           >
             {mutation.isPending ? (
               <Loader aria-hidden className="size-6 animate-spin" />

@@ -797,7 +797,21 @@ test('logs in from the header dialog', async ({ page }) => {
   // Once it lands the text replaces the description and the button offers a retry.
   releaseSummary();
   await expect(page.getByRole('heading', { name: 'Resumen de 2 parcelas' })).toBeVisible();
+  // The request carries the hero selection: the crop, soy by default, and the year.
+  await expect(page.getByText('Cultivo: soy')).toBeVisible();
+  await expect(page.getByText('Año: 2026')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+
+  // On a parcel tab the summary starts over and is asked about that parcel alone.
+  await page
+    .getByRole('group', { name: 'Parcela' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Parcela 2' })
+    .getByRole('button')
+    .click();
+  await expect(description).toBeVisible();
+  await page.getByRole('button', { name: 'Generar resumen' }).click();
+  await expect(page.getByRole('heading', { name: 'Resumen de 1 parcelas' })).toBeVisible();
 
   // Signed in, the user button is the account menu, not the login dialog.
   await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toHaveCount(0);
@@ -853,7 +867,7 @@ test('exports the productivo report as the page printed', async ({ page }) => {
   const info = page.getByRole('main');
   await expect(info.getByRole('term').filter({ hasText: 'Tipo de cultivo' })).toBeVisible();
   await expect(info.getByRole('definition').filter({ hasText: /Arroz|Soja/ })).toBeVisible();
-  await expect(info.getByRole('definition').filter({ hasText: '2026-09-17' })).toBeVisible();
+  await expect(info.getByRole('definition').filter({ hasText: '2026' })).toBeVisible();
   await expect(info.getByText('Informe generado el')).toBeVisible();
   await expect(info.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
 

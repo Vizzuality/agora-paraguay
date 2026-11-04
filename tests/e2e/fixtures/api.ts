@@ -26,6 +26,12 @@ export const HERO_FILTERS = [
   },
 ];
 
+/** Productivo's hero filters as the live API shapes them: the crop and a year picked from numbers. */
+export const PRODUCTIVO_FILTERS = [
+  HERO_FILTERS[0],
+  { id: 'year', name: 'Año', field_type: { type: 'number', options: [2026, 2025] } },
+];
+
 /**
  * The indicator lists `GET /api/parcels/indicators?riesgo={sanitario|productivo}` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
@@ -117,7 +123,11 @@ export async function stubAnalysisApi(page: Page) {
     (route) =>
       route.fulfill({
         contentType: 'application/json',
-        body: JSON.stringify(HERO_FILTERS),
+        body: JSON.stringify(
+          new URL(route.request().url()).searchParams.get('riesgo') === 'productivo'
+            ? PRODUCTIVO_FILTERS
+            : HERO_FILTERS,
+        ),
       }),
   );
 
@@ -195,16 +205,20 @@ export async function stubAnalysisApi(page: Page) {
       }),
   );
 
-  // The AI summary answers Markdown, not JSON. Echoes the parcels it was asked about,
-  // so a spec can tell the request carried the analysed selection.
+  // The AI summary answers Markdown, not JSON. Echoes the parcels, crop and year it
+  // was asked about, so a spec can tell the request carried the analysed selection.
   await page.route(
     (url) => url.pathname === '/api/parcels/analysis/summary/',
     (route) => {
-      const { parcels } = route.request().postDataJSON() as { parcels: string[] };
+      const { parcels, crop_type, year } = route.request().postDataJSON() as {
+        parcels: string[];
+        crop_type: string;
+        year?: string;
+      };
 
       return route.fulfill({
         contentType: 'text/markdown',
-        body: `## Resumen de ${parcels.length} parcelas\n\n- ${parcels.join('\n- ')}`,
+        body: `## Resumen de ${parcels.length} parcelas\n\nCultivo: ${crop_type}\n\nAño: ${year}\n\n- ${parcels.join('\n- ')}`,
       });
     },
   );

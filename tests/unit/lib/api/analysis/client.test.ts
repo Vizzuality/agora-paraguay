@@ -199,7 +199,7 @@ describe('generateSummary', () => {
     vi.unstubAllGlobals();
   });
 
-  it('POSTs the parcels with the CSRF token and returns the Markdown as it came', async () => {
+  it('POSTs the parcels and the hero filters with the CSRF token and returns the Markdown as it came', async () => {
     fetchMock.mockResolvedValueOnce(
       new Response('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.', {
         status: 200,
@@ -208,7 +208,11 @@ describe('generateSummary', () => {
     );
 
     await expect(
-      generateSummary({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
+      generateSummary({
+        parcels: ['D07D23P00000002', 'D07D23P00000008'],
+        year: '2025',
+        crop_type: 'soy',
+      }),
     ).resolves.toBe('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.');
 
     const [url, init] = fetchMock.mock.calls[0];
@@ -216,20 +220,28 @@ describe('generateSummary', () => {
     expect(init).toMatchObject({
       method: 'POST',
       headers: { 'X-CSRFToken': 'abc' },
-      body: JSON.stringify({ parcels: ['D07D23P00000002', 'D07D23P00000008'] }),
+      body: JSON.stringify({
+        parcels: ['D07D23P00000002', 'D07D23P00000008'],
+        year: '2025',
+        crop_type: 'soy',
+      }),
     });
   });
 
   it('rejects a blank answer', async () => {
     fetchMock.mockResolvedValueOnce(new Response('  \n', { status: 200 }));
 
-    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toThrow(ZodError);
+    await expect(
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'soy' }),
+    ).rejects.toThrow(ZodError);
   });
 
   it('surfaces a refusal as an ApiError with the API reason', async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ detail: 'LLM unavailable' }, { status: 503 }));
 
-    await expect(generateSummary({ parcels: ['D07D23P00000002'] })).rejects.toMatchObject({
+    await expect(
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'rice' }),
+    ).rejects.toMatchObject({
       name: 'ApiError',
       status: 503,
       detail: 'LLM unavailable',
@@ -237,7 +249,28 @@ describe('generateSummary', () => {
   });
 
   it('rejects an empty parcel list before touching the network', async () => {
-    await expect(generateSummary({ parcels: [] })).rejects.toThrow(ZodError);
+    await expect(generateSummary({ parcels: [], year: '2025', crop_type: 'soy' })).rejects.toThrow(
+      ZodError,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a missing or malformed year before touching the network', async () => {
+    await expect(
+      // @ts-expect-error -- no year, as an unchecked caller could send it
+      generateSummary({ parcels: ['D07D23P00000002'], crop_type: 'soy' }),
+    ).rejects.toThrow(ZodError);
+    await expect(
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025-01-01', crop_type: 'soy' }),
+    ).rejects.toThrow(ZodError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a crop the analysis does not cover before touching the network', async () => {
+    await expect(
+      // @ts-expect-error -- a crop outside CROPS, as an unchecked caller could send it
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'maiz' }),
+    ).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

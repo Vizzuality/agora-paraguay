@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AnalysisFilterSelection } from '@/lib/analysis/filters';
-import { requestedIndicatorIds, toAnalysisRequest, visibilityOf } from '@/lib/analysis/request';
+import {
+  requestedIndicatorIds,
+  toAnalysisRequest,
+  toSummaryRequest,
+  visibilityOf,
+} from '@/lib/analysis/request';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
 /** A hero selection as the API keys it: filter id → picked value. */
@@ -131,5 +136,31 @@ describe('toAnalysisRequest', () => {
       parcels: ['P1'],
       indicators: ['iep'],
     });
+  });
+});
+
+describe('toSummaryRequest', () => {
+  it('sends every analysed parcel under Todas, with the hero year and crop', () => {
+    expect(toSummaryRequest(['P1', 'P2'], null, { crop_type: 'rice', year: '2026' })).toEqual({
+      parcels: ['P1', 'P2'],
+      crop_type: 'rice',
+      year: '2026',
+    });
+  });
+
+  it("sends only the open tab's parcel", () => {
+    expect(toSummaryRequest(['P1', 'P2'], 'P2', { crop_type: 'soy', year: '2025' })).toEqual({
+      parcels: ['P2'],
+      year: '2025',
+      crop_type: 'soy',
+    });
+  });
+
+  it('is null with no parcels, filters not resolved yet, no year, or a crop the analysis does not cover', () => {
+    expect(toSummaryRequest(['P1'], null, { crop_type: 'soy' })).toBeNull();
+    expect(toSummaryRequest([], null, { crop_type: 'soy', year: '2025' })).toBeNull();
+    expect(toSummaryRequest(['P1'], null, null)).toBeNull();
+    expect(toSummaryRequest(['P1'], null, {})).toBeNull();
+    expect(toSummaryRequest(['P1'], null, { crop_type: 'maiz', year: '2025' })).toBeNull();
   });
 });
