@@ -17,7 +17,7 @@ import {
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
 import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
-import { pickDistrictAtom, selectedDistrictAtom, selectedLayerFeatureAtom } from '@/store/exposure';
+import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
 export type ExposureMapView = 'exposicion' | 'capas';
@@ -42,12 +42,7 @@ const REFERENCE_LAYERS = [
   { id: 8, color: '#1AF807', label: 'Soja', swatch: 'border-chart-5 bg-chart-5/50' },
 ];
 
-// Stable arrays, so the pointer listeners subscribe once per view.
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
-const CAPAS_FILL_IDS = [
-  ...REFERENCE_LAYERS.map(({ id }) => globalLayerFillId(id)),
-  EXPOSURE_FILL_ID,
-];
 
 /** A class's legend swatch, in the token its ruler band paints (`TONE_COLOR`). */
 const TONE_SWATCH: Record<RiskTone, string> = {
@@ -64,13 +59,11 @@ const TONE_SWATCH: Record<RiskTone, string> = {
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it, the camera flies to it, and Capas paints only its features. Clicking
  * it again clears the pick. The pick holds across both tabs: Capas traces its outline
- * over the reference layers, a click there picks the district under the pointer too, and
- * the clicked reference feature joins the panel.
+ * over the reference layers, and a click there picks the district under the pointer too.
  */
 export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const selected = useAtomValue(selectedDistrictAtom);
   const pickDistrict = useSetAtom(pickDistrictAtom);
-  const setLayerFeature = useSetAtom(selectedLayerFeatureAtom);
   const [hovered, setHovered] = useState<Hovered | null>(null);
   const exposure = view === 'exposicion';
   // The reference layers mount on the first visit to Capas and then stay, hidden off it:
@@ -97,27 +90,12 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     },
   });
 
-  // On Capas one click picks the district under the pointer (no toggle: a click inside
-  // the pick is aimed at its layers) and sends the topmost reference feature to the panel.
-  useLayerPointer(exposure ? null : CAPAS_FILL_IDS, {
+  // On Capas a click picks the district under the pointer; no toggle, so a click inside
+  // the pick keeps it.
+  useLayerPointer(exposure ? null : EXPOSURE_FILL_ID, {
     onClick: (event) => {
-      const features = event.features ?? [];
-      const district = districtFromProperties(
-        features.find((feature) => feature.layer.id === EXPOSURE_FILL_ID)?.properties,
-      );
+      const district = districtAt(event);
       if (district && district.id !== selected?.id) pickDistrict(district);
-
-      for (const feature of features) {
-        const layer = REFERENCE_LAYERS.find(({ id }) => globalLayerFillId(id) === feature.layer.id);
-        if (layer) {
-          setLayerFeature({
-            layerId: layer.id,
-            layer: layer.label,
-            properties: feature.properties,
-          });
-          return;
-        }
-      }
     },
   });
 

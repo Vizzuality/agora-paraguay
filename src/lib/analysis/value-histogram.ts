@@ -147,7 +147,8 @@ export function valueHistogramWidgets(
     const type = indicator.indicator_type;
 
     if (isAreaIndicator(indicator)) return [];
-    if (widgetFor(type, { riesgo, scope, unit: indicator.unit }) !== 'histogram') return [];
+    if (widgetFor(type, { riesgo, scope, unit: indicator.unit, id: indicator.id }) !== 'histogram')
+      return [];
 
     const submitted = parcelIds.flatMap((parcelId) => byId.get(parcelId) ?? []);
 

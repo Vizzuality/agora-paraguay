@@ -19,9 +19,9 @@ const rust: Indicator = {
   name: 'Phakopsora pachyrhizi',
   indicator_type: { type: 'range', min: 1, max: 3, step: 1 },
 };
-const quality: Indicator = {
-  id: 'data_quality',
-  name: 'Calidad del dato',
+const coverage: Indicator = {
+  id: 'coverage_index',
+  name: 'Cobertura',
   indicator_type: { type: 'range', min: 0, max: 100 },
 };
 
@@ -160,9 +160,9 @@ describe('categoryCountWidgets', () => {
   });
 
   it('leaves a long range and productivo ranges to other widgets', () => {
-    const answered = [parcel('A', { data_quality: 40, asian_rust: 2 })];
+    const answered = [parcel('A', { coverage_index: 40, asian_rust: 2 })];
 
-    expect(categoryCountWidgets(answered, ['A'], [quality], 'sanitario', 'multiple')).toEqual([]);
+    expect(categoryCountWidgets(answered, ['A'], [coverage], 'sanitario', 'multiple')).toEqual([]);
     expect(categoryCountWidgets(answered, ['A'], [rust], 'productivo', 'multiple')).toEqual([]);
   });
 
