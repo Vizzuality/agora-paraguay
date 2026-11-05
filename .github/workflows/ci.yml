@@ -82,10 +82,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # The client's backend team deploys this image at handover. Building it on
-      # every PR is what stops it rotting between now and then.
+      # The client's backend team deploys this image at handover. Building and starting
+      # it on every PR is what stops it rotting between now and then.
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           push: false
+          load: true
           tags: agora-paraguay:ci
+          build-args: API_PROXY_TARGET=http://backend:8000
+
+      # No backend here: only the app's own pages are checked, not /api.
+      - name: Container serves the app
+        run: |
+          docker run -d --name app -p 3000:3000 agora-paraguay:ci
+          curl --fail --silent --show-error --output /dev/null \
+            --retry 15 --retry-delay 1 --retry-all-errors http://localhost:3000/
+
+      - name: Container logs
+        if: ${{ failure() }}
+        run: docker logs app

@@ -19,9 +19,10 @@ COPY . .
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 # Backend origin the server relays /api to (`routeRules` in vite.config.ts), baked into
-# the build. ARG only, no ENV: an unset ARG stays out of the build's environment, so
-# vite.config.ts falls back to its default; an ENV would set it to an empty string.
+# the build. Required: without it /api would target the container itself.
 ARG API_PROXY_TARGET
+RUN test -n "$API_PROXY_TARGET" \
+  || (echo 'Set the backend origin: docker build --build-arg API_PROXY_TARGET=http://<host>:<port> .' >&2 && exit 1)
 
 RUN corepack enable pnpm && pnpm run build
 
