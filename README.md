@@ -19,14 +19,14 @@ pnpm setup          # first production build (generates the route tree) + Playwr
 pnpm dev            # http://localhost:3000
 ```
 
-No `.env` file is needed — the app runs with sensible defaults (local Django behind the proxy,
+No `.env` file is needed — the app runs with sensible defaults (a local backend behind the proxy,
 built-in satellite basemap). Copy `.env.example` to `.env` only to override them; note that setting
 `VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
 
-Auth, parcel filtering, metadata and analysis call the real Django API (see
+Auth, parcel filtering, metadata and analysis call the real backend API (see
 [Data layer](#data-layer)): the app proxies `/api` to the backend — Vite in dev, Nitro in the
 built server (`routeRules` in `vite.config.ts`) — so its session cookie stays first-party and
-an https page never calls the plain-http API directly. The default target is a local Django on
+an https page never calls the plain-http API directly. The default target is a local backend on
 port 8000; set `API_PROXY_TARGET` to reach the shared backend instead: in `.env` locally, in
 the project's build environment on Vercel. It is read at build time, so changing it means
 rebuilding. `VITE_API_URL` remains for a deployment where the browser can reach the API
@@ -158,7 +158,7 @@ One build, two targets, both driven by Nitro. The preset comes from `NITRO_PRESE
 Configuration lives in `vercel.json`, so it is versioned rather than set by hand in the dashboard:
 framework `null`, `pnpm install --frozen-lockfile`, `pnpm build`, and `NITRO_PRESET=vercel` for the
 build step. The one value that is not versioned is the backend: set `API_PROXY_TARGET` (the
-Django origin, e.g. `http://<backend-host>:<port>`) as a build-time environment variable in the
+backend origin, e.g. `http://<backend-host>:<port>`) as a build-time environment variable in the
 Vercel project, then redeploy; `/api/*` on the deployment is relayed there by the server function.
 
 With that preset Nitro emits the [Build Output API v3](https://vercel.com/docs/build-output-api/v3)
@@ -181,8 +181,8 @@ docker run -p 3000:3000 agora-paraguay
 
 `API_PROXY_TARGET` is where the server relays `/api`. Without it the image targets
 `http://localhost:8000` — inside a container that is the container itself, so `/api` fails unless
-Django runs there too. When the container shares a network with Django, use the internal address
-(e.g. `http://django:8000`) so the backend port need not be public.
+the backend runs there too. When the container shares a network with the backend, use the internal address
+(e.g. `http://backend:8000`) so the backend port need not be public.
 
 `VITE_*` variables and `API_PROXY_TARGET` are read by the **build**, so they are `ARG`s in the
 Dockerfile, not runtime environment variables.

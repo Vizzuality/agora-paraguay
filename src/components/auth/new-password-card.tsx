@@ -19,7 +19,7 @@ import { passwordErrors } from '@/lib/auth/password';
 
 /** What the card tells the user when saving fails, from the most specific source it has. */
 function failureMessage(error: unknown): string {
-  // The schema's own refinement: Django's validators, run client-side, in Spanish.
+  // The schema's own refinement: the backend's validators, run client-side, in Spanish.
   if (error instanceof ZodError) return error.issues.map((issue) => issue.message).join(' ');
   // The server's reason — a spent link, or a validator only it runs (common passwords).
   if (error instanceof ApiError && error.detail !== null) return error.detail;
@@ -29,7 +29,7 @@ function failureMessage(error: unknown): string {
 
 /**
  * The new-password card behind a reset link: the password twice and
- * Guardar. Mismatch and Django's client-side validators are reported before the round
+ * Guardar. Mismatch and the mirrored backend validators are reported before the round
  * trip; whatever the server refuses is quoted as it said it. `onUpdated` swaps in the
  * confirmation.
  */

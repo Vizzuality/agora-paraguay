@@ -12,7 +12,7 @@ import {
 
 /*
  * The only module in `metadata/` that knows the endpoints. Everything here is real.
- * `filters/` keeps its trailing slash: without one Django answers 301 to the slashed URL,
+ * `filters/` keeps its trailing slash: without one the backend answers 301 to the slashed URL,
  * a redirect on every call.
  */
 

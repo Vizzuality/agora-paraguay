@@ -8,11 +8,11 @@ import {
 } from './schemas';
 
 /*
- * Parcels are real: `filter-parcels/` is live (Django route `filter-features`). The
+ * Parcels are real: `filter-parcels/` is live (backend route `filter-features`). The
  * disease scoring lives in `analysis/`.
  */
 
-/** Trailing slash as Django routes it — without one the API answers 301. */
+/** Trailing slash as the backend routes it — without one the API answers 301. */
 export const FILTER_PARCELS_PATH = '/api/parcels/filter-parcels/';
 
 /**

@@ -17,9 +17,9 @@ import { authMutations } from '@/lib/api/auth/queries';
 import { useSessionActions } from '@/lib/auth/use-session';
 
 /**
- * Submits the credentials to the Django login (`authMutations.login`), then asks `/me`
+ * Submits the credentials to the backend login (`authMutations.login`), then asks `/me`
  * who the cookie now identifies (`useSessionActions().refresh`). The real session is
- * Django's HttpOnly cookie, which the browser sends on its own but scripts cannot read,
+ * the backend's HttpOnly cookie, which the browser sends on its own but scripts cannot read,
  * so that query is the UI's only record of who is signed in: the header dialog and the
  * riesgo productivo tab read it to swap the login gate for the identified state. The
  * button stays on Accediendo until `/me` has answered, so the host closes on a settled

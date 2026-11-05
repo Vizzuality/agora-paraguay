@@ -45,7 +45,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - reports the backend as unavailable when no CSRF token is obtainable
 - names the session after the form's email when the login body carries none
 - reports wrong credentials on a 401
-- reports wrong credentials on a 400 too, the other status Django login views use
+- reports wrong credentials on a 400 too, the other status the backend login views use
 - reports the backend as unavailable on a server error
 - reports the backend as unavailable when the CSRF step fails
 - reports the backend as unavailable when fetch itself rejects
@@ -163,7 +163,7 @@ logic modules are unit-tested, behaviour is e2e-tested.
 - accepts a password that passes every client-side validator
 - rejects fewer than 8 characters (MinimumLengthValidator)
 - rejects an entirely numeric password (NumericPasswordValidator)
-- reports every broken rule, in Django order
+- reports every broken rule, in the backend validator order
 - phrases messages in Spanish with the configured minimum
 
 ### `tests/unit/lib/map/draw-features.test.ts` (6)

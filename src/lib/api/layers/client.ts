@@ -2,7 +2,7 @@ import { API_URL, getJson } from '@/lib/api/http';
 
 import { globalLayersResponseSchema, type GlobalLayer } from './schemas';
 
-/** Trailing slash as Django routes it — without one the API answers 301. */
+/** Trailing slash as the backend routes it — without one the API answers 301. */
 export const GLOBAL_LAYERS_PATH = '/api/parcels/global_layers/';
 export const GLOBAL_LAYER_TILES_PATH = '/api/parcels/global_layer_tiles/';
 

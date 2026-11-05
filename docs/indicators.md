@@ -255,7 +255,7 @@ Mismatches between code, spec and live API, listed rather than fixed:
 
 ## Appendix: the live lists
 
-As the local Django answered `GET /api/parcels/indicators/?riesgo=…`. Every entry carries
+As the local backend answered `GET /api/parcels/indicators/?riesgo=…`. Every entry carries
 `default: true`, so the picker starts with all of them. Widget column = what each renders on a
 parcel tab / under Todas.
 

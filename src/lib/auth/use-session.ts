@@ -5,7 +5,7 @@ import { authQueries } from '@/lib/api/auth/queries';
 import type { Session } from '@/lib/api/auth/schemas';
 
 /**
- * The session behind the Django cookie (`authQueries.me`), the one record of who is
+ * The session behind the backend cookie (`authQueries.me`), the one record of who is
  * signed in: the header and riesgo productivo swap the login gate for the identified
  * state on it, and a reload asks the cookie again instead of forgetting the user.
  * `null` while the first answer is pending or on an outage — private content stays

@@ -4,7 +4,7 @@ import { CROPS, type IndicatorType } from '@/lib/api/metadata/schemas';
 
 /*
  * Analysis contract: `POST` runs the enumerated indicators over the selected parcels.
- * Django routes: `api/parcels/analysis/diseases/` (public, riesgo sanitario)
+ * Backend routes: `api/parcels/analysis/diseases/` (public, riesgo sanitario)
  * and `api/parcels/analysis/production/` (private, riesgo productivo). POST only — GET
  * answers 405. The indicator list has its own endpoint (`metadata/client.ts`).
  */
@@ -12,7 +12,7 @@ import { CROPS, type IndicatorType } from '@/lib/api/metadata/schemas';
 /** Which side of the analysis the request goes to: riesgo sanitario is public, productivo private. */
 export type AnalysisVisibility = 'public' | 'private';
 
-/** Trailing slash as Django routes it — without one the API answers 301. */
+/** Trailing slash as the backend routes it — without one the API answers 301. */
 export function analysisPath(visibility: AnalysisVisibility): string {
   return visibility === 'public'
     ? '/api/parcels/analysis/diseases/'
