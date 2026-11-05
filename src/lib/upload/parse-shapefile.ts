@@ -1,5 +1,6 @@
 import { normalizeUnknown } from '@/lib/upload/normalize';
 import { UploadError, type ParseOutcome, type UploadWarning } from '@/lib/upload/types';
+import { assertUnzippedSize, listZipEntries } from '@/lib/upload/zip';
 
 /**
  * Zipped shapefiles, via `shpjs`: the one library where "a shapefile in EPSG:32721
@@ -15,15 +16,16 @@ import { UploadError, type ParseOutcome, type UploadWarning } from '@/lib/upload
  * bundle.
  */
 export async function parseShapefile(buffer: ArrayBuffer): Promise<ParseOutcome> {
-  const [{ unzipSync }, { default: shp }] = await Promise.all([import('fflate'), import('shpjs')]);
+  const [entries, { default: shp }] = await Promise.all([
+    listZipEntries(buffer, 'No se pudo leer el archivo como archivo zip.'),
+    import('shpjs'),
+  ]);
 
-  let entryNames: string[];
+  // Before shpjs inflates the archive with its own unzipper, which trusts the data rather
+  // than the declared sizes: this stops an honest bomb, not one that lies in its directory.
+  assertUnzippedSize(entries);
 
-  try {
-    entryNames = Object.keys(unzipSync(new Uint8Array(buffer)));
-  } catch {
-    throw new UploadError('unreadable', 'No se pudo leer el archivo como archivo zip.');
-  }
+  const entryNames = entries.map((entry) => entry.name);
 
   const has = (extension: string) =>
     entryNames.some((name) => name.toLowerCase().endsWith(extension));
