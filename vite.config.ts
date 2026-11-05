@@ -6,6 +6,8 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
+import { SECURITY_HEADERS } from './src/lib/security-headers';
+
 export default defineConfig(({ mode }) => {
   /**
    * Where `/api` is forwarded, in dev and in the built server alike. The backend sets a
@@ -60,6 +62,8 @@ export default defineConfig(({ mode }) => {
         // never calls the plain-http API directly (mixed content). The header override
         // makes Nitro run it in the function rather than as a CDN rewrite — intended.
         routeRules: {
+          // Built server only: Vite's `server.headers` skips the SSR documents in dev.
+          '/**': { headers: SECURITY_HEADERS },
           '/api/**': {
             proxy: { to: `${API_PROXY_TARGET}/api/**`, headers: API_PROXY_HEADERS },
           },
