@@ -179,10 +179,9 @@ docker build --build-arg API_PROXY_TARGET=http://<backend-host>:<port> -t agora-
 docker run -p 3000:3000 agora-paraguay
 ```
 
-`API_PROXY_TARGET` is where the server relays `/api`. Without it the image targets
-`http://localhost:8000` — inside a container that is the container itself, so `/api` fails unless
-the backend runs there too. When the container shares a network with the backend, use the internal address
-(e.g. `http://backend:8000`) so the backend port need not be public.
+`API_PROXY_TARGET` is where the server relays `/api`, and the build fails without it. When the
+container shares a network with the backend, use the internal address (e.g. `http://backend:8000`)
+so the backend port need not be public.
 
 `VITE_*` variables and `API_PROXY_TARGET` are read by the **build**, so they are `ARG`s in the
 Dockerfile, not runtime environment variables.
