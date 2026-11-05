@@ -109,30 +109,28 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   }
 
   return (
-    <>
-      <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 print:hidden">
-        {filters ? (
-          orderHeroFilters(filters).map((filter, index, ordered) => (
-            <HeroField
-              key={filter.id}
-              filter={filter}
-              description={
-                filter.description && describeWithFilters(filter.description, filters, resolved)
-              }
-              value={resolved[filter.id] ?? ''}
-              onChange={(value) => setFilter({ id: filter.id, value })}
-              className={heroFieldSpansRow(index, ordered.length) ? 'md:col-span-2' : undefined}
-            />
-          ))
-        ) : (
-          // Placeholder: two disabled selects hold the layout until the filters land.
-          <>
-            <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
-            <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
-          </>
-        )}
-      </div>
-    </>
+    <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 print:hidden">
+      {filters ? (
+        orderHeroFilters(filters).map((filter, index, ordered) => (
+          <HeroField
+            key={filter.id}
+            filter={filter}
+            description={
+              filter.description && describeWithFilters(filter.description, filters, resolved)
+            }
+            value={resolved[filter.id] ?? ''}
+            onChange={(value) => setFilter({ id: filter.id, value })}
+            className={heroFieldSpansRow(index, ordered.length) ? 'md:col-span-2' : undefined}
+          />
+        ))
+      ) : (
+        // Placeholder: two disabled selects hold the layout until the filters land.
+        <>
+          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+          <HeroSelect label="Cargando…" options={[]} value="" onChange={() => {}} />
+        </>
+      )}
+    </div>
   );
 }
 
