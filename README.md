@@ -158,7 +158,7 @@ One build, two targets, both driven by Nitro. The preset comes from `NITRO_PRESE
 Configuration lives in `vercel.json`, so it is versioned rather than set by hand in the dashboard:
 framework `null`, `pnpm install --frozen-lockfile`, `pnpm build`, and `NITRO_PRESET=vercel` for the
 build step. The one value that is not versioned is the backend: set `API_PROXY_TARGET` (the
-Django origin, e.g. `http://46.60.18.203:8082`) as a build-time environment variable in the
+Django origin, e.g. `http://<backend-host>:<port>`) as a build-time environment variable in the
 Vercel project, then redeploy; `/api/*` on the deployment is relayed there by the server function.
 
 With that preset Nitro emits the [Build Output API v3](https://vercel.com/docs/build-output-api/v3)

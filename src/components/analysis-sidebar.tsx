@@ -28,8 +28,9 @@ const PHONE_ACTION_CLASS = 'h-11 flex-1 rounded-2xl px-4 font-normal';
  * already names the riesgo) until the report prints it.
  *
  * Exportar informe prints the page: the print stylesheet (`print:` classes here and in
- * the hero, shell, nav and footer) turns it into the report — no chrome, one column, the
- * filters as plain information — and the browser saves the PDF under `reportFileName`.
+ * the hero, shell, nav and footer) turns it into the report — no header, logo or fills,
+ * one column, the filters as Parámetros del análisis beside the map — and the browser
+ * saves the PDF under `reportFileName`.
  * In print the actions give way to a caption with the date.
  */
 export function AnalysisSidebar({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
@@ -68,7 +69,7 @@ export function AnalysisSidebar({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 
       {/* On screen the row dissolves: the visually hidden title takes no room in the column. */}
       <div className="flex flex-wrap items-center justify-between gap-4 not-print:contents">
-        <h1 className="text-[40px] font-thin tracking-[0.408px] not-print:sr-only">{title}</h1>
+        <h1 className="text-6xl font-thin tracking-[0.408px] not-print:sr-only">{title}</h1>
         <ReportCaption />
       </div>
     </>

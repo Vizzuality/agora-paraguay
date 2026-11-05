@@ -55,8 +55,8 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
     <Card
       className={cn(
         'min-w-50 flex-col gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
-        // Printed, the summary is body text of the report, not a card.
-        'print:bg-transparent print:p-0',
+        // Printed, the card keeps its frame but not its fill.
+        'print:border-2 print:bg-transparent',
         className,
       )}
     >
