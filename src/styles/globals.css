@@ -247,8 +247,10 @@
     margin: 12mm 8mm;
   }
 
+  /* No page fill: the report is the cards' frames and their content on white paper. */
   body {
     print-color-adjust: exact;
+    background: transparent;
   }
 }
 
