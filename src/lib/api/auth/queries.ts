@@ -52,7 +52,7 @@ export const authMutations = {
       mutationKey: ['auth', 'login'] as const,
       mutationFn: (credentials: Credentials) => login(credentials),
     }),
-  /** Ends the Django session; the cached one is the caller's to clear. */
+  /** Ends the backend session; the cached one is the caller's to clear. */
   logout: () =>
     mutationOptions({
       mutationKey: ['auth', 'logout'] as const,

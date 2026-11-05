@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 
 /**
- * Stubs the Django auth endpoints so the specs never depend on the real backend: the
+ * Stubs the backend auth endpoints so the specs never depend on the real backend: the
  * CSRF token is a constant, any credentials log in, logout always succeeds and `/me`
  * answers for whoever logged in last (anonymous until then, `staff` decides the role).
  * Signing in for real is a manual check: no test account lives in the repo or its

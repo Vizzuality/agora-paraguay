@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { passwordErrors } from '@/lib/auth/password';
 
 /**
- * Auth contract, against the Django session endpoints (`/api/auth/csrf/` then
+ * Auth contract, against the backend's session endpoints (`/api/auth/csrf/` then
  * `/api/auth/login/`, plus `/api/auth/me/`). The login body carries `identifier`, the
  * account's email: accounts have no username.
  */
@@ -15,7 +15,7 @@ export const credentialsSchema = z.object({
 export type Credentials = z.infer<typeof credentialsSchema>;
 
 /**
- * What the CSRF endpoint returns. Django's `ensure_csrf_cookie` views answer with a
+ * What the CSRF endpoint returns. Views decorated with `ensure_csrf_cookie` answer with a
  * bare `detail` and put the token in the `csrftoken` cookie only; some hand it back as
  * `csrfToken` too, so both are accepted and the cookie is the fallback (`client.ts`).
  */
@@ -52,14 +52,14 @@ export type MeResponse = z.infer<typeof meResponseSchema>;
  *    page shows the form or "link expired".
  *  - `POST /api/auth/reset-password/confirm/` with `{ token, new_password }` → 200
  *    `{ detail }`; 400 `{ detail: 'Enlace inválido o expirado.' }` for a bad token, 400
- *    `{ new_password: [...] }` for Django's validators. Anonymous: no session needed.
+ *    `{ new_password: [...] }` for the backend's validators. Anonymous: no session needed.
  */
 export const resetTokenSchema = z.uuid();
 
 export const resetTokenCheckSchema = z.looseObject({ valid: z.boolean() });
 
 /**
- * The client-side half of Django's `AUTH_PASSWORD_VALIDATORS` (length, numeric) runs in
+ * The client-side half of the backend's `AUTH_PASSWORD_VALIDATORS` (length, numeric) runs in
  * the parse; similarity needs the user's attributes, which the reset page does not have.
  * The server checks all of them, plus the common-password list, and answers 400.
  */

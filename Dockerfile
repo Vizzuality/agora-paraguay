@@ -15,10 +15,10 @@ COPY . .
 
 # Public build-time configuration. Vite inlines VITE_* vars at build time, so they
 # must be present here rather than at container start.
-# Origin of the Django API. Leave unset when the backend serves this app under /api.
+# Origin of the API. Leave unset when the backend serves this app under /api.
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
-# Django origin the server relays /api to (`routeRules` in vite.config.ts), baked into
+# Backend origin the server relays /api to (`routeRules` in vite.config.ts), baked into
 # the build. ARG only, no ENV: an unset ARG stays out of the build's environment, so
 # vite.config.ts falls back to its default; an ENV would set it to an empty string.
 ARG API_PROXY_TARGET

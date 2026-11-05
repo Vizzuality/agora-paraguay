@@ -21,7 +21,7 @@ describe('passwordErrors', () => {
     expect(codes('1234567a')).toEqual([]);
   });
 
-  it('reports every broken rule, in Django order', () => {
+  it('reports every broken rule, in the backend validator order', () => {
     expect(codes('1234')).toEqual(['too-short', 'numeric']);
   });
 
@@ -56,7 +56,7 @@ describe('similarity (UserAttributeSimilarityValidator)', () => {
     expect(codes('Analista1!', { email: 'analista@example.com' })).toEqual(['similar']);
   });
 
-  it('checks each part of a multi-word attribute, as Django splits on non-word characters', () => {
+  it('checks each part of a multi-word attribute, as the backend splits on non-word characters', () => {
     expect(codes('gonzalez99', { lastName: 'Pérez González' })).toEqual(['similar']);
   });
 

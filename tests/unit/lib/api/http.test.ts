@@ -150,7 +150,7 @@ describe('getJson / postJson', () => {
     });
   });
 
-  it("quotes Django's reason from the error body as `detail`, and errorReason prefers it", async () => {
+  it("quotes the backend's reason from the error body as `detail`, and errorReason prefers it", async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json(
         { status: 'error', message: 'The sowing date field is required.', result: {} },
@@ -180,7 +180,7 @@ describe('getJson / postJson', () => {
     );
   });
 
-  it('reads a `detail` Django wrote as a list, and ignores non-string values', async () => {
+  it('reads a `detail` the backend wrote as a list, and ignores non-string values', async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json({ detail: ['Enlace inválido', 'o expirado.'] }, { status: 400 }),
     );

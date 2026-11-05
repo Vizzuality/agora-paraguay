@@ -102,7 +102,7 @@ describe('login', () => {
     });
   });
 
-  it('reports wrong credentials on a 400 too, the other status Django login views use', async () => {
+  it('reports wrong credentials on a 400 too, the other status the backend login views use', async () => {
     fetchMock
       .mockResolvedValueOnce(json({ csrfToken: 'abc' }))
       .mockResolvedValueOnce(json({ non_field_errors: ['Unable to log in'] }, 400));

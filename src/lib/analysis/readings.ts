@@ -5,7 +5,7 @@ export type Reading = string | number;
 
 /**
  * The spellings of "no reading" seen from the backend, compared trimmed and case-blind:
- * the spec's "NA", plus the variants pandas and Django serialisers produce.
+ * the spec's "NA", plus the variants pandas and the backend's serialisers produce.
  */
 const NO_READING_VALUES = new Set(['', 'na', 'n/a', 'nan', 'null', 'none', '-']);
 

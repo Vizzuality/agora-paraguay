@@ -21,7 +21,7 @@ import {
   type Session,
 } from './schemas';
 
-/* Auth is real: Django session endpoints. */
+/* Auth is real: the backend's session endpoints. */
 
 /** Why a login failed, at the granularity the login card's copy distinguishes. */
 export type LoginFailure = 'credentials' | 'unavailable';
@@ -38,7 +38,7 @@ export class LoginError extends Error {
   }
 }
 
-/** Statuses Django login views use for a rejected user/password (DRF 400, LoginView 401). */
+/** Statuses the backend's login views use for a rejected user/password (DRF 400, LoginView 401). */
 const CREDENTIAL_STATUSES = new Set([400, 401]);
 
 /**
@@ -52,9 +52,9 @@ function loginFailureReason(status: number): LoginFailure {
 }
 
 /**
- * Django session login: fetch a CSRF token (the endpoint also sets the `csrftoken`
+ * Session login: fetch a CSRF token (the endpoint also sets the `csrftoken`
  * cookie), then POST the credentials with the token echoed in `X-CSRFToken`. The
- * session itself is the cookie Django sets on success; `credentials: 'include'` keeps
+ * session itself is the cookie the backend sets on success; `credentials: 'include'` keeps
  * both cookies flowing when `API_URL` is another origin.
  *
  * Hand-rolled rather than on `postJson` because the failure taxonomy (`LoginError`)
@@ -70,7 +70,7 @@ export async function login(credentials: Credentials): Promise<Session> {
 
     if (!csrfResponse.ok) throw new LoginError('unavailable', csrfResponse.status);
 
-    // Token from the body when the view echoes it, else from the cookie Django set.
+    // Token from the body when the view echoes it, else from the cookie the backend set.
     const token = csrfResponseSchema.parse(await csrfResponse.json()).csrfToken ?? csrfToken();
 
     if (token === null) throw new LoginError('unavailable', csrfResponse.status);
@@ -130,8 +130,8 @@ export async function deleteUser(id: number): Promise<void> {
 }
 
 /**
- * `POST /api/auth/logout/`: Django ends the session behind the cookie. Not in the API
- * spec yet — the path and the empty body follow the Django convention until the backend
+ * `POST /api/auth/logout/`: the backend ends the session behind the cookie. Not in the API
+ * spec yet — the path and the empty body follow the framework convention until the backend
  * confirms (AGP-42). A refusal (anonymous, 401/403) or an outage is an `ApiError`; the
  * caller decides what a failed logout means for the client session.
  */
@@ -160,7 +160,7 @@ export async function confirmResetPassword(request: ResetPasswordConfirmRequest)
   await postJson('/api/auth/reset-password/confirm/', resetPasswordConfirmSchema.parse(request));
 }
 
-/** Statuses that mean "no session": the spec's 400, and the 401/403 Django would also use. */
+/** Statuses that mean "no session": the spec's 400, and the 401/403 the backend would also use. */
 const ANONYMOUS_STATUSES = new Set([400, 401, 403]);
 
 /**
