@@ -18,7 +18,7 @@ export function WidgetCard({
   return (
     <Card
       className={cn(
-        'min-h-[254px] break-inside-avoid justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
+        'min-h-[254px] break-inside-avoid justify-between gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs print:border-2 print:bg-transparent print:backdrop-blur-none',
         className,
       )}
     >
