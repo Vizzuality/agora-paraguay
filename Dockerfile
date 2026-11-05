@@ -22,7 +22,7 @@ ENV VITE_API_URL=$VITE_API_URL
 # the build. Required: without it /api would target the container itself.
 ARG API_PROXY_TARGET
 RUN test -n "$API_PROXY_TARGET" \
-  || (echo 'Set the backend origin: docker build --build-arg API_PROXY_TARGET=http://<host>:<port> .' >&2 && exit 1)
+  || (echo 'Set the backend origin: docker build --build-arg API_PROXY_TARGET=<backend-origin> .' >&2 && exit 1)
 
 RUN corepack enable pnpm && pnpm run build
 
