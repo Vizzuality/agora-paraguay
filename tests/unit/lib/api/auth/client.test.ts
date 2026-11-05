@@ -227,7 +227,7 @@ describe('createUser', () => {
     const live = {
       ...created,
       user: { email: 'paule@example.org', first_name: '', last_name: '' },
-      reset_link: 'http://46.60.18.203:8082/api/auth/reset-password/ecb687e7/',
+      reset_link: 'http://backend.example/api/auth/reset-password/ecb687e7/',
     };
     fetchMock.mockResolvedValueOnce(json(live, 201));
 
