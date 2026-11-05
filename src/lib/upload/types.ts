@@ -10,6 +10,9 @@
 /** Uploads are parsed on the main thread, so the cap keeps the jank bounded. */
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
+/** The same bound after decompression, for zipped shapefiles and KMZ. */
+export const MAX_UNZIPPED_BYTES = 100 * 1024 * 1024;
+
 /** A position after normalisation: z/m dropped, precision capped at 9 decimals. */
 export type LngLat = [number, number];
 
