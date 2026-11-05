@@ -10,10 +10,10 @@ import { SECURITY_HEADERS } from './src/lib/security-headers';
 
 export default defineConfig(({ mode }) => {
   /**
-   * Where `/api` is forwarded, in dev and in the built server alike. The Django backend
-   * sets a session cookie, and a cookie from another origin over plain http never sticks
+   * Where `/api` is forwarded, in dev and in the built server alike. The backend sets a
+   * session cookie, and a cookie from another origin over plain http never sticks
    * in a browser — so the app talks to itself and relays: Vite in dev, Nitro in
-   * production (Vercel, the container). Defaults to a local Django; set
+   * production (Vercel, the container). Defaults to a local backend; set
    * `API_PROXY_TARGET` (shell, `.env`, or the Vercel project's build env) to reach a
    * shared backend. Read at build time: the rule is baked into the output.
    */
@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
     loadEnv(mode, process.cwd(), '').API_PROXY_TARGET ?? 'http://localhost:8000';
 
   /**
-   * Django's CSRF check compares Origin/Referer against the host it serves; make the
+   * The backend's CSRF check compares Origin/Referer against the host it serves; make the
    * relayed request look like it came from there. Same trick for both proxies.
    */
   const API_PROXY_HEADERS = { origin: API_PROXY_TARGET, referer: `${API_PROXY_TARGET}/` };

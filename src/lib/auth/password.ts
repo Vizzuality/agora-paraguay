@@ -1,14 +1,14 @@
 /**
- * Client-side mirror of Django's `AUTH_PASSWORD_VALIDATORS`, so the reset form can
+ * Client-side mirror of the backend's `AUTH_PASSWORD_VALIDATORS`, so the reset form can
  * tell the user before the round trip. The server stays authoritative — it also runs
  * `CommonPasswordValidator` (a ~20k-entry list that is not worth shipping), so its
  * errors must still be surfaced.
  */
 
-/** `MinimumLengthValidator` — Django default. */
+/** `MinimumLengthValidator` — framework default. */
 export const PASSWORD_MIN_LENGTH = 8;
 
-/** `UserAttributeSimilarityValidator` — Django default `max_similarity`. */
+/** `UserAttributeSimilarityValidator` — framework default `max_similarity`. */
 export const PASSWORD_MAX_SIMILARITY = 0.7;
 
 /** What the similarity check compares against. Unknown attributes are simply skipped. */
@@ -26,7 +26,7 @@ export type PasswordError = {
   message: string;
 };
 
-/** Spanish labels for Django's `verbose_name` in the similarity message. */
+/** Spanish labels for the backend's `verbose_name` in the similarity message. */
 const ATTRIBUTE_LABELS: Record<keyof UserAttributes, string> = {
   email: 'correo electrónico',
   firstName: 'nombre',
@@ -37,7 +37,7 @@ const ATTRIBUTE_LABELS: Record<keyof UserAttributes, string> = {
  * Python's `difflib.SequenceMatcher.quick_ratio()`: an upper bound on `ratio()` that
  * ignores ordering. Returns `2 * M / T`, where `M` is the size of the multiset
  * intersection of the two strings' characters and `T` the sum of their lengths.
- * `1` for two empty strings, matching difflib. Exactly what Django's validator calls.
+ * `1` for two empty strings, matching difflib. Exactly what the backend's validator calls.
  */
 export function quickRatio(a: string, b: string): number {
   const total = [...a].length + [...b].length;
@@ -67,7 +67,7 @@ export function quickRatio(a: string, b: string): number {
 }
 
 /**
- * `UserAttributeSimilarityValidator`: Django compares the lower-cased password with each
+ * `UserAttributeSimilarityValidator`: the backend compares the lower-cased password with each
  * attribute value AND with each of its parts split on non-word characters, rejecting
  * when any `quick_ratio` reaches `max_similarity`.
  */
@@ -79,7 +79,7 @@ function tooSimilar(password: string, value: string): boolean {
   return parts.some((part) => part !== '' && quickRatio(lowered, part) >= PASSWORD_MAX_SIMILARITY);
 }
 
-/** Every rule the password breaks, in Django's validator order. Empty means valid here. */
+/** Every rule the password breaks, in the backend's validator order. Empty means valid here. */
 export function passwordErrors(password: string, attributes: UserAttributes = {}): PasswordError[] {
   const errors: PasswordError[] = [];
 

@@ -1,7 +1,7 @@
 import { env } from '@/env';
 
 /**
- * The transport every domain client shares: base URL, the Django session/CSRF
+ * The transport every domain client shares: base URL, the backend's session/CSRF
  * conventions, and one error type. Domain modules (`auth/`, `parcels/`, ...) own their
  * endpoints and schemas; this file only knows how to reach the API.
  */
@@ -23,7 +23,7 @@ export function cookieValue(cookies: string, name: string): string | null {
 }
 
 /**
- * Django's CSRF token, left in the `csrftoken` cookie by the login flow or by
+ * The backend's CSRF token, left in the `csrftoken` cookie by the login flow or by
  * `ensureCsrfToken`. Readable only while the API is same-origin (the dev proxy, or
  * served under `/api`).
  */
@@ -31,7 +31,7 @@ export function csrfToken(): string | null {
   return cookieValue(globalThis.document?.cookie ?? '', 'csrftoken');
 }
 
-/** Where Django hands out a CSRF token (the view also sets the `csrftoken` cookie). */
+/** Where the backend hands out a CSRF token (the view also sets the `csrftoken` cookie). */
 export const CSRF_PATH = '/api/auth/csrf/';
 
 /** The token fetch in flight, so parallel POSTs from a cold start share one round trip. */
@@ -39,9 +39,9 @@ let pendingCsrfToken: Promise<string | null> | null = null;
 
 /**
  * The token a POST needs: the cookie when the login flow or an earlier POST already set
- * it, else fetched — Django protects the public analysis endpoints too, and an anonymous
+ * it, else fetched — the backend protects the public analysis endpoints too, and an anonymous
  * visitor has no cookie until something asks for one. Best effort: when the token
- * endpoint is unreachable the POST goes out without the header and Django's 403 surfaces
+ * endpoint is unreachable the POST goes out without the header and the backend's 403 surfaces
  * as the `ApiError` it is.
  */
 export async function ensureCsrfToken(): Promise<string | null> {
@@ -76,7 +76,7 @@ async function fetchCsrfToken(): Promise<string | null> {
 
 /**
  * A failed request: a non-2xx status, or no response at all (`status: null`). `detail` is
- * the reason Django wrote in the body (`message` or `detail`), when it wrote one — what
+ * the reason the backend wrote in the body (`message` or `detail`), when it wrote one — what
  * a user can act on, where the status alone says nothing.
  */
 export class ApiError extends Error {
@@ -104,7 +104,7 @@ export function errorReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** A reason as Django writes it — a string, or a list of them — as one string, else `null`. */
+/** A reason as the backend writes it — a string, or a list of them — as one string, else `null`. */
 function reasonOf(value: unknown): string | null {
   const parts = (Array.isArray(value) ? value : [value]).filter(
     (part): part is string => typeof part === 'string' && part.trim() !== '',
@@ -116,7 +116,7 @@ function reasonOf(value: unknown): string | null {
 /**
  * The human-readable reason in an error body: `message` or `detail` when the JSON carries
  * one, else the reasons of a DRF field-error body (`{ new_password: ['Too common.'] }`),
- * which is how Django's validators answer. Field names are left out — the form knows
+ * which is how the backend's validators answer. Field names are left out — the form knows
  * which field it sent.
  */
 function detailOf(text: string): string | null {
@@ -184,7 +184,7 @@ export function getJson(
   return send(query ? `${path}?${query}` : path, { method: 'GET', headers });
 }
 
-/** The CSRF header Django demands of every mutating request, anonymous ones included. */
+/** The CSRF header the backend demands of every mutating request, anonymous ones included. */
 async function csrfHeaders(): Promise<Record<string, string>> {
   const token = await ensureCsrfToken();
 

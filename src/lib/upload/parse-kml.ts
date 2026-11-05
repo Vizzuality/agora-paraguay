@@ -1,5 +1,6 @@
 import { normalizeUnknown } from '@/lib/upload/normalize';
 import { UploadError, type ParseOutcome } from '@/lib/upload/types';
+import { assertUnzippedSize, listZipEntries, readZipEntry } from '@/lib/upload/zip';
 
 /**
  * KML and KMZ, via `@tmcw/togeojson` — which extracts `<name>` into `properties.name`,
@@ -23,24 +24,20 @@ export async function parseKmlText(text: string): Promise<ParseOutcome> {
 }
 
 export async function parseKmz(buffer: ArrayBuffer): Promise<ParseOutcome> {
-  const { unzipSync } = await import('fflate');
+  const entries = await listZipEntries(buffer, 'No se pudo leer el archivo como archivo KMZ.');
 
-  let entries: Record<string, Uint8Array>;
-
-  try {
-    entries = unzipSync(new Uint8Array(buffer));
-  } catch {
-    throw new UploadError('unreadable', 'No se pudo leer el archivo como archivo KMZ.');
-  }
+  assertUnzippedSize(entries);
 
   // Finder-zipped archives carry AppleDouble copies (`__MACOSX/._x.kml`) whose payload
   // is a resource fork, not KML — counting or reading them breaks valid files.
-  const kmlNames = Object.keys(entries).filter((name) => {
-    if (name.startsWith('__MACOSX/')) return false;
-    if ((name.split('/').at(-1) ?? name).startsWith('._')) return false;
+  const kmlNames = entries
+    .map((entry) => entry.name)
+    .filter((name) => {
+      if (name.startsWith('__MACOSX/')) return false;
+      if ((name.split('/').at(-1) ?? name).startsWith('._')) return false;
 
-    return name.toLowerCase().endsWith('.kml');
-  });
+      return name.toLowerCase().endsWith('.kml');
+    });
   // The spec says the main document is `doc.kml`; fall back to whatever KML is there.
   const chosen = kmlNames.find((name) => name.toLowerCase() === 'doc.kml') ?? kmlNames[0];
 
@@ -48,7 +45,7 @@ export async function parseKmz(buffer: ArrayBuffer): Promise<ParseOutcome> {
     throw new UploadError('unreadable', 'El archivo KMZ no contiene ningún documento KML.');
   }
 
-  const outcome = await parseKmlText(new TextDecoder().decode(entries[chosen]));
+  const outcome = await parseKmlText(new TextDecoder().decode(await readZipEntry(buffer, chosen)));
 
   if (kmlNames.length > 1) {
     outcome.warnings.push({
