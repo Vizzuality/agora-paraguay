@@ -175,12 +175,17 @@ The client's backend team deploys the container. CI builds the image on every PR
 between now and then.
 
 ```sh
-docker build -t agora-paraguay .
+docker build --build-arg API_PROXY_TARGET=http://<backend-host>:<port> -t agora-paraguay .
 docker run -p 3000:3000 agora-paraguay
 ```
 
-`VITE_*` variables are inlined by Vite at **build** time, so they are `ARG`s in the Dockerfile, not
-runtime environment variables.
+`API_PROXY_TARGET` is where the server relays `/api`. Without it the image targets
+`http://localhost:8000` — inside a container that is the container itself, so `/api` fails unless
+Django runs there too. When the container shares a network with Django, use the internal address
+(e.g. `http://django:8000`) so the backend port need not be public.
+
+`VITE_*` variables and `API_PROXY_TARGET` are read by the **build**, so they are `ARG`s in the
+Dockerfile, not runtime environment variables.
 
 ## Decisions
 
