@@ -26,7 +26,7 @@ describe('fetchFilters', () => {
         type: 'category',
         options: [
           { value: 'rice', label: 'Arroz' },
-          { value: 'soy', label: 'Soja' },
+          { value: 'soja', label: 'Soja' },
         ],
       },
     },
@@ -43,7 +43,7 @@ describe('fetchFilters', () => {
 
     await expect(fetchFilters({ riesgo: 'productivo' })).resolves.toEqual(filters);
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/parcels/filters/?riesgo=productivo&crop_type=soy',
+      '/api/parcels/filters/?riesgo=productivo&crop_type=soja',
     );
   });
 
@@ -91,7 +91,7 @@ describe('fetchFilters', () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({ riesgo: 'productivo', crop_type: undefined });
     expect(String(fetchMock.mock.calls[1][0])).toBe(
-      '/api/parcels/filters/?riesgo=productivo&crop_type=soy',
+      '/api/parcels/filters/?riesgo=productivo&crop_type=soja',
     );
   });
 
@@ -99,13 +99,13 @@ describe('fetchFilters', () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters();
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/parcels/filters/?riesgo=sanitario&crop_type=soy',
+      '/api/parcels/filters/?riesgo=sanitario&crop_type=soja',
     );
 
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({});
     expect(String(fetchMock.mock.calls[1][0])).toBe(
-      '/api/parcels/filters/?riesgo=sanitario&crop_type=soy',
+      '/api/parcels/filters/?riesgo=sanitario&crop_type=soja',
     );
   });
 
@@ -163,7 +163,7 @@ describe('fetchIndicators', () => {
         type: 'category',
         options: [
           { value: 'rice', label: 'Arroz' },
-          { value: 'soy', label: 'Soja' },
+          { value: 'soja', label: 'Soja' },
         ],
       },
     };

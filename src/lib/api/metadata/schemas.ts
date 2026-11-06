@@ -71,12 +71,12 @@ export type Filters = z.infer<typeof filtersSchema>;
 export type Riesgo = 'sanitario' | 'productivo';
 
 /** The crops the analysis covers, as `crop_type` values. */
-export const CROPS = ['rice', 'soy'] as const;
+export const CROPS = ['rice', 'soja'] as const;
 
 export type Crop = (typeof CROPS)[number];
 
 /** The crop the filters are asked for until the user picks another. */
-export const DEFAULT_CROP: Crop = 'soy';
+export const DEFAULT_CROP: Crop = 'soja';
 
 export function isCrop(value: string | undefined): value is Crop {
   return CROPS.includes(value as Crop);

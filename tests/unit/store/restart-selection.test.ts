@@ -48,7 +48,7 @@ function storeAfterAnalysis() {
   });
   store.set(startAnalysisAtom, ['D07D21P00000002', 'D07D23P00000008']);
   store.set(activeParcelTabAtom, 'D07D23P00000008');
-  store.set(setAnalysisFilterAtom, { id: 'crop_type', value: 'soy' });
+  store.set(setAnalysisFilterAtom, { id: 'crop_type', value: 'soja' });
   store.set(selectedIndicatorIdsAtom, {
     riesgo: 'sanitario',
     indicators: INDICATORS,

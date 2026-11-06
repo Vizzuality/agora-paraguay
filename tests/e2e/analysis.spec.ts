@@ -145,19 +145,19 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
   // With no crop picked yet, the filters are asked for soy.
   expect(filtersRequests).toBe(1);
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soy']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soja']);
 
   // Picking the crop already shown asks nothing: soy's list is already the one in hand,
   // so only another crop would fetch again.
   await cultivo.click();
   await page.getByRole('option', { name: 'Soja' }).click();
   await expect(cultivo).toHaveText('Soja');
-  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soy']);
+  expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soja']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
   // default crop, today as the sowing date and the default indicators.
   await expect.poll(() => analysisBodies.length).toBe(1);
-  expect(analysisBodies[0]).toMatchObject({ crop_type: 'soy', sowing_date: TODAY });
+  expect(analysisBodies[0]).toMatchObject({ crop_type: 'soja', sowing_date: TODAY });
   expect(analysisBodies[0].indicators).toContain('asian_rust');
 
   // Typing a sowing date re-runs it with that date.
@@ -798,7 +798,7 @@ test('logs in from the header dialog', async ({ page }) => {
   releaseSummary();
   await expect(page.getByRole('heading', { name: 'Resumen de 2 parcelas' })).toBeVisible();
   // The request carries the hero selection: the crop, soy by default, and the year.
-  await expect(page.getByText('Cultivo: soy')).toBeVisible();
+  await expect(page.getByText('Cultivo: soja')).toBeVisible();
   await expect(page.getByText('Año: 2026')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
 

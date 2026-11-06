@@ -12,7 +12,7 @@ import {
 const request = {
   parcels: ['D07D21P00000002', 'D07D23P00000008'],
   indicators: ['iep'],
-  crop_type: 'soy',
+  crop_type: 'soja',
   sowing_date: '2026-06-18',
   date: '2026-09-17',
 };
@@ -24,7 +24,7 @@ const response = {
   input: {
     parcels: ['D07D21P00000002', 'D07D23P00000008'],
     indicators: ['iep'],
-    crop_type: 'soy',
+    crop_type: 'soja',
     date: '2026-09-17',
   },
   indicators: [
@@ -211,7 +211,7 @@ describe('generateSummary', () => {
       generateSummary({
         parcels: ['D07D23P00000002', 'D07D23P00000008'],
         year: '2025',
-        crop_type: 'soy',
+        crop_type: 'soja',
       }),
     ).resolves.toBe('## Resumen\n\nLas parcelas presentan **riesgo alto** de roya.');
 
@@ -223,7 +223,7 @@ describe('generateSummary', () => {
       body: JSON.stringify({
         parcels: ['D07D23P00000002', 'D07D23P00000008'],
         year: '2025',
-        crop_type: 'soy',
+        crop_type: 'soja',
       }),
     });
   });
@@ -232,7 +232,7 @@ describe('generateSummary', () => {
     fetchMock.mockResolvedValueOnce(new Response('  \n', { status: 200 }));
 
     await expect(
-      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'soy' }),
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'soja' }),
     ).rejects.toThrow(ZodError);
   });
 
@@ -249,7 +249,7 @@ describe('generateSummary', () => {
   });
 
   it('rejects an empty parcel list before touching the network', async () => {
-    await expect(generateSummary({ parcels: [], year: '2025', crop_type: 'soy' })).rejects.toThrow(
+    await expect(generateSummary({ parcels: [], year: '2025', crop_type: 'soja' })).rejects.toThrow(
       ZodError,
     );
     expect(fetchMock).not.toHaveBeenCalled();
@@ -258,10 +258,10 @@ describe('generateSummary', () => {
   it('rejects a missing or malformed year before touching the network', async () => {
     await expect(
       // @ts-expect-error -- no year, as an unchecked caller could send it
-      generateSummary({ parcels: ['D07D23P00000002'], crop_type: 'soy' }),
+      generateSummary({ parcels: ['D07D23P00000002'], crop_type: 'soja' }),
     ).rejects.toThrow(ZodError);
     await expect(
-      generateSummary({ parcels: ['D07D23P00000002'], year: '2025-01-01', crop_type: 'soy' }),
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025-01-01', crop_type: 'soja' }),
     ).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
   });

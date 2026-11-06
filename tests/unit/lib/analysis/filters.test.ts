@@ -18,7 +18,7 @@ const FILTERS: Filters = [
       type: 'category',
       options: [
         { value: 'rice', label: 'Arroz' },
-        { value: 'soy', label: 'Soja' },
+        { value: 'soja', label: 'Soja' },
       ],
     },
   },
@@ -29,7 +29,7 @@ const FILTERS: Filters = [
 describe('resolveFilterSelection', () => {
   it('defaults the crop to soy, a date to the API default, else to today', () => {
     expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toEqual({
-      crop_type: 'soy',
+      crop_type: 'soja',
       sowing_date: todayIso(),
       date: '2026-09-17',
     });
@@ -37,12 +37,12 @@ describe('resolveFilterSelection', () => {
 
   it('keeps a category pick the options still offer, and a typed date', () => {
     expect(
-      resolveFilterSelection({ crop_type: 'soy', sowing_date: '2026-05-01' }, FILTERS),
-    ).toEqual({ crop_type: 'soy', sowing_date: '2026-05-01', date: '2026-09-17' });
+      resolveFilterSelection({ crop_type: 'soja', sowing_date: '2026-05-01' }, FILTERS),
+    ).toEqual({ crop_type: 'soja', sowing_date: '2026-05-01', date: '2026-09-17' });
   });
 
   it('falls back when a category pick is no longer among the options', () => {
-    expect(resolveFilterSelection({ crop_type: 'wheat' }, FILTERS).crop_type).toBe('soy');
+    expect(resolveFilterSelection({ crop_type: 'wheat' }, FILTERS).crop_type).toBe('soja');
   });
 
   it('ignores picks for filters the API no longer lists', () => {
@@ -63,7 +63,7 @@ describe('resolveFilterSelection', () => {
   });
 
   it('gives an empty response an empty selection', () => {
-    expect(resolveFilterSelection({ crop_type: 'soy' }, [])).toEqual({});
+    expect(resolveFilterSelection({ crop_type: 'soja' }, [])).toEqual({});
   });
 });
 
