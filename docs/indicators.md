@@ -1,21 +1,22 @@
 # Indicators: types, behaviour per riesgo, widgets
 
 What an indicator is on `/analisis`, how each kind is read, and which widget it renders under
-each riesgo (sanitario, public; productivo, private) and scope (one parcel, Todas). It describes
+each riesgo (sanitario, public; productivo, private; exposición climática, per district) and
+scope (one parcel, Todas). It describes
 what the client does today; where the live API and the spec disagree, the row says how the
 client handles it. The rules live in `src/lib/analysis/widget-config.ts` (`widgetFor`), the
 schemas in `src/lib/api/metadata/schemas.ts` and `src/lib/api/analysis/schemas.ts`.
 
 ## Vocabulary
 
-| Word          | Meaning                                                                                                                                                   |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Riesgo**    | The analysis tab: `sanitario` (public, `POST /api/parcels/analysis/diseases/`) or `productivo` (login, `POST /api/parcels/analysis/production/`).         |
-| **Indicator** | One entry of `GET /api/parcels/indicators/?riesgo=…`: id, name, description, unit, `default`, and an `indicator_type` that says how its reading is typed. |
-| **Reading**   | One parcel's value for one indicator, as a property column of the analysis answer.                                                                        |
-| **Scope**     | How many parcels a widget reads: `individual` (a parcel tab in the hero) or `multiple` (the Todas tab).                                                   |
-| **Widget**    | The card an indicator renders as. Kinds are named by what they draw: ruler, fact, bar chart, histogram, number.                                           |
-| **Class**     | One band a classed reading falls in: `Sin riesgo` / `Moderado` / `Severo` for a range, the indicator's own categories for a category.                     |
+| Word          | Meaning                                                                                                                                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Riesgo**    | The analysis tab: `sanitario` (public, `POST /api/parcels/analysis/diseases/`), `productivo` (login, `POST /api/parcels/analysis/production/`) or `exposicion_climatica` (a district on the map, no analysis request). |
+| **Indicator** | One entry of `GET /api/parcels/indicators/?riesgo=…`: id, name, description, unit, `default`, and an `indicator_type` that says how its reading is typed.                                                              |
+| **Reading**   | One parcel's value for one indicator, as a property column of the analysis answer.                                                                                                                                     |
+| **Scope**     | How many parcels a widget reads: `individual` (a parcel tab in the hero) or `multiple` (the Todas tab).                                                                                                                |
+| **Widget**    | The card an indicator renders as. Kinds are named by what they draw: ruler, fact, bar chart, histogram, number.                                                                                                        |
+| **Class**     | One band a classed reading falls in: `Sin riesgo` / `Moderado` / `Severo` for a range, the indicator's own categories for a category.                                                                                  |
 
 ## 1. Indicator types
 
@@ -139,6 +140,34 @@ Productivo-only rules:
 - The AI summary widget (`POST /api/parcels/analysis/summary/`) sits above the grid; it is not
   an indicator.
 
+### Exposición climática
+
+`/analisis/exposicion-climatica` (`useExposureWidgets`) runs no analysis. The user picks a
+**district** on the exposure layer (global layer 9, `Nivel de exposición`), and the panel reads
+that district as if it were one parcel (`asDistrictParcel`): the feature's properties are the
+readings. The indicator list is `GET /api/parcels/indicators?riesgo=exposicion_climatica`.
+
+| Type                 | One district                                       |
+| -------------------- | -------------------------------------------------- |
+| `range`              | Number card on the range's own scale               |
+| `category`           | Ruler: class as the figure (`Ex_class`)            |
+| `text`               | General info row                                   |
+| `numeric`, unit `%`  | Number card on 0–100                               |
+| `numeric`, any other | General info row (hectares and other open numbers) |
+
+Exposición-only rules:
+
+- **One scope.** There is no Todas: the panel is always `individual`, one district.
+- **Defaults only.** Only indicators flagged `default: true` show; there is no picker.
+  `DPTO_DESC` and `DIST_DESC_` are left out because the panel heading already shows them.
+- **Open numbers are facts.** A percentage has its own 0–100 scale. Hectares would have to be
+  drawn against the largest district, which leaves almost every marker at zero, so they read
+  as facts.
+- **`Ex_class` colours the map too.** Its categories, in metadata order, give both the ruler
+  bands and the exposure layer's fill (`exposureClasses`). Until the metadata answers, the map
+  falls back to `Bajo` / `Medio` / `Alto`.
+- The pick survives switching between the map's two tabs (Nivel de exposición, Capas).
+
 ## 3. Visualizations
 
 ### Decision table
@@ -147,18 +176,20 @@ Productivo-only rules:
 `src/lib/analysis/` answers only the indicators whose kind is its own, so an indicator lands in
 at most one widget; `analysisWidgets` assembles them in metadata order.
 
-| Type       | Riesgo     | Scope      | Widget kind                            | Builder                                          | Component                                  |
-| ---------- | ---------- | ---------- | -------------------------------------- | ------------------------------------------------ | ------------------------------------------ |
-| `range`    | sanitario  | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            |
-| `range`    | sanitario  | multiple   | `bar-chart` if short, else `histogram` | `categoryCountWidgets` / `valueHistogramWidgets` | `CategoryCountCard` / `ValueHistogramCard` |
-| `range`    | productivo | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               |
-| `range`    | productivo | multiple   | `histogram` (stepped when short)       | `valueHistogramWidgets`                          | `ValueHistogramCard`                       |
-| `category` | any        | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            |
-| `category` | any        | multiple   | `bar-chart`                            | `categoryCountWidgets`                           | `CategoryCountCard`                        |
-| `text`     | any        | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          |
-| `numeric`  | sanitario  | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          |
-| `numeric`  | productivo | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               |
-| `numeric`  | productivo | multiple   | `histogram`                            | `valueHistogramWidgets`                          | `ValueHistogramCard`                       |
+| Type       | Riesgo               | Scope      | Widget kind                            | Builder                                          | Component                                  |
+| ---------- | -------------------- | ---------- | -------------------------------------- | ------------------------------------------------ | ------------------------------------------ |
+| `range`    | sanitario            | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            |
+| `range`    | sanitario            | multiple   | `bar-chart` if short, else `histogram` | `categoryCountWidgets` / `valueHistogramWidgets` | `CategoryCountCard` / `ValueHistogramCard` |
+| `range`    | productivo           | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               |
+| `range`    | productivo           | multiple   | `histogram` (stepped when short)       | `valueHistogramWidgets`                          | `ValueHistogramCard`                       |
+| `category` | any                  | individual | `ruler`                                | `indicatorCards`                                 | `RiskClassCard`                            |
+| `category` | any                  | multiple   | `bar-chart`                            | `categoryCountWidgets`                           | `CategoryCountCard`                        |
+| `text`     | any                  | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          |
+| `numeric`  | sanitario            | any        | `fact`                                 | `generalInfo`                                    | `GeneralInfoCard`                          |
+| `numeric`  | productivo           | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               |
+| `numeric`  | productivo           | multiple   | `histogram`                            | `valueHistogramWidgets`                          | `ValueHistogramCard`                       |
+| `range`    | exposicion_climatica | individual | `number`                               | `numberWidgets`                                  | `NumberCard`                               |
+| `numeric`  | exposicion_climatica | individual | `number` if unit `%`, else `fact`      | `numberWidgets` / `generalInfo`                  | `NumberCard` / `GeneralInfoCard`           |
 
 "Short range" is `max ≤ 10` (`SHORT_RANGE_MAX`): a 1–3 disease index reads as a handful of
 values, a 0–100 % quality as a continuum.
