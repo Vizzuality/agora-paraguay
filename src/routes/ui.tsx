@@ -589,7 +589,7 @@ function AnalysisCardsDemo() {
   const request = indicators
     ? toAnalysisRequest(
         ['D07D21P00000001'],
-        { crop_type: 'soy', date: '2026-09-17' },
+        { crop_type: 'soja', date: '2026-09-17' },
         requestedIndicatorIds(indicators, null, 'sanitario'),
       )
     : null;

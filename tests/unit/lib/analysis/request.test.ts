@@ -149,16 +149,16 @@ describe('toSummaryRequest', () => {
   });
 
   it("sends only the open tab's parcel", () => {
-    expect(toSummaryRequest(['P1', 'P2'], 'P2', { crop_type: 'soy', year: '2025' })).toEqual({
+    expect(toSummaryRequest(['P1', 'P2'], 'P2', { crop_type: 'soja', year: '2025' })).toEqual({
       parcels: ['P2'],
       year: '2025',
-      crop_type: 'soy',
+      crop_type: 'soja',
     });
   });
 
   it('is null with no parcels, filters not resolved yet, no year, or a crop the analysis does not cover', () => {
-    expect(toSummaryRequest(['P1'], null, { crop_type: 'soy' })).toBeNull();
-    expect(toSummaryRequest([], null, { crop_type: 'soy', year: '2025' })).toBeNull();
+    expect(toSummaryRequest(['P1'], null, { crop_type: 'soja' })).toBeNull();
+    expect(toSummaryRequest([], null, { crop_type: 'soja', year: '2025' })).toBeNull();
     expect(toSummaryRequest(['P1'], null, null)).toBeNull();
     expect(toSummaryRequest(['P1'], null, {})).toBeNull();
     expect(toSummaryRequest(['P1'], null, { crop_type: 'maiz', year: '2025' })).toBeNull();

@@ -10,7 +10,7 @@ export const HERO_FILTERS = [
       type: 'category',
       options: [
         { value: 'rice', label: 'Arroz' },
-        { value: 'soy', label: 'Soja' },
+        { value: 'soja', label: 'Soja' },
       ],
     },
   },

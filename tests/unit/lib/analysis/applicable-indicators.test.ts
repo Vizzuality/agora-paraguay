@@ -43,7 +43,7 @@ describe('applicableIndicators', () => {
     const soyAnswered = [parcel('A', { pro_soja: 3.5, Pro_arroz: 4.1, Vol_arroz: 'Alta' })];
 
     expect(
-      applicableIndicators(indicators, soyAnswered, ['A'], 'productivo', 'soy')?.map((i) => i.id),
+      applicableIndicators(indicators, soyAnswered, ['A'], 'productivo', 'soja')?.map((i) => i.id),
     ).toEqual(['Pro_soja', 'IEP']);
     expect(
       applicableIndicators(indicators, soyAnswered, ['A'], 'productivo', 'rice')?.map((i) => i.id),

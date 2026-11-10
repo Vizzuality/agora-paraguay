@@ -11,7 +11,7 @@ const filters: Filters = [
       type: 'category',
       options: [
         { value: 'rice', label: 'Arroz' },
-        { value: 'soy', label: 'Soja' },
+        { value: 'soja', label: 'Soja' },
       ],
     },
   },
@@ -27,7 +27,7 @@ describe('describeWithFilters', () => {
     expect(
       describeWithFilters(text, filters, {
         date: '2026-09-17',
-        crop_type: 'soy',
+        crop_type: 'soja',
         sowing_date: '2026-05-01',
       }),
     ).toBe(

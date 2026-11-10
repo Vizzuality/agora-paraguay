@@ -15,7 +15,7 @@ import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
  */
 
 /** The crop filter's values (`crop_type` options) → the suffix the indicator ids carry. */
-const CROP_SUFFIX: Record<string, string> = { soy: 'soja', rice: 'arroz' };
+const CROP_SUFFIX: Record<string, string> = { soja: 'soja', rice: 'arroz' };
 
 /** The crop an indicator id is bound to (`_soja`, `_arroz`), or `null` for one that applies to all. */
 export function cropOfIndicator(indicator: Indicator): string | null {

@@ -127,7 +127,7 @@ Productivo-only rules:
 - **Applicability by crop** (`applicableIndicators`, marked `TODO(api-filters)`). The list
   carries every crop's indicators (`Pro_soja`, `Pro_arroz`, …) and the analysis answers them all.
   An indicator whose id ends in `_soja` / `_arroz` shows only for that crop (hero `crop_type`
-  `soy` → `soja`, `rice` → `arroz`). An indicator the answer carries but every submitted parcel
+  `soja` → `soja`, `rice` → `arroz`). An indicator the answer carries but every submitted parcel
   reads as no reading is out too. One the answer does not carry at all stays. Sanitario's list
   is left as is. Remove once the API filters by crop itself.
 - **Scale shared across scopes.** The number card (one parcel) and the histogram (Todas) draw
