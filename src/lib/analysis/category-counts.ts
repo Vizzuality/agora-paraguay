@@ -2,8 +2,8 @@ import { isAreaIndicator } from '@/lib/analysis/area';
 import { categoryIndex, rangeClassIndex } from '@/lib/analysis/indicator-cards';
 import { hasColumn, numberOf, readingOf } from '@/lib/analysis/readings';
 import {
+  indicatorClasses,
   categoryAxis,
-  categoryClasses,
   NA_CATEGORY,
   RANGE_CLASSES,
   widgetFor,
@@ -55,7 +55,7 @@ function countingFor(indicator: Indicator): Counting | undefined {
       const axis = categoryAxis(type.categories);
 
       return {
-        classes: categoryClasses(type.categories),
+        classes: indicatorClasses(indicator.id, type.categories),
         classOf: (parcel) => {
           const value = readingOf(parcel, indicator.id);
           const index = value === undefined ? undefined : categoryIndex(value, type.categories);
