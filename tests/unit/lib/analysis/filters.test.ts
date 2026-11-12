@@ -142,10 +142,10 @@ describe('orderHeroFilters', () => {
     field_type: { type: 'category', options: [] },
   };
 
-  it('puts the date first, the sowing date second and the crop last, whatever the API order', () => {
-    expect(orderHeroFilters([crop, sowing, date]).map((f) => f.id)).toEqual([
-      'date',
+  it('puts the sowing date first, the date second and the crop last, whatever the API order', () => {
+    expect(orderHeroFilters([crop, date, sowing]).map((f) => f.id)).toEqual([
       'sowing_date',
+      'date',
       'crop_type',
     ]);
   });
