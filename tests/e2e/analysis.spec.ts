@@ -25,13 +25,20 @@ const FIRST_POLYGON = [
 /** MapLibre's default `fitBounds` ease, with slack: clicks mid-flight hit the wrong spot. */
 const FIT_ANIMATION = 800;
 
-/** Today as the hero's date inputs write it — the default of a date filter the API leaves blank. */
-const TODAY = (() => {
+/** A local calendar day as the hero's date inputs write it, `offset` days from today. */
+function isoDay(offset = 0): string {
   const now = new Date();
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
   const pad = (part: number) => String(part).padStart(2, '0');
 
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-})();
+  return `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
+}
+
+const TODAY = isoDay();
+
+/** The hero's date defaults: yesterday, and 1 October 2026 for sowing while that is earlier. */
+const DEFAULT_DATE = isoDay(-1);
+const DEFAULT_SOWING_DATE = '2026-10-01' < DEFAULT_DATE ? '2026-10-01' : isoDay(-2);
 
 function controls(page: Page) {
   return {
@@ -142,10 +149,12 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(cultivo).toBeEnabled();
   await expect(cultivo).toHaveText('Soja');
   await expect(page.getByRole('combobox')).toHaveCount(1);
-  // No sowing default: today, after the default date, moves to the day before it.
-  await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-09-16');
-  await expect(page.getByLabel('Fecha de siembra')).toHaveAttribute('max', '2026-09-16');
-  await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
+  // Our defaults, not the API's: 1 October for sowing, yesterday for the date.
+  await expect(page.getByLabel('Fecha de siembra')).toHaveValue(DEFAULT_SOWING_DATE);
+  await expect(page.getByLabel('Fecha de siembra')).toHaveAttribute('min', '2024-09-01');
+  await expect(page.getByLabel('Fecha de siembra')).toHaveAttribute('max', isoDay(-2));
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue(DEFAULT_DATE);
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveAttribute('max', TODAY);
   // With no crop picked yet, the filters are asked for soy.
   expect(filtersRequests).toBe(1);
   expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soja']);
@@ -158,9 +167,13 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soja']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
-  // default crop, the day before the date as the sowing date and the default indicators.
+  // default crop, the default dates and the default indicators.
   await expect.poll(() => analysisBodies.length).toBe(1);
-  expect(analysisBodies[0]).toMatchObject({ crop_type: 'soja', sowing_date: '2026-09-16' });
+  expect(analysisBodies[0]).toMatchObject({
+    crop_type: 'soja',
+    sowing_date: DEFAULT_SOWING_DATE,
+    date: DEFAULT_DATE,
+  });
   expect(analysisBodies[0].indicators).toContain('asian_rust');
 
   // Typing a sowing date re-runs it with that date.
@@ -493,7 +506,7 @@ test('opens the metadata description from the info icon on hero fields and cards
   await rustInfo.focus();
   await page.keyboard.press('Enter');
   await expect(popover).toContainText('Enfermedad favorecida por humedad elevada');
-  await expect(popover).toContainText('previas a 17/09/2026.');
+  await expect(popover).toContainText(`previas a ${DEFAULT_DATE.split('-').reverse().join('/')}.`);
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
 });

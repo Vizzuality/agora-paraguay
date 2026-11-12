@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  dateBounds,
   dayBefore,
+  DEFAULT_SOWING_DATE,
   EMPTY_ANALYSIS_FILTERS,
   heroFieldSpansRow,
   orderHeroFilters,
+  MIN_ANALYSIS_DATE,
   resolveFilterSelection,
   todayIso,
 } from '@/lib/analysis/filters';
@@ -28,46 +31,67 @@ const FILTERS: Filters = [
 ];
 
 describe('resolveFilterSelection', () => {
-  it('defaults the crop to soy and a date to the API default', () => {
-    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toMatchObject({
+  // Today is 2026-11-12, so the date defaults to 2026-11-11.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 12, 12));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('defaults the crop to soy, the sowing date to 1 October and the date to yesterday', () => {
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toEqual({
       crop_type: 'soja',
-      date: '2026-09-17',
+      sowing_date: DEFAULT_SOWING_DATE,
+      date: '2026-11-11',
     });
   });
 
-  it("moves today's sowing date to the day before a default date that is earlier", () => {
-    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS).sowing_date).toBe('2026-09-16');
-  });
-
-  it('moves a sowing date on the date to the day before', () => {
+  it("ignores the API's defaults for the sowing date and the date", () => {
     const filters: Filters = [
-      { id: 'sowing_date', name: 'Fecha de siembra', field_type: { type: 'date' } },
-      { id: 'date', name: 'Fecha', field_type: { type: 'date' } },
+      {
+        id: 'sowing_date',
+        name: 'Fecha de siembra',
+        field_type: { type: 'date', default: '2026-06-18' },
+      },
+      { id: 'date', name: 'Fecha', field_type: { type: 'date', default: '2026-09-17' } },
     ];
 
     expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({
-      sowing_date: dayBefore(todayIso()),
-      date: todayIso(),
+      sowing_date: DEFAULT_SOWING_DATE,
+      date: '2026-11-11',
     });
   });
 
-  it('moves a typed sowing date after the date to the day before', () => {
-    expect(resolveFilterSelection({ sowing_date: '2026-10-01' }, FILTERS).sowing_date).toBe(
-      '2026-09-16',
-    );
+  it('keeps the API default, else today, for any other date', () => {
+    const filters: Filters = [
+      { id: 'when', name: 'Cuándo', field_type: { type: 'date', default: '2026-05-01' } },
+      { id: 'until', name: 'Hasta', field_type: { type: 'date' } },
+    ];
+
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({
+      when: '2026-05-01',
+      until: '2026-11-12',
+    });
   });
 
-  it('keeps a sowing date before the date as it is', () => {
+  it('moves a date before 1 September 2024 up to it, and one after today down to today', () => {
     expect(
-      resolveFilterSelection({ sowing_date: '2026-09-16', date: '2026-09-17' }, FILTERS)
+      resolveFilterSelection({ sowing_date: '2024-01-15', date: '2027-01-01' }, FILTERS),
+    ).toMatchObject({ sowing_date: MIN_ANALYSIS_DATE, date: '2026-11-12' });
+  });
+
+  it('moves a sowing date on or after the date to the day before', () => {
+    expect(resolveFilterSelection({ date: '2026-09-17' }, FILTERS).sowing_date).toBe('2026-09-16');
+    expect(
+      resolveFilterSelection({ sowing_date: '2026-09-17', date: '2026-09-17' }, FILTERS)
         .sowing_date,
     ).toBe('2026-09-16');
   });
 
-  it('keeps a category pick the options still offer, and a typed date', () => {
+  it('keeps a typed sowing date before the date as it is', () => {
     expect(
-      resolveFilterSelection({ crop_type: 'soja', sowing_date: '2026-05-01' }, FILTERS),
-    ).toEqual({ crop_type: 'soja', sowing_date: '2026-05-01', date: '2026-09-17' });
+      resolveFilterSelection({ sowing_date: '2026-05-01', date: '2026-09-17' }, FILTERS),
+    ).toMatchObject({ sowing_date: '2026-05-01', date: '2026-09-17' });
   });
 
   it('falls back when a category pick is no longer among the options', () => {
@@ -78,13 +102,12 @@ describe('resolveFilterSelection', () => {
     expect(resolveFilterSelection({ cultivo: 'soja' }, FILTERS)).not.toHaveProperty('cultivo');
   });
 
-  it('leaves out a category with no options; a date without default or pick is today', () => {
+  it('leaves out a category with no options', () => {
     const filters: Filters = [
       { id: 'empty', name: 'Vacío', field_type: { type: 'category', options: [] } },
-      { id: 'when', name: 'Cuándo', field_type: { type: 'date' } },
     ];
 
-    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({ when: todayIso() });
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({});
   });
 
   it('drops a date the user cleared back to empty', () => {
@@ -93,6 +116,28 @@ describe('resolveFilterSelection', () => {
 
   it('gives an empty response an empty selection', () => {
     expect(resolveFilterSelection({ crop_type: 'soja' }, [])).toEqual({});
+  });
+});
+
+describe('dateBounds', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 12, 12));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('offers the date from 1 September 2024 to today', () => {
+    expect(dateBounds('date', { date: '2026-11-11' })).toEqual({
+      min: MIN_ANALYSIS_DATE,
+      max: '2026-11-12',
+    });
+  });
+
+  it('offers the sowing date up to the day before the date', () => {
+    expect(dateBounds('sowing_date', { date: '2026-11-11' })).toEqual({
+      min: MIN_ANALYSIS_DATE,
+      max: '2026-11-10',
+    });
   });
 });
 

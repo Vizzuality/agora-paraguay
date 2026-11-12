@@ -60,14 +60,46 @@ export function dayBefore(iso: string): string {
   return todayIso(new Date(year, month - 1, day - 1));
 }
 
+/** The earliest day any date field accepts: the first with analysis data. */
+export const MIN_ANALYSIS_DATE = '2024-09-01';
+
+/** The standard sowing date for both crops in Paraguay. */
+export const DEFAULT_SOWING_DATE = '2026-10-01';
+
+/** A date field's default, ours over the API's: the analysis needs the last 72 h observed. */
+function dateDefault(filterId: string, apiDefault: string | null | undefined): string {
+  if (filterId === SOWING_DATE_FILTER_ID) return DEFAULT_SOWING_DATE;
+  if (filterId === DATE_FILTER_ID) return dayBefore(todayIso());
+
+  return apiDefault ?? todayIso();
+}
+
+/** `iso` moved into the range every date field accepts, `MIN_ANALYSIS_DATE` to today. */
+function withinRange(iso: string): string {
+  const today = todayIso();
+
+  if (iso < MIN_ANALYSIS_DATE) return MIN_ANALYSIS_DATE;
+
+  return iso > today ? today : iso;
+}
+
+/** The days a date field offers: from `MIN_ANALYSIS_DATE`, the sowing date up to the day before the date. */
+export function dateBounds(
+  filterId: string,
+  resolved: Record<string, string>,
+): { min: string; max: string } {
+  const date = resolved[DATE_FILTER_ID];
+  const max = filterId === SOWING_DATE_FILTER_ID && date ? dayBefore(date) : todayIso();
+
+  return { min: MIN_ANALYSIS_DATE, max };
+}
+
 /**
  * Every filter resolved to what the hero displays and Analizar sends. A category keeps a
- * pick still among its options, else takes the first one — the crop takes `DEFAULT_CROP`
- * when offered, so the hero shows the crop the filters were first asked for; a date keeps whatever was typed,
- * else the API's default, else today — so every date always has a value and the analysis
- * never waits on one. A sowing date on or after the date moves to the day before it, since
- * the backend rejects that pair. A category with no options is left out, so the request
- * omits it. Runs on every render against whatever the query returned.
+ * pick still among its options, else takes the first one (the crop `DEFAULT_CROP` when
+ * offered). A date keeps whatever was typed, else its default (`dateDefault`), moved into
+ * the accepted range; then a sowing date on or after the date moves to the day before it.
+ * A category with no options is left out, so the request omits it.
  */
 export function resolveFilterSelection(
   selected: AnalysisFilterSelection,
@@ -91,9 +123,9 @@ export function resolveFilterSelection(
         break;
       }
       case 'date': {
-        const value = pick ?? field.default ?? todayIso();
+        const value = pick ?? dateDefault(filter.id, field.default);
 
-        if (value !== '') resolved[filter.id] = value;
+        if (value !== '') resolved[filter.id] = withinRange(value);
         break;
       }
     }
