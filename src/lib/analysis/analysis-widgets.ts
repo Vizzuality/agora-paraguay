@@ -1,6 +1,11 @@
 import { categoryCountWidgets, type CategoryCountWidget } from '@/lib/analysis/category-counts';
 import { indicatorCards, type IndicatorCard } from '@/lib/analysis/indicator-cards';
 import { numberWidgets, type NumberWidget } from '@/lib/analysis/number-widget';
+import {
+  projectionCrop,
+  projectionWidgets,
+  type ProjectionWidget,
+} from '@/lib/analysis/projection';
 import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
 import type { ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
@@ -10,7 +15,8 @@ export type AnalysisWidget =
   | ({ kind: 'ruler' } & IndicatorCard)
   | ({ kind: 'bar-chart' } & CategoryCountWidget)
   | ({ kind: 'histogram' } & ValueHistogramWidget)
-  | ({ kind: 'number' } & NumberWidget);
+  | ({ kind: 'number' } & NumberWidget)
+  | ({ kind: 'projection' } & ProjectionWidget);
 
 export type AnalysisWidgetsInput = {
   /** The answer's parcels, matched by id — the backend need not echo them in request order. */
@@ -65,7 +71,27 @@ export function analysisWidgets({
     ]),
   );
 
+  // Productivo's scenarios read together as one chart per crop, where the first of them sits.
+  const projections = new Map(
+    (riesgo === 'productivo'
+      ? projectionWidgets(parcels, parcelIds, indicators, scope, parcel)
+      : []
+    ).map((widget) => [widget.id, widget]),
+  );
+  const placed = new Set<string>();
+
   return (indicators ?? []).flatMap((indicator): AnalysisWidget[] => {
+    const crop = riesgo === 'productivo' ? projectionCrop(indicator.id) : null;
+
+    if (crop !== null) {
+      const projection = projections.get(`projection_${crop}`);
+
+      if (!projection || placed.has(projection.id)) return [];
+      placed.add(projection.id);
+
+      return [{ kind: 'projection', ...projection }];
+    }
+
     const card = cards.get(indicator.id);
     if (card) return [{ kind: 'ruler', ...card }];
 

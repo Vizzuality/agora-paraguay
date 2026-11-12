@@ -814,6 +814,22 @@ test('logs in from the header dialog', async ({ page }) => {
     .locator('..')
     .locator('..');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
+  // The six projection indicators read as one chart: from the base to each horizon, the
+  // band from P10 of the pessimist values to P90 of the optimist ones, the mean central.
+  const projection = page
+    .getByRole('heading', {
+      name: 'Producción proyectada a escenario pesimista, central y optimista',
+    })
+    .locator('..')
+    .locator('..');
+  await expect(projection.getByRole('listitem')).toHaveText([
+    'Base histórica: central 3,68 t/ha, pesimista 3,58 t/ha, optimista 3,78 t/ha',
+    'Horizonte 5 años: central 3,55 t/ha, pesimista 2,92 t/ha, optimista 4,17 t/ha',
+    'Horizonte 10 años: central 3,35 t/ha, pesimista 2,52 t/ha, optimista 4,27 t/ha',
+  ]);
+  await expect(
+    page.getByRole('heading', { name: /^Producción proyectada (LOW|MID|HIGH)/ }),
+  ).toHaveCount(0);
 
   // A parcel tab narrows the widgets to that parcel: its number as the number card's figure
   // (the "Numerical individual" design) — the range on its own 0–8 scale — its class on
@@ -824,6 +840,12 @@ test('logs in from the header dialog', async ({ page }) => {
   await expect(seasons.locator('[data-slot="figure"]')).toHaveText('3');
   await expect(seasons.getByText('8', { exact: true })).toBeVisible();
   await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  // On the tab the chart reads the parcel's own scenarios; its base is one value.
+  await expect(projection.getByRole('listitem')).toHaveText([
+    'Base histórica: central 3,81 t/ha, pesimista 3,81 t/ha, optimista 3,81 t/ha',
+    'Horizonte 5 años: central 3,7 t/ha, pesimista 3,1 t/ha, optimista 4,2 t/ha',
+    'Horizonte 10 años: central 3,5 t/ha, pesimista 2,7 t/ha, optimista 4,3 t/ha',
+  ]);
   await parcelTabs.filter({ hasText: 'Todas' }).getByRole('button').click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 
