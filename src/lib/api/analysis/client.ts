@@ -12,6 +12,7 @@ import {
   type AnalysisVisibility,
   type SummaryRequest,
   type SummaryResponse,
+  withRequestedParcelIds,
 } from './schemas';
 
 /**
@@ -23,8 +24,9 @@ export async function runAnalysis(
   request: AnalysisRequest,
 ): Promise<AnalysisResponse> {
   const parsed = analysisRequestSchema.parse(request);
+  const raw = await postJson(analysisPath(visibility), parsed);
 
-  return analysisResponseSchema.parse(await postJson(analysisPath(visibility), parsed));
+  return analysisResponseSchema.parse(withRequestedParcelIds(raw, request.parcels));
 }
 
 /** POSTs the selected parcels and gets back the LLM-written summary of their analysis, as Markdown. */

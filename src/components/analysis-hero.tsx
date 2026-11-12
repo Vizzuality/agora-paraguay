@@ -29,7 +29,13 @@ import {
 } from '@/components/ui/select';
 import { formatArea, parcelArea } from '@/lib/analysis/area';
 import { describeWithFilters } from '@/lib/analysis/describe';
-import { heroFieldSpansRow, orderHeroFilters } from '@/lib/analysis/filters';
+import {
+  DATE_FILTER_ID,
+  dayBefore,
+  heroFieldSpansRow,
+  orderHeroFilters,
+  SOWING_DATE_FILTER_ID,
+} from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import {
   nextScrollLeft,
@@ -119,6 +125,11 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
               filter.description && describeWithFilters(filter.description, filters, resolved)
             }
             value={resolved[filter.id] ?? ''}
+            max={
+              filter.id === SOWING_DATE_FILTER_ID && resolved[DATE_FILTER_ID]
+                ? dayBefore(resolved[DATE_FILTER_ID])
+                : undefined
+            }
             onChange={(value) => setFilter({ id: filter.id, value })}
             className={heroFieldSpansRow(index, ordered.length) ? 'md:col-span-2' : undefined}
           />
@@ -150,6 +161,7 @@ function HeroField({
   filter,
   description,
   value,
+  max,
   onChange,
   className,
 }: Readonly<{
@@ -157,6 +169,8 @@ function HeroField({
   /** `filter.description` with its filter references resolved (`describeWithFilters`). */
   description?: string;
   value: string;
+  /** The latest day a date field offers. */
+  max?: string;
   onChange: (value: string) => void;
   className?: string;
 }>) {
@@ -180,6 +194,7 @@ function HeroField({
           label={filter.name}
           description={description}
           value={value}
+          max={max}
           onChange={onChange}
           className={className}
         />
@@ -195,12 +210,14 @@ function HeroDate({
   label,
   description,
   value,
+  max,
   onChange,
   className,
 }: Readonly<{
   label: string;
   description?: string;
   value: string;
+  max?: string;
   onChange: (value: string) => void;
   className?: string;
 }>) {
@@ -212,6 +229,7 @@ function HeroDate({
         id={id}
         type="date"
         value={value}
+        max={max}
         onChange={(event) => onChange(event.target.value)}
         className={cn(FLOATING_FIELD_CLASS, 'border')}
       />
