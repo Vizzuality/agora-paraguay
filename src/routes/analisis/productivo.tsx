@@ -57,7 +57,7 @@ function ProductivoWidgets() {
   return (
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
-      <WidgetGrid>
+      <WidgetGrid busy={analysis.isPlaceholderData}>
         {widgets.map((widget) => (
           <AnalysisWidgetCard key={widget.id} widget={widget} />
         ))}

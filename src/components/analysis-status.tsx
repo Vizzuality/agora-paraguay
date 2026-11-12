@@ -1,3 +1,4 @@
+import { Spinner } from '@/components/ui/spinner';
 import type { useAnalysis } from '@/lib/analysis/use-analysis';
 import { errorReason } from '@/lib/api/http';
 
@@ -5,8 +6,8 @@ type AnalysisStatusProps = Pick<ReturnType<typeof useAnalysis>, 'analysis' | 'in
 
 /**
  * What both analysis pages say above their widgets: the indicator list failing, the
- * analysis failing, and the first run in flight. Nothing when all is well. Alerts for
- * failures, a polite live region for the wait.
+ * analysis failing, and a run in flight: the first one, or a re-run while the previous
+ * cards stay. Nothing when all is well. Alerts for failures, a live region for the wait.
  */
 export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisStatusProps>) {
   return (
@@ -21,10 +22,11 @@ export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisS
           El análisis falló: {errorReason(analysis.error)}
         </p>
       )}
-      {analysis.isFetching && !analysis.data && (
-        <p aria-live="polite" className="text-sm text-muted-foreground">
-          Analizando…
-        </p>
+      {analysis.isFetching && (
+        <output className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Spinner />
+          {analysis.data ? 'Actualizando análisis…' : 'Analizando…'}
+        </output>
       )}
     </>
   );

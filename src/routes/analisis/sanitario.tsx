@@ -47,7 +47,7 @@ function SanitarioWidgets() {
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
       {info.length > 0 && <GeneralInfoCard items={info} />}
-      <WidgetGrid>
+      <WidgetGrid busy={analysis.isPlaceholderData}>
         {widgets.map((widget) => (
           <AnalysisWidgetCard key={widget.id} widget={widget} />
         ))}
