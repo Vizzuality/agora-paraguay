@@ -38,7 +38,6 @@ export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }
     <dl className="columns-[172px] gap-8">
       {items.map((item) => (
         <div key={item.id} className="mb-4 flex break-inside-avoid flex-col gap-1">
-          {/* The tip sits top right, level with the label's first line however it wraps. */}
           <dt className="flex items-start justify-between gap-2 text-sm text-muted-foreground">
             {item.label}
             <InfoTip
