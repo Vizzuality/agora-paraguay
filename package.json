@@ -65,7 +65,7 @@
     "@types/shpjs": "3.4.7",
     "@vitejs/plugin-react": "6.3.0",
     "@vitest/coverage-v8": "5.1.0",
-    "knip": "6.44.1",
+    "knip": "6.44.2",
     "oxfmt": "0.77.0",
     "oxlint": "1.92.0",
     "tailwindcss": "4.3.3",
