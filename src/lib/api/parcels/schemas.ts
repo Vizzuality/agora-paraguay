@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { Crop } from '@/lib/api/metadata/schemas';
 import { polygonName, type DrawnPolygon } from '@/lib/map/draw-features';
 
 /*
@@ -95,6 +96,15 @@ export function toFilterParcelsRequest(
  * geometry in a FeatureCollection — modelled as given, loose on the feature so the
  * backend can add properties without breaking the parse.
  */
+/** A crop name as the cadastre writes it (`Soja`, `Arroz`), as a crop value; `null` if unknown. */
+export function toCrop(name: string | null | undefined): Crop | null {
+  const normalized = name?.trim().toLowerCase();
+  if (normalized === 'soja') return 'soja';
+  if (normalized === 'arroz' || normalized === 'rice') return 'rice';
+
+  return null;
+}
+
 const filteredParcelSchema = z.object({
   /** The cadastral code (`D07D21P00000002`), as the backend answers it. */
   parcel_id: z.string().min(1),
@@ -103,6 +113,8 @@ const filteredParcelSchema = z.object({
     features: z.array(z.looseObject({ type: z.literal('Feature'), geometry: arealGeometrySchema })),
   }),
   selected: z.boolean(),
+  /** The crop last grown on the parcel; `null` when the backend does not know it. */
+  last_crop_type: z.string().nullish().transform(toCrop),
 });
 
 export type FilteredParcel = z.infer<typeof filteredParcelSchema>;

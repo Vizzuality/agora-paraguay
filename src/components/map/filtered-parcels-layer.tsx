@@ -5,17 +5,30 @@ import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { ParcelNumbers } from '@/components/map/parcel-numbers';
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { DOT_PATTERN_ID } from '@/lib/map/dot-pattern';
+import { CROP_PATTERN_IDS } from '@/lib/map/crop-patterns';
 import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { drawPolygonsAtom } from '@/store/draw';
 import { toggledParcelIdsAtom } from '@/store/parcels';
 
 /** Selected parcels in the analysis yellow of `draw-styles.ts`, the rest traced in white. */
 const COLOR: ExpressionSpecification = ['case', ['get', 'selected'], '#F1FF28', '#FFFFFF'];
-const FILL_OPACITY: ExpressionSpecification = ['case', ['get', 'selected'], 0.35, 0.05];
-const LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 2, 1];
-/** The analysis mini map is small and framed tight, so its outlines read a step heavier. */
-const ANALYSIS_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'], 3, 2];
+/** Yellow at half over the selection; a white veil on rice and unknown crops, none on soy. */
+const FILL_OPACITY: ExpressionSpecification = [
+  'case',
+  ['get', 'selected'],
+  0.5,
+  ['==', ['get', 'crop'], 'soja'],
+  0,
+  0.1,
+];
+const PATTERN: ExpressionSpecification = [
+  'match',
+  ['get', 'crop'],
+  'soja',
+  CROP_PATTERN_IDS.soja,
+  CROP_PATTERN_IDS.rice,
+];
+const PATTERN_OPACITY: ExpressionSpecification = ['case', ['get', 'selected'], 0.7, 0.5];
 
 /**
  * The parcels `filter-parcels` answers for the polygons on the map, after the user's
@@ -32,11 +45,7 @@ const ANALYSIS_LINE_WIDTH: ExpressionSpecification = ['case', ['get', 'selected'
  *   passes the analysed ids, so unselected neighbours do not follow into the hero.
  * - `highlightedIds`: which of those paint yellow. Default: the selection after the
  *   user's flips. The mini map passes the open tab's parcel.
- * - `variant`: how the parcels look. `default` is the main map: plain fills and thin
- *   outlines while the user is still picking parcels. `analysis` is the analysis map, which
- *   adds three things: a "Parcela N" chip over each parcel (`ParcelNumbers`), the
- *   design's dot texture over every fill, and outlines one step thicker so they read on
- *   a small map.
+ * - `variant`: `analysis` adds a number chip over each parcel (`ParcelNumbers`).
  * - `zoom`: the camera's zoom, which the analysis chips need to know when they overlap.
  *   The mini map feeds it after each finished move; chips wait for it.
  */
@@ -76,7 +85,11 @@ export function FilteredParcelsLayer({
     parcel.geometry.features.map((feature) => ({
       type: 'Feature' as const,
       geometry: feature.geometry,
-      properties: { parcel_id: parcel.parcel_id, selected: parcel.selected },
+      properties: {
+        parcel_id: parcel.parcel_id,
+        selected: parcel.selected,
+        ...(parcel.last_crop_type && { crop: parcel.last_crop_type }),
+      },
     })),
   );
 
@@ -90,24 +103,20 @@ export function FilteredParcelsLayer({
     <>
       <Source id="filtered-parcels" type="geojson" data={{ type: 'FeatureCollection', features }}>
         <Layer
+          id="filtered-parcels-pattern"
+          type="fill"
+          filter={['has', 'crop']}
+          paint={{ 'fill-pattern': PATTERN, 'fill-opacity': PATTERN_OPACITY }}
+        />
+        <Layer
           id="filtered-parcels-fill"
           type="fill"
           paint={{ 'fill-color': COLOR, 'fill-opacity': FILL_OPACITY }}
         />
-        {isAnalysis && (
-          <Layer
-            id="filtered-parcels-dots"
-            type="fill"
-            paint={{ 'fill-pattern': DOT_PATTERN_ID }}
-          />
-        )}
         <Layer
           id="filtered-parcels-outline"
           type="line"
-          paint={{
-            'line-color': COLOR,
-            'line-width': isAnalysis ? ANALYSIS_LINE_WIDTH : LINE_WIDTH,
-          }}
+          paint={{ 'line-color': COLOR, 'line-width': 2 }}
         />
       </Source>
       {isAnalysis && zoom !== undefined && (

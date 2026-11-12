@@ -11,11 +11,11 @@ import Map, {
 import { DevFocusBanner } from '@/components/map/dev-focus-banner';
 import { DrawLayer } from '@/components/map/draw-layer';
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
-import { ParcelPattern } from '@/components/map/parcel-pattern';
+import { ParcelLegend } from '@/components/map/parcel-legend';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
-import { BASEMAP_STYLE, MAX_BOUNDS } from '@/lib/map/basemap';
-import { addDotPattern } from '@/lib/map/dot-pattern';
+import { BASEMAP_STYLE, dimBasemap, MAX_BOUNDS } from '@/lib/map/basemap';
+import { addCropPatterns } from '@/lib/map/crop-patterns';
 import { INITIAL_VIEW_STATE, normalizeViewState } from '@/lib/map/view-state';
 import { drawAtom, redrawAfterRejectionAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
@@ -99,7 +99,8 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       maxBounds={MAX_BOUNDS}
       onLoad={(event) => {
         collapseAttribution(event.target);
-        addDotPattern(event.target);
+        dimBasemap(event.target);
+        addCropPatterns(event.target);
       }}
       onMoveEnd={handleMoveEnd}
       // A press after a rejected drawing starts the next one there (the atom checks for the
@@ -121,8 +122,8 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
        * leaving the drawing on top of the parcels it is meant to hide behind.
        */}
       {bound && <FilteredParcelsLayer />}
+      <ParcelLegend className="bottom-16 left-2.5" />
       <DrawLayer />
-      <ParcelPattern />
       {children}
     </Map>
   );

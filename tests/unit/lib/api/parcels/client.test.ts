@@ -38,6 +38,7 @@ const response = {
       parcel_id: 'D07D21P00000002',
       geometry: { type: 'FeatureCollection', features: [] },
       selected: true,
+      last_crop_type: 'soja',
     },
   ],
 };
