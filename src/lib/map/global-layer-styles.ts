@@ -32,9 +32,11 @@ export type GlobalLayerStyleOptions = {
   color: Color;
   /**
    * Replaces the default fill with the layer's own look. Without `outline` the layer is
-   * that fill alone, no lines or points.
+   * that fill alone, no lines or points, unless `lineWidth` traces it too.
    */
   fill?: FillPaint;
+  /** With `fill`: also trace every feature in `color` this wide, the highlighted one thicker. */
+  lineWidth?: number;
   /** Paint only this district's features, plus any that belong to no district. */
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
@@ -66,6 +68,7 @@ export function globalLayerStyles({
   id,
   color,
   fill,
+  lineWidth,
   districtId,
   highlightedId,
   outline = false,
@@ -112,14 +115,29 @@ export function globalLayerStyles({
   }
 
   if (fill) {
+    const fillLayer: GlobalLayerStyle = {
+      id: globalLayerFillId(id),
+      type: 'fill',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+      filter: inDistrict(['==', ['geometry-type'], 'Polygon']),
+      layout: { visibility },
+      paint: fillPaint(fill),
+    };
+
+    if (lineWidth === undefined) return [fillLayer];
+
     return [
+      fillLayer,
       {
-        id: globalLayerFillId(id),
-        type: 'fill',
+        id: `${source}-line`,
+        type: 'line',
         'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
-        filter: inDistrict(['==', ['geometry-type'], 'Polygon']),
-        layout: { visibility },
-        paint: fillPaint(fill),
+        filter: inDistrict(['!=', ['geometry-type'], 'Point']),
+        layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
+        paint: {
+          'line-color': color,
+          'line-width': ['case', isHighlighted, lineWidth + 1, lineWidth],
+        },
       },
     ];
   }

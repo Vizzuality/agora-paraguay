@@ -9,8 +9,12 @@ import { useIndicators } from '@/lib/analysis/use-indicators';
 import type { RiskTone } from '@/lib/analysis/widget-config';
 import {
   districtFromProperties,
+  EXPOSURE_FILL_OPACITY,
+  EXPOSURE_LINE_WIDTH,
   exposureClasses,
+  exposureFill,
   exposureLabel,
+  exposureOutline,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
@@ -23,7 +27,10 @@ import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
 export type ExposureMapView = 'exposicion' | 'capas';
 
-/** The districts layer, on both tabs: faint edges, the pick traced over them. */
+/**
+ * The districts layer: Nivel de exposición fills and traces each district in its class
+ * colour; Capas keeps faint edges and traces the pick over them.
+ */
 const EXPOSURE_LAYER = { id: 9 };
 
 /** The pick's outline, in the parcel outline's white. */
@@ -41,8 +48,9 @@ const TONE_SWATCH: Record<RiskTone, string> = {
 };
 
 /**
- * Exposición climática's layers for the panel map. Both tabs trace the districts layer
- * faintly; Nivel de exposición keys its classes, Capas adds the reference layers.
+ * Exposición climática's layers for the panel map. Nivel de exposición colours each
+ * district by its exposure class, with the legend; Capas traces the districts faintly
+ * under the reference layers.
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it, the camera flies to it, and Capas paints only its features. Clicking
  * it again clears the pick. The pick holds across both tabs: Capas traces its outline
@@ -110,12 +118,20 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
       />
       {exposure && hovered && <DistrictTooltip {...hovered} />}
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
-      {/* Mounted on both tabs, so a switch keeps it loaded. */}
+      {/* Mounted on both tabs, so a switch restyles it instead of reloading it. */}
       <GlobalLayer
         {...EXPOSURE_LAYER}
-        color={PICK_OUTLINE_COLOR}
-        fill={DISTRICTS_FILL}
-        outline
+        {...(exposure
+          ? {
+              color: exposureOutline(classes),
+              fill: {
+                color: exposureFill(classes),
+                opacity: EXPOSURE_FILL_OPACITY,
+                outlineColor: 'rgba(0, 0, 0, 0)',
+              },
+              lineWidth: EXPOSURE_LINE_WIDTH,
+            }
+          : { color: PICK_OUTLINE_COLOR, fill: DISTRICTS_FILL, outline: true })}
         highlightedId={selected?.id}
       />
       {capasOpened &&

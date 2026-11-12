@@ -5,6 +5,7 @@ import {
   exposureClasses,
   exposureFill,
   exposureLabel,
+  exposureOutline,
 } from '@/lib/map/exposure-districts';
 
 describe('districtFromProperties', () => {
@@ -66,15 +67,15 @@ describe('exposureClasses', () => {
     { id: 'Ex_class', indicator_type: { type: 'category' as const, categories } },
   ];
 
-  it("colours Ex_class's categories as the ruler does, Sin soja green first", () => {
+  it("colours Ex_class's five categories on exposure's scale: grey, blue, green, orange, red", () => {
     expect(
       exposureClasses(
         exClass(['Sin soja', 'Sin exposición identificada', 'Bajo', 'Medio', 'Alto']),
       ),
     ).toEqual([
-      { label: 'Sin soja', tone: 'none' },
+      { label: 'Sin soja', tone: 'medium' },
       { label: 'Sin exposición identificada', tone: 'low' },
-      { label: 'Bajo', tone: 'medium' },
+      { label: 'Bajo', tone: 'none' },
       { label: 'Medio', tone: 'elevated' },
       { label: 'Alto', tone: 'high' },
     ]);
@@ -90,17 +91,38 @@ describe('exposureClasses', () => {
   });
 });
 
-describe('exposureFill', () => {
-  it("matches each class's label to its tone's colour, grey for any other", () => {
-    expect(
-      exposureFill([
-        { label: 'Sin soja', tone: 'none' },
-        { label: 'Alto', tone: 'high' },
-      ]),
-    ).toEqual(['match', ['get', 'Ex_class'], 'Sin soja', '#1AF807', 'Alto', '#FF3838', '#96A3B5']);
+describe('exposureFill / exposureOutline', () => {
+  const classes = [
+    { label: 'Sin soja', tone: 'medium' as const },
+    { label: 'Alto', tone: 'high' as const },
+  ];
+
+  it("fills each class's label in its tone's deeper colour, grey for any other", () => {
+    expect(exposureFill(classes)).toEqual([
+      'match',
+      ['get', 'Ex_class'],
+      'Sin soja',
+      '#657690',
+      'Alto',
+      '#EC1919',
+      '#657690',
+    ]);
+  });
+
+  it("traces each class's label in its tone's bright colour, grey for any other", () => {
+    expect(exposureOutline(classes)).toEqual([
+      'match',
+      ['get', 'Ex_class'],
+      'Sin soja',
+      '#96A3B5',
+      'Alto',
+      '#FF3838',
+      '#96A3B5',
+    ]);
   });
 
   it('paints everything grey with no classes, since match needs a label', () => {
-    expect(exposureFill([])).toBe('#96A3B5');
+    expect(exposureFill([])).toBe('#657690');
+    expect(exposureOutline([])).toBe('#96A3B5');
   });
 });

@@ -71,9 +71,15 @@ export async function zoomToFarmScale(page: Page, target = 12): Promise<void> {
   return zoomToFarmScale(page, target);
 }
 
+/** The Capas basemap's style URL, stubbed with an empty style so its tiles are never asked. */
+export const CAPAS_STYLE_URL = 'https://styles.maptoolkit.org/summer.json';
+
 export async function stubBasemap(page: Page) {
   await page.route('https://server.arcgisonline.com/**', (route) =>
     route.fulfill({ contentType: 'image/png', body: BLANK_TILE }),
+  );
+  await page.route(CAPAS_STYLE_URL, (route) =>
+    route.fulfill({ json: { version: 8, sources: {}, layers: [] } }),
   );
 }
 

@@ -8,6 +8,7 @@ import {
   isShortRange,
   RANGE_CLASSES,
   widgetFor,
+  indicatorClasses,
 } from '@/lib/analysis/widget-config';
 import type { IndicatorType } from '@/lib/api/metadata/schemas';
 
@@ -177,5 +178,29 @@ describe('categoryAxis', () => {
       'Estable',
       'Alerta',
     ]);
+  });
+});
+
+describe('indicatorClasses', () => {
+  const exposure = ['Sin soja', 'Sin exposición identificada', 'Bajo', 'Medio', 'Alto'];
+
+  it("gives the exposure classification exposure's own scale, whatever the id's case", () => {
+    expect(indicatorClasses('Ex_class', exposure).map(({ tone }) => tone)).toEqual([
+      'medium',
+      'low',
+      'none',
+      'elevated',
+      'high',
+    ]);
+  });
+
+  it('keeps the shared scale for any other five-class indicator', () => {
+    expect(indicatorClasses('crop_phase', exposure)).toEqual(categoryClasses(exposure));
+  });
+
+  it('keeps the shared scale for the exposure classification with another class count', () => {
+    expect(indicatorClasses('ex_class', ['Bajo', 'Medio', 'Alto'])).toEqual(
+      categoryClasses(['Bajo', 'Medio', 'Alto']),
+    );
   });
 });
