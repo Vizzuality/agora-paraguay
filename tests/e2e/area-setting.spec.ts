@@ -82,3 +82,25 @@ test('Borrar mapa clears the drawing and disarms the tool', async ({ page }) => 
   );
   await expect(section).not.toContainText('Haga clic para comenzar el polígono');
 });
+
+test('once analysed, Cultivo y fechas holds the filters and names them closed', async ({
+  page,
+}) => {
+  const section = area(page);
+  const filters = page.getByRole('region', { name: 'Cultivo y fechas' });
+
+  // Nothing to filter before Analizar.
+  await expect(filters).toHaveCount(0);
+
+  await section.getByRole('button', { name: 'Dibujar polígono' }).click();
+  await drawPolygon(page, POLYGON);
+  await section.getByRole('button', { name: 'Analizar' }).click();
+
+  const heading = filters.getByRole('button', { name: /Cultivo y fechas/ });
+  await expect(heading).toContainText('Soja');
+
+  await heading.click();
+  await expect(filters.getByRole('combobox', { name: 'Tipo de cultivo' })).toHaveText('Soja');
+  // One section open at a time: the área closes.
+  await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
+});
