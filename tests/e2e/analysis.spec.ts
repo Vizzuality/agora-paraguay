@@ -141,7 +141,9 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(cultivo).toBeEnabled();
   await expect(cultivo).toHaveText('Soja');
   await expect(page.getByRole('combobox')).toHaveCount(1);
-  await expect(page.getByLabel('Fecha de siembra')).toHaveValue(TODAY);
+  // No sowing default: today, after the default date, moves to the day before it.
+  await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-09-16');
+  await expect(page.getByLabel('Fecha de siembra')).toHaveAttribute('max', '2026-09-16');
   await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-09-17');
   // With no crop picked yet, the filters are asked for soy.
   expect(filtersRequests).toBe(1);
@@ -155,9 +157,9 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soja']);
 
   // Every filter has a value, so the analysis runs at once — one POST, with the API's
-  // default crop, today as the sowing date and the default indicators.
+  // default crop, the day before the date as the sowing date and the default indicators.
   await expect.poll(() => analysisBodies.length).toBe(1);
-  expect(analysisBodies[0]).toMatchObject({ crop_type: 'soja', sowing_date: TODAY });
+  expect(analysisBodies[0]).toMatchObject({ crop_type: 'soja', sowing_date: '2026-09-16' });
   expect(analysisBodies[0].indicators).toContain('asian_rust');
 
   // Typing a sowing date re-runs it with that date.
