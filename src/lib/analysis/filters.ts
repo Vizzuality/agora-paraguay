@@ -99,12 +99,15 @@ export function resolveFilterSelection(
     }
   }
 
+  return withSowingBeforeDate(resolved);
+}
+
+/** Moves a sowing date on or after the date to the day before it; the backend rejects that pair. */
+function withSowingBeforeDate(resolved: Record<string, string>): Record<string, string> {
   const sowing = resolved[SOWING_DATE_FILTER_ID];
   const date = resolved[DATE_FILTER_ID];
 
-  if (sowing !== undefined && date !== undefined && sowing >= date) {
-    resolved[SOWING_DATE_FILTER_ID] = dayBefore(date);
-  }
+  if (sowing === undefined || date === undefined || sowing < date) return resolved;
 
-  return resolved;
+  return { ...resolved, [SOWING_DATE_FILTER_ID]: dayBefore(date) };
 }
