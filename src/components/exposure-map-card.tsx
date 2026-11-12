@@ -1,12 +1,10 @@
 import { ClientOnly } from '@tanstack/react-router';
 
 import { InfoTip } from '@/components/info-tip';
-import { BasemapSwitch } from '@/components/map/basemap-switch';
+import { CapasBasemap } from '@/components/map/capas-basemap';
 import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
-import { MapLoading } from '@/components/map/map-loading';
 import { PanelMap } from '@/components/map/panel-map';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useExposureBasemap } from '@/lib/map/use-exposure-basemap';
 
 const TRIGGER_CLASS =
   'h-auto flex-none rounded-none border-0 border-b-3 border-transparent px-0 py-2 font-normal text-accent-foreground after:hidden hover:text-primary data-[state=active]:border-primary data-[state=active]:text-primary dark:text-accent-foreground dark:data-[state=active]:border-primary dark:data-[state=active]:bg-transparent dark:data-[state=active]:text-primary';
@@ -20,8 +18,6 @@ export function ExposureMapCard({
   view,
   onViewChange,
 }: Readonly<{ view: ExposureMapView; onViewChange: (view: ExposureMapView) => void }>) {
-  const basemap = useExposureBasemap();
-
   return (
     <section
       aria-labelledby="mapa-exposicion"
@@ -54,14 +50,10 @@ export function ExposureMapCard({
 
       <div className="relative h-108 overflow-hidden rounded-md bg-muted">
         <ClientOnly>
-          {basemap ? (
-            <PanelMap mapStyle={basemap.style}>
-              <BasemapSwitch basemap={basemap} showOverlay={view === 'capas'} />
-              <ExposureLayers view={view} />
-            </PanelMap>
-          ) : (
-            <MapLoading>Cargando mapa…</MapLoading>
-          )}
+          <PanelMap>
+            <CapasBasemap showOverlay={view === 'capas'} />
+            <ExposureLayers view={view} />
+          </PanelMap>
         </ClientOnly>
       </div>
     </section>

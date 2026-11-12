@@ -1,4 +1,3 @@
-import type { StyleSpecification } from 'maplibre-gl';
 import type { ReactNode } from 'react';
 import Map, { AttributionControl } from 'react-map-gl/maplibre';
 
@@ -12,26 +11,16 @@ import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-export function PanelMap({
-  children,
-  mapStyle = BASEMAP_STYLE,
-}: Readonly<{ children: ReactNode; mapStyle?: string | StyleSpecification }>) {
+export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <Map
       initialViewState={PARAGUAY_VIEW_STATE}
-      mapStyle={mapStyle}
+      mapStyle={BASEMAP_STYLE}
       attributionControl={false}
       onLoad={(event) => {
-        const map = event.target;
-        // A style swap drops the dimming and the pattern image, so both follow every style.
-        const prepareStyle = () => {
-          dimBasemap(map);
-          addDotPattern(map);
-        };
-
-        collapseAttribution(map);
-        prepareStyle();
-        map.on('style.load', prepareStyle);
+        collapseAttribution(event.target);
+        dimBasemap(event.target);
+        addDotPattern(event.target);
       }}
       dragRotate={false}
       touchPitch={false}
