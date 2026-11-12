@@ -6,6 +6,7 @@ import {
   DEFAULT_SOWING_DATE,
   EMPTY_ANALYSIS_FILTERS,
   heroFieldSpansRow,
+  isoToDate,
   orderHeroFilters,
   MIN_ANALYSIS_DATE,
   resolveFilterSelection,
@@ -145,6 +146,13 @@ describe('dayBefore', () => {
   it('steps back across a month and a year', () => {
     expect(dayBefore('2026-03-01')).toBe('2026-02-28');
     expect(dayBefore('2026-01-01')).toBe('2025-12-31');
+  });
+});
+
+describe('isoToDate', () => {
+  it('reads an ISO day as local midnight, offset by whole days', () => {
+    expect(isoToDate('2024-09-01')).toEqual(new Date(2024, 8, 1));
+    expect(isoToDate('2026-01-01', -1)).toEqual(new Date(2025, 11, 31));
   });
 });
 
