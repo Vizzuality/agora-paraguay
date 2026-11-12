@@ -551,6 +551,38 @@ test('keeps the analysis across a reload', async ({ page }) => {
   await expect(card).toBeVisible();
 });
 
+// A filter change re-runs the analysis: the previous results stay, dimmed, under a notice.
+test('shows a loader while a filter change re-runs the analysis', async ({ page }) => {
+  let release: () => void = () => {};
+  let held = Promise.resolve();
+  await page.route('**/api/parcels/analysis/diseases/', async (route) => {
+    await held;
+    await route.fallback();
+  });
+
+  await analyzeFirstPolygon(page);
+
+  const status = page.getByRole('status').filter({ hasText: /Analizando|Actualizando/ });
+  const card = page.getByRole('heading', { name: 'Phakopsora pachyrhizi' });
+  await expect(card).toBeVisible();
+  await expect(status).toHaveCount(0);
+
+  held = new Promise<void>((resolve) => (release = resolve));
+  const cultivo = page.getByRole('combobox', { name: 'Tipo de cultivo' });
+  await cultivo.click();
+  await page.getByRole('option', { name: 'Arroz' }).click();
+
+  await expect(status).toHaveText('Actualizando análisis…');
+  // The previous results stay on screen, disabled: inert and greyed until the answer lands.
+  const busy = page.locator('[aria-busy="true"]');
+  await expect(busy).toHaveCount(1);
+  await expect(busy).toContainText('Phakopsora pachyrhizi');
+  await expect(busy.locator('[inert]')).toHaveCount(1);
+  release();
+  await expect(status).toHaveCount(0);
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+});
+
 test('opens a parcel tab from the list dropdown and from the mini map', async ({ page }) => {
   const { draw, analyze } = controls(page);
 

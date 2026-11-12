@@ -1,5 +1,6 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 
+import { AnalysisPanel } from '@/components/analysis-panel';
 import { AnalysisShell } from '@/components/analysis-shell';
 import { AnalysisSidebar } from '@/components/analysis-sidebar';
 import { AnalysisStatus } from '@/components/analysis-status';
@@ -46,12 +47,14 @@ function SanitarioWidgets() {
   return (
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
-      {info.length > 0 && <GeneralInfoCard items={info} />}
-      <WidgetGrid>
-        {widgets.map((widget) => (
-          <AnalysisWidgetCard key={widget.id} widget={widget} />
-        ))}
-      </WidgetGrid>
+      <AnalysisPanel busy={analysis.isPlaceholderData}>
+        {info.length > 0 && <GeneralInfoCard items={info} />}
+        <WidgetGrid>
+          {widgets.map((widget) => (
+            <AnalysisWidgetCard key={widget.id} widget={widget} />
+          ))}
+        </WidgetGrid>
+      </AnalysisPanel>
     </div>
   );
 }
