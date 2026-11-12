@@ -6,6 +6,7 @@ import {
   drawPolygon,
   FARM_SCALE_URL,
   mapCanvas,
+  CAPAS_STYLE_URL,
   stubBasemap,
   wheelZoomIn,
   yellowPixelCount,
@@ -263,8 +264,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
 
   // Exposición climática is a header tab only, a placeholder page for now.
+  const capasStyle = page.waitForRequest(CAPAS_STYLE_URL);
   await navbar.getByRole('link', { name: 'Exposición climática' }).click();
   await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
+  await capasStyle;
   await expect(page.getByRole('heading', { name: 'Exposición climática' })).toBeVisible();
   // The district panel holds across the map's tabs; Capas does not swap it out.
   await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
