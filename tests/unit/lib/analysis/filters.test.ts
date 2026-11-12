@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  dayBefore,
   EMPTY_ANALYSIS_FILTERS,
   heroFieldSpansRow,
   orderHeroFilters,
@@ -27,12 +28,40 @@ const FILTERS: Filters = [
 ];
 
 describe('resolveFilterSelection', () => {
-  it('defaults the crop to soy, a date to the API default, else to today', () => {
-    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toEqual({
+  it('defaults the crop to soy and a date to the API default', () => {
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS)).toMatchObject({
       crop_type: 'soja',
-      sowing_date: todayIso(),
       date: '2026-09-17',
     });
+  });
+
+  it("moves today's sowing date to the day before a default date that is earlier", () => {
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS).sowing_date).toBe('2026-09-16');
+  });
+
+  it('moves a sowing date on the date to the day before', () => {
+    const filters: Filters = [
+      { id: 'sowing_date', name: 'Fecha de siembra', field_type: { type: 'date' } },
+      { id: 'date', name: 'Fecha', field_type: { type: 'date' } },
+    ];
+
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, filters)).toEqual({
+      sowing_date: dayBefore(todayIso()),
+      date: todayIso(),
+    });
+  });
+
+  it('moves a typed sowing date after the date to the day before', () => {
+    expect(resolveFilterSelection({ sowing_date: '2026-10-01' }, FILTERS).sowing_date).toBe(
+      '2026-09-16',
+    );
+  });
+
+  it('keeps a sowing date before the date as it is', () => {
+    expect(
+      resolveFilterSelection({ sowing_date: '2026-09-16', date: '2026-09-17' }, FILTERS)
+        .sowing_date,
+    ).toBe('2026-09-16');
   });
 
   it('keeps a category pick the options still offer, and a typed date', () => {
@@ -64,6 +93,13 @@ describe('resolveFilterSelection', () => {
 
   it('gives an empty response an empty selection', () => {
     expect(resolveFilterSelection({ crop_type: 'soja' }, [])).toEqual({});
+  });
+});
+
+describe('dayBefore', () => {
+  it('steps back across a month and a year', () => {
+    expect(dayBefore('2026-03-01')).toBe('2026-02-28');
+    expect(dayBefore('2026-01-01')).toBe('2025-12-31');
   });
 });
 

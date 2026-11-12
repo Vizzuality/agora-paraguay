@@ -6,7 +6,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
-import { SECURITY_HEADERS } from './src/lib/security-headers';
+import { SECURITY_HEADERS } from './src/lib/security-headers.ts';
 
 export default defineConfig(({ mode }) => {
   /**

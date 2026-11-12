@@ -164,6 +164,29 @@ export const analysisResponseSchema = z.looseObject({
 
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
 
+/**
+ * The diseases answer does not echo `parcel_id`: its entries come back in the order the
+ * request listed the parcels, so a missing id is taken from that position. Only when the
+ * counts match, otherwise entries cannot be told apart and the parse fails on the missing
+ * id. An entry that carries its id keeps it.
+ */
+export function withRequestedParcelIds(raw: unknown, parcels: string[]): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+
+  const { indicators } = raw as { indicators?: unknown };
+
+  if (!Array.isArray(indicators) || indicators.length !== parcels.length) return raw;
+
+  return {
+    ...raw,
+    indicators: indicators.map((entry: unknown, index) =>
+      typeof entry === 'object' && entry !== null && !('parcel_id' in entry)
+        ? { ...entry, parcel_id: parcels[index] }
+        : entry,
+    ),
+  };
+}
+
 /*
  * The AI summary: `POST /api/parcels/analysis/summary/` writes a text over the selected
  * parcels with an LLM and answers it as Markdown, not JSON. Same CSRF and session rules

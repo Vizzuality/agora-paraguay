@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useEffect, useEffectEvent, useState, type CSSProperties } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 
 import { GlobalLayer } from '@/components/map/global-layer';
@@ -10,37 +10,24 @@ import type { RiskTone } from '@/lib/analysis/widget-config';
 import {
   districtFromProperties,
   exposureClasses,
-  exposureFill,
   exposureLabel,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
+import { DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
+import { cn } from '@/lib/utils';
 import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
 export type ExposureMapView = 'exposicion' | 'capas';
 
-/** The exposure layer Nivel de exposición paints, each district in its class colour. */
+/** The districts layer, on both tabs: faint edges, the pick traced over them. */
 const EXPOSURE_LAYER = { id: 9 };
 
-/** On Capas the exposure layer traces only the pick, in the parcel outline's white. */
+/** The pick's outline, in the parcel outline's white. */
 const PICK_OUTLINE_COLOR = '#FFFFFF';
-
-/** The Capas tab's global layers; 8 is where soy is grown. */
-// Mount order is paint order: the country-wide drought hazard first, soy on top.
-// Colours are the legend tokens' values (chart-3, chart-1, chart-5).
-const REFERENCE_LAYERS = [
-  { id: 6, color: '#FF871F', label: 'Expuesto a sequía', swatch: 'border-chart-3 bg-chart-3/50' },
-  {
-    id: 7,
-    color: '#4C95FF',
-    label: 'Expuesto a inundación',
-    swatch: 'border-chart-1 bg-chart-1/50',
-  },
-  { id: 8, color: '#1AF807', label: 'Soja', swatch: 'border-chart-5 bg-chart-5/50' },
-];
 
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
 
@@ -54,8 +41,8 @@ const TONE_SWATCH: Record<RiskTone, string> = {
 };
 
 /**
- * Exposición climática's layers for the panel map. Nivel de exposición paints the
- * exposure layer with its legend; Capas paints the reference layers, soy among them.
+ * Exposición climática's layers for the panel map. Both tabs trace the districts layer
+ * faintly; Nivel de exposición keys its classes, Capas adds the reference layers.
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it, the camera flies to it, and Capas paints only its features. Clicking
  * it again clears the pick. The pick holds across both tabs: Capas traces its outline
@@ -70,7 +57,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   // tens of MB, too much to load before anyone asks, too much to load twice.
   const [capasOpened, setCapasOpened] = useState(!exposure);
   if (!exposure && !capasOpened) setCapasOpened(true);
-  // The same classes and colours as the panel's exposure ruler.
+  // The legend's classes and colours, the same as the panel's exposure ruler.
   const classes = exposureClasses(useIndicators('exposicion_climatica').data);
 
   useFlyToDistrict(globalLayerSourceId(EXPOSURE_LAYER.id), selected?.id ?? null);
@@ -115,27 +102,31 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
                 label: exposureLabel(label),
                 swatch: TONE_SWATCH[tone],
               }))
-            : REFERENCE_LAYERS
+            : REFERENCE_LAYERS.map(({ label, swatch }) => ({
+                label,
+                style: { backgroundColor: swatch.fill, borderColor: swatch.edge },
+              }))
         }
       />
       {exposure && hovered && <DistrictTooltip {...hovered} />}
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
-      {/* Mounted on both tabs, so a switch restyles it instead of reloading it: the
-          classes on Nivel de exposición, only the pick's outline on Capas. */}
+      {/* Mounted on both tabs, so a switch keeps it loaded. */}
       <GlobalLayer
         {...EXPOSURE_LAYER}
-        color={exposure ? exposureFill(classes) : PICK_OUTLINE_COLOR}
-        outline={!exposure}
+        color={PICK_OUTLINE_COLOR}
+        fill={DISTRICTS_FILL}
+        outline
         highlightedId={selected?.id}
       />
       {capasOpened &&
-        REFERENCE_LAYERS.map(({ id, color }) => (
+        REFERENCE_LAYERS.map(({ id, fill }) => (
           // Mounted after the exposure layer, slotted under it so the pick's outline
           // stays on top: the one `beforeId`, on an id of ours that is always there.
           <GlobalLayer
             key={id}
             id={id}
-            color={color}
+            color={fill.color}
+            fill={fill}
             districtId={selected?.id}
             hidden={exposure}
             beforeId={EXPOSURE_FILL_ID}
@@ -196,12 +187,14 @@ function DistrictTooltip({ district, x, y }: Readonly<Hovered>) {
 }
 
 /** The open view's key, bottom left in dark glass: exposure classes, or the layers. */
-function MapLegend({ items }: Readonly<{ items: { label: string; swatch: string }[] }>) {
+function MapLegend({
+  items,
+}: Readonly<{ items: { label: string; swatch?: string; style?: CSSProperties }[] }>) {
   return (
     <ul className="absolute bottom-0 left-0 flex flex-col gap-1 bg-black/50 p-2 text-xs text-white backdrop-blur-xs">
-      {items.map(({ label, swatch }) => (
+      {items.map(({ label, swatch, style }) => (
         <li key={label} className="flex items-center gap-1">
-          <span aria-hidden className={`size-4 rounded-full border-2 ${swatch}`} />
+          <span aria-hidden className={cn('size-4 rounded-full border-2', swatch)} style={style} />
           {label}
         </li>
       ))}
