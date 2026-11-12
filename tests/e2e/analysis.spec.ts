@@ -503,7 +503,7 @@ test('opens the metadata description from the info icon on hero fields and cards
   await rustInfo.focus();
   await page.keyboard.press('Enter');
   await expect(popover).toContainText('Enfermedad favorecida por humedad elevada');
-  await expect(popover).toContainText('previas a 17/09/2026.');
+  await expect(popover).toContainText(`previas a ${DEFAULT_DATE.split('-').reverse().join('/')}.`);
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
 });
