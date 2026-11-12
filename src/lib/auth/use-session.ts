@@ -1,7 +1,7 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { authQueries } from '@/lib/api/auth/queries';
+import { authMutations, authQueries } from '@/lib/api/auth/queries';
 import type { Session } from '@/lib/api/auth/schemas';
 
 /**
@@ -37,4 +37,14 @@ export function useSessionActions() {
       },
     };
   }, [queryClient]);
+}
+
+/**
+ * Cerrar sesión. Success or failure, the client session ends: the cookie is HttpOnly,
+ * so nothing more is possible from here.
+ */
+export function useLogout() {
+  const { clear } = useSessionActions();
+
+  return useMutation({ ...authMutations.logout(), onSettled: clear });
 }
