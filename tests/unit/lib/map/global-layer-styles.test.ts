@@ -58,6 +58,42 @@ describe('globalLayerStyles', () => {
     ]);
   });
 
+  it("paints a layer's own fill alone, keeping the district filter", () => {
+    const fill = { color: '#6d8067', opacity: 0.9, outlineColor: '#000' };
+    const styles = globalLayerStyles({ id: 8, color: '#000', fill, districtId: '0101' });
+
+    expect(styles.map((style) => style.type)).toEqual(['fill']);
+    expect(styles[0].paint).toEqual({
+      'fill-color': '#6d8067',
+      'fill-opacity': 0.9,
+      'fill-outline-color': '#000',
+    });
+    expect(styles[0].filter).toEqual([
+      'all',
+      ['==', ['geometry-type'], 'Polygon'],
+      ['any', ['==', DISTRICT_KEY_EXPRESSION, ''], ['==', DISTRICT_KEY_EXPRESSION, '0101']],
+    ]);
+  });
+
+  it("keeps the pick's outline over a layer's own fill in outline mode", () => {
+    const fill = { color: 'rgba(0, 0, 0, 0)', opacity: 1, outlineColor: 'rgba(0, 0, 0, 0.2)' };
+    const [fillLayer, line] = globalLayerStyles({
+      id: 9,
+      color: '#fff',
+      fill,
+      outline: true,
+      highlightedId: '0101',
+    });
+
+    expect(fillLayer.paint).toMatchObject({ 'fill-outline-color': 'rgba(0, 0, 0, 0.2)' });
+    expect(line.paint).toMatchObject({ 'line-color': '#fff' });
+    expect(line.filter).toEqual([
+      'all',
+      ['!=', ['geometry-type'], 'Point'],
+      ['==', DISTRICT_KEY_EXPRESSION, '0101'],
+    ]);
+  });
+
   it('hides every layer when hidden, so the source stays loaded', () => {
     const shown = globalLayerStyles({ id: 8, color: '#000' });
     const hidden = globalLayerStyles({ id: 8, color: '#000', hidden: true });

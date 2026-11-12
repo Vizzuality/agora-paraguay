@@ -17,10 +17,24 @@ export type GlobalLayerStyle =
   | Omit<LineLayerSpecification, 'source'>
   | Omit<CircleLayerSpecification, 'source'>;
 
+type Color = string | ExpressionSpecification;
+
+/** A layer's own fill look: its areas only, edged by the fill's 1px outline. */
+export type FillPaint = {
+  color: Color;
+  opacity: number;
+  outlineColor: string;
+};
+
 export type GlobalLayerStyleOptions = {
   id: number;
   /** One colour, or an expression that picks one per feature. */
-  color: string | ExpressionSpecification;
+  color: Color;
+  /**
+   * Replaces the default fill with the layer's own look. Without `outline` the layer is
+   * that fill alone, no lines or points.
+   */
+  fill?: FillPaint;
   /** Paint only this district's features, plus any that belong to no district. */
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
@@ -51,6 +65,7 @@ export function globalLayerFillId(id: number): string {
 export function globalLayerStyles({
   id,
   color,
+  fill,
   districtId,
   highlightedId,
   outline = false,
@@ -83,7 +98,7 @@ export function globalLayerStyles({
         'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
         filter: ['==', ['geometry-type'], 'Polygon'],
         layout: { visibility },
-        paint: { 'fill-color': color, 'fill-opacity': 0 },
+        paint: fill ? fillPaint(fill) : { 'fill-color': color, 'fill-opacity': 0 },
       },
       {
         id: `${source}-line`,
@@ -92,6 +107,19 @@ export function globalLayerStyles({
         filter: ['all', ['!=', ['geometry-type'], 'Point'], isHighlighted],
         layout: { visibility },
         paint: { 'line-color': color, 'line-width': 2.5 },
+      },
+    ];
+  }
+
+  if (fill) {
+    return [
+      {
+        id: globalLayerFillId(id),
+        type: 'fill',
+        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+        filter: inDistrict(['==', ['geometry-type'], 'Polygon']),
+        layout: { visibility },
+        paint: fillPaint(fill),
       },
     ];
   }
@@ -129,4 +157,8 @@ export function globalLayerStyles({
       paint: { 'circle-color': color, 'circle-radius': 3 },
     },
   ];
+}
+
+function fillPaint({ color, opacity, outlineColor }: FillPaint): FillLayerSpecification['paint'] {
+  return { 'fill-color': color, 'fill-opacity': opacity, 'fill-outline-color': outlineColor };
 }
