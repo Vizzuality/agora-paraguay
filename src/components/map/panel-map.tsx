@@ -11,12 +11,6 @@ import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-/**
- * The satellite map inside a page's card, the same on every analysis page: the whole
- * country on a dimmed basemap, credits collapsed top right, the panel zoom bottom right,
- * no rotation or pitch. What it shows is its children: a page injects its layers, and
- * they bring their own camera moves and pointer events through `useMap`.
- */
 export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <Map

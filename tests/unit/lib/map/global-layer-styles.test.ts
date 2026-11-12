@@ -94,6 +94,25 @@ describe('globalLayerStyles', () => {
     ]);
   });
 
+  it("traces a layer's own fill in `color` when given a line width, the pick thicker", () => {
+    const fill = { color: '#e06900', opacity: 0.6, outlineColor: 'rgba(0, 0, 0, 0)' };
+    const styles = globalLayerStyles({
+      id: 9,
+      color: '#ff871f',
+      fill,
+      lineWidth: 2,
+      highlightedId: '0101',
+    });
+    const isHighlighted = ['==', DISTRICT_KEY_EXPRESSION, '0101'];
+
+    expect(styles.map((style) => style.type)).toEqual(['fill', 'line']);
+    expect(styles[0].paint).toMatchObject({ 'fill-color': '#e06900', 'fill-opacity': 0.6 });
+    expect(styles[1].paint).toEqual({
+      'line-color': '#ff871f',
+      'line-width': ['case', isHighlighted, 3, 2],
+    });
+  });
+
   it('hides every layer when hidden, so the source stays loaded', () => {
     const shown = globalLayerStyles({ id: 8, color: '#000' });
     const hidden = globalLayerStyles({ id: 8, color: '#000', hidden: true });

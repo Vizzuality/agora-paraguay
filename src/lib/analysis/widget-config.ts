@@ -171,6 +171,32 @@ export function categoryClasses(categories: readonly string[]): RiskClass[] {
   return axis.map((label, index) => ({ label, tone: tones[index] }));
 }
 
+/** The exposure classification, whose classes colour the exposure map and its ruler. */
+export const EXPOSURE_CLASS_INDICATOR = 'ex_class';
+
+/**
+ * Exposure's own five-class scale: "Sin soja" grey and "Sin exposición identificada" blue
+ * stand apart from the exposure levels, which run green, orange, red.
+ */
+const EXPOSURE_TONES: readonly RiskTone[] = ['medium', 'low', 'none', 'elevated', 'high'];
+
+/**
+ * An indicator's classes: `categoryClasses`, except the exposure classification when it
+ * lists its five classes, which takes exposure's own scale.
+ */
+export function indicatorClasses(indicatorId: string, categories: readonly string[]): RiskClass[] {
+  const axis = categoryAxis(categories);
+
+  if (
+    indicatorId.toLowerCase() === EXPOSURE_CLASS_INDICATOR &&
+    axis.length === EXPOSURE_TONES.length
+  ) {
+    return axis.map((label, index) => ({ label, tone: EXPOSURE_TONES[index] }));
+  }
+
+  return categoryClasses(categories);
+}
+
 /**
  * The class a 0–100 position falls in when the classes split the scale equally. A cut
  * point belongs to the class above it; out-of-range and unknown positions to the outer

@@ -1,6 +1,7 @@
 import { ClientOnly } from '@tanstack/react-router';
 
 import { InfoTip } from '@/components/info-tip';
+import { CapasBasemap } from '@/components/map/capas-basemap';
 import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
 import { PanelMap } from '@/components/map/panel-map';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -50,6 +51,7 @@ export function ExposureMapCard({
       <div className="relative h-108 overflow-hidden rounded-md bg-muted">
         <ClientOnly>
           <PanelMap>
+            <CapasBasemap showOverlay={view === 'capas'} />
             <ExposureLayers view={view} />
           </PanelMap>
         </ClientOnly>
