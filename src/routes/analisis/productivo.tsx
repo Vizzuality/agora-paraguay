@@ -1,6 +1,7 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 
+import { AnalysisPanel } from '@/components/analysis-panel';
 import { AnalysisShell } from '@/components/analysis-shell';
 import { AnalysisSidebar } from '@/components/analysis-sidebar';
 import { AnalysisStatus } from '@/components/analysis-status';
@@ -57,11 +58,13 @@ function ProductivoWidgets() {
   return (
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
-      <WidgetGrid>
-        {widgets.map((widget) => (
-          <AnalysisWidgetCard key={widget.id} widget={widget} />
-        ))}
-      </WidgetGrid>
+      <AnalysisPanel busy={analysis.isPlaceholderData}>
+        <WidgetGrid>
+          {widgets.map((widget) => (
+            <AnalysisWidgetCard key={widget.id} widget={widget} />
+          ))}
+        </WidgetGrid>
+      </AnalysisPanel>
     </div>
   );
 }
