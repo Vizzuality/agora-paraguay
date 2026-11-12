@@ -5,6 +5,7 @@ import {
   DEFAULT_FILTER_PARCELS_OPTIONS,
   filterParcelsRequestSchema,
   filterParcelsResponseSchema,
+  toCrop,
   toFilterParcelsRequest,
 } from '@/lib/api/parcels/schemas';
 import type { DrawnPolygon } from '@/lib/map/draw-features';
@@ -156,6 +157,17 @@ describe('filterParcelsResponseSchema', () => {
     expect(filterParcelsResponseSchema.safeParse(body).success).toBe(true);
   });
 
+  it("reads each parcel's last crop as a crop value, null when missing or unknown", () => {
+    const body = structuredClone(response) as { results: Record<string, unknown>[] };
+    body.results[0].last_crop_type = 'Arroz';
+    body.results[1].last_crop_type = 'Maíz';
+
+    const parsed = filterParcelsResponseSchema.parse(body);
+
+    expect(parsed.results.map((parcel) => parcel.last_crop_type)).toEqual(['rice', null]);
+    expect(filterParcelsResponseSchema.parse(response).results[0].last_crop_type).toBeNull();
+  });
+
   // Real answer for an area outside the cadastre: HTTP 200, `results: {}`.
   it('reads the `empty` answer, whose results are an object, as no parcels', () => {
     const parsed = filterParcelsResponseSchema.parse({
@@ -177,5 +189,12 @@ describe('filterParcelsResponseSchema', () => {
     const numericId = structuredClone(response) as { results: Record<string, unknown>[] };
     numericId.results[0].parcel_id = 8668;
     expect(filterParcelsResponseSchema.safeParse(numericId).success).toBe(false);
+  });
+});
+
+describe('toCrop', () => {
+  it('maps the cadastre crop names to crop values, whatever their case', () => {
+    expect([' Soja ', 'ARROZ', 'rice'].map(toCrop)).toEqual(['soja', 'rice', 'rice']);
+    expect([null, undefined, 'Maíz'].map(toCrop)).toEqual([null, null, null]);
   });
 });

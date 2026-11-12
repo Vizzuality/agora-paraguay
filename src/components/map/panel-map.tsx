@@ -4,7 +4,7 @@ import Map, { AttributionControl } from 'react-map-gl/maplibre';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, dimBasemap } from '@/lib/map/basemap';
-import { addDotPattern } from '@/lib/map/dot-pattern';
+import { addCropPatterns } from '@/lib/map/crop-patterns';
 import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
@@ -20,7 +20,7 @@ export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
       onLoad={(event) => {
         collapseAttribution(event.target);
         dimBasemap(event.target);
-        addDotPattern(event.target);
+        addCropPatterns(event.target);
       }}
       dragRotate={false}
       touchPitch={false}

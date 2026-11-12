@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { Layer, Source, useMap } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
+import { ParcelLegend } from '@/components/map/parcel-legend';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
@@ -49,6 +50,7 @@ export function AnalysedParcelsLayers() {
         variant="analysis"
         zoom={zoom}
       />
+      <ParcelLegend className="bottom-1 left-2 print:hidden" />
       <AnalysedParcelsBehaviour />
       <ReportSnapshot />
       {(parcels?.results.length ?? 0) === 0 && (
