@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { ADMIN_USERS, stubAdminUsers, stubAuth } from './fixtures/auth';
@@ -39,6 +39,19 @@ const TODAY = isoDay();
 /** The hero's date defaults: yesterday, and 1 October 2026 for sowing while that is earlier. */
 const DEFAULT_DATE = isoDay(-1);
 const DEFAULT_SOWING_DATE = '2026-10-01' < DEFAULT_DATE ? '2026-10-01' : isoDay(-2);
+
+/** `YYYY-MM-DD` as the hero prints it, `dd/mm/yyyy`. */
+const ddmmyyyy = (iso: string) => iso.split('-').reverse().join('/');
+
+/** Picks an ISO day in a hero date field's calendar through its month and year dropdowns. */
+async function pickDate(page: Page, field: Locator, iso: string) {
+  const [year, month] = iso.split('-').map(Number);
+  await field.click();
+  await page.getByRole('combobox', { name: 'Elegir el año' }).selectOption(String(year));
+  await page.getByRole('combobox', { name: 'Elegir el mes' }).selectOption(String(month - 1));
+  await page.locator(`[data-day="${iso}"] button`).click();
+  await expect(field).toHaveAttribute('data-value', iso);
+}
 
 function controls(page: Page) {
   return {
@@ -150,11 +163,20 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(cultivo).toHaveText('Soja');
   await expect(page.getByRole('combobox')).toHaveCount(1);
   // Our defaults, not the API's: 1 October for sowing, yesterday for the date.
-  await expect(page.getByLabel('Fecha de siembra')).toHaveValue(DEFAULT_SOWING_DATE);
-  await expect(page.getByLabel('Fecha de siembra')).toHaveAttribute('min', '2024-09-01');
-  await expect(page.getByLabel('Fecha de siembra')).toHaveAttribute('max', isoDay(-2));
-  await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue(DEFAULT_DATE);
-  await expect(page.getByLabel('Fecha', { exact: true })).toHaveAttribute('max', TODAY);
+  const sowingDate = page.getByLabel('Fecha de siembra');
+  const date = page.getByLabel('Fecha', { exact: true });
+  await expect(sowingDate).toHaveText(ddmmyyyy(DEFAULT_SOWING_DATE));
+  await expect(sowingDate).toHaveAttribute('data-value', DEFAULT_SOWING_DATE);
+  await expect(date).toHaveText(ddmmyyyy(DEFAULT_DATE));
+  await expect(date).toHaveAttribute('data-value', DEFAULT_DATE);
+  // The calendar offers 1 September 2024 to today: no year before 2024, nothing after today.
+  await date.click();
+  const years = page.getByRole('combobox', { name: 'Elegir el año' }).locator('option');
+  await expect(years.first()).toHaveText('2024');
+  await expect(years.last()).toHaveText(TODAY.slice(0, 4));
+  await expect(page.locator(`[data-day="${TODAY}"] button`)).toBeEnabled();
+  await expect(page.locator(`[data-day="${isoDay(1)}"] button`)).toBeDisabled();
+  await page.keyboard.press('Escape');
   // With no crop picked yet, the filters are asked for soy.
   expect(filtersRequests).toBe(1);
   expect(filtersUrls).toEqual(['/api/parcels/filters/?riesgo=sanitario&crop_type=soja']);
@@ -177,8 +199,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(analysisBodies[0].indicators).toContain('asian_rust');
 
   // Typing a sowing date re-runs it with that date.
-  await page.getByLabel('Fecha de siembra').fill('2026-05-01');
-  await expect(page.getByLabel('Fecha de siembra')).toHaveValue('2026-05-01');
+  await pickDate(page, sowingDate, '2026-05-01');
   await expect.poll(() => analysisBodies.length).toBe(2);
   expect(analysisBodies[1]).toMatchObject({ sowing_date: '2026-05-01' });
 
@@ -190,7 +211,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   expect(analysisBodies[2]).toMatchObject({ crop_type: 'rice' });
 
   // So does changing the defaulted date: the value is part of the query key.
-  await page.getByLabel('Fecha', { exact: true }).fill('2026-09-10');
+  await pickDate(page, date, '2026-09-10');
   await expect.poll(() => analysisBodies.length).toBe(4);
   expect(analysisBodies[3]).toMatchObject({ date: '2026-09-10', sowing_date: '2026-05-01' });
 
