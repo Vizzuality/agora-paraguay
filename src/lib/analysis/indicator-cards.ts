@@ -9,8 +9,8 @@ import { isAreaIndicator } from './area';
 import { asReading, isNoReading, isUnreadable, readingOf, type Reading } from './readings';
 import {
   categoryAxis,
-  categoryClasses,
   classIndexAt,
+  indicatorClasses,
   isShortRange,
   RANGE_CLASSES,
   widgetFor,
@@ -330,7 +330,7 @@ function categoryCard(
     description: indicator.description,
     level: capitalise(axis[band]),
     scale: {
-      classes: categoryClasses(categories),
+      classes: indicatorClasses(indicator.id, categories),
       position: ((band + 0.5) / axis.length) * 100,
     },
   };
