@@ -573,8 +573,11 @@ test('shows a loader while a filter change re-runs the analysis', async ({ page 
   await page.getByRole('option', { name: 'Arroz' }).click();
 
   await expect(status).toHaveText('Actualizando análisis…');
-  await expect(card).toBeVisible();
-  await expect(page.locator('[aria-busy="true"]')).toHaveCount(1);
+  // The previous results stay on screen, disabled: inert and greyed until the answer lands.
+  const busy = page.locator('[aria-busy="true"]');
+  await expect(busy).toHaveCount(1);
+  await expect(busy).toContainText('Phakopsora pachyrhizi');
+  await expect(busy.locator('[inert]')).toHaveCount(1);
   release();
   await expect(status).toHaveCount(0);
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
