@@ -551,7 +551,7 @@ test('keeps the analysis across a reload', async ({ page }) => {
   await expect(card).toBeVisible();
 });
 
-// A filter change re-runs the analysis: the previous cards stay, dimmed, under a spinner.
+// A filter change re-runs the analysis: the previous results stay, dimmed, under a notice.
 test('shows a loader while a filter change re-runs the analysis', async ({ page }) => {
   let release: () => void = () => {};
   let held = Promise.resolve();

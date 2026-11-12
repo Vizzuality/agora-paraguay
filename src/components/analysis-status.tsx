@@ -6,8 +6,8 @@ type AnalysisStatusProps = Pick<ReturnType<typeof useAnalysis>, 'analysis' | 'in
 
 /**
  * What both analysis pages say above their widgets: the indicator list failing, the
- * analysis failing, and a run in flight: the first one, or a re-run while the previous
- * cards stay. Nothing when all is well. Alerts for failures, a live region for the wait.
+ * analysis failing, and the first run in flight (a re-run shows over the results, in
+ * `AnalysisPanel`). Nothing when all is well. Alerts for failures, a live region for the wait.
  */
 export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisStatusProps>) {
   return (
@@ -22,10 +22,10 @@ export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisS
           El análisis falló: {errorReason(analysis.error)}
         </p>
       )}
-      {analysis.isFetching && (
+      {analysis.isFetching && !analysis.data && (
         <output className="flex items-center gap-2 text-sm text-muted-foreground">
           <Spinner />
-          {analysis.data ? 'Actualizando análisis…' : 'Analizando…'}
+          Analizando…
         </output>
       )}
     </>
