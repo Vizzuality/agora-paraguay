@@ -1,12 +1,14 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { ArrowLeft, ArrowRight, ChevronDown, SquarePen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarIcon, ChevronDown, SquarePen } from 'lucide-react';
 import { type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { es } from 'react-day-picker/locale';
 
 import { InfoTip } from '@/components/info-tip';
 import { AnalysedParcelsLayers } from '@/components/map/analysed-parcels-layers';
 import { PanelMap } from '@/components/map/panel-map';
 import { SelectionLink } from '@/components/selection-link';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,7 @@ import {
   FLOATING_FIELD_CLASS,
   FloatingLabel,
 } from '@/components/ui/floating-label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -28,8 +31,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatArea, parcelArea } from '@/lib/analysis/area';
-import { describeWithFilters } from '@/lib/analysis/describe';
-import { dateBounds, heroFieldSpansRow, orderHeroFilters } from '@/lib/analysis/filters';
+import { describeWithFilters, formatIsoDate } from '@/lib/analysis/describe';
+import {
+  dateBounds,
+  heroFieldSpansRow,
+  isoToDate,
+  orderHeroFilters,
+  todayIso,
+} from '@/lib/analysis/filters';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import {
   nextScrollLeft,
@@ -195,10 +204,7 @@ function HeroField({
   }
 }
 
-/**
- * A date filter, ISO `YYYY-MM-DD` in and out (the API's `format`). A native date input
- * never shows a placeholder, so the label always sits on the border.
- */
+/** A date filter, ISO `YYYY-MM-DD` in and out; the calendar offers only min–max. */
 function HeroDate({
   label,
   description,
@@ -217,18 +223,46 @@ function HeroDate({
   className?: string;
 }>) {
   const id = useId();
+  const [open, setOpen] = useState(false);
+  const selected = value ? isoToDate(value) : undefined;
+  const first = min ? isoToDate(min) : undefined;
+  const last = max ? isoToDate(max) : undefined;
 
   return (
     <div className={cn('relative', className)}>
-      <input
-        id={id}
-        type="date"
-        value={value}
-        min={min}
-        max={max}
-        onChange={(event) => onChange(event.target.value)}
-        className={cn(FLOATING_FIELD_CLASS, 'border')}
-      />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            id={id}
+            type="button"
+            data-value={value}
+            className={cn(
+              FLOATING_FIELD_CLASS,
+              'flex items-center justify-between border text-left',
+            )}
+          >
+            {formatIsoDate(value)}
+            <CalendarIcon aria-hidden className="size-4 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto p-0">
+          <Calendar
+            mode="single"
+            locale={es}
+            captionLayout="dropdown"
+            selected={selected}
+            defaultMonth={selected}
+            startMonth={first}
+            endMonth={last}
+            disabled={[...(first ? [{ before: first }] : []), ...(last ? [{ after: last }] : [])]}
+            onSelect={(date) => {
+              if (!date) return;
+              onChange(todayIso(date));
+              setOpen(false);
+            }}
+          />
+        </PopoverContent>
+      </Popover>
       <FloatingLabel htmlFor={id}>
         {label}
         <InfoTip description={description} subject={label} />

@@ -53,11 +53,16 @@ export function todayIso(now: Date = new Date()): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** The calendar day before an ISO `YYYY-MM-DD` date. */
-export function dayBefore(iso: string): string {
+/** An ISO `YYYY-MM-DD` date as local midnight of that calendar day. */
+export function isoToDate(iso: string, offsetDays = 0): Date {
   const [year, month, day] = iso.split('-').map(Number);
 
-  return todayIso(new Date(year, month - 1, day - 1));
+  return new Date(year, month - 1, day + offsetDays);
+}
+
+/** The calendar day before an ISO `YYYY-MM-DD` date. */
+export function dayBefore(iso: string): string {
+  return todayIso(isoToDate(iso, -1));
 }
 
 /** The earliest day any date field accepts: the first with analysis data. */
