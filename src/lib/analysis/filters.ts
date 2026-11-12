@@ -18,10 +18,10 @@ export const SOWING_DATE_FILTER_ID = 'sowing_date';
 export const DATE_FILTER_ID = 'date';
 
 /**
- * How the hero lays the filters out: the date (productivo's is the `year`), the sowing
- * date, then the crop.
+ * How the hero lays the filters out: the sowing date, then the date it must come before
+ * (productivo's is the `year`), then the crop.
  */
-const HERO_FILTER_ORDER = [DATE_FILTER_ID, 'year', SOWING_DATE_FILTER_ID, CROP_FILTER_ID];
+const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, 'year', CROP_FILTER_ID];
 
 /**
  * The filters in the hero's order rather than the API's: the two dates first, the crop
