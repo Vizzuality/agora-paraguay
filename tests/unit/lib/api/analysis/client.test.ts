@@ -180,6 +180,38 @@ describe('runAnalysis', () => {
     });
   });
 
+  // The live diseases answer: flat entries, no `parcel_id`, in the requested order.
+  const flatEntry = (anublo: number) => ({
+    anublo_de_la_vaina: anublo,
+    DPTO_CODE: '10',
+    area: 2.53,
+    weather_station: 'Santa Teresa',
+    crop_type: 'arroz',
+    data_quality: 76,
+  });
+
+  it('gives id-less entries the requested parcel at their position', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ status: 'success', message: '', indicators: [flatEntry(1), flatEntry(3)] }),
+    );
+
+    const { indicators } = await runAnalysis('public', request);
+
+    expect(indicators.map((entry) => entry.parcel_id)).toEqual(request.parcels);
+    expect(indicators[1].properties).toMatchObject({
+      anublo_de_la_vaina: 3,
+      weather_station: 'Santa Teresa',
+    });
+  });
+
+  it('rejects id-less entries that do not match the requested parcels one to one', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ status: 'success', message: '', indicators: [flatEntry(1)] }),
+    );
+
+    await expect(runAnalysis('public', request)).rejects.toThrow(ZodError);
+  });
+
   it('rejects a malformed request before touching the network', async () => {
     await expect(runAnalysis('public', { ...request, parcels: [] })).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
