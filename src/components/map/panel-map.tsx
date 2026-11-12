@@ -1,3 +1,4 @@
+import type { StyleSpecification } from 'maplibre-gl';
 import type { ReactNode } from 'react';
 import Map, { AttributionControl } from 'react-map-gl/maplibre';
 
@@ -12,21 +13,32 @@ import '@/components/map/worker';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 /**
- * The satellite map inside a page's card, the same on every analysis page: the whole
- * country on a dimmed basemap, credits collapsed top right, the panel zoom bottom right,
- * no rotation or pitch. What it shows is its children: a page injects its layers, and
- * they bring their own camera moves and pointer events through `useMap`.
+ * The map inside a page's card, the same on every analysis page: the whole country on a
+ * dimmed basemap, credits collapsed top right, the panel zoom bottom right, no rotation
+ * or pitch. What it shows is its children: a page injects its layers, and they bring
+ * their own camera moves and pointer events through `useMap`. `mapStyle` swaps the
+ * basemap in place; the children's sources and layers are added back over the new one.
  */
-export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
+export function PanelMap({
+  children,
+  mapStyle = BASEMAP_STYLE,
+}: Readonly<{ children: ReactNode; mapStyle?: string | StyleSpecification }>) {
   return (
     <Map
       initialViewState={PARAGUAY_VIEW_STATE}
-      mapStyle={BASEMAP_STYLE}
+      mapStyle={mapStyle}
       attributionControl={false}
       onLoad={(event) => {
-        collapseAttribution(event.target);
-        dimBasemap(event.target);
-        addDotPattern(event.target);
+        const map = event.target;
+        // A style swap drops the dimming and the pattern image, so both follow every style.
+        const prepareStyle = () => {
+          dimBasemap(map);
+          addDotPattern(map);
+        };
+
+        collapseAttribution(map);
+        prepareStyle();
+        map.on('style.load', prepareStyle);
       }}
       dragRotate={false}
       touchPitch={false}

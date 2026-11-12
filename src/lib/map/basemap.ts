@@ -51,6 +51,9 @@ const SATELLITE_STYLE: StyleSpecification = {
 export const BASEMAP_STYLE: string | StyleSpecification =
   env.VITE_BASEMAP_STYLE_URL ?? SATELLITE_STYLE;
 
+/** The Capas tab's basemap: a light vector map, so the hazard and crop layers read over it. */
+export const CAPAS_BASEMAP_STYLE = 'https://styles.maptoolkit.org/summer.json';
+
 /**
  * Camera limit — Paraguay's extent padded by roughly 4° so neighbouring context stays
  * reachable, without letting the map wander off to another continent. Intentionally

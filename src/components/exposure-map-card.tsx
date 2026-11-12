@@ -4,6 +4,7 @@ import { InfoTip } from '@/components/info-tip';
 import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
 import { PanelMap } from '@/components/map/panel-map';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BASEMAP_STYLE, CAPAS_BASEMAP_STYLE } from '@/lib/map/basemap';
 
 const TRIGGER_CLASS =
   'h-auto flex-none rounded-none border-0 border-b-3 border-transparent px-0 py-2 font-normal text-accent-foreground after:hidden hover:text-primary data-[state=active]:border-primary data-[state=active]:text-primary dark:text-accent-foreground dark:data-[state=active]:border-primary dark:data-[state=active]:bg-transparent dark:data-[state=active]:text-primary';
@@ -11,7 +12,8 @@ const TRIGGER_CLASS =
 /**
  * Exposición climática's map widget: the title, two views, and one map under both.
  * The tabs choose what the map paints, the exposure base or the reference layers, and
- * what the panel beside it shows; the page holds the open tab for both.
+ * what the panel beside it shows; the page holds the open tab for both. Capas lays the
+ * reference layers over a light vector basemap instead of the satellite.
  */
 export function ExposureMapCard({
   view,
@@ -49,7 +51,7 @@ export function ExposureMapCard({
 
       <div className="relative h-108 overflow-hidden rounded-md bg-muted">
         <ClientOnly>
-          <PanelMap>
+          <PanelMap mapStyle={view === 'capas' ? CAPAS_BASEMAP_STYLE : BASEMAP_STYLE}>
             <ExposureLayers view={view} />
           </PanelMap>
         </ClientOnly>

@@ -6,6 +6,7 @@ import {
   drawPolygon,
   FARM_SCALE_URL,
   mapCanvas,
+  CAPAS_STYLE_URL,
   stubBasemap,
   wheelZoomIn,
   yellowPixelCount,
@@ -268,7 +269,10 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Exposición climática' })).toBeVisible();
   // The district panel holds across the map's tabs; Capas does not swap it out.
   await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
+  // Capas swaps the satellite for the light vector basemap.
+  const capasStyle = page.waitForRequest(CAPAS_STYLE_URL);
   await page.getByRole('tab', { name: 'Capas' }).click();
+  await capasStyle;
   await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
   await page.getByRole('tab', { name: 'Nivel de exposición' }).click();
   await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
