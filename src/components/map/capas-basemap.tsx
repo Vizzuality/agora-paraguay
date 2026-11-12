@@ -46,11 +46,19 @@ export function CapasBasemap({ showOverlay }: Readonly<{ showOverlay: boolean }>
       }
     };
 
-    if (map.isStyleLoaded()) apply();
-    else map.once('load', apply);
+    // isStyleLoaded() stays false while any source loads tiles, so try and retry instead.
+    const run = () => {
+      try {
+        apply();
+      } catch {
+        map.once('styledata', run);
+      }
+    };
+
+    run();
 
     return () => {
-      map.off('load', apply);
+      map.off('styledata', run);
     };
   }, [mapRef, overlay, showOverlay]);
 
