@@ -26,8 +26,8 @@ export function cameraParams(view: MapViewState): Record<'lng' | 'lat' | 'zoom',
   return { lng: String(view.longitude), lat: String(view.latitude), zoom: String(view.zoom) };
 }
 
-function cameraUrl(view: MapViewState): string {
-  return `/?${new URLSearchParams(cameraParams(view))}`;
+export function cameraUrl(view: MapViewState, path = '/'): string {
+  return `${path}?${new URLSearchParams(cameraParams(view))}`;
 }
 
 /** The zoom the map opens at (`INITIAL_VIEW_STATE`), whatever the app currently sets it to. */

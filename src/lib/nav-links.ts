@@ -46,3 +46,23 @@ export const RISK_LINKS: NavLink[] = RISK_TABS.map(({ label, to }) => ({
   to,
   replace: true,
 }));
+
+/**
+ * The redesign's analysis types, in its display order, each its own route under `/v2`
+ * until the cut-over (AGP-120) moves them into place.
+ */
+export const ANALYSIS_TYPES: {
+  label: string;
+  to: LinkProps['to'];
+  icon: LucideIcon;
+  /** The riesgo a parcel analysis runs; Exposición climática works by district instead. */
+  riesgo?: Riesgo;
+}[] = [
+  { label: EXPOSURE_TAB.label, to: '/v2/exposicion-climatica', icon: EXPOSURE_TAB.icon },
+  ...RISK_TABS.map(({ label, riesgo, icon }) => ({
+    label,
+    to: `/v2/${riesgo}` as LinkProps['to'],
+    icon,
+    riesgo,
+  })),
+];
