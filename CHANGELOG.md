@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.7.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.6.0...v0.7.0) (2026-11-13)
+
+
+### Features
+
+* Capas lays the layers over a light vector basemap (AGP-99) ([#252](https://github.com/Vizzuality/agora-paraguay/issues/252)) ([ecec9bc](https://github.com/Vizzuality/agora-paraguay/commit/ecec9bc6ee014a3956d5435bdde321083612ba67))
+* Nivel de exposición colours districts by class as the design does (AGP-100) ([#254](https://github.com/Vizzuality/agora-paraguay/issues/254)) ([9935741](https://github.com/Vizzuality/agora-paraguay/commit/99357419fc015712bf69ae6b231c2c4f1496ad1c))
+* parcels paint by selection and last crop, with a legend, on both maps (AGP-104, AGP-106, AGP-107) ([#259](https://github.com/Vizzuality/agora-paraguay/issues/259)) ([2424a2e](https://github.com/Vizzuality/agora-paraguay/commit/2424a2e698ebd2719f9c0bbaf2fa07ba66b725bb))
+* the analysis page shows a loader while a filter change re-runs it ([#258](https://github.com/Vizzuality/agora-paraguay/issues/258)) ([0c44fc5](https://github.com/Vizzuality/agora-paraguay/commit/0c44fc5960f1ad4aa839497a0f9c01508d482c75))
+* the exposure map's layers follow the new styles (AGP-99) ([#250](https://github.com/Vizzuality/agora-paraguay/issues/250)) ([50a9f7b](https://github.com/Vizzuality/agora-paraguay/commit/50a9f7babd681a4ad590e88e0f91b26271859975))
+* the hero dates default to 1 October and yesterday, within 1 Sept 2024 – today (AGP-95) ([#256](https://github.com/Vizzuality/agora-paraguay/issues/256)) ([51878ee](https://github.com/Vizzuality/agora-paraguay/commit/51878ee3042c14b3c5098aaacfaf72dcfe587aae))
+* the hero dates pick from a calendar limited to 1 Sept 2024 – today (AGP-95) ([#257](https://github.com/Vizzuality/agora-paraguay/issues/257)) ([6a09edc](https://github.com/Vizzuality/agora-paraguay/commit/6a09edce8a39df7a27272c63937b6c2c2fd4e9aa))
+* the parcel legend opens by default on the selection and analysis maps ([#266](https://github.com/Vizzuality/agora-paraguay/issues/266)) ([5a385e2](https://github.com/Vizzuality/agora-paraguay/commit/5a385e2dae4afb59b2e6ee77c55d1b988973ce41))
+
+
+### Bug Fixes
+
+* every map keeps its credits and scale top left, legend bottom left and zoom bottom right ([#261](https://github.com/Vizzuality/agora-paraguay/issues/261)) ([4555750](https://github.com/Vizzuality/agora-paraguay/commit/45557505449ad3e86d06fbd16affb2ba114c46d9))
+* send soja as the crop value, as the API now names it ([#237](https://github.com/Vizzuality/agora-paraguay/issues/237)) ([d7d26cb](https://github.com/Vizzuality/agora-paraguay/commit/d7d26cb53f021899d95a7c02a120e78ad2cc8592))
+* the general info tips sit top right of each fact ([#253](https://github.com/Vizzuality/agora-paraguay/issues/253)) ([46916ea](https://github.com/Vizzuality/agora-paraguay/commit/46916ea7e058cb9db5a74fb455fe45498a596a30))
+* the hero lists the sowing date before the date ([#255](https://github.com/Vizzuality/agora-paraguay/issues/255)) ([8ee9d73](https://github.com/Vizzuality/agora-paraguay/commit/8ee9d73c5da6cd143d5004fd7611b4d47ad74801))
+
 ## [0.6.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.5.0...v0.6.0) (2026-11-05)
 
 
