@@ -135,10 +135,13 @@ export async function drawPolygon(page: Page, vertices: { x: number; y: number }
 /**
  * How many canvas pixels read as the selected-parcel yellow (`#F1FF28` at 0.35 over the
  * blank basemap). The layers live on a WebGL canvas, nothing in the DOM: a screenshot,
- * decoded in the page on a 2D canvas, is the only way to assert what is painted.
+ * decoded in the page on a 2D canvas, is the only way to assert what is painted. The
+ * parcel legend sits over the canvas with a swatch in that yellow: masked out.
  */
 export async function yellowPixelCount(page: Page): Promise<number> {
-  const png = await mapCanvas(page).screenshot();
+  const png = await mapCanvas(page).screenshot({
+    mask: [page.getByRole('list', { name: 'Leyenda de parcelas' })],
+  });
 
   return page.evaluate(async (base64) => {
     const image = new Image();
