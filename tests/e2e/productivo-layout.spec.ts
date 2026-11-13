@@ -1,30 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-import { PARAGUAY_VIEW_STATE } from '../../src/lib/map/view-state';
-import { stubAnalysisApi } from './fixtures/api';
-import { stubAuth } from './fixtures/auth';
-import { cameraUrl, drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
-
-const POLYGON = [
-  { x: 300, y: 250 },
-  { x: 360, y: 250 },
-  { x: 360, y: 350 },
-];
+import { analyseOnRedesign } from './fixtures/redesign';
 
 test('Riesgo productivo gates its analysis, then shows the actions and widgets in the content column', async ({
   page,
 }) => {
-  await stubBasemap(page);
-  await stubAnalysisApi(page);
-  await stubAuth(page);
-  await page.goto(cameraUrl({ ...PARAGUAY_VIEW_STATE, zoom: 12 }, '/v2/productivo'));
-
-  const area = page.getByRole('region', { name: 'Área de interés' });
-  await expect(area.getByRole('button', { name: 'Dibujar polígono' })).toBeEnabled();
-  await expect(mapCanvas(page)).toBeVisible();
-  await area.getByRole('button', { name: 'Dibujar polígono' }).click();
-  await drawPolygon(page, POLYGON);
-  await area.getByRole('button', { name: 'Analizar' }).click();
+  await analyseOnRedesign(page, '/v2/productivo');
 
   // Private: the login card stands in for the analysis.
   const main = page.getByRole('main');
