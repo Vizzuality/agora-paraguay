@@ -11,7 +11,7 @@ import { SettingsSection } from '@/components/settings/settings-section';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { analysedViewAtom } from '@/store/mode';
 
-type SectionKey = 'tipo' | 'area' | 'cultivo';
+type SectionKey = 'analysisType' | 'area' | 'cropDates';
 
 /**
  * The redesign's settings column, one section open at a time: the analysis type, then
@@ -38,8 +38,8 @@ function Sections() {
       <SettingsSection
         name="Tipo de análisis"
         selection={current?.label}
-        open={open === 'tipo'}
-        onToggle={() => toggle('tipo')}
+        open={open === 'analysisType'}
+        onToggle={() => toggle('analysisType')}
       >
         <AnalysisTypeSetting onChoose={() => setOpen(null)} />
       </SettingsSection>
@@ -59,8 +59,8 @@ function Sections() {
       {current?.riesgo && analysed && (
         <CropDatesSection
           riesgo={current.riesgo}
-          open={open === 'cultivo'}
-          onToggle={() => toggle('cultivo')}
+          open={open === 'cropDates'}
+          onToggle={() => toggle('cropDates')}
         />
       )}
     </>
