@@ -78,6 +78,12 @@ test('the hero and the title row actions fit the width', async ({ page }) => {
   const parcels = page.getByRole('group', { name: 'Parcela' }).getByRole('listitem');
   await expect(parcels).toHaveText(['Todas', 'Parcela 1', 'Parcela 2']);
 
+  // Todas stays put while the parcels scroll: only they live in the scrolling strip.
+  const strip = page
+    .getByRole('group', { name: 'Parcela' })
+    .locator('[data-radix-scroll-area-viewport]');
+  await expect(strip.getByRole('listitem')).toHaveText(['Parcela 1', 'Parcela 2']);
+
   await expect(page.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
   // Sanitario has no report: the picker is the only action on the row.
   await expect(page.getByRole('button', { name: 'Exportar informe' })).toHaveCount(0);

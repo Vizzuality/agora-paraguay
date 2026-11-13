@@ -387,14 +387,17 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
     }
 
     const strip = stripRef.current;
-    const tab = strip?.querySelectorAll('li')[activeIndex];
-    if (!strip || !tab) return;
+    if (!strip) return;
 
-    const gutter = parseFloat(getComputedStyle(tab.parentElement as HTMLElement).paddingLeft) || 0;
-    const left = scrollLeftForTab(tab.offsetLeft, strip, gutter);
+    // Todas is outside the strip: opening it brings the strip back to its first parcel.
+    const tab = strip.querySelectorAll('li')[activeIndex - offset];
+    const gutter = tab
+      ? parseFloat(getComputedStyle(tab.parentElement as HTMLElement).paddingLeft) || 0
+      : 0;
+    const left = tab ? scrollLeftForTab(tab.offsetLeft, strip, gutter) : 0;
     pendingLeft.current = left;
     strip.scrollTo({ left, behavior: 'smooth' });
-  }, [activeIndex]);
+  }, [activeIndex, offset]);
 
   // Edge state feeds the arrows' `disabled`: recomputed on scroll, resize and tab changes.
   // Layout effect so the first paint already has the right arrow enabled (client-only tree).
@@ -435,12 +438,37 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
     strip.scrollTo({ left, behavior: 'smooth' });
   };
 
+  const tabButton = (tab: string, index: number) => (
+    <button
+      type="button"
+      aria-current={index === activeIndex || undefined}
+      onClick={() => {
+        skipScroll.current = index !== activeIndex;
+        setActiveIndex(index);
+      }}
+      className={cn(
+        'cursor-pointer py-2 text-sm whitespace-nowrap',
+        index === activeIndex
+          ? 'border-b-[3px] border-primary text-primary'
+          : 'text-accent-foreground',
+      )}
+    >
+      {tabLabel(tab, parcels)}
+    </button>
+  );
+
   return (
     <fieldset className="relative flex h-13 min-w-0 flex-1 items-center gap-2 rounded-2xl border border-muted-foreground py-2 pr-1 print:hidden">
       <legend className={FLOATING_CHIP_CLASS}>Parcela</legend>
+      {/* Todas stays put; only the parcels scroll. */}
+      {hasAllTab && (
+        <ul className="shrink-0 pl-4">
+          <li>{tabButton(ALL_TAB, 0)}</li>
+        </ul>
+      )}
       {/* Clipped on the fieldset's own radius, so a tab scrolled under the rounded
           corner does not show its underline outside the border. */}
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-l-2xl">
+      <div className={cn('relative min-w-0 flex-1 overflow-hidden', !hasAllTab && 'rounded-l-2xl')}>
         {!atStart && (
           <div
             aria-hidden
@@ -449,25 +477,10 @@ function ParcelTabs({ parcels }: Readonly<{ parcels: string[] }>) {
         )}
         <ScrollArea viewportRef={stripRef}>
           {/* A list, so the analysed areas stay enumerable (the e2e suite reads them). */}
-          <ul className="flex gap-5 px-4">
-            {tabs.map((tab, index) => (
-              <li key={tab} className="shrink-0">
-                <button
-                  type="button"
-                  aria-current={index === activeIndex || undefined}
-                  onClick={() => {
-                    skipScroll.current = index !== activeIndex;
-                    setActiveIndex(index);
-                  }}
-                  className={cn(
-                    'cursor-pointer py-2 text-sm whitespace-nowrap',
-                    index === activeIndex
-                      ? 'border-b-[3px] border-primary text-primary'
-                      : 'text-accent-foreground',
-                  )}
-                >
-                  {tabLabel(tab, parcels)}
-                </button>
+          <ul className={cn('flex gap-5 pr-4', hasAllTab ? 'pl-3' : 'pl-4')}>
+            {parcels.map((parcel, index) => (
+              <li key={parcel} className="shrink-0">
+                {tabButton(parcel, index + offset)}
               </li>
             ))}
           </ul>
