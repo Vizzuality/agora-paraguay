@@ -4,6 +4,7 @@ import { PARAGUAY_VIEW_STATE } from '../../src/lib/map/view-state';
 import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { cameraUrl, drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
+import { savedAnalysedParcelCount } from './fixtures/saved-selection';
 
 // Farm scale, where the test triangle is a few farms rather than a department.
 const FARM_SCALE_V2_URL = cameraUrl({ ...PARAGUAY_VIEW_STATE, zoom: 12 }, '/v2/sanitario');
@@ -65,6 +66,8 @@ test('a reload keeps the analysis', async ({ page }) => {
   await drawPolygon(page, POLYGON);
   await section.getByRole('button', { name: 'Analizar' }).click();
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toBeVisible();
+  // The save is debounced: reload only once the analysed parcels are on disk.
+  await expect.poll(() => savedAnalysedParcelCount(page)).toBeGreaterThan(0);
 
   await page.reload();
   await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
