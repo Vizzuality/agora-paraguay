@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Map, { AttributionControl } from 'react-map-gl/maplibre';
+import Map, { AttributionControl, ScaleControl } from 'react-map-gl/maplibre';
 
 import { ZoomControl } from '@/components/map/zoom-control';
 import { collapseAttribution } from '@/lib/map/attribution';
@@ -26,7 +26,9 @@ export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
       touchPitch={false}
       style={{ width: '100%', height: '100%' }}
     >
-      <AttributionControl compact position="top-right" />
+      {/* Same corners as the main map; the scale stacks under the credits ⓘ. */}
+      <AttributionControl compact position="top-left" />
+      <ScaleControl position="top-left" />
       <ZoomControl variant="panel" />
       {children}
     </Map>
