@@ -12,12 +12,18 @@ const TRIGGER_CLASS =
 /**
  * Exposición climática's map widget: the title, two views, and one map under both.
  * The tabs choose what the map paints, the exposure base or the reference layers, and
- * what the panel beside it shows; the page holds the open tab for both.
+ * what the panel beside it shows; the page holds the open tab for both. The redesign
+ * names the reference-layers tab Superficie expuesta.
  */
 export function ExposureMapCard({
   view,
   onViewChange,
-}: Readonly<{ view: ExposureMapView; onViewChange: (view: ExposureMapView) => void }>) {
+  layersLabel = 'Capas',
+}: Readonly<{
+  view: ExposureMapView;
+  onViewChange: (view: ExposureMapView) => void;
+  layersLabel?: string;
+}>) {
   return (
     <section
       aria-labelledby="mapa-exposicion"
@@ -43,7 +49,7 @@ export function ExposureMapCard({
             Nivel de exposición
           </TabsTrigger>
           <TabsTrigger value="capas" className={TRIGGER_CLASS}>
-            Capas
+            {layersLabel}
           </TabsTrigger>
         </TabsList>
       </Tabs>

@@ -1,6 +1,8 @@
 import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
+import { ExposureMapCard } from '@/components/exposure-map-card';
+import type { ExposureMapView } from '@/components/map/exposure-layers';
 import {
   AnalysisTypeSetting,
   useCurrentAnalysisType,
@@ -55,6 +57,9 @@ function Sections() {
         </SettingsSection>
       )}
 
+      {/* Exposición climática works by district: its map takes the área's place. */}
+      {current && !current.riesgo && <ExposureMap />}
+
       {/* The filters apply to an analysis: none to set before Analizar. */}
       {current?.riesgo && analysed && (
         <CropDatesSection
@@ -65,6 +70,13 @@ function Sections() {
       )}
     </>
   );
+}
+
+/** The exposure map card, holding its own tab: the content column does not read it. */
+function ExposureMap() {
+  const [view, setView] = useState<ExposureMapView>('exposicion');
+
+  return <ExposureMapCard view={view} onViewChange={setView} layersLabel="Superficie expuesta" />;
 }
 
 /** Its own component: the filter query runs only while the section is on screen. */
