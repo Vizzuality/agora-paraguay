@@ -1,4 +1,5 @@
 import { HeroFilters } from '@/components/analysis-hero';
+import { IndicatorPicker } from '@/components/indicator-picker';
 import { filterSummary } from '@/lib/analysis/filters';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
@@ -19,5 +20,13 @@ export function useCropDatesLabel(riesgo: Riesgo): string | undefined {
  * render inside `<ClientOnly>`.
  */
 export function CropDatesSetting({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
-  return <HeroFilters riesgo={riesgo} />;
+  return (
+    <>
+      <HeroFilters riesgo={riesgo} />
+      {/* Productivo keeps it in the content column, beside Exportar informe. */}
+      {riesgo === 'sanitario' && (
+        <IndicatorPicker riesgo={riesgo} className="h-12 w-full border text-primary" />
+      )}
+    </>
+  );
 }
