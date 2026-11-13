@@ -1,10 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 
-/** Riesgo productivo in the redesign; its content comes with its own ticket. */
+import { RiskPageContent } from '@/components/settings/risk-page-content';
+
+/** Riesgo productivo in the redesign: the selection map, then the analysis. */
 export const Route = createFileRoute('/v2/productivo')({
   component: ProductivoPage,
 });
 
 function ProductivoPage() {
-  return <h1 className="sr-only">Riesgo productivo</h1>;
+  return (
+    <ClientOnly fallback={<h1 className="sr-only">Riesgo productivo</h1>}>
+      <RiskPageContent title="Riesgo productivo" />
+    </ClientOnly>
+  );
 }

@@ -1,7 +1,7 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 
+import { SettingCardIcon, settingCardClass } from '@/components/settings/setting-card';
 import { ANALYSIS_TYPES } from '@/lib/nav-links';
-import { cn } from '@/lib/utils';
 
 /** The analysis type the open route shows, or `undefined` off the analysis routes. */
 export function useCurrentAnalysisType() {
@@ -30,14 +30,9 @@ export function AnalysisTypeSetting({ onChoose }: Readonly<{ onChoose?: () => vo
             replace
             onClick={onChoose}
             aria-current={active ? 'page' : undefined}
-            className={cn(
-              'flex flex-col items-center justify-center gap-2.5 rounded-2xl bg-secondary p-8 text-center text-sm transition-colors hover:bg-secondary-hover max-md:flex-row max-md:p-4',
-              active
-                ? 'border-3 border-primary text-primary'
-                : 'border border-border text-accent-foreground',
-            )}
+            className={settingCardClass({ active })}
           >
-            <Icon aria-hidden className="size-10 shrink-0 max-md:size-6" strokeWidth={1.5} />
+            <SettingCardIcon icon={Icon} />
             {label}
           </Link>
         );
