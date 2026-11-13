@@ -1,15 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { PageFrame } from '@/components/frame/page-frame';
-
-/**
- * Entry of the redesign, unlinked until the cut-over: the page frame alone. The settings
- * and the analysis pages fill it ticket by ticket.
- */
+/** Bare `/v2` has no page of its own: send it to the public type, as `/analisis` does. */
 export const Route = createFileRoute('/v2/')({
-  component: RedesignPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/v2/sanitario', replace: true });
+  },
 });
-
-function RedesignPage() {
-  return <PageFrame>{null}</PageFrame>;
-}
