@@ -59,6 +59,31 @@ test('draws an area, analyses it, and edits the parcels back', async ({ page }) 
   await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
 });
 
+test('the logo goes back to the área de interés, parcels kept, map in the content', async ({
+  page,
+}) => {
+  const section = area(page);
+  const logo = page.getByRole('banner').getByRole('link', { name: 'Inicio' });
+
+  // Nothing drawn yet: the section opens on the selection over an empty map.
+  await section.getByRole('button', { name: /Área de interés/ }).click();
+  await expect(section.getByRole('button', { name: 'Dibujar polígono' })).toBeHidden();
+  await logo.click();
+  await expect(section.getByRole('button', { name: 'Dibujar polígono' })).toBeVisible();
+  await expect(page.getByRole('main').locator('canvas.maplibregl-canvas')).toBeVisible();
+
+  await section.getByRole('button', { name: 'Dibujar polígono' }).click();
+  await drawPolygon(page, POLYGON);
+  await section.getByRole('button', { name: 'Analizar' }).click();
+  await expect(section.getByRole('combobox', { name: 'Parcela' })).toBeVisible();
+
+  // Analysed: the logo lands where Editar parcelas does.
+  await logo.click();
+  await expect(page).toHaveURL(/\/v2\/sanitario/);
+  await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
+  await expect(page.getByRole('main').locator('canvas.maplibregl-canvas')).toBeVisible();
+});
+
 test('a reload keeps the analysis', async ({ page }) => {
   const section = area(page);
 

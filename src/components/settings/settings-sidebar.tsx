@@ -10,6 +10,7 @@ import { CropDatesSetting, useCropDatesLabel } from '@/components/settings/crop-
 import { SettingsSection } from '@/components/settings/settings-section';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { analysedViewAtom } from '@/store/mode';
+import { settingsRestartCountAtom } from '@/store/settings';
 
 type SectionKey = 'analysisType' | 'area' | 'cropDates';
 
@@ -20,9 +21,10 @@ type SectionKey = 'analysisType' | 'area' | 'cropDates';
  */
 export function SettingsSidebar() {
   const current = useCurrentAnalysisType();
+  const restarts = useAtomValue(settingsRestartCountAtom);
 
-  // Keyed by the type, so moving onto a riesgo opens its área de interés afresh.
-  return <Sections key={String(current?.to)} />;
+  // Keyed by the type and the logo's restarts, so either opens the área de interés afresh.
+  return <Sections key={`${String(current?.to)}:${restarts}`} />;
 }
 
 function Sections() {
