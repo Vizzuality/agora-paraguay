@@ -219,6 +219,7 @@ test('analyzes the drawn area and moves to the analysis page', async ({ page }) 
   // the same layer as the main map, without Terra Draw, with its own zoom buttons.
   await expect(mapCanvas(page)).toBeVisible();
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  await expect(page.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Alejar' })).toBeVisible();
 
