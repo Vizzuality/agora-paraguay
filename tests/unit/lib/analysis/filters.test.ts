@@ -5,6 +5,7 @@ import {
   dayBefore,
   DEFAULT_SOWING_DATE,
   EMPTY_ANALYSIS_FILTERS,
+  filterSummary,
   heroFieldSpansRow,
   isoToDate,
   orderHeroFilters,
@@ -220,5 +221,19 @@ describe('orderHeroFilters', () => {
       'crop_type',
       'cycle',
     ]);
+  });
+});
+
+describe('filterSummary', () => {
+  it('reads the filters in force in the hero order: dates printed, the crop by its label', () => {
+    expect(
+      filterSummary(FILTERS, { crop_type: 'rice', sowing_date: '2026-06-18', date: '2026-08-18' }),
+    ).toBe('18/06/2026 · 18/08/2026 · Arroz');
+  });
+
+  it('leaves out a filter without a value', () => {
+    expect(filterSummary(FILTERS, { crop_type: 'soja', date: '2026-08-18' })).toBe(
+      '18/08/2026 · Soja',
+    );
   });
 });

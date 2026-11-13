@@ -1,3 +1,4 @@
+import { formatIsoDate } from '@/lib/analysis/describe';
 import { DEFAULT_CROP, type Filter, type Filters } from '@/lib/api/metadata/schemas';
 
 /**
@@ -147,4 +148,33 @@ function withSowingBeforeDate(resolved: Record<string, string>): Record<string, 
   if (sowing === undefined || date === undefined || sowing < date) return resolved;
 
   return { ...resolved, [SOWING_DATE_FILTER_ID]: dayBefore(date) };
+}
+
+/** What a filter's value reads as: the option's label for a category, the date as is. */
+export function filterValueLabel(filter: Filter, value: string): string {
+  const field = filter.field_type;
+
+  if (field.type === 'category') {
+    return field.options.find((option) => option.value === value)?.label ?? value;
+  }
+
+  return value;
+}
+
+/**
+ * The filters in force on one line, in the hero's order, for a closed settings heading:
+ * dates as the platform prints them, categories by their label, unset ones left out.
+ */
+export function filterSummary(filters: Filters, resolved: Record<string, string>): string {
+  return orderHeroFilters(filters)
+    .flatMap((filter) => {
+      const value = resolved[filter.id];
+
+      if (!value) return [];
+
+      return filter.field_type.type === 'date'
+        ? [formatIsoDate(value)]
+        : [filterValueLabel(filter, value)];
+    })
+    .join(' · ');
 }
