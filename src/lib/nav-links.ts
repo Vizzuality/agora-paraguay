@@ -12,24 +12,21 @@ export type NavLink = {
 /** Way back to the selection screen, shared by the top nav and the footer. */
 export const SELECTION_LINK: NavLink = { label: 'Personalización del análisis', to: '/' };
 
-/**
- * The two risk views, in display order, each its own route under `/analisis`. The top
- * nav renders them as tabs; the pages take their title from here.
- */
+/** The two risk views, in display order, each its own route under `/v2`. */
 export const RISK_TABS: {
   label: string;
   riesgo: Riesgo;
   to: LinkProps['to'];
   icon: LucideIcon;
 }[] = [
-  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/analisis/sanitario', icon: Bug },
-  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/analisis/productivo', icon: ChartPie },
+  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/v2/sanitario', icon: Bug },
+  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/v2/productivo', icon: ChartPie },
 ];
 
 /** Exposición climática: by district, no parcel selection. */
 export const EXPOSURE_TAB = {
   label: 'Exposición climática',
-  to: '/analisis/exposicion-climatica',
+  to: '/v2/exposicion-climatica',
   icon: ThermometerSun,
 } satisfies { label: string; to: LinkProps['to']; icon: LucideIcon };
 
@@ -47,22 +44,11 @@ export const RISK_LINKS: NavLink[] = RISK_TABS.map(({ label, to }) => ({
   replace: true,
 }));
 
-/**
- * The redesign's analysis types, in its display order, each its own route under `/v2`
- * until the cut-over (AGP-120) moves them into place.
- */
+/** The analysis types, in display order, each its own route under `/v2`. */
 export const ANALYSIS_TYPES: {
   label: string;
   to: LinkProps['to'];
   icon: LucideIcon;
   /** The riesgo a parcel analysis runs; Exposición climática works by district instead. */
   riesgo?: Riesgo;
-}[] = [
-  { label: EXPOSURE_TAB.label, to: '/v2/exposicion-climatica', icon: EXPOSURE_TAB.icon },
-  ...RISK_TABS.map(({ label, riesgo, icon }) => ({
-    label,
-    to: `/v2/${riesgo}` as LinkProps['to'],
-    icon,
-    riesgo,
-  })),
-];
+}[] = [EXPOSURE_TAB, ...RISK_TABS];
