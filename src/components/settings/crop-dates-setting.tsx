@@ -1,4 +1,4 @@
-import { HeroFilters } from '@/components/analysis-hero';
+import { HeroFilters } from '@/components/hero-filters';
 import { IndicatorPicker } from '@/components/indicator-picker';
 import { filterSummary } from '@/lib/analysis/filters';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';

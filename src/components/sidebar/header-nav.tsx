@@ -1,25 +1,15 @@
 import { ClientOnly, Link, type LinkProps, useMatchRoute } from '@tanstack/react-router';
-import { SquarePen } from 'lucide-react';
 
 import { LoginDialog, UserButton } from '@/components/auth/login-dialog';
-import { SelectionLink } from '@/components/selection-link';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
-import { Button } from '@/components/ui/button';
-import { HEADER_TABS, SELECTION_LINK } from '@/lib/nav-links';
+import { HEADER_TABS } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
 
-/**
- * The analysis nav bar's right side: the section tabs, the theme switch and the account.
- * On a wide screen the way back to the selection is the analysis card's Editar. On a
- * mobile device the tabs do not fit beside the logo and move, with the selection link,
- * to a row of their own under the bar (`PhoneAnalysisNav`): `compact` leaves them out
- * once the screen is known to be narrow, and the CSS hides them before that, so they
- * are never shown twice.
- */
-export function HeaderNav({ compact = false }: Readonly<{ compact?: boolean }>) {
+/** The nav bar's right side on the pages outside the redesign: the analysis tabs, the theme switch and the account. */
+export function HeaderNav() {
   return (
     <>
-      {!compact && <HeaderTabs className="max-md:hidden" />}
+      <HeaderTabs className="max-md:hidden" />
 
       <ClientOnly fallback={<ThemeTogglePlaceholder />}>
         <ThemeToggle />
@@ -32,36 +22,8 @@ export function HeaderNav({ compact = false }: Readonly<{ compact?: boolean }>) 
   );
 }
 
-/** The selection link and the section tabs stacked full width under the mobile nav bar. */
-export function PhoneAnalysisNav() {
-  return (
-    <div className="flex flex-col gap-2 p-2">
-      <SelectionButton className="w-full" />
-      <HeaderTabs className="w-full" stretch />
-    </div>
-  );
-}
-
-function SelectionButton({ className }: Readonly<{ className?: string }>) {
-  return (
-    <Button
-      asChild
-      variant="secondary"
-      className={cn('h-11 rounded-2xl px-8 font-normal text-accent-foreground', className)}
-    >
-      <SelectionLink>
-        <SquarePen aria-hidden />
-        {SELECTION_LINK.label}
-      </SelectionLink>
-    </Button>
-  );
-}
-
-/** The section tabs (`HEADER_TABS`); `stretch` shares the row between them (the mobile menu). */
-function HeaderTabs({
-  className,
-  stretch = false,
-}: Readonly<{ className?: string; stretch?: boolean }>) {
+/** The section tabs (`HEADER_TABS`). */
+function HeaderTabs({ className }: Readonly<{ className?: string }>) {
   return (
     <div
       className={cn(
@@ -70,7 +32,7 @@ function HeaderTabs({
       )}
     >
       {HEADER_TABS.map(({ label, to }) => (
-        <RiskTab key={label} to={to} className={cn(stretch && 'flex-1 text-center')}>
+        <RiskTab key={label} to={to}>
           {label}
         </RiskTab>
       ))}
@@ -79,11 +41,7 @@ function HeaderTabs({
 }
 
 /** A tab is a link to its section's route; the router marks the matching one (`aria-current="page"`). */
-function RiskTab({
-  to,
-  className,
-  children,
-}: Readonly<{ to: LinkProps['to']; className?: string; children: React.ReactNode }>) {
+function RiskTab({ to, children }: Readonly<{ to: LinkProps['to']; children: React.ReactNode }>) {
   const matchRoute = useMatchRoute();
   const active = matchRoute({ to }) !== false;
 
@@ -96,7 +54,6 @@ function RiskTab({
       className={cn(
         'py-2 text-accent-foreground',
         active && 'border-b-3 border-primary text-primary',
-        className,
       )}
     >
       {children}

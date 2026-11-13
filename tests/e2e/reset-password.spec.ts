@@ -64,7 +64,7 @@ test('a valid link shows the form; saving a good password confirms and offers th
   expect(posted).toEqual([{ token: TOKEN, new_password: 'Chaco-2026!' }]);
 
   await page.getByRole('link', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/(\?.*)?$/);
+  await expect(page).toHaveURL(/\/analisis\/sanitario/);
 });
 
 test('mismatched or weak passwords are refused before any request', async ({ page }) => {

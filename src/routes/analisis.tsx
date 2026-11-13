@@ -1,80 +1,50 @@
-import {
-  ClientOnly,
-  createFileRoute,
-  Outlet,
-  useLocation,
-  useNavigate,
-} from '@tanstack/react-router';
-import { useAtomValue } from 'jotai';
+import { ClientOnly, createFileRoute, Outlet } from '@tanstack/react-router';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import { Footer } from '@/components/footer';
-import { HeaderNav, PhoneAnalysisNav } from '@/components/sidebar/header-nav';
-import { NavBar } from '@/components/sidebar/nav-bar';
-import { sendsBackToSelection } from '@/lib/analysis/empty-selection';
-import { useNarrowScreen } from '@/lib/use-narrow-screen';
+import { PageFrame } from '@/components/frame/page-frame';
+import { SettingsSidebar } from '@/components/settings/settings-sidebar';
 import { useSavedSelection } from '@/lib/use-saved-selection';
-import { analysedParcelIdsAtom } from '@/store/analysis';
+import { resumeAnalysisAtom } from '@/store/mode';
 import { savedSelectionHydratedAtom } from '@/store/saved-selection';
 
 /**
- * Layout of the analysis pages: the nav with the risk tabs, the footer, and the guard
- * that sends an empty selection back to `/`. Each riesgo is a child route
- * (`/analisis/sanitario`, `/analisis/productivo`) rendered in the outlet, so a shared
- * link lands on the same tab and the two pages grow apart without branching here.
+ * The analysis pages: the page frame with the settings on the left and the analysis
+ * type's page, one route per type, on the right.
  */
 export const Route = createFileRoute('/analisis')({
-  component: AnalysisLayout,
+  component: RedesignLayout,
 });
 
-function AnalysisLayout() {
-  const narrow = useNarrowScreen();
-
+function RedesignLayout() {
   return (
-    // The nav and footer live outside <main> on purpose: header/footer only get
-    // their banner/contentinfo landmark roles when they are not descendants of
-    // <main> — the e2e locators rely on those roles.
-    <div className="flex min-h-screen w-full flex-col">
-      {/* Client-only like every other atom consumer (see draw-core.ts); a router
-          `beforeLoad` guard is not an option — it runs on the server, where the
-          shared module store must stay untouched. */}
-      <ClientOnly>
-        <EmptySelectionRedirect />
-      </ClientOnly>
-
-      <NavBar below={narrow && <PhoneAnalysisNav />}>
-        <HeaderNav compact={narrow} />
-      </NavBar>
-      <main className="flex flex-1 flex-col gap-6 px-2 pt-6 pb-10 md:px-10 md:pt-10 md:pb-12 print:p-0">
-        <Outlet />
-      </main>
-
-      <Footer />
-    </div>
+    <PageFrame
+      settings={
+        <ClientOnly>
+          <PersistSelection />
+          <SettingsSidebar />
+        </ClientOnly>
+      }
+    >
+      <Outlet />
+    </PageFrame>
   );
 }
 
 /**
- * A hard reload starts a fresh module store, so the saved selection is read here too:
- * the analysed parcels come back and the page shows the same analysis. Only once that
- * read is done, with still no parcels (nothing saved, expired, or a direct visit), is
- * the user sent back to build a selection (`sendsBackToSelection`: never from
- * Exposición climática, which does not depend on it).
+ * The selection survives a reload, saved on every change; an analysed one comes back
+ * analysed, once the saved record has been read. Once per visit: Editar parcelas after
+ * that stays in the selection.
  */
-function EmptySelectionRedirect() {
+function PersistSelection() {
   useSavedSelection();
 
-  const parcelIds = useAtomValue(analysedParcelIdsAtom);
   const hydrated = useAtomValue(savedSelectionHydratedAtom);
-  const navigate = useNavigate();
-  // The live pathname, not `useMatchRoute`: while the navigation from `/` is still
-  // pending, that matches against the resolved location (`/`) and would redirect.
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const empty = sendsBackToSelection({ pathname, hydrated, parcelCount: parcelIds.length });
+  const resume = useSetAtom(resumeAnalysisAtom);
 
   useEffect(() => {
-    if (empty) void navigate({ to: '/', replace: true });
-  }, [empty, navigate]);
+    if (hydrated) resume();
+  }, [hydrated, resume]);
 
   return null;
 }

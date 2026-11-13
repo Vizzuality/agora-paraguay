@@ -12,10 +12,7 @@ export type NavLink = {
 /** Way back to the selection screen, shared by the top nav and the footer. */
 export const SELECTION_LINK: NavLink = { label: 'Personalización del análisis', to: '/' };
 
-/**
- * The two risk views, in display order, each its own route under `/analisis`. The top
- * nav renders them as tabs; the pages take their title from here.
- */
+/** The two risk views, in display order, each its own route under `/analisis`. */
 export const RISK_TABS: {
   label: string;
   riesgo: Riesgo;
@@ -47,22 +44,11 @@ export const RISK_LINKS: NavLink[] = RISK_TABS.map(({ label, to }) => ({
   replace: true,
 }));
 
-/**
- * The redesign's analysis types, in its display order, each its own route under `/v2`
- * until the cut-over (AGP-120) moves them into place.
- */
+/** The analysis types, in display order, each its own route under `/analisis`. */
 export const ANALYSIS_TYPES: {
   label: string;
   to: LinkProps['to'];
   icon: LucideIcon;
   /** The riesgo a parcel analysis runs; Exposición climática works by district instead. */
   riesgo?: Riesgo;
-}[] = [
-  { label: EXPOSURE_TAB.label, to: '/v2/exposicion-climatica', icon: EXPOSURE_TAB.icon },
-  ...RISK_TABS.map(({ label, riesgo, icon }) => ({
-    label,
-    to: `/v2/${riesgo}` as LinkProps['to'],
-    icon,
-    riesgo,
-  })),
-];
+}[] = [EXPOSURE_TAB, ...RISK_TABS];

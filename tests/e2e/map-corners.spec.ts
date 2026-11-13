@@ -3,7 +3,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { stubBasemap } from './fixtures/map';
-import { pickAnalysisType } from './fixtures/selection';
 
 /** Every map: credits ⓘ then the scale top left, zoom in the bottom-right quarter. */
 async function expectCorners(page: Page, map: Locator) {
@@ -28,8 +27,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('the selection map keeps credits and scale top left, zoom bottom right', async ({ page }) => {
-  await page.goto('/');
-  await pickAnalysisType(page);
+  await page.goto('/analisis/sanitario');
 
   await expectCorners(page, page.locator('.maplibregl-map').first());
 });

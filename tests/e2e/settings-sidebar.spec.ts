@@ -4,14 +4,14 @@ import { stubAuth } from './fixtures/auth';
 
 test.beforeEach(async ({ page }) => {
   await stubAuth(page);
-  await page.goto('/v2');
+  await page.goto('/analisis');
   // Hydrated once the theme switch's disabled placeholder has been replaced.
   await expect(page.getByRole('button', { name: 'Cambiar tema' })).toBeEnabled();
 });
 
 test('Tipo de análisis names the open type and switches between them', async ({ page }) => {
-  // Bare /v2 lands on the public type.
-  await expect(page).toHaveURL(/\/v2\/sanitario$/);
+  // Bare /analisis lands on the public type.
+  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
 
   const section = page.getByRole('region', { name: 'Tipo de análisis' });
   const heading = section.getByRole('button', { name: /Tipo de análisis/ });
@@ -30,7 +30,7 @@ test('Tipo de análisis names the open type and switches between them', async ({
 
   // Choosing navigates, closes the section, and the heading follows.
   await types.filter({ hasText: 'Exposición climática' }).click();
-  await expect(page).toHaveURL(/\/v2\/exposicion-climatica$/);
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
   await expect(heading).toHaveAttribute('aria-expanded', 'false');
   await expect(heading).toContainText('Exposición climática');
 });
