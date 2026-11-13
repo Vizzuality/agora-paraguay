@@ -9,10 +9,10 @@ import { resumeAnalysisAtom } from '@/store/mode';
 import { savedSelectionHydratedAtom } from '@/store/saved-selection';
 
 /**
- * The redesign, unlinked until the cut-over (AGP-120): the page frame with the settings
- * on the left and the analysis type's page, one route per type, on the right.
+ * The analysis pages: the page frame with the settings on the left and the analysis
+ * type's page, one route per type, on the right.
  */
-export const Route = createFileRoute('/v2')({
+export const Route = createFileRoute('/analisis')({
   component: RedesignLayout,
 });
 

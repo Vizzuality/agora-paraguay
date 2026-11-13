@@ -12,21 +12,21 @@ export type NavLink = {
 /** Way back to the selection screen, shared by the top nav and the footer. */
 export const SELECTION_LINK: NavLink = { label: 'Personalización del análisis', to: '/' };
 
-/** The two risk views, in display order, each its own route under `/v2`. */
+/** The two risk views, in display order, each its own route under `/analisis`. */
 export const RISK_TABS: {
   label: string;
   riesgo: Riesgo;
   to: LinkProps['to'];
   icon: LucideIcon;
 }[] = [
-  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/v2/sanitario', icon: Bug },
-  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/v2/productivo', icon: ChartPie },
+  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/analisis/sanitario', icon: Bug },
+  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/analisis/productivo', icon: ChartPie },
 ];
 
 /** Exposición climática: by district, no parcel selection. */
 export const EXPOSURE_TAB = {
   label: 'Exposición climática',
-  to: '/v2/exposicion-climatica',
+  to: '/analisis/exposicion-climatica',
   icon: ThermometerSun,
 } satisfies { label: string; to: LinkProps['to']; icon: LucideIcon };
 
@@ -44,7 +44,7 @@ export const RISK_LINKS: NavLink[] = RISK_TABS.map(({ label, to }) => ({
   replace: true,
 }));
 
-/** The analysis types, in display order, each its own route under `/v2`. */
+/** The analysis types, in display order, each its own route under `/analisis`. */
 export const ANALYSIS_TYPES: {
   label: string;
   to: LinkProps['to'];

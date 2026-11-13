@@ -4,7 +4,7 @@ import { SanitarioWidgets } from '@/components/sanitario-widgets';
 import { RiskPageContent } from '@/components/settings/risk-page-content';
 
 /** Riesgo sanitario in the redesign, public: the selection map, then the summary and the widgets. */
-export const Route = createFileRoute('/v2/sanitario')({
+export const Route = createFileRoute('/analisis/sanitario')({
   component: SanitarioPage,
 });
 

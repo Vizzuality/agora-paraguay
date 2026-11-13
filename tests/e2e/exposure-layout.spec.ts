@@ -10,7 +10,7 @@ test('Exposición climática keeps its map in the settings column and prompts fo
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await stubAuth(page);
-  await page.goto('/v2/exposicion-climatica');
+  await page.goto('/analisis/exposicion-climatica');
 
   // The map card, with its two views, sits in the settings column; no área de interés.
   const settings = page.getByRole('complementary', { name: 'Configuración' });

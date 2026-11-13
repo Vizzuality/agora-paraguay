@@ -14,7 +14,7 @@ import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 const ACTION_CLASS = 'h-12 flex-1 rounded-2xl border px-8 font-normal';
 
 /** Riesgo productivo in the redesign: the selection map, then, with an account, the analysis. */
-export const Route = createFileRoute('/v2/productivo')({
+export const Route = createFileRoute('/analisis/productivo')({
   component: ProductivoPage,
 });
 
