@@ -36,3 +36,22 @@ export const startAnalysisAtom = atom(null, (_get, set, parcelIds: string[]) => 
 export const backToSelectionAtom = atom(null, (_get, set) => {
   set(appModeAtom, 'selection');
 });
+
+/**
+ * The redesign shows the analysis in place of the selection map (no `/analisis` to land
+ * on): analysing, with parcels analysed. Editar parcelas (`backToSelectionAtom`) flips it
+ * back with the parcels kept.
+ */
+export const analysedViewAtom = atom(
+  (get) => get(appModeAtom) === 'analysis' && get(analysedParcelIdsAtom).length > 0,
+);
+
+/**
+ * A reload starts in 'selection' with the analysed parcels restored from disk: resume
+ * the analysis they were. The redesign's layout calls it once the saved record is read.
+ */
+export const resumeAnalysisAtom = atom(null, (get, set) => {
+  const parcelIds = get(analysedParcelIdsAtom);
+
+  if (get(appModeAtom) === 'selection' && parcelIds.length > 0) set(startAnalysisAtom, parcelIds);
+});

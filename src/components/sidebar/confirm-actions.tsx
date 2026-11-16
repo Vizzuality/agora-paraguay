@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, Undo2 } from 'lucide-react';
@@ -8,13 +7,11 @@ import {
   PARCELS_REQUEST_FAILED_MESSAGE,
 } from '@/components/error-toast';
 import { ACTION_CARDS_ENTER, ActionCardButton } from '@/components/sidebar/action-card-button';
-import { parcelQueries } from '@/lib/api/parcels/queries';
-import { applyToggles, selectedParcelIds } from '@/lib/map/parcel-selection';
 import { RISK_TABS } from '@/lib/nav-links';
+import { useConfirmedParcels } from '@/lib/use-confirmed-parcels';
 import { cn } from '@/lib/utils';
-import { drawPolygonsAtom, restartAnalysisAtom } from '@/store/draw';
+import { restartAnalysisAtom } from '@/store/draw';
 import { startAnalysisAtom } from '@/store/mode';
-import { toggledParcelIdsAtom } from '@/store/parcels';
 import { analysisTypeAtom } from '@/store/selection';
 
 /**
@@ -28,21 +25,11 @@ import { analysisTypeAtom } from '@/store/selection';
  * the panel's cards, or the phone's bar under the map.
  */
 export function ConfirmActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'bar' }>) {
-  const polygons = useAtomValue(drawPolygonsAtom);
-  const toggled = useAtomValue(toggledParcelIdsAtom);
-  const { data: parcels, isError, isSuccess } = useQuery(parcelQueries.filtered(polygons));
+  const { parcelIds, isError, noIntersection } = useConfirmedParcels();
   const analysisType = useAtomValue(analysisTypeAtom);
   const restart = useSetAtom(restartAnalysisAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
   const navigate = useNavigate();
-
-  const parcelIds = parcels ? selectedParcelIds(applyToggles(parcels.results, toggled)) : [];
-
-  // Parcels around the areas, none over the threshold: the user can still click one.
-  // (No parcel at all is `useRejectUncoveredAreas`: the areas go, back to step 2.)
-  // `isSuccess`, not `parcels`: a re-keyed query shows the previous parcels as
-  // placeholder while the answer is not in yet.
-  const noIntersection = isSuccess && parcelIds.length === 0;
 
   // Entering the mode before navigating keeps the store consistent even if navigation fails.
   function analyze() {

@@ -1,20 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, type ReactNode } from 'react';
 
 import { LoginDialog, UserButton } from '@/components/auth/login-dialog';
 import { MapView } from '@/components/map';
-import { MapLoading } from '@/components/map/map-loading';
+import { ParcelsLookup } from '@/components/map/parcels-lookup';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { SelectionBar } from '@/components/sidebar/selection-bar';
 import { SelectionBlock, SelectionBlockLayout } from '@/components/sidebar/selection-block';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
-import { parcelQueries } from '@/lib/api/parcels/queries';
 import { useNarrowScreen } from '@/lib/use-narrow-screen';
 import { useSavedSelection } from '@/lib/use-saved-selection';
 import { cn } from '@/lib/utils';
-import { drawPolygonsAtom } from '@/store/draw';
 import { backToSelectionAtom } from '@/store/mode';
 import { selectionViewAtom } from '@/store/selection';
 
@@ -141,14 +138,6 @@ function PhoneNavPlaceholder() {
       <UserButton disabled />
     </div>
   );
-}
-
-/** Veils the map while `filter-parcels` looks up the parcels for the areas just landed. */
-function ParcelsLookup() {
-  const polygons = useAtomValue(drawPolygonsAtom);
-  const { isFetching } = useQuery(parcelQueries.filtered(polygons));
-
-  return isFetching ? <MapLoading>Buscando parcelas…</MapLoading> : null;
 }
 
 /** The selection survives a reload: restored from disk on mount, saved on every change. */

@@ -1,14 +1,10 @@
-import { useIsMutating } from '@tanstack/react-query';
-import { useAtomValue, useStore } from 'jotai';
-import { Upload } from 'lucide-react';
+import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
 import { AnalysisHero } from '@/components/analysis-hero';
+import { ExportReportButton } from '@/components/export-report-button';
 import { IndicatorPicker } from '@/components/indicator-picker';
-import { Button } from '@/components/ui/button';
-import { printReport } from '@/lib/analysis/print-report';
-import { reportCaption, reportFileName } from '@/lib/analysis/report';
-import { analysisMutations } from '@/lib/api/analysis/queries';
+import { reportCaption } from '@/lib/analysis/report';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { RISK_TABS } from '@/lib/nav-links';
 import { useNarrowScreen } from '@/lib/use-narrow-screen';
@@ -35,11 +31,7 @@ const PHONE_ACTION_CLASS = 'h-11 flex-1 rounded-2xl px-4 font-normal';
  */
 export function AnalysisSidebar({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
-  const store = useStore();
   const title = RISK_TABS.find((tab) => tab.riesgo === riesgo)?.label;
-  // A report printed mid-generation would go out without the summary: wait for it.
-  const generatingSummary =
-    useIsMutating({ mutationKey: analysisMutations.summary().mutationKey }) > 0;
 
   const narrow = useNarrowScreen();
   const actionClass = narrow ? PHONE_ACTION_CLASS : ACTION_CLASS;
@@ -47,17 +39,7 @@ export function AnalysisSidebar({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const actions = (
     <div className="flex items-center gap-4 print:hidden">
       <IndicatorPicker riesgo={riesgo} className={actionClass} />
-      {riesgo === 'productivo' && (
-        <Button
-          className={actionClass}
-          disabled={generatingSummary}
-          title={generatingSummary ? 'Espere a que termine el resumen del análisis' : undefined}
-          onClick={() => printReport(reportFileName(riesgo, new Date()), store)}
-        >
-          <Upload aria-hidden />
-          Exportar informe
-        </Button>
-      )}
+      {riesgo === 'productivo' && <ExportReportButton riesgo={riesgo} className={actionClass} />}
     </div>
   );
 

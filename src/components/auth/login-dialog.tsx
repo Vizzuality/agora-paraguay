@@ -1,4 +1,3 @@
-import { useMutation } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { User } from 'lucide-react';
 import { useState } from 'react';
@@ -14,9 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { authMutations } from '@/lib/api/auth/queries';
 import type { Session } from '@/lib/api/auth/schemas';
-import { useSession, useSessionActions } from '@/lib/auth/use-session';
+import { useLogout, useSession } from '@/lib/auth/use-session';
 
 export function UserButton(props: Readonly<React.ComponentProps<typeof Button>>) {
   return (
@@ -38,7 +36,8 @@ export function LoginDialog() {
   return session ? <UserMenu session={session} /> : <LoginPopover />;
 }
 
-function LoginPopover() {
+/** The user button that opens the login form (and the reset request) in a popover. */
+export function LoginPopover() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<AuthView>('login');
 
@@ -99,13 +98,7 @@ function LoginPopover() {
  * Staff get Administrar usuarios in between.
  */
 function UserMenu({ session }: Readonly<{ session: Session }>) {
-  const { clear } = useSessionActions();
-  const mutation = useMutation({
-    ...authMutations.logout(),
-    // Success or failure, the client session ends: the cookie is HttpOnly, so nothing
-    // more is possible from here.
-    onSettled: clear,
-  });
+  const mutation = useLogout();
 
   return (
     <DropdownMenu>
