@@ -9,11 +9,18 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  // The thumb is what reads as a slider, so it carries the name, not the root.
+  'aria-label': label,
   ...props
 }: Readonly<React.ComponentProps<typeof SliderPrimitive.Root>>) {
   const values = React.useMemo(
-    () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
+    () => value ?? defaultValue ?? [min, max],
     [value, defaultValue, min, max],
+  );
+  // A thumb is its position: the first value's, the second's.
+  const thumbs = React.useMemo(
+    () => Array.from({ length: values.length }, (_, position) => `thumb-${position}`),
+    [values.length],
   );
 
   return (
@@ -38,12 +45,11 @@ function Slider({
           className="absolute bg-primary data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full"
         />
       </SliderPrimitive.Track>
-      {values.map((_, index) => (
+      {thumbs.map((thumb) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
-          // The thumbs are positional: one per value, never reordered.
-          // oxlint-disable-next-line react/no-array-index-key
-          key={index}
+          key={thumb}
+          aria-label={label}
           className="block size-4 shrink-0 rounded-full border border-primary bg-white shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
