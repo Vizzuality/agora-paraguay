@@ -1,5 +1,9 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
-import { CROP_FILTER_ID, type AnalysisFilterSelection } from '@/lib/analysis/filters';
+import {
+  CROP_FILTER_ID,
+  YEAR_FILTER_ID,
+  type AnalysisFilterSelection,
+} from '@/lib/analysis/filters';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicatorIds } from '@/lib/analysis/indicator-picker';
 import type {
@@ -14,9 +18,6 @@ import { isCrop, type Indicators, type Riesgo } from '@/lib/api/metadata/schemas
  * pure, node-tested. The hero selection is already keyed by the API's filter ids, so it
  * goes on the wire as is, flat, with the parcel and indicator lists beside it.
  */
-
-/** Productivo's year filter, which the AI summary requires. */
-const YEAR_FILTER_ID = 'year';
 
 /** Which analysis path serves a riesgo tab: sanitario is public, productivo private. */
 export function visibilityOf(riesgo: Riesgo): AnalysisVisibility {

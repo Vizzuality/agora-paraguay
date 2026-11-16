@@ -1,8 +1,8 @@
 import { scaleLinear, scalePoint } from '@visx/scale';
 import { Area, LinePath } from '@visx/shape';
 
-import { Responsive, SVG_CLASS } from '@/components/charts/plot';
-import { formatTick } from '@/lib/analysis/number-scale';
+import { HitAreas, Responsive, SVG_CLASS } from '@/components/charts/plot';
+import { formatNumber, formatTick } from '@/lib/analysis/number-scale';
 import type { ProjectionPoint } from '@/lib/analysis/projection';
 
 const HEIGHT = 320;
@@ -22,6 +22,31 @@ type ProjectionBandProps = {
   ticks: number[];
   unit: string | null;
 };
+
+/** A point's tooltip: its three scenarios, top to bottom as the band draws them. */
+function PointReading({ point, unit }: Readonly<{ point: ProjectionPoint; unit: string | null }>) {
+  const suffix = unit ? ` ${unit}` : '';
+  const rows = [
+    ['Optimista', point.high],
+    ['Central', point.mid],
+    ['Pesimista', point.low],
+  ] as const;
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <p className="font-medium">
+        {point.label}
+        {point.year && ` (${point.year})`}
+      </p>
+      {rows.map(([name, value]) => (
+        <p key={name}>
+          {name}: {formatNumber(value)}
+          {suffix}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 /** The pessimist–optimist band and the central line over the points, on a t/ha axis. */
 export function ProjectionBand({ points, min, max, ticks, unit }: Readonly<ProjectionBandProps>) {
@@ -98,6 +123,15 @@ export function ProjectionBand({ points, min, max, ticks, unit }: Readonly<Proje
               y={(point) => y(point.mid)}
               style={{ stroke: 'var(--chart-1)' }}
               strokeWidth={2}
+            />
+            <HitAreas
+              height={HEIGHT}
+              areas={points.map((point) => ({
+                key: point.label,
+                x: at(point) - x.step() / 2,
+                width: x.step(),
+                label: <PointReading point={point} unit={unit} />,
+              }))}
             />
           </svg>
         );

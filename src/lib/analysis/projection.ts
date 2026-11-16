@@ -23,8 +23,17 @@ const HORIZONS = [
 
 export const PROJECTION_TITLE = 'Producción proyectada a escenario pesimista, central y optimista';
 
-/** One point of the chart: the band from `low` to `high`, the central line through `mid`. */
-export type ProjectionPoint = { label: string; low: number; mid: number; high: number };
+/**
+ * One point of the chart: the band from `low` to `high`, the central line through `mid`.
+ * The base carries the hero's `year`, which the tooltip names it by.
+ */
+export type ProjectionPoint = {
+  label: string;
+  low: number;
+  mid: number;
+  high: number;
+  year?: string;
+};
 
 export type ProjectionWidget = NumberScale & {
   id: string;
@@ -121,6 +130,7 @@ export function projectionWidgets(
   indicators: Indicators | undefined,
   scope: ParcelScope,
   parcel: AnalysisParcel | null | undefined,
+  year?: string,
 ): ProjectionWidget[] {
   if (!indicators) return [];
 
@@ -147,7 +157,7 @@ export function projectionWidgets(
 
     const pro = `Pro_${crop}`;
     const base = point('Base histórica', { low: pro, mid: pro, high: pro });
-    const points = base ? [base, ...horizons] : horizons;
+    const points = base ? [year ? { ...base, year } : base, ...horizons] : horizons;
     const central = indicators.find((indicator) => indicator.id.toLowerCase() === `mid_h5_${crop}`);
     const unit =
       indicators.find((indicator) => projectionCrop(indicator.id) === crop)?.unit ?? null;

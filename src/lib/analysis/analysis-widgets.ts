@@ -32,6 +32,8 @@ export type AnalysisWidgetsInput = {
    * parcel the value lists row — or, under Todas, the set combined (`combinedParcel`).
    */
   parcel: AnalysisParcel | null | undefined;
+  /** The hero's year, productivo only: dates the projection's base. */
+  year?: string;
 };
 
 /**
@@ -48,6 +50,7 @@ export function analysisWidgets({
   riesgo,
   scope,
   parcel,
+  year,
 }: AnalysisWidgetsInput): AnalysisWidget[] {
   const cards = new Map(
     indicatorCards(parcel, indicators, riesgo, scope).map((card) => [card.id, card]),
@@ -74,7 +77,7 @@ export function analysisWidgets({
   // Productivo's scenarios read together as one chart per crop, where the first of them sits.
   const projections = new Map(
     (riesgo === 'productivo'
-      ? projectionWidgets(parcels, parcelIds, indicators, scope, parcel)
+      ? projectionWidgets(parcels, parcelIds, indicators, scope, parcel, year)
       : []
     ).map((widget) => [widget.id, widget]),
   );

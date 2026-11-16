@@ -18,11 +18,14 @@ export const CROP_FILTER_ID = 'crop_type';
 export const SOWING_DATE_FILTER_ID = 'sowing_date';
 export const DATE_FILTER_ID = 'date';
 
+/** Productivo's year: the AI summary requires it, the projection's base is dated by it. */
+export const YEAR_FILTER_ID = 'year';
+
 /**
  * How the hero lays the filters out: the sowing date, then the date it must come before
  * (productivo's is the `year`), then the crop.
  */
-const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, 'year', CROP_FILTER_ID];
+const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, YEAR_FILTER_ID, CROP_FILTER_ID];
 
 /**
  * The filters in the hero's order rather than the API's: the two dates first, the crop

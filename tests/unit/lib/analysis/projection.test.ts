@@ -104,6 +104,12 @@ describe('projectionWidgets', () => {
     expect(h5.high).toBeCloseTo(4.9);
   });
 
+  it('dates the base, and only the base, with the hero year', () => {
+    const [widget] = projectionWidgets([A, B], ['A', 'B'], INDICATORS, 'individual', A, '2026');
+
+    expect(widget.points.map((point) => point.year)).toEqual(['2026', undefined, undefined]);
+  });
+
   it('leaves out a horizon without readings and the base when Pro was not answered', () => {
     const partial = parcel('C', { LOW_H5_soja: 2, MID_H5_soja: 3, HIGH_H5_soja: 'NA' });
     const only = parcel('D', { LOW_H10_soja: 1, MID_H10_soja: 2, HIGH_H10_soja: 3 });

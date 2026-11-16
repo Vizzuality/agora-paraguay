@@ -21,5 +21,5 @@ export function useApplicableIndicators(riesgo: Riesgo) {
     resolvedFilters?.[CROP_FILTER_ID],
   );
 
-  return { analysis, indicators: applicable, indicatorsError, parcelIds };
+  return { analysis, indicators: applicable, indicatorsError, parcelIds, filters: resolvedFilters };
 }
