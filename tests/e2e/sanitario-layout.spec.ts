@@ -104,6 +104,8 @@ test('the analysis runs with the default filters, and each change re-runs it', a
   ).toHaveText('2024');
   await expect(page.locator(`[data-day="${isoDay(1)}"] button`)).toBeDisabled();
   await page.keyboard.press('Escape');
+  // The closing calendar stays mounted while it animates out; wait it off before the next.
+  await expect(page.getByRole('dialog')).toBeHidden();
 
   await pickDate(page, sowingDate, '2026-05-01');
   await expect.poll(() => bodies.length).toBe(2);
