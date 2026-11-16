@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
-import { useId, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 
 type SettingsSectionProps = {
@@ -13,9 +14,13 @@ type SettingsSectionProps = {
 };
 
 /**
- * One setting of the sidebar: a card whose heading names it and, closed, shows the
- * current choice and a chevron; open, the controls under it. The sidebar decides which
- * one is open.
+ * One setting of the sidebar: a card whose heading names it, with a chevron that turns up
+ * while open; closed, the current choice beside the name; open, the controls under it.
+ * The sidebar decides which one is open.
+ *
+ * Opening and closing slide the controls' height (Radix measures it); the card's own
+ * padding never changes, so nothing jumps while they do. Closed, the controls unmount
+ * once the slide is over.
  */
 export function SettingsSection({
   name,
@@ -24,40 +29,38 @@ export function SettingsSection({
   onToggle,
   children,
 }: Readonly<SettingsSectionProps>) {
-  const id = useId();
-
   return (
-    <section
-      aria-label={name}
-      className={cn(
-        'flex flex-col rounded-3xl bg-card backdrop-blur-xs transition-colors',
-        open ? 'gap-2.5 pt-4' : 'py-4 has-[>button:hover]:bg-secondary-hover',
-      )}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={id}
-        onClick={onToggle}
-        className="flex w-full cursor-pointer items-center gap-1 px-6 text-left"
-      >
-        <span className="flex-1 text-base tracking-[0.28px] text-foreground">{name}</span>
-        {!open && selection && (
-          <span className="text-xs whitespace-nowrap text-muted-foreground">{selection}</span>
+    <Collapsible asChild open={open} onOpenChange={onToggle}>
+      <section
+        aria-label={name}
+        className={cn(
+          'flex animate-in flex-col rounded-3xl bg-card py-4 backdrop-blur-xs transition-colors fade-in motion-reduce:animate-none',
+          !open && 'has-[>button:hover]:bg-secondary-hover',
         )}
-        <span
-          aria-hidden
-          className={cn('flex size-8 items-center justify-center', open && 'invisible')}
-        >
-          <ChevronDown className="size-4" />
-        </span>
-      </button>
+      >
+        <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-1 px-6 text-left">
+          <span className="flex-1 text-base tracking-[0.28px] text-foreground">{name}</span>
+          {!open && selection && (
+            <span className="animate-in text-xs whitespace-nowrap text-muted-foreground fade-in motion-reduce:animate-none">
+              {selection}
+            </span>
+          )}
+          <span
+            aria-hidden
+            className={cn(
+              'flex size-8 items-center justify-center transition-transform duration-200 motion-reduce:transition-none',
+              open && 'rotate-180',
+            )}
+          >
+            <ChevronDown className="size-4" />
+          </span>
+        </CollapsibleTrigger>
 
-      {open && (
-        <div id={id} className="flex flex-col gap-6 px-6 pb-6">
-          {children}
-        </div>
-      )}
-    </section>
+        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down motion-reduce:animate-none">
+          {/* 10px under the heading and 24px to the card's edge, the card's 16px included. */}
+          <div className="flex flex-col gap-6 px-6 pt-2.5 pb-2">{children}</div>
+        </CollapsibleContent>
+      </section>
+    </Collapsible>
   );
 }
