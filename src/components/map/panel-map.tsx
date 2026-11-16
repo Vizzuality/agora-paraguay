@@ -26,7 +26,7 @@ export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
       touchPitch={false}
       style={{ width: '100%', height: '100%' }}
     >
-      {/* Same corners as the main map; the scale stacks under the credits ⓘ. */}
+      {/* Same corners as the main map; the scale sits beside the credits ⓘ. */}
       <AttributionControl compact position="top-left" />
       <ScaleControl position="top-left" />
       <ZoomControl variant="panel" />

@@ -111,7 +111,7 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       attributionControl={false}
     >
       {/* Every map: credits ⓘ and scale top left, legend bottom left, zoom bottom right.
-          JSX order = add order: the scale stacks under the ⓘ. */}
+          JSX order = add order: the scale sits beside the ⓘ (`globals.css`). */}
       <AttributionControl compact position="top-left" />
       <ScaleControl position="top-left" />
       <ZoomControl />
