@@ -1,27 +1,17 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 
-import { AnalysisShell } from '@/components/analysis-shell';
-import { AnalysisSidebar } from '@/components/analysis-sidebar';
 import { SanitarioWidgets } from '@/components/sanitario-widgets';
-import { WidgetGrid } from '@/components/widget-grid';
+import { RiskPageContent } from '@/components/settings/risk-page-content';
 
-/** Riesgo sanitario is public: the hero beside the summary and the cards, no gate. */
+/** Riesgo sanitario in the redesign, public: the selection map, then the summary and the widgets. */
 export const Route = createFileRoute('/analisis/sanitario')({
   component: SanitarioPage,
 });
 
 function SanitarioPage() {
   return (
-    <AnalysisShell
-      side={
-        <ClientOnly>
-          <AnalysisSidebar riesgo="sanitario" />
-        </ClientOnly>
-      }
-    >
-      <ClientOnly fallback={<WidgetGrid />}>
-        <SanitarioWidgets />
-      </ClientOnly>
-    </AnalysisShell>
+    <ClientOnly fallback={<h1 className="sr-only">Riesgo sanitario</h1>}>
+      <RiskPageContent title="Riesgo sanitario" analysis={<SanitarioWidgets />} />
+    </ClientOnly>
   );
 }
