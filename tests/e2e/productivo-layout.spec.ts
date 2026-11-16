@@ -37,6 +37,21 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
     'Horizonte 5 años: central 3,55 t/ha, pesimista 2,92 t/ha, optimista 4,17 t/ha',
     'Horizonte 10 años: central 3,35 t/ha, pesimista 2,52 t/ha, optimista 4,27 t/ha',
   ]);
+  // Hovering a column names its three scenarios; the base is dated by the hero's year.
+  const columns = projection.locator('svg rect[fill="transparent"]');
+  await columns.nth(0).hover();
+  await expect(page.getByRole('tooltip')).toContainText('Base histórica (2026)');
+  await columns.nth(1).hover();
+  const tooltip = page.getByRole('tooltip');
+  await expect(tooltip).toContainText(
+    'Horizonte 5 años' + 'Optimista: 4,17 t/ha' + 'Central: 3,55 t/ha' + 'Pesimista: 2,92 t/ha',
+  );
+  // Under Todas the header and the legend say how the parcels' values were combined.
+  await expect(
+    projection.getByText(/^Cada punto combina las parcelas seleccionadas/),
+  ).toBeVisible();
+  await expect(projection.getByText('[Percentiles 10-90] Rango pesimista-optimista')).toBeVisible();
+  await expect(projection.getByText('[Promedio] Central de las parcelas')).toBeVisible();
   await expect(
     main.getByRole('heading', { name: /^Producción proyectada (LOW|MID|HIGH)/ }),
   ).toHaveCount(0);
@@ -101,6 +116,10 @@ test('the productivo widgets read the selection under Todas and one parcel when 
     'Horizonte 5 años: central 3,7 t/ha, pesimista 3,1 t/ha, optimista 4,2 t/ha',
     'Horizonte 10 años: central 3,5 t/ha, pesimista 2,7 t/ha, optimista 4,3 t/ha',
   ]);
+  // One parcel's own scenarios need no method in the legend.
+  await expect(projection.getByText('Central de la parcela', { exact: true })).toBeVisible();
+  await expect(projection.getByText(/^\[/)).toHaveCount(0);
+  await expect(projection.getByText(/^Cada punto combina/)).toHaveCount(0);
   await parcel.click();
   await page.getByRole('option', { name: 'Todas' }).click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);

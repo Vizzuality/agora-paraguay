@@ -5,11 +5,17 @@ import type { ProjectionWidget } from '@/lib/analysis/projection';
 
 type ProjectionCardProps = Omit<ProjectionWidget, 'id'> & { className?: string };
 
-/** The legend's words: the selection's band is percentiles of its parcels, a parcel's its own scenarios. */
-const LEGEND = {
+/**
+ * The legend's words. Under Todas each leads with how the parcels' values were combined,
+ * and `method` spells it out under the title; a parcel's band and line are its own
+ * scenarios, so they need no method.
+ */
+const LEGEND: Record<ProjectionWidget['scope'], { band: string; line: string; method?: string }> = {
   multiple: {
-    band: 'Rango pesimista-optimista de las parcelas (percentiles 10-90)',
-    line: 'Central de las parcelas (promedio)',
+    band: '[Percentiles 10-90] Rango pesimista-optimista de las parcelas',
+    line: '[Promedio] Central de las parcelas',
+    method:
+      'Cada punto combina las parcelas seleccionadas: la banda va del percentil 10 de sus valores pesimistas al percentil 90 de los optimistas, y la línea es el promedio de los centrales. La base histórica usa la producción histórica para los tres.',
   },
   individual: {
     band: 'Rango pesimista-optimista de la parcela',
@@ -38,7 +44,7 @@ export function ProjectionCard({
 
   return (
     <WidgetCard className={className}>
-      <WidgetHeader label={label} description={description} />
+      <WidgetHeader label={label} description={description} subtitle={legend.method} />
 
       <ul className="sr-only">
         {points.map((point) => (
