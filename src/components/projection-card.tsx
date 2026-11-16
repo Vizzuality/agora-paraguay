@@ -24,7 +24,7 @@ const LEGEND: Record<ProjectionWidget['scope'], { band: string; line: string; me
 };
 
 /**
- * Projected production as one chart across the card's row: the historical base and each
+ * Projected production as one chart across the widget's row: the historical base and each
  * horizon, the pessimist–optimist band and the central line. The figures are listed for
  * assistive tech; the chart is decoration over that list.
  */

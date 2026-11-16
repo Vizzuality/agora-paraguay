@@ -10,7 +10,7 @@ const HEIGHT = 320;
 const TOP = 28;
 const LEFT = 32;
 const BOTTOM = 32;
-/** How far in the first and last points sit, so their centred labels stay inside the card. */
+/** How far in the first and last points sit, so their centred labels stay inside the widget. */
 const INSET = 64;
 
 const TEXT_CLASS = 'fill-muted-foreground text-[12px]';
@@ -61,7 +61,12 @@ export function ProjectionBand({ points, min, max, ticks, unit }: Readonly<Proje
         const at = (point: ProjectionPoint) => x(point.label) ?? 0;
 
         return (
-          <svg viewBox={`0 0 ${width} ${HEIGHT}`} className={SVG_CLASS}>
+          <svg
+            data-slot="chart"
+            aria-hidden
+            viewBox={`0 0 ${width} ${HEIGHT}`}
+            className={SVG_CLASS}
+          >
             {unit && (
               <text x={0} y={TOP - 12} className={TEXT_CLASS}>
                 {unit}

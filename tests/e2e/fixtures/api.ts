@@ -105,7 +105,7 @@ export const PRODUCTIVO_INDICATORS = [
     default: true,
     indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
   },
-  // Projected production, 3 scenarios × 2 horizons: one chart, not six cards.
+  // Projected production, 3 scenarios × 2 horizons: one chart, not six widgets.
   ...['LOW', 'MID', 'HIGH'].flatMap((scenario) =>
     ['H5', 'H10'].map((horizon) => ({
       id: `${scenario}_${horizon}_soja`,

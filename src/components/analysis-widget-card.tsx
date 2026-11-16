@@ -17,7 +17,7 @@ export function AnalysisWidgetCard({ widget }: Readonly<{ widget: AnalysisWidget
     case 'number':
       return <NumberCard {...widget} />;
     case 'projection':
-      // Across the row: three points over time need the width a single card lacks.
+      // Across the row: three points over time need the width a single widget lacks.
       return <ProjectionCard {...widget} className="col-span-full" />;
   }
 }
