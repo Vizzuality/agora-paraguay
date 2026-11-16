@@ -105,7 +105,40 @@ export const PRODUCTIVO_INDICATORS = [
     default: true,
     indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
   },
+  // Projected production, 3 scenarios × 2 horizons: one chart, not six widgets.
+  ...['LOW', 'MID', 'HIGH'].flatMap((scenario) =>
+    ['H5', 'H10'].map((horizon) => ({
+      id: `${scenario}_${horizon}_soja`,
+      name: `Producción proyectada ${scenario} ${horizon} de soja`,
+      unit: 't/ha',
+      default: true,
+      indicator_type: { type: 'numeric' },
+    })),
+  ),
 ];
+
+/**
+ * Projected soy production per parcel (t/ha), west then east: pessimist, central and
+ * optimist at each horizon.
+ */
+export const PARCEL_PROJECTIONS: Record<string, Record<string, number>> = {
+  D07D21P00000002: {
+    LOW_H5_soja: 2.9,
+    MID_H5_soja: 3.4,
+    HIGH_H5_soja: 3.9,
+    LOW_H10_soja: 2.5,
+    MID_H10_soja: 3.2,
+    HIGH_H10_soja: 4,
+  },
+  D07D23P00000008: {
+    LOW_H5_soja: 3.1,
+    MID_H5_soja: 3.7,
+    HIGH_H5_soja: 4.2,
+    LOW_H10_soja: 2.7,
+    MID_H10_soja: 3.5,
+    HIGH_H10_soja: 4.3,
+  },
+};
 
 /**
  * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
@@ -242,6 +275,7 @@ export async function stubAnalysisApi(page: Page) {
           Asian_rust: rust,
           Pro_soja: PARCEL_PRODUCTION[parcelId],
           N_soja: PARCEL_SEASONS[parcelId],
+          ...PARCEL_PROJECTIONS[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',
           // Both parcels Media: the resilience widget counts 2 under Media.

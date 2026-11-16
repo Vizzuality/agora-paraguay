@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 
 import { analysisWidgets } from '@/lib/analysis/analysis-widgets';
+import { YEAR_FILTER_ID } from '@/lib/analysis/filters';
 import { combinedParcel } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
@@ -18,7 +19,8 @@ import { activeParcelIdAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
  * inside `<ClientOnly>`.
  */
 export function useRiesgoWidgets(riesgo: Riesgo) {
-  const { analysis, indicators, indicatorsError, parcelIds } = useApplicableIndicators(riesgo);
+  const { analysis, indicators, indicatorsError, parcelIds, filters } =
+    useApplicableIndicators(riesgo);
   const activeId = useAtomValue(activeParcelIdAtom);
   const selected = useAtomValue(selectedIndicatorIdsAtom)[riesgo];
   const describe = useDescribe(riesgo);
@@ -42,7 +44,8 @@ export function useRiesgoWidgets(riesgo: Riesgo) {
     riesgo,
     scope,
     parcel,
+    year: filters?.[YEAR_FILTER_ID],
   }).map((widget) => ({ ...widget, description: describe(widget.description) }));
 
-  return { analysis, indicators, indicatorsError, parcelIds, parcel, widgets, describe };
+  return { analysis, indicators, indicatorsError, parcelIds, parcel, scope, widgets, describe };
 }

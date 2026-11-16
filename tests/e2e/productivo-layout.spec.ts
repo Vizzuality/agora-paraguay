@@ -25,6 +25,38 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
     main.getByRole('heading', { name: 'Producción base histórica de soja' }),
   ).toBeVisible();
 
+  // The six projection indicators read as one chart, across the content column.
+  const projection = main
+    .getByRole('heading', {
+      name: 'Producción proyectada a escenario pesimista, central y optimista',
+    })
+    .locator('..')
+    .locator('..');
+  await expect(projection.getByRole('listitem')).toHaveText([
+    'Base histórica: central 3,68 t/ha, pesimista 3,58 t/ha, optimista 3,78 t/ha',
+    'Horizonte 5 años: central 3,55 t/ha, pesimista 2,92 t/ha, optimista 4,17 t/ha',
+    'Horizonte 10 años: central 3,35 t/ha, pesimista 2,52 t/ha, optimista 4,27 t/ha',
+  ]);
+  // Hovering a column names its three scenarios; the base is dated by the hero's year.
+  const columns = projection.locator('svg rect[fill="transparent"]');
+  await columns.nth(0).hover();
+  await expect(page.getByRole('tooltip')).toContainText('Base histórica (2026)');
+  await columns.nth(1).hover();
+  // The base's tooltip may still be fading out: name the one to read.
+  const tooltip = page.getByRole('tooltip', { name: /^Horizonte 5 años/ });
+  await expect(tooltip).toContainText(
+    'Horizonte 5 años' + 'Optimista: 4,17 t/ha' + 'Central: 3,55 t/ha' + 'Pesimista: 2,92 t/ha',
+  );
+  // Under Todas the header and the legend say how the parcels' values were combined.
+  await expect(
+    projection.getByText(/^Cada punto combina las parcelas seleccionadas/),
+  ).toBeVisible();
+  await expect(projection.getByText('[Percentiles 10-90] Rango pesimista-optimista')).toBeVisible();
+  await expect(projection.getByText('[Promedio] Central de las parcelas')).toBeVisible();
+  await expect(
+    main.getByRole('heading', { name: /^Producción proyectada (LOW|MID|HIGH)/ }),
+  ).toHaveCount(0);
+
   // Productivo keeps the picker out of Cultivo y fechas.
   const filters = page.getByRole('region', { name: 'Cultivo y fechas' });
   await filters.getByRole('button', { name: /Cultivo y fechas/ }).click();
@@ -58,6 +90,17 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
   const resilience = widget(page, 'Proxy de resiliencia operativa');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
+  // The projection chart leads, and under Todas every widget takes the full width.
+  const projection = widget(
+    page,
+    'Producción proyectada a escenario pesimista, central y optimista',
+  );
+  const projectionBox = await projection.boundingBox();
+  const todasBoxes = [await production.boundingBox(), await resilience.boundingBox()];
+  expect(projectionBox!.y).toBeLessThan(todasBoxes[0]!.y);
+  expect(projectionBox!.y).toBeLessThan(todasBoxes[1]!.y);
+  expect(todasBoxes[0]!.x).toBe(todasBoxes[1]!.x);
+  expect(todasBoxes[0]!.width).toBe(todasBoxes[1]!.width);
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
 
@@ -75,6 +118,19 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
   await expect(seasons.locator('[data-slot="figure"]')).toHaveText('3');
   await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  // On one parcel the projection reads its own scenarios; its base is one value.
+  await expect(projection.getByRole('listitem')).toHaveText([
+    'Base histórica: central 3,81 t/ha, pesimista 3,81 t/ha, optimista 3,81 t/ha',
+    'Horizonte 5 años: central 3,7 t/ha, pesimista 3,1 t/ha, optimista 4,2 t/ha',
+    'Horizonte 10 años: central 3,5 t/ha, pesimista 2,7 t/ha, optimista 4,3 t/ha',
+  ]);
+  // One parcel's own scenarios need no method in the legend.
+  await expect(projection.getByText('Central de la parcela', { exact: true })).toBeVisible();
+  await expect(projection.getByText(/^\[/)).toHaveCount(0);
+  await expect(projection.getByText(/^Cada punto combina/)).toHaveCount(0);
+  // A parcel tab goes back to columns: the widgets narrow below the full width.
+  const parcelBox = await production.boundingBox();
+  expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
   await parcel.click();
   await page.getByRole('option', { name: 'Todas' }).click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);

@@ -70,6 +70,33 @@ describe('analysisWidgets', () => {
     expect(widgets[1]).not.toHaveProperty('classes');
   });
 
+  it('productivo: the projection chart leads, wherever its scenarios sit in the metadata', () => {
+    const scenarios: Indicator[] = ['LOW', 'MID', 'HIGH'].map((level) => ({
+      id: `${level}_H5_soja`,
+      name: `Producción proyectada ${level}`,
+      unit: 't/ha',
+      indicator_type: { type: 'numeric' },
+    }));
+    const projected = parcels.map((entry) => ({
+      ...entry,
+      properties: { ...entry.properties, LOW_H5_soja: 3, MID_H5_soja: 3.5, HIGH_H5_soja: 4 },
+    }));
+
+    for (const scope of ['multiple', 'individual'] as const) {
+      const widgets = analysisWidgets({
+        parcels: projected,
+        parcelIds: ['A', 'B'],
+        indicators: [resilience, production, ...scenarios],
+        riesgo: 'productivo',
+        scope,
+        parcel: projected[0],
+      });
+
+      expect(widgets.map((widget) => widget.kind)[0]).toBe('projection');
+      expect(widgets.filter((widget) => widget.kind === 'projection')).toHaveLength(1);
+    }
+  });
+
   it("productivo, a parcel tab: the category reads its class on the ruler, the number is that parcel's figure", () => {
     const widgets = analysisWidgets({
       parcels,

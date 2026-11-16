@@ -104,7 +104,8 @@ export type HitArea = { key: string | number; x: number; width: number; label: R
 /** One transparent hit area per bin or column, the full plot height, so an empty one answers too. */
 export function HitAreas({ areas, height }: Readonly<{ areas: HitArea[]; height: number }>) {
   return (
-    <TooltipProvider>
+    // The readings are read-only: moving off a column closes its tooltip, so the next opens.
+    <TooltipProvider disableHoverableContent>
       {areas.map((area) => (
         <Tooltip key={area.key}>
           <TooltipTrigger asChild>
