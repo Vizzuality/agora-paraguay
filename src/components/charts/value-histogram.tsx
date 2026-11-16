@@ -32,7 +32,7 @@ type ValueHistogramProps = Pick<ValueHistogramWidget, 'min' | 'max' | 'ticks' | 
 export function ValueHistogram({ min, max, ticks, bins, classes }: Readonly<ValueHistogramProps>) {
   return (
     <div className="flex flex-col">
-      <Responsive height={HISTOGRAM_HEIGHT + 1 + TICK_ROW}>
+      <Responsive>
         {(width) => <HistogramSvg width={width} min={min} max={max} ticks={ticks} bins={bins} />}
       </Responsive>
       {classes && (

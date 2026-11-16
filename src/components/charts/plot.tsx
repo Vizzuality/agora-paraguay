@@ -1,4 +1,4 @@
-import { ParentSize } from '@visx/responsive';
+import { useParentSize } from '@visx/responsive';
 import { Bar } from '@visx/shape';
 import type { ReactNode } from 'react';
 
@@ -44,28 +44,29 @@ export function parcelCount(count: number): string {
 const NOMINAL_WIDTH = 341;
 
 /**
- * The chart at the width its card gives it, `height` tall. Presentational: every card
- * lists its readings for assistive tech itself, so the drawing is hidden from it.
+ * The chart at the width its card gives it. Presentational: every card lists its
+ * readings for assistive tech itself, so the drawing is hidden from it.
  *
  * The measured width is a layout hint, not a size: the SVGs draw into a `viewBox` of it
  * and fill their card with CSS, so when the card changes width without a measurement
  * — the report, laid out for paper while the page keeps its screen width — the drawing
- * scales with the card instead of running past it. The nominal width covers the first
- * paint for the same reason.
+ * scales with the card instead of running past it. The box has no height of its own: it
+ * is the drawing's, so a scaled drawing still ends inside its card, axis included. The
+ * nominal width covers the first paint for the same reason.
+ *
+ * Measured with the hook, not `<ParentSize>`: that component draws inside an absolute,
+ * clipping layer, so its box needs a set height and would hide a drawing taller than it.
  */
-export function Responsive({
-  height,
-  children,
-}: Readonly<{ height: number; children: (width: number) => ReactNode }>) {
+export function Responsive({ children }: Readonly<{ children: (width: number) => ReactNode }>) {
+  const { parentRef, width } = useParentSize({
+    debounceTime: 50,
+    initialSize: { width: NOMINAL_WIDTH },
+    ignoreDimensions: ['height', 'top', 'left'],
+  });
+
   return (
-    <div aria-hidden>
-      <ParentSize
-        debounceTime={50}
-        initialSize={{ width: NOMINAL_WIDTH, height }}
-        style={{ height }}
-      >
-        {({ width }) => (width > 0 ? children(width) : null)}
-      </ParentSize>
+    <div ref={parentRef} aria-hidden>
+      {width > 0 ? children(width) : null}
     </div>
   );
 }

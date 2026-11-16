@@ -51,7 +51,7 @@ function PointReading({ point, unit }: Readonly<{ point: ProjectionPoint; unit: 
 /** The pessimist–optimist band and the central line over the points, on a t/ha axis. */
 export function ProjectionBand({ points, min, max, ticks, unit }: Readonly<ProjectionBandProps>) {
   return (
-    <Responsive height={HEIGHT}>
+    <Responsive>
       {(width) => {
         const x = scalePoint({
           domain: points.map((point) => point.label),
