@@ -57,6 +57,8 @@ export default defineConfig(({ mode }) => {
         // .output/server/index.mjs (the container entrypoint). Vercel sets
         // NITRO_PRESET=vercel so the target is chosen explicitly rather than sniffed.
         preset: process.env.NITRO_PRESET,
+        // Traced lucide-react ships only dist/esm, but Node resolves its `node` export to dist/cjs.
+        externals: { inline: ['lucide-react'] },
         // The production counterpart of `server.proxy` above: the deployed server relays
         // `/api` to the backend so the session cookie stays first-party and an https page
         // never calls the plain-http API directly (mixed content). The header override

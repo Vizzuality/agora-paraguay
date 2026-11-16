@@ -126,6 +126,9 @@ test('Reiniciar clears the drawing and returns to step 1', async ({ page }) => {
     .poll(() => Number(new URL(page.url()).searchParams.get('zoom')), { timeout: 5_000 })
     .toBeGreaterThan(OPENING_ZOOM);
   await expect.poll(() => yellowPixelCount(page), { timeout: 10_000 }).toBeGreaterThan(200);
+  // With parcels on the map, their legend opens by default.
+  await expect(page.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ocultar leyenda' })).toBeVisible();
 
   await restart.click();
 

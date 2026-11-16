@@ -134,8 +134,8 @@ function FormatSizeHelp() {
         correctamente.
       </p>
       <p>
-        Formatos compatibles: .csv (debe contener una columna "geom" con información geográfica),
-        .geojson, .kml, .kmz, .wkt, .shp (deben incluirse los archivos .shp, .shx, .dbf y .prj)
+        Formatos compatibles: .geojson, .kml, .kmz y .zip (un shapefile comprimido con los archivos
+        .shp, .shx, .dbf y .prj).
       </p>
     </>
   );

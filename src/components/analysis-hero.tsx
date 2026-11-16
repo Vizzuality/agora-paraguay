@@ -34,6 +34,7 @@ import { formatArea, parcelArea } from '@/lib/analysis/area';
 import { describeWithFilters, formatIsoDate } from '@/lib/analysis/describe';
 import {
   dateBounds,
+  filterValueLabel,
   heroFieldSpansRow,
   isoToDate,
   orderHeroFilters,
@@ -101,7 +102,7 @@ export function AnalysisHero({
  * placeholder selects hold the layout instead of a Suspense boundary the rest of the app
  * does not use.
  */
-function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
+export function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
   const {
     filters: { data: filters, error },
     resolvedFilters,
@@ -142,17 +143,6 @@ function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
       )}
     </div>
   );
-}
-
-/** What the report prints for a filter: the option's label for a category, the date as is. */
-function filterValueLabel(filter: Filter, value: string): string {
-  const field = filter.field_type;
-
-  if (field.type === 'category') {
-    return field.options.find((option) => option.value === value)?.label ?? value;
-  }
-
-  return value;
 }
 
 /** The control a filter's `field_type` calls for. */

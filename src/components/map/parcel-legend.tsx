@@ -23,11 +23,11 @@ const ITEMS = [
   { label: 'Arroz', className: 'border-2 border-white bg-black', style: ARROZ_SWATCH },
 ];
 
-/** What the parcels' colours and textures mean, folded behind a button. Shown once parcels are on the map. */
+/** What the parcels' colours and textures mean, open until folded. Shown once parcels are on the map. */
 export function ParcelLegend({ className }: Readonly<{ className?: string }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const id = useId();
 
   if ((data?.results.length ?? 0) === 0) return null;
@@ -46,6 +46,7 @@ export function ParcelLegend({ className }: Readonly<{ className?: string }>) {
       {open && (
         <ul
           id={id}
+          aria-label="Leyenda de parcelas"
           className="flex w-full flex-col gap-1 rounded-2xl bg-background py-2 pr-2 pl-4 backdrop-blur-xs"
         >
           {ITEMS.map((item) => (

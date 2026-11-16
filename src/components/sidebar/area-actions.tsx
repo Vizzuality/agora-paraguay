@@ -1,15 +1,15 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { SquarePen, Undo2, Upload } from 'lucide-react';
-import { useRef, type ChangeEvent } from 'react';
+import { useRef } from 'react';
 
 import { ACTION_CARDS_ENTER, ActionCardButton } from '@/components/sidebar/action-card-button';
-import { parseUploadFile, UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
-import { UploadError } from '@/lib/upload/types';
+import { UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
+import { useUploadFile } from '@/lib/upload/use-upload-file';
 import { cn } from '@/lib/utils';
 import { drawAtom, restartAnalysisAtom, setDrawToolAtom, startDrawAtom } from '@/store/draw';
 import { modeAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
-import { failUploadAtom, uploadFeaturesAtom, uploadResultAtom } from '@/store/upload';
+import { uploadResultAtom } from '@/store/upload';
 
 /**
  * Step 2 of the selection: the two ways to bring an área de interés onto the map —
@@ -28,36 +28,12 @@ export function AreaActions({ layout = 'card' }: Readonly<{ layout?: 'card' | 'b
   const setTool = useSetAtom(setDrawToolAtom);
   const startDraw = useSetAtom(startDrawAtom);
   const restart = useSetAtom(restartAnalysisAtom);
-  const uploadFeatures = useSetAtom(uploadFeaturesAtom);
-  const failUpload = useSetAtom(failUploadAtom);
+  const handleChange = useUploadFile();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // `startAnalysisAtom` parks the tool, so the tool check alone would do — the
   // explicit conjunction documents the rule: drawing is a selection-mode activity.
   const drawing = mode === 'selection' && draw.tool === 'draw';
-
-  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
-
-    // Reset so picking the same file again still fires a change event.
-    event.currentTarget.value = '';
-
-    if (!file) return;
-
-    try {
-      const outcome = await parseUploadFile(file);
-
-      uploadFeatures({ fileName: file.name, outcome });
-    } catch (error) {
-      const upload = error instanceof UploadError ? error : null;
-
-      failUpload({
-        fileName: file.name,
-        error: upload?.message ?? 'No se pudo leer el archivo.',
-        errorCode: upload?.code ?? null,
-      });
-    }
-  };
 
   return (
     <fieldset

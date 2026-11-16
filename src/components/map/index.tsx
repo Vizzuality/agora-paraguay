@@ -110,9 +110,10 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       style={{ width: '100%', height: '100%' }}
       attributionControl={false}
     >
-      {/* Same corner, JSX order = add order: the scale sits before the attribution. */}
-      <ScaleControl position="bottom-left" />
-      <AttributionControl compact position="bottom-left" />
+      {/* Every map: credits ⓘ and scale top left, legend bottom left, zoom bottom right.
+          JSX order = add order: the scale stacks under the ⓘ. */}
+      <AttributionControl compact position="top-left" />
+      <ScaleControl position="top-left" />
       <ZoomControl />
       <DevFocusBanner />
       {/*
@@ -122,7 +123,7 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
        * leaving the drawing on top of the parcels it is meant to hide behind.
        */}
       {bound && <FilteredParcelsLayer />}
-      <ParcelLegend className="bottom-16 left-2.5" />
+      <ParcelLegend className="bottom-5 left-4" />
       <DrawLayer />
       {children}
     </Map>
