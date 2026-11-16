@@ -217,4 +217,25 @@ test('Exportar informe lays the report out in one column, every chart inside its
     const chartBox = (await card.locator('svg[data-slot="chart"]').boundingBox())!;
     expect(chartBox.y + chartBox.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);
   }
+
+  // The área prints open: its map with the legend's rows and the credits written out,
+  // the parcel named in the heading in place of the picker and Editar parcelas.
+  const area = settings.getByRole('region', { name: 'Área de interés' });
+  await expect(area.getByRole('button', { name: /^Área de interés/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await page.emulateMedia({ media: 'print' });
+  await expect(area.getByRole('button', { name: /^Área de interés/ })).toContainText(
+    'Área de interés - Todas',
+  );
+  await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
+  await expect(area.getByRole('button', { name: 'Editar parcelas' })).toBeHidden();
+  await expect(area.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
+  await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
+  await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
+  await expect(area.locator('.maplibregl-ctrl-attrib-button')).toBeHidden();
+
+  // No summary generated: the AI card stays out of the report.
+  await expect(main.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
 });

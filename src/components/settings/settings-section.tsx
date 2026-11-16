@@ -45,7 +45,11 @@ export function SettingsSection({
             open ? 'pb-0' : 'pb-4',
           )}
         >
-          <span className="flex-1 text-base tracking-[0.28px] text-foreground">{name}</span>
+          <span className="flex-1 text-base tracking-[0.28px] text-foreground">
+            {name}
+            {/* The report keeps its sections open, so the choice prints beside the name. */}
+            {open && selection && <span className="hidden print:inline"> - {selection}</span>}
+          </span>
           {!open && selection && (
             <span className="animate-in text-xs whitespace-nowrap text-muted-foreground fade-in motion-reduce:animate-none">
               {selection}

@@ -14,7 +14,7 @@ const VARIANTS = {
   // Light tiles with primary icons in one rounded block, inset from the corner: the
   // panel map (`PanelMap`). A phone pinches instead.
   panel: {
-    group: 'right-2 bottom-2 overflow-hidden rounded-2xl max-md:hidden',
+    group: 'right-2 bottom-2 overflow-hidden rounded-2xl max-md:hidden print:hidden',
     button: 'size-11 bg-background text-primary backdrop-blur-xs hover:bg-accent',
     in: '',
     out: '',

@@ -50,9 +50,10 @@ export function AnalysedParcelsLayers() {
         variant="analysis"
         zoom={zoom}
       />
-      <ParcelLegend className="bottom-1 left-2 print:hidden" />
+      <ParcelLegend className="bottom-1 left-2" />
       <AnalysedParcelsBehaviour />
       <ReportSnapshot />
+      <ReportMapImage />
       {(parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
           <Layer type="fill" paint={{ 'fill-color': AREA_COLOR, 'fill-opacity': 0.5 }} />
@@ -105,10 +106,15 @@ function AnalysedParcelsBehaviour() {
 
 /**
  * The map for the report: a WebGL canvas prints blank, so while the page is laid out for
- * paper (`printReport`) the map is rendered to an image the hero prints in its place.
- * Taken once the map has settled at paper width with its tiles in (`idle`), from inside
- * a render — the only moment the canvas can be read without preserving its buffer.
+ * paper (`printReport`) the map is rendered to an image `ReportMapImage` prints in its place.
+ * The paper layout widens the map (and opens its section, a slide), so the snapshot waits
+ * for the layout to settle, resizes the map to it, and is taken at the next `idle` — only
+ * once the tiles the wider map needs are in, or its new edges would print empty. Taken
+ * from inside a render, the only moment the canvas can be read without preserving its buffer.
  */
+/** Long enough for the área's slide (`SettingsSection`, 200ms) to end. */
+const LAYOUT_SETTLE_MS = 250;
+
 function ReportSnapshot() {
   const { current: map } = useMap();
   const paperLayout = useAtomValue(paperLayoutAtom);
@@ -127,15 +133,35 @@ function ReportSnapshot() {
       instance.triggerRepaint();
     };
 
-    instance.once('idle', take);
-    // A repaint guarantees an `idle` even when the paper layout changed nothing.
-    instance.triggerRepaint();
+    const settled = setTimeout(() => {
+      // Size the canvas to the paper layout now, not on the resize observer's next frame.
+      instance.resize();
+      instance.once('idle', take);
+      // A repaint guarantees an `idle` even when the paper layout changed nothing.
+      instance.triggerRepaint();
+    }, LAYOUT_SETTLE_MS);
 
     return () => {
       cancelled = true;
+      clearTimeout(settled);
       instance.off('idle', take);
     };
   }, [paperLayout, map, setSnapshot]);
 
   return null;
+}
+
+/** Print only: the report's snapshot over the blank canvas, under the legend and credits. */
+function ReportMapImage() {
+  const snapshot = useAtomValue(reportMapAtom);
+  if (snapshot === null) return null;
+
+  return (
+    <img
+      src={snapshot}
+      alt=""
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-1 hidden size-full object-cover print:block"
+    />
+  );
 }
