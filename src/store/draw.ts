@@ -2,10 +2,10 @@ import { atom } from 'jotai';
 import type { GeoJSONStoreFeatures, TerraDraw } from 'terra-draw';
 
 import { drawnPolygons } from '@/lib/map/draw-features';
-import { terraDrawMode, type DrawTool } from '@/lib/map/draw-state';
+import { terraDrawMode } from '@/lib/map/draw-state';
 import { restoreFeatures } from '@/lib/map/import-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
-import { analysisTypeAtom, areaRejectionAtom } from '@/store/selection';
+import { areaRejectionAtom } from '@/store/selection';
 import { resetSelectionSessionAtom } from '@/store/upload';
 
 /**
@@ -33,10 +33,6 @@ export const drawModeAtom = atom((get) => terraDrawMode(get(drawStateAtom)));
  * a command changed.
  */
 
-export const setDrawToolAtom = atom(null, (_get, set, tool: DrawTool | null) => {
-  set(drawStateAtom, { type: 'tool', tool });
-});
-
 /**
  * Starts the selection over: polygons, tool and session state (parcel flips, upload
  * notice, analysis, mode) all reset. Reiniciar routes through here. Also works without
@@ -59,12 +55,6 @@ export const restartSelectionAtom = atom(null, (get, set) => {
   }
 
   set(resetSelectionSessionAtom);
-});
-
-/** Reiniciar: the selection starts over from Paso 1, the analysis type included. */
-export const restartAnalysisAtom = atom(null, (_get, set) => {
-  set(restartSelectionAtom);
-  set(analysisTypeAtom, null);
 });
 
 /** Activates the draw tool. A drawing session always starts from scratch. */

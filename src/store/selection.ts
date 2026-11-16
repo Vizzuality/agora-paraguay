@@ -1,30 +1,7 @@
 import { atom } from 'jotai';
 
-import type { Riesgo } from '@/lib/api/metadata/schemas';
-import { selectionStep, selectionView } from '@/lib/selection-steps';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { resetParcelTogglesAtom } from '@/store/parcels';
-
-/** The riesgo picked on step 1; Analizar opens its page. Reiniciar clears it. */
-export const analysisTypeAtom = atom<Riesgo | null>(null);
-
-/** The panel step, derived: the store never holds it, so it cannot drift from the areas. */
-export const selectionStepAtom = atom((get) => {
-  const draw = get(drawStateAtom);
-
-  return selectionStep({
-    analysisType: get(analysisTypeAtom),
-    areaCount: draw.polygons.length,
-    drawing: draw.tool === 'draw',
-  });
-});
-
-/** Which of panel and map a phone shows, derived like the step. */
-export const selectionViewAtom = atom((get) => {
-  const draw = get(drawStateAtom);
-
-  return selectionView({ areaCount: draw.polygons.length, drawing: draw.tool === 'draw' });
-});
 
 /**
  * `filter-parcels` answered with nothing for the areas (outside the cadastre's coverage).

@@ -6,6 +6,16 @@ import { mapCanvas, panMap, stubBasemap } from './fixtures/map';
 // Temporary while the cadastre covers Alto Paraná only: the map opens there
 // (`INITIAL_VIEW_STATE`), says so, and the first camera write lands on that view.
 // Delete this test with `DevFocusBanner` when the view goes back to the whole country.
+test('/ keeps the camera it was given on its way to the analysis page', async ({ page }) => {
+  await stubBasemap(page);
+  await page.goto('/?lng=-55.5&lat=-25.5&zoom=11');
+
+  await expect(page).toHaveURL(/\/analisis\/sanitario\?/);
+  const params = new URL(page.url()).searchParams;
+  expect(Number(params.get('lng'))).toBeCloseTo(-55.5, 1);
+  expect(Number(params.get('zoom'))).toBe(11);
+});
+
 test('opens on Alto Paraná with the development banner', async ({ page }) => {
   await stubBasemap(page);
   await page.goto('/');

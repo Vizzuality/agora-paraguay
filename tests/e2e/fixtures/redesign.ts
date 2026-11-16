@@ -12,11 +12,19 @@ const POLYGON = [
   { x: 360, y: 350 },
 ];
 
-/** Opens a redesign riesgo page at farm scale, draws an área de interés and runs Analizar. */
-export async function analyseOnRedesign(page: Page, path: '/v2/sanitario' | '/v2/productivo') {
+/**
+ * Opens a redesign riesgo page at farm scale, draws an área de interés and runs Analizar.
+ * `override` registers routes after the stubs, so Playwright tries them first.
+ */
+export async function analyseOnRedesign(
+  page: Page,
+  path: '/analisis/sanitario' | '/analisis/productivo',
+  override?: (page: Page) => Promise<unknown>,
+) {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await stubAuth(page);
+  await override?.(page);
   await page.goto(cameraUrl({ ...PARAGUAY_VIEW_STATE, zoom: 12 }, path));
 
   const area = page.getByRole('region', { name: 'Área de interés' });

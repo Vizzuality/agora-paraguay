@@ -18,10 +18,3 @@ export function reportDate(date: Date): string {
 export function reportFileName(riesgo: Riesgo, date: Date): string {
   return `agora-${riesgo}-${reportDate(date)}`;
 }
-
-/** The line the report carries instead of the buttons: when it was generated. */
-export function reportCaption(date: Date): string {
-  const formatted = new Intl.DateTimeFormat('es-PY', { dateStyle: 'long' }).format(date);
-
-  return `Informe generado el ${formatted}`;
-}

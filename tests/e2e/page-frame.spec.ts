@@ -17,7 +17,7 @@ async function login(page: Page) {
 test('the settings column sits left of the content, 552px wide', async ({ page }) => {
   await stubAuth(page);
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto('/v2');
+  await page.goto('/analisis');
 
   const banner = page.getByRole('banner');
   const settings = page.getByRole('complementary', { name: 'Configuración' });
@@ -38,7 +38,7 @@ test('the settings column sits left of the content, 552px wide', async ({ page }
 test('below lg the columns stack, settings first', async ({ page }) => {
   await stubAuth(page);
   await page.setViewportSize({ width: 390, height: 800 });
-  await page.goto('/v2');
+  await page.goto('/analisis');
 
   const settingsBox = await page
     .getByRole('complementary', { name: 'Configuración' })
@@ -50,7 +50,7 @@ test('below lg the columns stack, settings first', async ({ page }) => {
 
 test('signed in, the account menu names the user and closes the session', async ({ page }) => {
   await stubAuth(page);
-  await page.goto('/v2');
+  await page.goto('/analisis');
   await login(page);
 
   await page.getByRole('button', { name: 'Cuenta' }).click();
@@ -67,7 +67,7 @@ test('signed in, the account menu names the user and closes the session', async 
 
 test('staff find Administrar usuarios in the account menu', async ({ page }) => {
   await stubAuth(page, { staff: true });
-  await page.goto('/v2');
+  await page.goto('/analisis');
   await login(page);
 
   await page.getByRole('button', { name: 'Cuenta' }).click();

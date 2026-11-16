@@ -7,7 +7,10 @@ import { cameraUrl, drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
 import { savedAnalysedParcelCount } from './fixtures/saved-selection';
 
 // Farm scale, where the test triangle is a few farms rather than a department.
-const FARM_SCALE_V2_URL = cameraUrl({ ...PARAGUAY_VIEW_STATE, zoom: 12 }, '/v2/sanitario');
+const FARM_SCALE_URL_SANITARIO = cameraUrl(
+  { ...PARAGUAY_VIEW_STATE, zoom: 12 },
+  '/analisis/sanitario',
+);
 
 // Canvas-relative, inside the content column's map.
 const POLYGON = [
@@ -24,7 +27,7 @@ test.beforeEach(async ({ page }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await stubAuth(page);
-  await page.goto(FARM_SCALE_V2_URL);
+  await page.goto(FARM_SCALE_URL_SANITARIO);
 
   // Terra Draw is bound once the draw card is enabled.
   await expect(area(page).getByRole('button', { name: 'Dibujar polígono' })).toBeEnabled();
@@ -52,7 +55,7 @@ test('draws an area, analyses it, and edits the parcels back', async ({ page }) 
   await expect(page.getByRole('main').locator('canvas')).toHaveCount(0);
   await expect(section.locator('canvas.maplibregl-canvas')).toBeVisible();
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
-  await expect(page).toHaveURL(/\/v2\/sanitario/);
+  await expect(page).toHaveURL(/\/analisis\/sanitario/);
 
   // Editar parcelas goes back to the selection with the parcels kept.
   await section.getByRole('button', { name: 'Editar parcelas' }).click();
