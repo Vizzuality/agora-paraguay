@@ -2,18 +2,14 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { parseAsFloat, useQueryStates } from 'nuqs';
 import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
-import Map, {
-  AttributionControl,
-  ScaleControl,
-  type ViewStateChangeEvent,
-} from 'react-map-gl/maplibre';
+import Map, { ScaleControl, type ViewStateChangeEvent } from 'react-map-gl/maplibre';
 
+import { CompactAttribution } from '@/components/map/compact-attribution';
 import { DevFocusBanner } from '@/components/map/dev-focus-banner';
 import { DrawLayer } from '@/components/map/draw-layer';
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelLegend } from '@/components/map/parcel-legend';
 import { ZoomControl } from '@/components/map/zoom-control';
-import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, dimBasemap, MAX_BOUNDS } from '@/lib/map/basemap';
 import { addCropPatterns } from '@/lib/map/crop-patterns';
 import { INITIAL_VIEW_STATE, normalizeViewState } from '@/lib/map/view-state';
@@ -98,7 +94,6 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
       onLoad={(event) => {
-        collapseAttribution(event.target);
         dimBasemap(event.target);
         addCropPatterns(event.target);
       }}
@@ -112,7 +107,7 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
     >
       {/* Every map: credits ⓘ and scale top left, legend bottom left, zoom bottom right.
           JSX order = add order: the scale sits beside the ⓘ (`globals.css`). */}
-      <AttributionControl compact position="top-left" />
+      <CompactAttribution />
       <ScaleControl position="top-left" />
       <ZoomControl />
       <DevFocusBanner />

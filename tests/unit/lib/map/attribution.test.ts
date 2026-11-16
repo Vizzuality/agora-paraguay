@@ -13,7 +13,6 @@ function fakeMap(initial: string[]) {
     },
   };
   const map = {
-    getContainer: () => ({ querySelector: () => control }),
     on: (type: string, listener: () => void) => {
       if (!listeners.has(type)) listeners.set(type, new Set());
       listeners.get(type)!.add(listener);
@@ -23,23 +22,26 @@ function fakeMap(initial: string[]) {
   const fire = (type: string) => listeners.get(type)?.forEach((listener) => listener());
   const listening = () => [...listeners.values()].reduce((sum, set) => sum + set.size, 0);
 
-  return { map: map as never, classes, fire, listening };
+  return { map: map as never, control: control as never, classes, fire, listening };
 }
 
 describe('collapseAttribution', () => {
   it('closes credits that are already open', () => {
-    const { map, classes, listening } = fakeMap(['maplibregl-compact', 'maplibregl-compact-show']);
+    const { map, control, classes, listening } = fakeMap([
+      'maplibregl-compact',
+      'maplibregl-compact-show',
+    ]);
 
-    collapseAttribution(map);
+    collapseAttribution(map, control);
 
     expect(classes.has('maplibregl-compact-show')).toBe(false);
     expect(listening()).toBe(0);
   });
 
-  it('closes credits that open after load, when a source brings them', () => {
-    const { map, classes, fire, listening } = fakeMap([]);
+  it('closes credits that open later, when a source brings them', () => {
+    const { map, control, classes, fire, listening } = fakeMap([]);
 
-    collapseAttribution(map);
+    collapseAttribution(map, control);
     classes.add('maplibregl-compact');
     classes.add('maplibregl-compact-show');
     fire('sourcedata');
@@ -49,9 +51,9 @@ describe('collapseAttribution', () => {
   });
 
   it('leaves credits the user opened afterwards alone', () => {
-    const { map, classes, fire } = fakeMap(['maplibregl-compact']);
+    const { map, control, classes, fire } = fakeMap(['maplibregl-compact']);
 
-    collapseAttribution(map);
+    collapseAttribution(map, control);
     classes.add('maplibregl-compact-show');
     fire('sourcedata');
 
