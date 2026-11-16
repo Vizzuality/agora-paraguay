@@ -22,7 +22,8 @@ type Color = string | ExpressionSpecification;
 /** A layer's own fill look: its areas only, edged by the fill's 1px outline. */
 export type FillPaint = {
   color: Color;
-  opacity: number;
+  /** One opacity, or an expression that picks one per feature. */
+  opacity: number | ExpressionSpecification;
   outlineColor: string;
 };
 
@@ -37,6 +38,8 @@ export type GlobalLayerStyleOptions = {
   fill?: FillPaint;
   /** With `fill`: also trace every feature in `color` this wide, the highlighted one thicker. */
   lineWidth?: number;
+  /** With `lineWidth`: the trace's opacity, one or per feature; opaque when left out. */
+  lineOpacity?: number | ExpressionSpecification;
   /** Paint only this district's features, plus any that belong to no district. */
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
@@ -69,6 +72,7 @@ export function globalLayerStyles({
   color,
   fill,
   lineWidth,
+  lineOpacity,
   districtId,
   highlightedId,
   outline = false,
@@ -137,6 +141,7 @@ export function globalLayerStyles({
         paint: {
           'line-color': color,
           'line-width': ['case', isHighlighted, lineWidth + 1, lineWidth],
+          ...(lineOpacity === undefined ? {} : { 'line-opacity': lineOpacity }),
         },
       },
     ];

@@ -76,16 +76,23 @@ export const EXPOSURE_FILL_OPACITY = 0.6;
 export const EXPOSURE_LINE_WIDTH = 2;
 
 /** Each feature's `Ex_class` in its class colour from `palette`; a class not listed is grey. */
+/** What a class the legend has hidden paints: nothing, so its districts still answer the pointer. */
+const HIDDEN_CLASS_COLOR = 'rgba(0, 0, 0, 0)';
+
 function classColor(
   classes: readonly RiskClass[],
   palette: Record<RiskTone, string>,
+  hidden: ReadonlySet<string>,
 ): ExpressionSpecification | string {
   if (classes.length === 0) return palette.medium;
 
   return [
     'match',
     ['get', 'Ex_class'],
-    ...classes.flatMap(({ label, tone }) => [label, palette[tone]]),
+    ...classes.flatMap(({ label, tone }) => [
+      label,
+      hidden.has(label) ? HIDDEN_CLASS_COLOR : palette[tone],
+    ]),
     palette.medium,
   ] as unknown as ExpressionSpecification;
 }
@@ -106,14 +113,40 @@ export function exposureClasses(
     : FALLBACK_CLASSES;
 }
 
-/** The exposure layer's fill: each district's class in the deeper chart colour. */
-export function exposureFill(classes: readonly RiskClass[]): ExpressionSpecification | string {
-  return classColor(classes, TONE_FILL_HEX);
+/**
+ * An exposure opacity per district: `base` scaled by its class's share in `byClass`
+ * (0–1, from the legend), `base` for a class it does not name.
+ */
+export function exposureOpacity(
+  classes: readonly RiskClass[],
+  byClass: Readonly<Record<string, number>>,
+  base: number,
+): ExpressionSpecification | number {
+  const named = classes.filter(({ label }) => byClass[label] !== undefined);
+  if (named.length === 0) return base;
+
+  return [
+    'match',
+    ['get', 'Ex_class'],
+    ...named.flatMap(({ label }) => [label, base * byClass[label]]),
+    base,
+  ] as unknown as ExpressionSpecification;
 }
 
-/** The exposure layer's outline: each district's class in the bright chart colour. */
-export function exposureOutline(classes: readonly RiskClass[]): ExpressionSpecification | string {
-  return classColor(classes, TONE_HEX);
+/** The exposure layer's fill: each district's class in the deeper chart colour, `hidden` ones clear. */
+export function exposureFill(
+  classes: readonly RiskClass[],
+  hidden: ReadonlySet<string> = new Set(),
+): ExpressionSpecification | string {
+  return classColor(classes, TONE_FILL_HEX, hidden);
+}
+
+/** The exposure layer's outline: each district's class in the bright chart colour, `hidden` ones clear. */
+export function exposureOutline(
+  classes: readonly RiskClass[],
+  hidden: ReadonlySet<string> = new Set(),
+): ExpressionSpecification | string {
+  return classColor(classes, TONE_HEX, hidden);
 }
 
 /** A district as the analysis widgets read a parcel: its key and its scalar properties. */

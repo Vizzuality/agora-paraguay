@@ -1,9 +1,10 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
-import { useEffect, useEffectEvent, useState, type CSSProperties } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 
 import { GlobalLayer } from '@/components/map/global-layer';
+import { MapLegend } from '@/components/map/map-legend';
 import { MapLoading } from '@/components/map/map-loading';
 import { useIndicators } from '@/lib/analysis/use-indicators';
 import type { RiskTone } from '@/lib/analysis/widget-config';
@@ -14,10 +15,12 @@ import {
   exposureClasses,
   exposureFill,
   exposureLabel,
+  exposureOpacity,
   exposureOutline,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
+import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legend-order';
 import { DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
@@ -68,6 +71,23 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   // The legend's classes and colours, the same as the panel's exposure ruler.
   const classes = exposureClasses(useIndicators('exposicion_climatica').data);
 
+  // The legend's row controls. A hidden class paints clear, a faded one scales its
+  // opacity; the reference layers paint in the legend's order, top row on top. Exposure is one layer, so reordering its
+  // classes reorders the key only.
+  const [hiddenClasses, setHiddenClasses] = useState<ReadonlySet<string>>(new Set());
+  const [classOrder, setClassOrder] = useState<string[]>([]);
+  const [classOpacity, setClassOpacity] = useState<Readonly<Record<string, number>>>({});
+  const [hiddenLayers, setHiddenLayers] = useState<ReadonlySet<string>>(new Set());
+  const [layerOpacity, setLayerOpacity] = useState<Readonly<Record<string, number>>>({});
+  const [layerOrder, setLayerOrder] = useState(() =>
+    REFERENCE_LAYERS.map(({ id }) => String(id)).toReversed(),
+  );
+  const layersTopFirst = ordered(REFERENCE_LAYERS, layerOrder, ({ id }) => String(id));
+  const beforeIds = stackBeforeIds(
+    layersTopFirst.map(({ id }) => globalLayerFillId(id)),
+    EXPOSURE_FILL_ID,
+  );
+
   useFlyToDistrict(globalLayerSourceId(EXPOSURE_LAYER.id), selected?.id ?? null);
 
   const districtAt = (event: MapLayerMouseEvent) =>
@@ -103,19 +123,38 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
 
   return (
     <>
-      <MapLegend
-        items={
-          exposure
-            ? classes.map(({ label, tone }) => ({
-                label: exposureLabel(label),
-                swatch: TONE_SWATCH[tone],
-              }))
-            : REFERENCE_LAYERS.map(({ label, swatch }) => ({
-                label,
-                style: { backgroundColor: swatch.fill, borderColor: swatch.edge },
-              }))
-        }
-      />
+      {exposure ? (
+        <MapLegend
+          label="Leyenda de exposición"
+          className="bottom-2 left-2"
+          items={ordered(classes, classOrder, ({ label }) => label).map(({ label, tone }) => ({
+            id: label,
+            label: exposureLabel(label),
+            className: cn('border-2', TONE_SWATCH[tone]),
+          }))}
+          hidden={hiddenClasses}
+          onToggle={(id) => setHiddenClasses((ids) => toggled(ids, id))}
+          onReorder={setClassOrder}
+          opacity={classOpacity}
+          onOpacity={(id, value) => setClassOpacity((values) => ({ ...values, [id]: value }))}
+        />
+      ) : (
+        <MapLegend
+          label="Leyenda de capas"
+          className="bottom-2 left-2"
+          items={layersTopFirst.map(({ id, label, swatch }) => ({
+            id: String(id),
+            label,
+            className: 'border-2',
+            style: { backgroundColor: swatch.fill, borderColor: swatch.edge },
+          }))}
+          hidden={hiddenLayers}
+          onToggle={(id) => setHiddenLayers((ids) => toggled(ids, id))}
+          onReorder={setLayerOrder}
+          opacity={layerOpacity}
+          onOpacity={(id, value) => setLayerOpacity((values) => ({ ...values, [id]: value }))}
+        />
+      )}
       {exposure && hovered && <DistrictTooltip {...hovered} />}
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
       {/* Mounted on both tabs, so a switch restyles it instead of reloading it. */}
@@ -123,29 +162,31 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
         {...EXPOSURE_LAYER}
         {...(exposure
           ? {
-              color: exposureOutline(classes),
+              color: exposureOutline(classes, hiddenClasses),
               fill: {
-                color: exposureFill(classes),
-                opacity: EXPOSURE_FILL_OPACITY,
+                color: exposureFill(classes, hiddenClasses),
+                opacity: exposureOpacity(classes, classOpacity, EXPOSURE_FILL_OPACITY),
                 outlineColor: 'rgba(0, 0, 0, 0)',
               },
               lineWidth: EXPOSURE_LINE_WIDTH,
+              lineOpacity: exposureOpacity(classes, classOpacity, 1),
             }
           : { color: PICK_OUTLINE_COLOR, fill: DISTRICTS_FILL, outline: true })}
         highlightedId={selected?.id}
       />
       {capasOpened &&
-        REFERENCE_LAYERS.map(({ id, fill }) => (
-          // Mounted after the exposure layer, slotted under it so the pick's outline
-          // stays on top: the one `beforeId`, on an id of ours that is always there.
+        layersTopFirst.map(({ id, fill }) => (
+          // Under the exposure layer, so the pick's outline stays on top, each right
+          // under the row above it (`stackBeforeIds`). Mounted top first, so every
+          // `beforeId` names a layer already there: a missing one would drop the layer.
           <GlobalLayer
             key={id}
             id={id}
             color={fill.color}
-            fill={fill}
+            fill={{ ...fill, opacity: scaledOpacity(fill.opacity, layerOpacity[String(id)]) }}
             districtId={selected?.id}
-            hidden={exposure}
-            beforeId={EXPOSURE_FILL_ID}
+            hidden={exposure || hiddenLayers.has(String(id))}
+            beforeId={beforeIds[globalLayerFillId(id)]}
           />
         ))}
     </>
@@ -155,18 +196,19 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
 /**
  * Whether the open view's sources are still loading. The layers are tens of MB, so
  * parsing them takes seconds and the wait shows. Only a tab's first opening waits: its
- * sources stay mounted after, and the repaint a switch causes ends in an `idle` check.
+ * sources stay mounted after, so once they have loaded the notice stays away for it.
  */
 function useViewLoading(view: ExposureMapView, sourceIds: string[]): boolean {
   const { current: mapRef } = useMap();
-  // Which view's sources last finished.
-  const [loadedView, setLoadedView] = useState<ExposureMapView | null>(null);
+  // The views whose sources have finished once. Latched: later tile loads (a pan, a
+  // layer the legend shows again) fetch tiles too, and must not bring the notice back.
+  const [loadedViews, setLoadedViews] = useState<ReadonlySet<ExposureMapView>>(new Set());
 
   const check = useEffectEvent(() => {
     const map = mapRef?.getMap();
-    if (!map) return;
+    if (!map || loadedViews.has(view)) return;
     const ready = sourceIds.every((id) => map.getSource(id) && map.isSourceLoaded(id));
-    setLoadedView(ready ? view : null);
+    if (ready) setLoadedViews((views) => new Set(views).add(view));
   });
 
   useEffect(() => {
@@ -182,7 +224,7 @@ function useViewLoading(view: ExposureMapView, sourceIds: string[]): boolean {
     };
   }, [mapRef]);
 
-  return loadedView !== view;
+  return !loadedViews.has(view);
 }
 
 type Hovered = { district: ExposureDistrict; x: number; y: number };
@@ -199,21 +241,5 @@ function DistrictTooltip({ district, x, y }: Readonly<Hovered>) {
       {district.department && <p className="text-white/70">{district.department}</p>}
       {district.exposure && <p>{exposureLabel(district.exposure)}</p>}
     </div>
-  );
-}
-
-/** The open view's key, bottom left in dark glass: exposure classes, or the layers. */
-function MapLegend({
-  items,
-}: Readonly<{ items: { label: string; swatch?: string; style?: CSSProperties }[] }>) {
-  return (
-    <ul className="absolute bottom-0 left-0 flex flex-col gap-1 bg-black/50 p-2 text-xs text-white backdrop-blur-xs">
-      {items.map(({ label, swatch, style }) => (
-        <li key={label} className="flex items-center gap-1">
-          <span aria-hidden className={cn('size-4 rounded-full border-2', swatch)} style={style} />
-          {label}
-        </li>
-      ))}
-    </ul>
   );
 }
