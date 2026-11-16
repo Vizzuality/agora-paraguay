@@ -18,7 +18,7 @@ export const CROP_FILTER_ID = 'crop_type';
 export const SOWING_DATE_FILTER_ID = 'sowing_date';
 export const DATE_FILTER_ID = 'date';
 
-/** Productivo's year: the AI summary requires it, the projection's base is dated by it. */
+/** Productivo's year. Is required for the AI summary and determines the baseline year for projections. */
 export const YEAR_FILTER_ID = 'year';
 
 /**
