@@ -125,7 +125,7 @@ describe('projectionWidgets', () => {
 });
 
 describe('analysisWidgets with projections', () => {
-  it('replaces the six scenario cards with one chart where the first of them sat, Pro kept', () => {
+  it('replaces the six scenario widgets with one chart ahead of the rest, Pro kept', () => {
     const widgets = analysisWidgets({
       parcels: [A],
       parcelIds: ['A'],
@@ -136,8 +136,8 @@ describe('analysisWidgets with projections', () => {
     });
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
-      ['number', 'Pro_soja'],
       ['projection', 'projection_soja'],
+      ['number', 'Pro_soja'],
     ]);
   });
 });

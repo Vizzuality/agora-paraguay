@@ -37,7 +37,8 @@ export type AnalysisWidgetsInput = {
 };
 
 /**
- * Every widget the shown indicators produce, in metadata order, whatever its kind:
+ * Every widget the shown indicators produce, productivo's projection charts first, the
+ * rest in metadata order, whatever its kind:
  * a risk card for a classed reading of one parcel, a count of the parcels per class, a
  * histogram of their values over a scale, one parcel's number on that scale. Which kind an
  * indicator takes is `widgetFor`'s call, by riesgo and scope; each kind's builder answers
@@ -74,26 +75,15 @@ export function analysisWidgets({
     ]),
   );
 
-  // Productivo's scenarios read together as one chart per crop, where the first of them sits.
-  const projections = new Map(
-    (riesgo === 'productivo'
+  // Productivo's scenarios read together as one chart per crop, ahead of every other widget.
+  const projections: AnalysisWidget[] = (
+    riesgo === 'productivo'
       ? projectionWidgets(parcels, parcelIds, indicators, scope, parcel, year)
       : []
-    ).map((widget) => [widget.id, widget]),
-  );
-  const placed = new Set<string>();
+  ).map((widget) => ({ kind: 'projection', ...widget }));
 
-  return (indicators ?? []).flatMap((indicator): AnalysisWidget[] => {
-    const crop = riesgo === 'productivo' ? projectionCrop(indicator.id) : null;
-
-    if (crop !== null) {
-      const projection = projections.get(`projection_${crop}`);
-
-      if (!projection || placed.has(projection.id)) return [];
-      placed.add(projection.id);
-
-      return [{ kind: 'projection', ...projection }];
-    }
+  const others = (indicators ?? []).flatMap((indicator): AnalysisWidget[] => {
+    if (riesgo === 'productivo' && projectionCrop(indicator.id) !== null) return [];
 
     const card = cards.get(indicator.id);
     if (card) return [{ kind: 'ruler', ...card }];
@@ -109,4 +99,6 @@ export function analysisWidgets({
 
     return [];
   });
+
+  return [...projections, ...others];
 }

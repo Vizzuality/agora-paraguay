@@ -47,5 +47,5 @@ export function useRiesgoWidgets(riesgo: Riesgo) {
     year: filters?.[YEAR_FILTER_ID],
   }).map((widget) => ({ ...widget, description: describe(widget.description) }));
 
-  return { analysis, indicators, indicatorsError, parcelIds, parcel, widgets, describe };
+  return { analysis, indicators, indicatorsError, parcelIds, parcel, scope, widgets, describe };
 }

@@ -12,13 +12,13 @@ import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
  * `/analisis/productivo` and the redesign. Reads atoms: render inside `<ClientOnly>`.
  */
 export function ProductivoWidgets() {
-  const { analysis, indicatorsError, widgets } = useRiesgoWidgets('productivo');
+  const { analysis, indicatorsError, scope, widgets } = useRiesgoWidgets('productivo');
 
   return (
     <div className="flex flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
       <AnalysisPanel busy={analysis.isPlaceholderData}>
-        <WidgetGrid>
+        <WidgetGrid stacked={scope === 'multiple'}>
           {widgets.map((widget) => (
             <AnalysisWidgetCard key={widget.id} widget={widget} />
           ))}

@@ -89,6 +89,13 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
   const resilience = widget(page, 'Proxy de resiliencia operativa');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
+  // The projection chart leads, and under Todas every widget takes the full width.
+  await expect(page.getByRole('main').getByRole('heading', { level: 3 }).first()).toHaveText(
+    'Producción proyectada a escenario pesimista, central y optimista',
+  );
+  const todasBoxes = [await production.boundingBox(), await resilience.boundingBox()];
+  expect(todasBoxes[0]!.x).toBe(todasBoxes[1]!.x);
+  expect(todasBoxes[0]!.width).toBe(todasBoxes[1]!.width);
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
 
@@ -120,6 +127,9 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(projection.getByText('Central de la parcela', { exact: true })).toBeVisible();
   await expect(projection.getByText(/^\[/)).toHaveCount(0);
   await expect(projection.getByText(/^Cada punto combina/)).toHaveCount(0);
+  // A parcel tab goes back to columns: the widgets narrow below the full width.
+  const parcelBox = await production.boundingBox();
+  expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
   await parcel.click();
   await page.getByRole('option', { name: 'Todas' }).click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
