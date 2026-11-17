@@ -35,6 +35,23 @@ test('the settings column sits left of the content, 552px wide', async ({ page }
   expect(mainBox!.x).toBeGreaterThan(settingsBox!.x + settingsBox!.width);
 });
 
+test('below 1280 the content keeps its width and the settings column narrows', async ({ page }) => {
+  await stubAuth(page);
+  await page.goto('/analisis');
+
+  // 632 = the content's width at 1280: 1280 − 2 × 40 padding − 16 gap − 552 settings.
+  for (const width of [1280, 1152, 1024]) {
+    await page.setViewportSize({ width, height: 800 });
+    const settingsBox = await page
+      .getByRole('complementary', { name: 'Configuración' })
+      .boundingBox();
+    const mainBox = await page.getByRole('main').boundingBox();
+
+    expect(mainBox!.width).toBe(632);
+    expect(settingsBox!.width).toBe(width - 80 - 16 - 632);
+  }
+});
+
 test('below lg the columns stack, settings first', async ({ page }) => {
   await stubAuth(page);
   await page.setViewportSize({ width: 390, height: 800 });
