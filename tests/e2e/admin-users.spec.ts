@@ -4,7 +4,7 @@ import { ADMIN_USERS, RESET_TOKEN, stubAdminUsers, stubAuth } from './fixtures/a
 
 /** Signs in through the login modal `/usuarios` opens for an anonymous visitor. */
 async function loginAtGate(page: Page) {
-  const login = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  const login = page.getByRole('dialog', { name: 'Área privada' });
   await login.getByLabel('Email').fill('admin@example.com');
   await login.getByLabel('Contraseña').fill('cualquiera');
   await login.getByRole('button', { name: 'Acceder' }).click();

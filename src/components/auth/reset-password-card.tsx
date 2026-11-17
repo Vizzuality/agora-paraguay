@@ -58,7 +58,7 @@ export function ResetPasswordCard({
         }}
       >
         <CardHeader className="gap-1.5 px-10">
-          <CardTitle className="text-4xl leading-[normal] font-semibold tracking-[-0.015em] text-foreground">
+          <CardTitle className="text-4xl leading-[normal] font-light tracking-[-0.015em] text-foreground">
             <h2>Restablecer contraseña</h2>
           </CardTitle>
           <CardDescription>

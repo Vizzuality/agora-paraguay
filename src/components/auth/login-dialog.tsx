@@ -84,7 +84,7 @@ export function LoginModal() {
         }}
       >
         {/* The card's own heading is visual; this names the dialog. */}
-        <DialogTitle className="sr-only">Iniciar sesión</DialogTitle>
+        <DialogTitle className="sr-only">Área privada</DialogTitle>
         {view === 'login' ? (
           <LoginCard
             className="w-full"

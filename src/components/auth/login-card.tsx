@@ -70,8 +70,8 @@ export function LoginCard({
       >
         <CardHeader className="gap-1.5 px-10">
           {/* Real heading: CardTitle renders a <div>, which screen readers skip. */}
-          <CardTitle className="text-4xl leading-[normal] font-semibold tracking-[-0.015em] text-foreground">
-            <h2>Iniciar sesión</h2>
+          <CardTitle className="text-4xl leading-[normal] font-light tracking-[-0.015em] text-foreground">
+            <h2>Área privada</h2>
           </CardTitle>
           <CardDescription>
             Para visualizar este tipo de contenido necesita una cuenta de acceso.

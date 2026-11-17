@@ -9,9 +9,9 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
 
   // Private: the login modal opens over an empty content column, no login page.
   const main = page.getByRole('main');
-  const login = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  const login = page.getByRole('dialog', { name: 'Área privada' });
   await expect(login).toBeVisible();
-  await expect(main.getByRole('heading', { name: 'Iniciar sesión' })).toHaveCount(0);
+  await expect(main.getByRole('heading', { name: 'Área privada' })).toHaveCount(0);
   await expect(main.getByRole('button', { name: 'Exportar informe' })).toHaveCount(0);
 
   // Stubbed login (`stubAuth`): any credentials open the analysis in place.
@@ -68,7 +68,7 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
 
 /** Signs in through the login modal the page opens (stubbed: any credentials). */
 async function loginAtGate(page: Page) {
-  const login = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  const login = page.getByRole('dialog', { name: 'Área privada' });
   await login.getByLabel('Email').fill('analista@example.com');
   await login.getByLabel('Contraseña').fill('cualquiera');
   await login.getByRole('button', { name: 'Acceder' }).click();
@@ -178,7 +178,7 @@ test('the login modal swaps the login card for the reset request, and reopens fr
   page,
 }) => {
   await analyseOnRedesign(page, '/analisis/productivo');
-  const login = page.getByRole('dialog', { name: 'Iniciar sesión' });
+  const login = page.getByRole('dialog', { name: 'Área privada' });
 
   await login.getByRole('button', { name: 'Restablecer contraseña' }).click();
   await expect(login.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
