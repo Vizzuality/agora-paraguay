@@ -12,11 +12,16 @@ test('Exposición climática keeps its map in the settings column and prompts fo
   await stubAuth(page);
   await page.goto('/analisis/exposicion-climatica');
 
-  // The map card, with its two views, sits in the settings column; no área de interés.
+  // The map is the área de interés, open to start: two views over it, a district to pick.
   const settings = page.getByRole('complementary', { name: 'Configuración' });
-  const map = settings.getByRole('region', { name: 'Mapa' });
+  const map = settings.getByRole('region', { name: 'Área de interés' });
   await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
-  await expect(settings.getByRole('region', { name: 'Área de interés' })).toHaveCount(0);
+  const heading = map.getByRole('button', { name: /^Área de interés/ });
+  await expect(heading).toHaveAttribute('aria-expanded', 'true');
+  await heading.click();
+  await expect(heading).toContainText('Seleccione un distrito');
+  await heading.click();
+  await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
 
   const exposure = map.getByRole('tab', { name: 'Nivel de exposición' });
   const surface = map.getByRole('tab', { name: 'Superficie expuesta' });

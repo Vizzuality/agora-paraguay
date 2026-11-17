@@ -1,7 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
-import { ExposureMapCard } from '@/components/exposure-map-card';
 import type { ExposureMapView } from '@/components/map/exposure-layers';
 import {
   AnalysisTypeSetting,
@@ -9,6 +8,10 @@ import {
 } from '@/components/settings/analysis-type-setting';
 import { AreaSetting, useAreaSelectionLabel } from '@/components/settings/area-setting';
 import { CropDatesSetting, useCropDatesLabel } from '@/components/settings/crop-dates-setting';
+import {
+  ExposureAreaSetting,
+  useExposureAreaLabel,
+} from '@/components/settings/exposure-area-setting';
 import { SettingsSection } from '@/components/settings/settings-section';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { analysedViewAtom } from '@/store/mode';
@@ -18,7 +21,8 @@ type SectionKey = 'analysisType' | 'area' | 'cropDates';
 
 /**
  * The redesign's settings column, one section open at a time: the analysis type, then
- * on a riesgo the área de interés, open to start with since that is where the work is.
+ * the área de interés, open to start with since that is where the work is: parcels on a
+ * riesgo, a district on the exposure map.
  * Reads atoms: render inside `<ClientOnly>`.
  */
 export function SettingsSidebar() {
@@ -30,8 +34,7 @@ export function SettingsSidebar() {
 
 function Sections() {
   const current = useCurrentAnalysisType();
-  const parcelAnalysis = current?.riesgo !== undefined;
-  const [open, setOpen] = useState<SectionKey | null>(parcelAnalysis ? 'area' : null);
+  const [open, setOpen] = useState<SectionKey | null>(current ? 'area' : null);
   const areaLabel = useAreaSelectionLabel();
   const analysed = useAtomValue(analysedViewAtom);
   // The report prints the área open, so its map is in the PDF whatever the reader left open.
@@ -60,8 +63,10 @@ function Sections() {
         </SettingsSection>
       )}
 
-      {/* Exposición climática works by district: its map takes the área's place. */}
-      {current && !current.riesgo && <ExposureMap />}
+      {/* Exposición climática works by district: its área is the exposure map. */}
+      {current && !current.riesgo && (
+        <ExposureAreaSection open={open === 'area'} onToggle={() => toggle('area')} />
+      )}
 
       {/* The filters apply to an analysis: none to set before Analizar. */}
       {current?.riesgo && analysed && (
@@ -75,11 +80,19 @@ function Sections() {
   );
 }
 
-/** The exposure map card, holding its own tab: the content column does not read it. */
-function ExposureMap() {
+/** The exposure map's área, holding its own view: the content column does not read it. */
+function ExposureAreaSection({
+  open,
+  onToggle,
+}: Readonly<{ open: boolean; onToggle: () => void }>) {
   const [view, setView] = useState<ExposureMapView>('exposicion');
+  const label = useExposureAreaLabel();
 
-  return <ExposureMapCard view={view} onViewChange={setView} layersLabel="Superficie expuesta" />;
+  return (
+    <SettingsSection name="Área de interés" selection={label} open={open} onToggle={onToggle}>
+      <ExposureAreaSetting view={view} onViewChange={setView} />
+    </SettingsSection>
+  );
 }
 
 /** Its own component: the filter query runs only while the section is on screen. */
