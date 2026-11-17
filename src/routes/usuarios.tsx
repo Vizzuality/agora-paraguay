@@ -1,7 +1,7 @@
 import { ClientOnly, createFileRoute, Navigate } from '@tanstack/react-router';
 
 import { UsersPanel } from '@/components/admin/users-table';
-import { LoginGate } from '@/components/auth/login-gate';
+import { LoginRequired } from '@/components/auth/login-dialog';
 import { Footer } from '@/components/footer';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
@@ -22,7 +22,7 @@ function UsersPage() {
       </NavBar>
 
       <main className="flex flex-1 flex-col gap-6 px-10 pt-10 pb-12">
-        <ClientOnly fallback={<LoginGate hydrating />}>
+        <ClientOnly>
           <StaffGate />
         </ClientOnly>
       </main>
@@ -32,11 +32,11 @@ function UsersPage() {
   );
 }
 
-/** Anonymous: the login gate. Signed in without staff rights: nothing to see, back to the map. */
+/** Anonymous: the login modal. Signed in without staff rights: nothing to see, back to the map. */
 function StaffGate() {
   const session = useSession();
 
-  if (!session) return <LoginGate />;
+  if (!session) return <LoginRequired />;
   if (!session.isStaff) return <Navigate to="/" replace />;
 
   return (

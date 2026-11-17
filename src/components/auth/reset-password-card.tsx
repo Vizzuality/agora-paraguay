@@ -16,7 +16,7 @@ import { resetRequestMailto } from '@/lib/auth/reset-request';
 
 /**
  * The reset-password card: an email and a Solicitar button. Shown in
- * place of `LoginCard` by whoever hosts it (`LoginGate`, `LoginDialog`).
+ * place of `LoginCard` by the login modal (`LoginModal`).
  *
  * There is no request-reset endpoint and no mail server, so Solicitar opens the user's
  * mail client addressed to the admin (`resetRequestMailto`) and the card turns into the
@@ -58,7 +58,7 @@ export function ResetPasswordCard({
         }}
       >
         <CardHeader className="gap-1.5 px-10">
-          <CardTitle className="text-4xl leading-[normal] font-semibold tracking-[-0.015em] text-foreground">
+          <CardTitle className="text-4xl leading-[normal] font-light tracking-[-0.015em] text-foreground">
             <h2>Restablecer contraseña</h2>
           </CardTitle>
           <CardDescription>

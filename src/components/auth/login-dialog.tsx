@@ -1,20 +1,24 @@
 import { Link } from '@tanstack/react-router';
+import { useAtom, useSetAtom } from 'jotai';
 import { User } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { LoginCard } from '@/components/auth/login-card';
-import type { AuthView } from '@/components/auth/login-gate';
 import { ResetPasswordCard } from '@/components/auth/reset-password-card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { Session } from '@/lib/api/auth/schemas';
 import { useLogout, useSession } from '@/lib/auth/use-session';
+import { loginOpenAtom } from '@/store/auth';
+
+/** Which card the login modal shows. Reopening always starts at the login form. */
+type AuthView = 'login' | 'reset';
 
 export function UserButton(props: Readonly<React.ComponentProps<typeof Button>>) {
   return (
@@ -29,20 +33,29 @@ export function UserButton(props: Readonly<React.ComponentProps<typeof Button>>)
   );
 }
 
-/** The header's user button: the login popover while anonymous, the account menu once signed in. */
+/** The header's user button: the login modal while anonymous, the account menu once signed in. */
 export function LoginDialog() {
   const session = useSession();
 
-  return session ? <UserMenu session={session} /> : <LoginPopover />;
+  return session ? <UserMenu session={session} /> : <LoginModal />;
 }
 
-/** The user button that opens the login form (and the reset request) in a popover. */
-export function LoginPopover() {
-  const [open, setOpen] = useState(false);
+/**
+ * The user button that opens the login form (and the reset request) in a modal, centred
+ * over a backdrop. The gated pages open it too (`LoginRequired`). Reads atoms: render
+ * inside `<ClientOnly>`.
+ */
+export function LoginModal() {
+  const [open, setOpen] = useAtom(loginOpenAtom);
   const [view, setView] = useState<AuthView>('login');
 
   return (
-    <Popover
+    // Not modal, and only the backdrop dismisses: a modal dialog disables pointer events
+    // on the page and closes on any pointer-down or focus outside its content, which is
+    // what a password manager's inline suggestion is, so it could never be picked. Being
+    // non-modal, Radix renders no overlay: the backdrop is ours. Escape still closes.
+    <Dialog
+      modal={false}
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
@@ -50,9 +63,9 @@ export function LoginPopover() {
         if (!next) setView('login');
       }}
     >
-      <PopoverTrigger asChild>
+      <DialogTrigger asChild>
         <UserButton />
-      </PopoverTrigger>
+      </DialogTrigger>
       {open && (
         <div
           aria-hidden
@@ -60,24 +73,18 @@ export function LoginPopover() {
           className="fixed inset-0 z-40 animate-in bg-black/50 fade-in-0"
         />
       )}
-      <PopoverContent
-        align="end"
-        sideOffset={20}
-        // Same 8px gutter as the page on a phone, where 411px is wider than the screen.
-        collisionPadding={8}
-        // Radix gives the content role="dialog"; the label names it for AT.
-        aria-label="Iniciar sesión"
-        className="w-[411px] max-w-(--radix-popover-content-available-width) rounded-3xl border-0 p-0 shadow-lg"
-        // Not modal, and only the backdrop dismisses: a modal popover disables pointer
-        // events on the page and closes on any pointer-down or focus outside its content —
-        // which is what a password manager's inline suggestion is, so it could never be
-        // picked. Escape still closes.
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className="w-[411px] max-w-[calc(100%-1rem)] gap-0 rounded-3xl border-0 bg-transparent p-0 shadow-lg sm:max-w-[411px]"
         onInteractOutside={(event) => {
           const target = event.target instanceof Element ? event.target : null;
 
           if (!target?.closest('[data-slot="login-backdrop"]')) event.preventDefault();
         }}
       >
+        {/* The card's own heading is visual; this names the dialog. */}
+        <DialogTitle className="sr-only">Área privada</DialogTitle>
         {view === 'login' ? (
           <LoginCard
             className="w-full"
@@ -87,9 +94,24 @@ export function LoginPopover() {
         ) : (
           <ResetPasswordCard className="w-full" onBackToLogin={() => setView('login')} />
         )}
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
+}
+
+/**
+ * What a page shows a signed-out user where its content goes: nothing, with the login
+ * modal opened over it. Closing the modal leaves the page empty; the header's user
+ * button opens it again. Render inside `<ClientOnly>`.
+ */
+export function LoginRequired() {
+  const openLogin = useSetAtom(loginOpenAtom);
+
+  useEffect(() => {
+    openLogin(true);
+  }, [openLogin]);
+
+  return null;
 }
 
 /**

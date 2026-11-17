@@ -2,15 +2,13 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { ADMIN_USERS, RESET_TOKEN, stubAdminUsers, stubAuth } from './fixtures/auth';
 
-/**
- * Signs in through the gate card `/usuarios` shows to an anonymous visitor. The
- * server-rendered card is disabled until hydration, so the fills and the click wait for
- * the client's card rather than typing into a form about to be replaced.
- */
+/** Signs in through the login modal `/usuarios` opens for an anonymous visitor. */
 async function loginAtGate(page: Page) {
-  await page.getByLabel('Email').fill('admin@example.com');
-  await page.getByLabel('Contraseña').fill('cualquiera');
-  await page.getByRole('button', { name: 'Acceder' }).click();
+  const login = page.getByRole('dialog', { name: 'Área privada' });
+  await login.getByLabel('Email').fill('admin@example.com');
+  await login.getByLabel('Contraseña').fill('cualquiera');
+  await login.getByRole('button', { name: 'Acceder' }).click();
+  await expect(login).toBeHidden();
   await expect(page.getByRole('table')).toBeVisible();
 }
 

@@ -7,16 +7,18 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
 }) => {
   await analyseOnRedesign(page, '/analisis/productivo');
 
-  // Private: the login card stands in for the analysis.
+  // Private: the login modal opens over an empty content column, no login page.
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+  const login = page.getByRole('dialog', { name: 'Área privada' });
+  await expect(login).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'Área privada' })).toHaveCount(0);
   await expect(main.getByRole('button', { name: 'Exportar informe' })).toHaveCount(0);
 
   // Stubbed login (`stubAuth`): any credentials open the analysis in place.
-  await main.getByLabel('Email').fill('analista@example.com');
-  await main.getByLabel('Contraseña').fill('cualquiera');
-  await main.getByRole('button', { name: 'Acceder' }).click();
-  await expect(main.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
+  await login.getByLabel('Email').fill('analista@example.com');
+  await login.getByLabel('Contraseña').fill('cualquiera');
+  await login.getByRole('button', { name: 'Acceder' }).click();
+  await expect(login).toBeHidden();
 
   // Personalizar indicadores beside Exportar informe, then the widgets.
   await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
@@ -64,13 +66,13 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
 
-/** Signs in through the gate card in the content column (stubbed: any credentials). */
+/** Signs in through the login modal the page opens (stubbed: any credentials). */
 async function loginAtGate(page: Page) {
-  const main = page.getByRole('main');
-  await main.getByLabel('Email').fill('analista@example.com');
-  await main.getByLabel('Contraseña').fill('cualquiera');
-  await main.getByRole('button', { name: 'Acceder' }).click();
-  await expect(main.getByRole('heading', { name: 'Iniciar sesión' })).toBeHidden();
+  const login = page.getByRole('dialog', { name: 'Área privada' });
+  await login.getByLabel('Email').fill('analista@example.com');
+  await login.getByLabel('Contraseña').fill('cualquiera');
+  await login.getByRole('button', { name: 'Acceder' }).click();
+  await expect(login).toBeHidden();
 }
 
 function widget(page: Page, name: string) {
@@ -172,19 +174,27 @@ test('Generar resumen asks for the open selection, then for one parcel', async (
   await expect(page.getByRole('heading', { name: 'Resumen de 1 parcelas' })).toBeVisible();
 });
 
-test('the gate swaps the login card for the reset request and back', async ({ page }) => {
+test('the login modal swaps the login card for the reset request, and reopens from the header', async ({
+  page,
+}) => {
   await analyseOnRedesign(page, '/analisis/productivo');
-  const main = page.getByRole('main');
+  const login = page.getByRole('dialog', { name: 'Área privada' });
 
-  await main.getByRole('button', { name: 'Restablecer contraseña' }).click();
-  await expect(main.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
-  await expect(main.getByRole('button', { name: 'Acceder' })).toBeHidden();
+  await login.getByRole('button', { name: 'Restablecer contraseña' }).click();
+  await expect(login.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
+  await expect(login.getByRole('button', { name: 'Acceder' })).toBeHidden();
 
   // Solicitar hands off to the mail client and confirms with the email.
-  await main.getByLabel('Email').fill('ana@example.org');
-  await main.getByRole('button', { name: 'Solicitar' }).click();
-  await expect(main.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
+  await login.getByLabel('Email').fill('ana@example.org');
+  await login.getByRole('button', { name: 'Solicitar' }).click();
+  await expect(login.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
+
+  // Closed, the page stays empty; the header's user button opens the login form again.
+  await page.keyboard.press('Escape');
+  await expect(login).toBeHidden();
+  await page.getByRole('banner').getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(login.getByRole('button', { name: 'Acceder' })).toBeVisible();
 });
 
 test('Exportar informe lays the report out in one column, every chart inside its widget', async ({
