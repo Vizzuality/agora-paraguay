@@ -22,7 +22,7 @@ import {
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
 import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legend-order';
 import { DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
-import { useFlyToDistrict } from '@/lib/map/use-fly-to-district';
+import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
 import { cn } from '@/lib/utils';
 import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
@@ -88,10 +88,22 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     EXPOSURE_FILL_ID,
   );
 
-  useFlyToDistrict(globalLayerSourceId(EXPOSURE_LAYER.id), selected?.id ?? null);
+  const exposureSourceId = globalLayerSourceId(EXPOSURE_LAYER.id);
+  useFlyToDistrict(exposureSourceId, selected);
 
   const districtAt = (event: MapLayerMouseEvent) =>
     districtFromProperties(event.features?.[0]?.properties);
+  // Measured on the click, while this map's tiles are loaded: a pick moves the map to the
+  // other column, and the map mounting there frames the district from this box.
+  const pickAt = (event: MapLayerMouseEvent) => {
+    const district = districtAt(event);
+    return (
+      district && {
+        ...district,
+        bounds: districtBounds(event.target, exposureSourceId, district.id),
+      }
+    );
+  };
 
   useLayerPointer(exposure ? EXPOSURE_FILL_ID : null, {
     onMove: (event) => {
@@ -100,7 +112,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     },
     onLeave: () => setHovered(null),
     onClick: (event) => {
-      const district = districtAt(event);
+      const district = pickAt(event);
       if (district) pickDistrict(district.id === selected?.id ? null : district);
     },
   });
@@ -109,7 +121,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   // the pick keeps it.
   useLayerPointer(exposure ? null : EXPOSURE_FILL_ID, {
     onClick: (event) => {
-      const district = districtAt(event);
+      const district = pickAt(event);
       if (district && district.id !== selected?.id) pickDistrict(district);
     },
   });

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 /*
  * What the analysis widgets share, from the design's widget frame: the light card, the
- * header (title, info tip, a subtitle line), the figure (40px beside the side column,
+ * header (title, info tip top right, a subtitle line), the figure (40px beside the side column,
  * 66px when the page stacks), and the pieces of a track with a marker. Each card composes these and owns only what it draws.
  */
 
@@ -38,8 +38,9 @@ type WidgetHeaderProps = {
 };
 
 /**
- * The title with its info tip beside it and the subtitle under both. The heading's
- * parent is this header and its grandparent the card: the e2e specs climb that way.
+ * The title on the left, its info tip in the card's top-right corner, the subtitle under
+ * both. The heading's parent is this header and its grandparent the card: the e2e specs
+ * climb that way.
  */
 export function WidgetHeader({
   label,
@@ -48,14 +49,16 @@ export function WidgetHeader({
   action,
 }: Readonly<WidgetHeaderProps>) {
   return (
-    <div className="grid grid-cols-[auto_1fr] items-start gap-x-2">
+    <div className="grid grid-cols-[1fr_auto] items-start gap-x-2">
       <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px] text-balance">{label}</h3>
-      <InfoTip
-        description={description}
-        subject={label}
-        className="mt-0.5 text-accent-foreground"
-      />
-      {action && <div className="col-start-2 row-start-1 justify-self-end">{action}</div>}
+      <div className="flex items-center gap-2">
+        {action}
+        <InfoTip
+          description={description}
+          subject={label}
+          className="mt-0.5 text-accent-foreground"
+        />
+      </div>
       {subtitle && (
         <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
           {subtitle}

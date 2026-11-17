@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  districtFlight,
   districtFromProperties,
   exposureClasses,
   exposureFill,
@@ -161,5 +162,27 @@ describe('exposureOpacity', () => {
       0.3,
       0.6,
     ]);
+  });
+});
+
+describe('districtFlight', () => {
+  const box: [number, number, number, number] = [-56, -27, -55, -26];
+
+  it('frames the district a map mounts with, as the settings column does after a pick', () => {
+    // The mounting map starts from no pick, so the one already made still flies.
+    expect(districtFlight(null, { id: '0721', bounds: box })?.to).toBe('district');
+  });
+
+  it('leaves the box to the caller when the pick carries none', () => {
+    expect(districtFlight('0721', { id: '0722' })).toEqual({ to: 'district', bounds: null });
+  });
+
+  it('goes back to the country when the pick is cleared', () => {
+    expect(districtFlight('0721', null)).toEqual({ to: 'country' });
+  });
+
+  it('stays put when nothing changed, or a map mounts with nothing picked', () => {
+    expect(districtFlight('0721', { id: '0721', bounds: box })).toBeNull();
+    expect(districtFlight(null, null)).toBeNull();
   });
 });
