@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
+import { combinedParcel, generalInfo, indicatorCards } from '@/lib/analysis/indicator-cards';
 import { RANGE_CLASSES } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
@@ -324,6 +324,50 @@ describe('indicatorCards', () => {
 });
 
 describe('generalInfo', () => {
+  const district: Indicator = {
+    id: 'DIST_CODE',
+    name: 'Código del distrito',
+    indicator_type: { type: 'text' },
+  };
+
+  it('names a fact in the plural when Todas lists several values for it', () => {
+    const todas = combinedParcel(
+      [
+        parcel({ DIST_CODE: '1001', weather_station: 'Santa Teresa', crop_type: 'Soja' }),
+        parcel({ DIST_CODE: '1002', weather_station: 'Pirapó', crop_type: 'Soja' }),
+      ],
+      [district, station, crop],
+    );
+
+    expect(generalInfo(todas, [district, station, crop])).toEqual([
+      { id: 'DIST_CODE', label: 'Códigos de los distritos', value: '1001, 1002' },
+      {
+        id: 'weather_station',
+        label: 'Nombres de las estaciones meteorológicas más cercanas',
+        value: 'Santa Teresa, Pirapó',
+      },
+      // One value across the set: the name stays singular.
+      { id: 'crop_type', label: 'Cultivo', value: 'Soja' },
+    ]);
+  });
+
+  it('counts the values of a listed fact it has no plural for', () => {
+    const todas = combinedParcel(
+      [parcel({ crop_type: 'Soja' }), parcel({ crop_type: 'Maíz' })],
+      [crop],
+    );
+
+    expect(generalInfo(todas, [crop])).toEqual([
+      { id: 'crop_type', label: 'Cultivo (2)', value: 'Soja, Maíz' },
+    ]);
+  });
+
+  it('keeps one parcel’s fact singular, even with a comma in its value', () => {
+    expect(generalInfo(parcel({ weather_station: 'Hohenau, Itapúa' }), [station])).toEqual([
+      { id: 'weather_station', label: 'Estación', value: 'Hohenau, Itapúa' },
+    ]);
+  });
+
   it('is empty without a parcel or without metadata', () => {
     expect(generalInfo(null, [station])).toEqual([]);
     expect(generalInfo(parcel({ weather_station: 'Hohenau' }), undefined)).toEqual([]);
