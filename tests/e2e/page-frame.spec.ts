@@ -14,11 +14,11 @@ async function login(page: Page) {
   await expect(dialog).toBeHidden();
 }
 
-test('at 1280 the settings and the content split in halves, settings on the left', async ({
+test('at 1440 the settings and the content split in halves, settings on the left', async ({
   page,
 }) => {
   await stubAuth(page);
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: 1440, height: 800 });
   await page.goto('/analisis');
 
   const banner = page.getByRole('banner');
@@ -33,13 +33,13 @@ test('at 1280 the settings and the content split in halves, settings on the left
   const settingsBox = await settings.boundingBox();
   const mainBox = await main.boundingBox();
 
-  // 592 = (1280 − 2 × 40 padding − 16 gap) / 2.
-  expect(settingsBox?.width).toBe(592);
-  expect(mainBox?.width).toBe(592);
+  // 672 = (1440 − 2 × 40 padding − 16 gap) / 2.
+  expect(settingsBox?.width).toBe(672);
+  expect(mainBox?.width).toBe(672);
   expect(mainBox!.x).toBeGreaterThan(settingsBox!.x + settingsBox!.width);
 });
 
-test('past 1280 the columns stop growing and centre', async ({ page }) => {
+test('past 1440 the columns stop growing and centre', async ({ page }) => {
   await stubAuth(page);
   await page.setViewportSize({ width: 1600, height: 800 });
   await page.goto('/analisis');
@@ -49,26 +49,26 @@ test('past 1280 the columns stop growing and centre', async ({ page }) => {
     .boundingBox();
   const mainBox = await page.getByRole('main').boundingBox();
 
-  expect(settingsBox?.width).toBe(592);
-  expect(mainBox?.width).toBe(592);
-  // (1600 − 1280) / 2 margin, then the 40px padding.
-  expect(settingsBox?.x).toBe(200);
+  expect(settingsBox?.width).toBe(672);
+  expect(mainBox?.width).toBe(672);
+  // (1600 − 1440) / 2 margin, then the 40px padding.
+  expect(settingsBox?.x).toBe(120);
 });
 
-test('below 1280 the content keeps its width and the settings column narrows', async ({ page }) => {
+test('below 1440 the content keeps its width and the settings column narrows', async ({ page }) => {
   await stubAuth(page);
   await page.goto('/analisis');
 
-  // 592 = the content's half at 1280.
-  for (const width of [1280, 1152, 1024]) {
+  // 672 = the content's half at 1440.
+  for (const width of [1440, 1152, 1024]) {
     await page.setViewportSize({ width, height: 800 });
     const settingsBox = await page
       .getByRole('complementary', { name: 'Configuración' })
       .boundingBox();
     const mainBox = await page.getByRole('main').boundingBox();
 
-    expect(mainBox!.width).toBe(592);
-    expect(settingsBox!.width).toBe(width - 80 - 16 - 592);
+    expect(mainBox!.width).toBe(672);
+    expect(settingsBox!.width).toBe(width - 80 - 16 - 672);
   }
 });
 
