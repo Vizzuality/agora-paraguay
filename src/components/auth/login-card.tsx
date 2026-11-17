@@ -26,7 +26,7 @@ import { useSessionActions } from '@/lib/auth/use-session';
  * state.
  *
  * "Restablecer contraseña" only reports up (`onReset`): the host decides how to show
- * `ResetPasswordCard`: the login modal swaps its content.
+ * `ResetPasswordCard`: the login modal leaves for its page.
  */
 export function LoginCard({
   className,
