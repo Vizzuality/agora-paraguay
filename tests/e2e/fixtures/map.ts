@@ -1,10 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 
-import {
-  INITIAL_VIEW_STATE,
-  type MapViewState,
-  PARAGUAY_VIEW_STATE,
-} from '../../../src/lib/map/view-state';
+import { INITIAL_VIEW_STATE, type MapViewState, PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
 
 /** A 1×1 transparent PNG, so stubbed raster tiles decode cleanly. */
 const BLANK_TILE = Buffer.from(
