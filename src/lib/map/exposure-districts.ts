@@ -8,6 +8,7 @@ import {
 } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel, ParcelValue } from '@/lib/api/analysis/schemas';
 import type { IndicatorType } from '@/lib/api/metadata/schemas';
+import type { Bounds } from '@/lib/map/area-bounds';
 
 /** A district on the exposure layer, read from its feature's properties. */
 export type ExposureDistrict = {
@@ -18,6 +19,11 @@ export type ExposureDistrict = {
   exposure: string | null;
   /** Every property of the feature: the exposure indicators read their values here. */
   properties: Record<string, unknown>;
+  /**
+   * The whole district's box, measured on the map it was picked on, whose tiles are
+   * loaded: the map that mounts in the other column after the pick has none yet.
+   */
+  bounds?: Bounds | null;
 };
 
 /**
@@ -205,4 +211,23 @@ function text(value: unknown): string | null {
       /(^|\s)(\p{L})/gu,
       (_, space: string, letter: string) => space + letter.toLocaleUpperCase('es'),
     );
+}
+
+/** Where the camera goes when the pick changes: back to the country, onto a box, or nowhere. */
+export type DistrictFlight = { to: 'country' } | { to: 'district'; bounds: Bounds | null };
+
+/**
+ * The camera move for a pick going from `was` to `district`. A map that mounts with a
+ * district already picked starts from `was = null`, so it frames the district too;
+ * `bounds: null` leaves the caller to measure the district on its own tiles.
+ */
+export function districtFlight(
+  was: string | null,
+  district: Pick<ExposureDistrict, 'id' | 'bounds'> | null,
+): DistrictFlight | null {
+  const now = district?.id ?? null;
+  if (now === was) return null;
+  if (!district) return { to: 'country' };
+
+  return { to: 'district', bounds: district.bounds ?? null };
 }
