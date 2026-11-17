@@ -5,8 +5,9 @@ import { TopBar } from '@/components/frame/top-bar';
 
 /**
  * The redesign's page frame: the top bar and the settings on the left, the content on
- * the right, the footer below. From `lg` the left column stays in view while the
- * content scrolls; one taller than the window scrolls on its own. Below 1280px the
+ * the right, the footer below. The columns stop growing at 1440px and centre beyond it;
+ * at that width they split in halves. From `lg` the left column stays in view while the
+ * content scrolls; one taller than the window scrolls on its own. Below 1440px the
  * content keeps the width it has there and the settings column gives up the rest. The
  * column stretches to the row, up to the window, so a setting can fill it to the bottom.
  * Below `lg` the columns stack, settings first.
@@ -21,16 +22,17 @@ export function PageFrame({
 }: Readonly<{ settings?: ReactNode; children: ReactNode }>) {
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-1 flex-col gap-4 px-2 md:px-10 lg:flex-row print:flex-col print:px-0 paper:flex-col paper:px-0">
+      <div className="mx-auto flex w-full max-w-360 flex-1 flex-col gap-4 px-2 md:px-10 lg:flex-row print:flex-col print:px-0 paper:flex-col paper:px-0">
         {/* A plain div, not the aside: a header inside an aside loses its banner role. */}
-        <div className="flex shrink-0 flex-col gap-4 bg-background pt-2 md:pt-10 lg:sticky lg:top-0 lg:max-h-dvh lg:w-138 lg:min-w-0 lg:shrink lg:overflow-y-auto lg:pb-10 print:static print:max-h-none print:w-auto print:self-auto print:overflow-visible print:pt-0 print:pb-0 paper:static paper:max-h-none paper:w-auto paper:self-auto paper:overflow-visible paper:pt-0 paper:pb-0">
+        <div className="flex shrink-0 flex-col gap-4 bg-background pt-2 md:pt-10 lg:sticky lg:top-0 lg:max-h-dvh lg:min-w-0 lg:flex-1 lg:overflow-y-auto lg:pb-10 print:static print:max-h-none print:w-auto print:flex-none print:self-auto print:overflow-visible print:pt-0 print:pb-0 paper:static paper:max-h-none paper:w-auto paper:flex-none paper:self-auto paper:overflow-visible paper:pt-0 paper:pb-0">
           <TopBar />
           <aside aria-label="Configuración" className="flex flex-1 flex-col gap-4">
             {settings}
           </aside>
         </div>
 
-        <main className="flex min-w-0 flex-1 flex-col gap-4 pb-10 lg:min-w-158 lg:pt-10 print:min-w-0 print:pt-0 paper:min-w-0 paper:pt-0">
+        {/* 168 = 672px, its half at 1440: (1440 − 2 × 40 padding − 16 gap) / 2. */}
+        <main className="flex min-w-0 flex-1 flex-col gap-4 pb-10 lg:min-w-168 lg:pt-10 print:min-w-0 print:pt-0 paper:min-w-0 paper:pt-0">
           {children}
         </main>
       </div>
