@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
-import type { ExposureMapView } from '@/components/map/exposure-layers';
+import { DistrictPrompt } from '@/components/district-panel';
 import {
   AnalysisTypeSetting,
   useCurrentAnalysisType,
@@ -14,6 +14,7 @@ import {
 } from '@/components/settings/exposure-area-setting';
 import { SettingsSection } from '@/components/settings/settings-section';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
+import { selectedDistrictAtom } from '@/store/exposure';
 import { analysedViewAtom } from '@/store/mode';
 import { paperLayoutAtom } from '@/store/report';
 
@@ -63,9 +64,10 @@ function Sections() {
         </SettingsSection>
       )}
 
-      {/* Exposición climática works by district: its área is the exposure map. */}
+      {/* Exposición climática works by district: its área is the exposure map, which
+          fills the content column until a district is picked, the prompt holding its place. */}
       {current && !current.riesgo && (
-        <ExposureAreaSection open={open === 'area'} onToggle={() => toggle('area')} />
+        <ExposureArea open={open === 'area'} onToggle={() => toggle('area')} />
       )}
 
       {/* The filters apply to an analysis: none to set before Analizar. */}
@@ -80,17 +82,15 @@ function Sections() {
   );
 }
 
-/** The exposure map's área, holding its own view: the content column does not read it. */
-function ExposureAreaSection({
-  open,
-  onToggle,
-}: Readonly<{ open: boolean; onToggle: () => void }>) {
-  const [view, setView] = useState<ExposureMapView>('exposicion');
+function ExposureArea({ open, onToggle }: Readonly<{ open: boolean; onToggle: () => void }>) {
+  const district = useAtomValue(selectedDistrictAtom);
   const label = useExposureAreaLabel();
+
+  if (!district) return <DistrictPrompt />;
 
   return (
     <SettingsSection name="Área de interés" selection={label} open={open} onToggle={onToggle}>
-      <ExposureAreaSetting view={view} onViewChange={setView} />
+      <ExposureAreaSetting />
     </SettingsSection>
   );
 }
