@@ -58,7 +58,8 @@ export function SettingsSection({
           <span
             aria-hidden
             className={cn(
-              'flex size-8 items-center justify-center transition-transform duration-200 motion-reduce:transition-none',
+              // A control, not content: the report has nothing to open or close.
+              'flex size-8 items-center justify-center transition-transform duration-200 motion-reduce:transition-none print:hidden',
               open && 'rotate-180',
             )}
           >

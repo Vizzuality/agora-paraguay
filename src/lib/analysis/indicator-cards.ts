@@ -106,8 +106,32 @@ function mostFrequent(readings: (string | number)[]): ParcelValue {
   return best?.value ?? null;
 }
 
+/** What joins a text column's distinct values on the combined parcel. */
+const LIST_SEPARATOR = ', ';
+
 function distinctList(readings: (string | number)[]): string {
-  return [...new Set(readings.map((value) => String(value).trim()))].join(', ');
+  return [...new Set(readings.map((value) => String(value).trim()))].join(LIST_SEPARATOR);
+}
+
+/**
+ * The general-info facts that can differ between parcels, named in the plural for when
+ * Todas lists more than one value. Keyed by indicator id, lower case. Any other fact with
+ * several values keeps its name and adds the count.
+ */
+const PLURAL_LABELS: Record<string, string> = {
+  dpto_code: 'Códigos de departamento',
+  dist_code: 'Códigos de distrito',
+  weather_station: 'Estaciones meteorológicas más cercanas',
+};
+
+/** A fact's heading: plural when the combined parcel lists several values for it. */
+function factLabel(parcel: AnalysisParcel, id: string, name: string, value: string): string {
+  if (parcel.parcel_id !== COMBINED_PARCEL_ID) return name;
+
+  const count = value.split(LIST_SEPARATOR).length;
+  if (count < 2) return name;
+
+  return PLURAL_LABELS[id.toLowerCase()] ?? `${name} (${count})`;
 }
 
 /**
@@ -242,13 +266,16 @@ export function generalInfo(
     if (value === undefined && !isUnreadable(parcel, indicator.id)) return [];
 
     const typed = value === undefined ? undefined : typedReading(indicator, value);
+    const text = factText(typed, indicator.unit);
+    // Only text lists its values; a number or a category combines into one.
+    const listed = typeof typed === 'string';
 
     return [
       {
         id: indicator.id,
-        label: indicator.name,
+        label: listed ? factLabel(parcel, indicator.id, indicator.name, text) : indicator.name,
         description: indicator.description,
-        value: factText(typed, indicator.unit),
+        value: text,
       },
     ];
   });
