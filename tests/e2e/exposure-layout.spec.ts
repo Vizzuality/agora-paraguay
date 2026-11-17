@@ -4,24 +4,31 @@ import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { stubBasemap } from './fixtures/map';
 
-test('Exposición climática keeps its map in the settings column and prompts for a district', async ({
+test('Exposición climática fills the content column with its map and prompts for a district in the settings', async ({
   page,
 }) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await stubAuth(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/analisis/exposicion-climatica');
 
-  // The map is the área de interés, open to start: two views over it, a district to pick.
+  // Nothing picked: the map is the content column, two views over it, no section to fold.
   const settings = page.getByRole('complementary', { name: 'Configuración' });
-  const map = settings.getByRole('region', { name: 'Área de interés' });
+  const main = page.getByRole('main');
+  const map = main.getByRole('region', { name: 'Área de interés' });
   await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
-  const heading = map.getByRole('button', { name: /^Área de interés/ });
-  await expect(heading).toHaveAttribute('aria-expanded', 'true');
-  await heading.click();
-  await expect(heading).toContainText('Seleccione un distrito');
-  await heading.click();
-  await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
+  await expect(map.getByRole('button', { name: /^Área de interés/ })).toHaveCount(0);
+
+  // The prompt holds the settings column under the analysis type, down to the map's bottom.
+  const prompt = settings.getByText('Seleccione un distrito en el mapa');
+  await expect(prompt).toBeVisible();
+  await expect(settings.getByRole('region', { name: 'Área de interés' })).toHaveCount(0);
+  await expect(settings.locator('canvas')).toHaveCount(0);
+  const promptCard = settings.locator('div', { has: prompt }).last();
+  const promptBox = await promptCard.boundingBox();
+  const mapBox = await map.boundingBox();
+  expect(Math.abs(promptBox!.y + promptBox!.height - (mapBox!.y + mapBox!.height))).toBeLessThan(2);
 
   const exposure = map.getByRole('tab', { name: 'Nivel de exposición' });
   const surface = map.getByRole('tab', { name: 'Superficie expuesta' });
@@ -60,9 +67,4 @@ test('Exposición climática keeps its map in the settings column and prompts fo
   await surface.click();
   await expect(surface).toHaveAttribute('aria-selected', 'true');
   await expect(map.getByRole('list', { name: 'Leyenda de capas' })).toBeVisible();
-
-  // Nothing picked: the content column is the prompt.
-  const main = page.getByRole('main');
-  await expect(main.getByText('Seleccione un distrito en el mapa')).toBeVisible();
-  await expect(main.locator('canvas')).toHaveCount(0);
 });

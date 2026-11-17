@@ -9,15 +9,14 @@ import { pickDistrictAtom } from '@/store/exposure';
 
 /**
  * The district picked on the map with its exposure indicators, drawn as the riesgo pages
- * draw theirs (`useExposureWidgets`), or the prompt to pick one. The indicator list
- * loads with the page, so a pick shows its widgets at once. Shared by
- * `/analisis/exposicion-climatica` and the redesign. Reads atoms: render inside `<ClientOnly>`.
+ * draw theirs (`useExposureWidgets`). The indicator list loads with the page, so a pick
+ * shows its widgets at once. Reads atoms: render inside `<ClientOnly>`.
  */
 export function DistrictPanel() {
   const pickDistrict = useSetAtom(pickDistrictAtom);
   const { indicators, district, info, widgets } = useExposureWidgets();
 
-  if (!district) return <DistrictPrompt />;
+  if (!district) return null;
 
   return (
     <section
@@ -56,10 +55,10 @@ export function DistrictPanel() {
   );
 }
 
-/** The empty state until a district is picked; also the server-rendered fallback. */
+/** What to do until a district is picked: holds the settings column under the analysis type. */
 export function DistrictPrompt() {
   return (
-    <div className="flex min-h-108 flex-1 items-center justify-center rounded-3xl border-3 border-border p-6">
+    <div className="flex min-h-108 flex-1 items-center justify-center rounded-3xl border-3 border-border p-6 backdrop-blur-xs">
       <p className="max-w-md text-center text-sm text-muted-foreground">
         Seleccione un distrito en el mapa para ver sus indicadores sobre exposición a sequía e
         inundación.
