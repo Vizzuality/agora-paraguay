@@ -95,7 +95,7 @@ export function NewPasswordCard({
               type="password"
               required
               autoComplete="new-password"
-              placeholder=" "
+              placeholder="Nueva contraseña"
               aria-invalid={error !== null || undefined}
               aria-describedby={error !== null ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
@@ -109,7 +109,7 @@ export function NewPasswordCard({
               type="password"
               required
               autoComplete="new-password"
-              placeholder=" "
+              placeholder="Repetir nueva contraseña"
               aria-invalid={error !== null || undefined}
               aria-describedby={error !== null ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Map, { ScaleControl } from 'react-map-gl/maplibre';
 
 import { CompactAttribution } from '@/components/map/compact-attribution';
+import { CountryMask } from '@/components/map/country-mask';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { BASEMAP_STYLE, dimBasemap } from '@/lib/map/basemap';
 import { addCropPatterns } from '@/lib/map/crop-patterns';
@@ -29,6 +30,8 @@ export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
       <CompactAttribution />
       <ScaleControl position="top-left" />
       <ZoomControl variant="panel" />
+      {/* First of the layers: the panel's own paint over it. */}
+      <CountryMask />
       {children}
     </Map>
   );
