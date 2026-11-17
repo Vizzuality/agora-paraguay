@@ -55,8 +55,8 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
     <Card
       className={cn(
         'min-w-50 flex-col gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
-        // Printed, the card keeps its frame but not its fill; no summary, no card.
-        'print:border-2 print:bg-transparent',
+        // Printed, no fill and no frame: the summary reads as text; no summary, no card.
+        'print:bg-transparent',
         !mutation.isSuccess && 'print:hidden',
         className,
       )}
