@@ -100,7 +100,14 @@ export function AxisTicks({ ticks, x, y, min, max }: Readonly<AxisTicksProps>) {
   ));
 }
 
-export type HitArea = { key: string | number; x: number; width: number; label: ReactNode };
+export type HitArea = {
+  key: string | number;
+  x: number;
+  width: number;
+  label: ReactNode;
+  /** Where in the plot the tooltip sits above, in plot pixels; the top of the area when left out. */
+  anchor?: number;
+};
 
 /** One transparent hit area per bin or column, the full plot height, so an empty one answers too. */
 export function HitAreas({ areas, height }: Readonly<{ areas: HitArea[]; height: number }>) {
@@ -112,7 +119,8 @@ export function HitAreas({ areas, height }: Readonly<{ areas: HitArea[]; height:
           <TooltipTrigger asChild>
             <rect x={area.x} y={0} width={area.width} height={height} fill="transparent" />
           </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={4}>
+          {/* A negative offset pulls the tooltip down from the area's top to its anchor. */}
+          <TooltipContent side="top" sideOffset={4 - (area.anchor ?? 0)}>
             {area.label}
           </TooltipContent>
         </Tooltip>
