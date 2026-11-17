@@ -16,7 +16,7 @@ import { resetRequestMailto } from '@/lib/auth/reset-request';
 
 /**
  * The reset-password card: an email and a Solicitar button. Shown in
- * place of `LoginCard` by whoever hosts it (`LoginGate`, `LoginDialog`).
+ * place of `LoginCard` by the login modal (`LoginModal`).
  *
  * There is no request-reset endpoint and no mail server, so Solicitar opens the user's
  * mail client addressed to the admin (`resetRequestMailto`) and the card turns into the

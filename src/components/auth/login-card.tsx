@@ -20,23 +20,20 @@ import { useSessionActions } from '@/lib/auth/use-session';
  * Submits the credentials to the backend login (`authMutations.login`), then asks `/me`
  * who the cookie now identifies (`useSessionActions().refresh`). The real session is
  * the backend's HttpOnly cookie, which the browser sends on its own but scripts cannot read,
- * so that query is the UI's only record of who is signed in: the header dialog and the
- * riesgo productivo tab read it to swap the login gate for the identified state. The
+ * so that query is the UI's only record of who is signed in: the header modal and the
+ * gated pages read it to show the signed-in state. The
  * button stays on Accediendo until `/me` has answered, so the host closes on a settled
  * state.
  *
  * "Restablecer contraseña" only reports up (`onReset`): the host decides how to show
- * `ResetPasswordCard` — the gate swaps cards, the header popover swaps its content.
+ * `ResetPasswordCard`: the login modal swaps its content.
  */
 export function LoginCard({
   className,
-  disabled = false,
   onSuccess,
   onReset,
 }: Readonly<{
   className?: string;
-  /** Makes the whole form inert, fields included: the server-rendered gate before hydration. */
-  disabled?: boolean;
   onSuccess?: () => void;
   onReset: () => void;
 }>) {
@@ -90,7 +87,6 @@ export function LoginCard({
               name="identifier"
               type="email"
               required
-              disabled={disabled}
               autoComplete="email"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
@@ -105,7 +101,6 @@ export function LoginCard({
               name="password"
               type="password"
               required
-              disabled={disabled}
               autoComplete="current-password"
               placeholder=" "
               aria-invalid={mutation.isError || undefined}
@@ -119,7 +114,7 @@ export function LoginCard({
         <CardFooter className="flex-col gap-6 px-10">
           <Button
             type="submit"
-            disabled={disabled || mutation.isPending}
+            disabled={mutation.isPending}
             className="h-11 w-full rounded-2xl font-normal"
           >
             {mutation.isPending ? 'Accediendo…' : 'Acceder'}

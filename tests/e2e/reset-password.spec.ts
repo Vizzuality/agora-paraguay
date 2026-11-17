@@ -53,6 +53,12 @@ test('a valid link shows the form; saving a good password confirms and offers th
 
   await page.goto(`/restablecer-contrasena/${TOKEN}`);
   await expect(page.getByRole('heading', { name: 'Nueva contraseña' })).toBeVisible();
+  // The analysis pages' frame: the card heads the settings column.
+  await expect(
+    page
+      .getByRole('complementary', { name: 'Configuración' })
+      .getByRole('heading', { name: 'Nueva contraseña' }),
+  ).toBeVisible();
 
   const { password, confirmation, save } = card(page);
 

@@ -1,7 +1,7 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 
-import { LoginGate } from '@/components/auth/login-gate';
+import { LoginRequired } from '@/components/auth/login-dialog';
 import { ExportReportButton } from '@/components/export-report-button';
 import { IndicatorPicker } from '@/components/indicator-picker';
 import { ProductivoWidgets } from '@/components/productivo-widgets';
@@ -27,7 +27,7 @@ function ProductivoPage() {
 }
 
 /**
- * The analysis needs an account: the login gate until a session exists. Behind it,
+ * The analysis needs an account: the login modal until a session exists. Behind it,
  * Personalizar indicadores beside Exportar informe, the AI summary and the widgets.
  */
 function ProductivoAnalysis() {
@@ -35,7 +35,7 @@ function ProductivoAnalysis() {
   const parcelIds = useAtomValue(analysedParcelIdsAtom);
   const activeId = useAtomValue(activeParcelIdAtom);
 
-  if (!session) return <LoginGate />;
+  if (!session) return <LoginRequired />;
 
   return (
     <div className="flex flex-col gap-4">

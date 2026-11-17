@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 
-import { LoginPopover, UserButton } from '@/components/auth/login-dialog';
+import { LoginModal, UserButton } from '@/components/auth/login-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,14 +14,14 @@ import { sessionDisplayName } from '@/lib/auth/display-name';
 import { useLogout, useSession } from '@/lib/auth/use-session';
 
 /**
- * The top bar's account button: the login popover while anonymous; signed in, a menu
+ * The top bar's account button: the login modal while anonymous; signed in, a menu
  * naming the user, with Administrar usuarios for staff and Cerrar sesión. Reads the
  * session, so render it inside `<ClientOnly>` with `<UserButton />` as the fallback.
  */
 export function AccountMenu() {
   const session = useSession();
 
-  return session ? <SignedInMenu session={session} /> : <LoginPopover />;
+  return session ? <SignedInMenu session={session} /> : <LoginModal />;
 }
 
 function SignedInMenu({ session }: Readonly<{ session: Session }>) {
