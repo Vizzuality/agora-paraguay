@@ -119,9 +119,9 @@ function distinctList(readings: (string | number)[]): string {
  * several values keeps its name and adds the count.
  */
 const PLURAL_LABELS: Record<string, string> = {
-  dpto_code: 'Códigos de los departamentos',
-  dist_code: 'Códigos de los distritos',
-  weather_station: 'Nombres de las estaciones meteorológicas más cercanas',
+  dpto_code: 'Códigos de departamento',
+  dist_code: 'Códigos de distrito',
+  weather_station: 'Estaciones meteorológicas más cercanas',
 };
 
 /** A fact's heading: plural when the combined parcel lists several values for it. */

@@ -340,10 +340,10 @@ describe('generalInfo', () => {
     );
 
     expect(generalInfo(todas, [district, station, crop])).toEqual([
-      { id: 'DIST_CODE', label: 'Códigos de los distritos', value: '1001, 1002' },
+      { id: 'DIST_CODE', label: 'Códigos de distrito', value: '1001, 1002' },
       {
         id: 'weather_station',
-        label: 'Nombres de las estaciones meteorológicas más cercanas',
+        label: 'Estaciones meteorológicas más cercanas',
         value: 'Santa Teresa, Pirapó',
       },
       // One value across the set: the name stays singular.
