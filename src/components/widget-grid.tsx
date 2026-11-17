@@ -14,6 +14,9 @@ export function WidgetGrid({
 }: Readonly<{ stacked?: boolean; children?: ReactNode }>) {
   return (
     <div
+      // The print stylesheet lays the widgets out by these (`globals.css`).
+      data-slot="widget-grid"
+      data-stacked={stacked || undefined}
       className={cn(
         'grid gap-4',
         stacked
