@@ -25,7 +25,8 @@ test('Exposición climática fills the content column with its map and prompts f
   await expect(prompt).toBeVisible();
   await expect(settings.getByRole('region', { name: 'Área de interés' })).toHaveCount(0);
   await expect(settings.locator('canvas')).toHaveCount(0);
-  const promptCard = settings.locator('div', { has: prompt }).last();
+  // The prompt's paragraph sits straight in its card.
+  const promptCard = prompt.locator('..');
   const promptBox = await promptCard.boundingBox();
   const mapBox = await map.boundingBox();
   expect(Math.abs(promptBox!.y + promptBox!.height - (mapBox!.y + mapBox!.height))).toBeLessThan(2);
