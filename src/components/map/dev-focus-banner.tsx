@@ -2,7 +2,8 @@ import { TriangleAlert } from 'lucide-react';
 
 /**
  * Temporary: the map opens on Alto Paraná (`INITIAL_VIEW_STATE`) while the cadastre
- * covers that department only. Remove with the view state when coverage is national.
+ * covers that department only. Once coverage is national, remove it in the same change
+ * that moves `INITIAL_VIEW_STATE` to the country-wide default (see its note).
  */
 export function DevFocusBanner() {
   return (
