@@ -14,7 +14,9 @@ async function login(page: Page) {
   await expect(dialog).toBeHidden();
 }
 
-test('the settings column sits left of the content, 552px wide', async ({ page }) => {
+test('at 1280 the settings and the content split in halves, settings on the left', async ({
+  page,
+}) => {
   await stubAuth(page);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/analisis');
@@ -31,15 +33,33 @@ test('the settings column sits left of the content, 552px wide', async ({ page }
   const settingsBox = await settings.boundingBox();
   const mainBox = await main.boundingBox();
 
-  expect(settingsBox?.width).toBe(552);
+  // 592 = (1280 − 2 × 40 padding − 16 gap) / 2.
+  expect(settingsBox?.width).toBe(592);
+  expect(mainBox?.width).toBe(592);
   expect(mainBox!.x).toBeGreaterThan(settingsBox!.x + settingsBox!.width);
+});
+
+test('past 1280 the columns stop growing and centre', async ({ page }) => {
+  await stubAuth(page);
+  await page.setViewportSize({ width: 1600, height: 800 });
+  await page.goto('/analisis');
+
+  const settingsBox = await page
+    .getByRole('complementary', { name: 'Configuración' })
+    .boundingBox();
+  const mainBox = await page.getByRole('main').boundingBox();
+
+  expect(settingsBox?.width).toBe(592);
+  expect(mainBox?.width).toBe(592);
+  // (1600 − 1280) / 2 margin, then the 40px padding.
+  expect(settingsBox?.x).toBe(200);
 });
 
 test('below 1280 the content keeps its width and the settings column narrows', async ({ page }) => {
   await stubAuth(page);
   await page.goto('/analisis');
 
-  // 632 = the content's width at 1280: 1280 − 2 × 40 padding − 16 gap − 552 settings.
+  // 592 = the content's half at 1280.
   for (const width of [1280, 1152, 1024]) {
     await page.setViewportSize({ width, height: 800 });
     const settingsBox = await page
@@ -47,8 +67,8 @@ test('below 1280 the content keeps its width and the settings column narrows', a
       .boundingBox();
     const mainBox = await page.getByRole('main').boundingBox();
 
-    expect(mainBox!.width).toBe(632);
-    expect(settingsBox!.width).toBe(width - 80 - 16 - 632);
+    expect(mainBox!.width).toBe(592);
+    expect(settingsBox!.width).toBe(width - 80 - 16 - 592);
   }
 });
 

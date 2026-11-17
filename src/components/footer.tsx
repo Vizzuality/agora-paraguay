@@ -14,19 +14,22 @@ const LINK_CLASS =
  */
 export function Footer() {
   return (
-    <footer className="flex w-full flex-col items-center gap-10 bg-primary p-10 md:flex-row md:justify-between print:hidden">
-      <Link to="/" aria-label="Inicio">
-        <Logo className="h-[30px] w-auto text-primary-foreground" />
-      </Link>
+    // The band spans the window; its content stops at the page frame's 1280px.
+    <footer className="w-full bg-primary print:hidden">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-10 p-10 md:flex-row md:justify-between">
+        <Link to="/" aria-label="Inicio">
+          <Logo className="h-[30px] w-auto text-primary-foreground" />
+        </Link>
 
-      <nav className="flex flex-col items-center gap-2 md:flex-row">
-        <SelectionLink className={LINK_CLASS}>{SELECTION_LINK.label}</SelectionLink>
-        {RISK_LINKS.map(({ label, to, replace }) => (
-          <Link key={label} to={to} replace={replace} className={LINK_CLASS}>
-            {label}
-          </Link>
-        ))}
-      </nav>
+        <nav className="flex flex-col items-center gap-2 md:flex-row">
+          <SelectionLink className={LINK_CLASS}>{SELECTION_LINK.label}</SelectionLink>
+          {RISK_LINKS.map(({ label, to, replace }) => (
+            <Link key={label} to={to} replace={replace} className={LINK_CLASS}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+      </div>
     </footer>
   );
 }
