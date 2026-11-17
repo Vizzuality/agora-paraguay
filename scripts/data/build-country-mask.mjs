@@ -84,7 +84,12 @@ const feature = {
 mkdirSync(dirname(OUTPUT), { recursive: true });
 writeFileSync(OUTPUT, `${JSON.stringify({ type: 'FeatureCollection', features: [feature] })}\n`);
 
+// Only numbers and our own words reach the log: the source is fetched, so its strings
+// are never echoed (no line breaks or escapes smuggled into the output).
+const kind = geometry.type === 'MultiPolygon' ? 'MultiPolygon' : 'Polygon';
+const bbox = [west, south, east, north].map((value) => Number(value).toFixed(5)).join(', ');
+
 console.log(
-  `wrote public/data/paraguay-mask.geojson: Paraguay ${geometry.type}, ${vertexCount(geometry)} vertices, ` +
-    `bbox [${west}, ${south}, ${east}, ${north}]`,
+  `wrote public/data/paraguay-mask.geojson: Paraguay ${kind}, ` +
+    `${Number(vertexCount(geometry))} vertices, bbox [${bbox}]`,
 );
