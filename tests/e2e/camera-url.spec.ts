@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-import { INITIAL_VIEW_STATE } from '../../src/lib/map/view-state';
+import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
+
 import { mapCanvas, panMap, stubBasemap } from './fixtures/map';
 
 // Temporary while the cadastre covers Alto Paraná only: the map opens there

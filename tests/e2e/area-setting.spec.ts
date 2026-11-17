@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { PARAGUAY_VIEW_STATE } from '../../src/lib/map/view-state';
+import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
+
 import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { cameraUrl, drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
