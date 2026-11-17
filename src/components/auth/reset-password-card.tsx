@@ -75,7 +75,7 @@ export function ResetPasswordCard({
               type="email"
               required
               autoComplete="email"
-              placeholder=" "
+              placeholder="Email"
               className={FLOATING_FIELD_CLASS}
             />
             <FloatingLabel htmlFor={`${fieldId}-email`}>Email</FloatingLabel>

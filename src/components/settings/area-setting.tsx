@@ -218,7 +218,7 @@ function ParcelSelect() {
         disabled={options.length === 1}
       >
         <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
-          <SelectValue placeholder=" " />
+          <SelectValue placeholder="Seleccionar parcela" />
         </SelectTrigger>
         <FloatingLabel htmlFor={id}>Parcela</FloatingLabel>
         <SelectContent>

@@ -88,7 +88,7 @@ export function LoginCard({
               type="email"
               required
               autoComplete="email"
-              placeholder=" "
+              placeholder="Email"
               aria-invalid={mutation.isError || undefined}
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
@@ -102,7 +102,7 @@ export function LoginCard({
               type="password"
               required
               autoComplete="current-password"
-              placeholder=" "
+              placeholder="Contraseña"
               aria-invalid={mutation.isError || undefined}
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
