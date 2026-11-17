@@ -135,6 +135,7 @@ export function ProjectionBand({ points, min, max, ticks, unit }: Readonly<Proje
                 key: point.label,
                 x: at(point) - x.step() / 2,
                 width: x.step(),
+                anchor: y(point.high),
                 label: <PointReading point={point} unit={unit} />,
               }))}
             />
