@@ -5,6 +5,7 @@ import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
 import Map, { ScaleControl, type ViewStateChangeEvent } from 'react-map-gl/maplibre';
 
 import { CompactAttribution } from '@/components/map/compact-attribution';
+import { CountryMask } from '@/components/map/country-mask';
 import { DevFocusBanner } from '@/components/map/dev-focus-banner';
 import { DrawLayer } from '@/components/map/draw-layer';
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
@@ -110,6 +111,8 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       <CompactAttribution />
       <ScaleControl position="top-left" />
       <ZoomControl />
+      {/* First of the layers: everything after paints over it. */}
+      <CountryMask />
       <DevFocusBanner />
       {/*
        * The parcels filter-parcels answers for the drawn areas. Mounted only once Terra

@@ -15,8 +15,8 @@ import { Input } from '@/components/ui/input';
 import { resetRequestMailto } from '@/lib/auth/reset-request';
 
 /**
- * The reset-password card: an email and a Solicitar button. Shown in
- * place of `LoginCard` by the login modal (`LoginModal`).
+ * The reset-password card: an email and a Solicitar button, on its own page
+ * (`/restablecer-contrasena`), reached from the login modal.
  *
  * There is no request-reset endpoint and no mail server, so Solicitar opens the user's
  * mail client addressed to the admin (`resetRequestMailto`) and the card turns into the
@@ -75,7 +75,7 @@ export function ResetPasswordCard({
               type="email"
               required
               autoComplete="email"
-              placeholder=" "
+              placeholder="Email"
               className={FLOATING_FIELD_CLASS}
             />
             <FloatingLabel htmlFor={`${fieldId}-email`}>Email</FloatingLabel>

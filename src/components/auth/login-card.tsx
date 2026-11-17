@@ -26,7 +26,7 @@ import { useSessionActions } from '@/lib/auth/use-session';
  * state.
  *
  * "Restablecer contraseña" only reports up (`onReset`): the host decides how to show
- * `ResetPasswordCard`: the login modal swaps its content.
+ * `ResetPasswordCard`: the login modal leaves for its page.
  */
 export function LoginCard({
   className,
@@ -88,7 +88,7 @@ export function LoginCard({
               type="email"
               required
               autoComplete="email"
-              placeholder=" "
+              placeholder="Email"
               aria-invalid={mutation.isError || undefined}
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
@@ -102,7 +102,7 @@ export function LoginCard({
               type="password"
               required
               autoComplete="current-password"
-              placeholder=" "
+              placeholder="Contraseña"
               aria-invalid={mutation.isError || undefined}
               aria-describedby={mutation.isError ? errorId : undefined}
               className={FLOATING_FIELD_CLASS}
