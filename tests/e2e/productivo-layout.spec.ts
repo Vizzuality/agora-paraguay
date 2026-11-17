@@ -174,27 +174,32 @@ test('Generar resumen asks for the open selection, then for one parcel', async (
   await expect(page.getByRole('heading', { name: 'Resumen de 1 parcelas' })).toBeVisible();
 });
 
-test('the login modal swaps the login card for the reset request, and reopens from the header', async ({
+test('Restablecer contraseña leaves the login modal for its page, and Iniciar sesión brings the modal back', async ({
   page,
 }) => {
   await analyseOnRedesign(page, '/analisis/productivo');
   const login = page.getByRole('dialog', { name: 'Área privada' });
 
   await login.getByRole('button', { name: 'Restablecer contraseña' }).click();
-  await expect(login.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
-  await expect(login.getByRole('button', { name: 'Acceder' })).toBeHidden();
+  await expect(page).toHaveURL(/\/restablecer-contrasena\/?$/);
+  await expect(login).toBeHidden();
+
+  // The request heads the settings column, as the reset link's cards do.
+  const settings = page.getByRole('complementary', { name: 'Configuración' });
+  await expect(settings.getByRole('heading', { name: 'Restablecer contraseña' })).toBeVisible();
 
   // Solicitar hands off to the mail client and confirms with the email.
-  await login.getByLabel('Email').fill('ana@example.org');
-  await login.getByRole('button', { name: 'Solicitar' }).click();
-  await expect(login.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
-  await expect(page).toHaveURL(/\/analisis\/productivo/);
+  await settings.getByLabel('Email').fill('ana@example.org');
+  await settings.getByRole('button', { name: 'Solicitar' }).click();
+  await expect(settings.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
 
-  // Closed, the page stays empty; the header's user button opens the login form again.
+  // Iniciar sesión opens the modal over the page; Escape closes it, the header reopens it.
+  await settings.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(login.getByRole('button', { name: 'Acceder' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(login).toBeHidden();
   await page.getByRole('banner').getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(login.getByRole('button', { name: 'Acceder' })).toBeVisible();
+  await expect(login).toBeVisible();
 });
 
 test('Exportar informe lays the report out in one column, every chart inside its widget', async ({

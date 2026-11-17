@@ -1,10 +1,9 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useAtom, useSetAtom } from 'jotai';
 import { User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { LoginCard } from '@/components/auth/login-card';
-import { ResetPasswordCard } from '@/components/auth/reset-password-card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
@@ -16,9 +15,6 @@ import {
 import type { Session } from '@/lib/api/auth/schemas';
 import { useLogout, useSession } from '@/lib/auth/use-session';
 import { loginOpenAtom } from '@/store/auth';
-
-/** Which card the login modal shows. Reopening always starts at the login form. */
-type AuthView = 'login' | 'reset';
 
 export function UserButton(props: Readonly<React.ComponentProps<typeof Button>>) {
   return (
@@ -41,28 +37,20 @@ export function LoginDialog() {
 }
 
 /**
- * The user button that opens the login form (and the reset request) in a modal, centred
- * over a backdrop. The gated pages open it too (`LoginRequired`). Reads atoms: render
- * inside `<ClientOnly>`.
+ * The user button that opens the login form in a modal, centred over a backdrop. The
+ * gated pages open it too (`LoginRequired`); Restablecer contraseña leaves it for its own
+ * page. Reads atoms: render inside `<ClientOnly>`.
  */
 export function LoginModal() {
   const [open, setOpen] = useAtom(loginOpenAtom);
-  const [view, setView] = useState<AuthView>('login');
+  const navigate = useNavigate();
 
   return (
     // Not modal, and only the backdrop dismisses: a modal dialog disables pointer events
     // on the page and closes on any pointer-down or focus outside its content, which is
     // what a password manager's inline suggestion is, so it could never be picked. Being
     // non-modal, Radix renders no overlay: the backdrop is ours. Escape still closes.
-    <Dialog
-      modal={false}
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        // Reopening always starts at the login form.
-        if (!next) setView('login');
-      }}
-    >
+    <Dialog modal={false} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <UserButton />
       </DialogTrigger>
@@ -85,15 +73,14 @@ export function LoginModal() {
       >
         {/* The card's own heading is visual; this names the dialog. */}
         <DialogTitle className="sr-only">Área privada</DialogTitle>
-        {view === 'login' ? (
-          <LoginCard
-            className="w-full"
-            onSuccess={() => setOpen(false)}
-            onReset={() => setView('reset')}
-          />
-        ) : (
-          <ResetPasswordCard className="w-full" onBackToLogin={() => setView('login')} />
-        )}
+        <LoginCard
+          className="w-full"
+          onSuccess={() => setOpen(false)}
+          onReset={() => {
+            setOpen(false);
+            void navigate({ to: '/restablecer-contrasena' });
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
