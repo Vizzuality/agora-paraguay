@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import Map, { AttributionControl, ScaleControl } from 'react-map-gl/maplibre';
+import Map, { ScaleControl } from 'react-map-gl/maplibre';
 
+import { CompactAttribution } from '@/components/map/compact-attribution';
 import { ZoomControl } from '@/components/map/zoom-control';
-import { collapseAttribution } from '@/lib/map/attribution';
 import { BASEMAP_STYLE, dimBasemap } from '@/lib/map/basemap';
 import { addCropPatterns } from '@/lib/map/crop-patterns';
 import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
@@ -18,7 +18,6 @@ export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
       mapStyle={BASEMAP_STYLE}
       attributionControl={false}
       onLoad={(event) => {
-        collapseAttribution(event.target);
         dimBasemap(event.target);
         addCropPatterns(event.target);
       }}
@@ -26,8 +25,8 @@ export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
       touchPitch={false}
       style={{ width: '100%', height: '100%' }}
     >
-      {/* Same corners as the main map; the scale stacks under the credits ⓘ. */}
-      <AttributionControl compact position="top-left" />
+      {/* Same corners as the main map; the scale sits beside the credits ⓘ. */}
+      <CompactAttribution />
       <ScaleControl position="top-left" />
       <ZoomControl variant="panel" />
       {children}

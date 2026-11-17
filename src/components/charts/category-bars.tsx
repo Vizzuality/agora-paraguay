@@ -38,9 +38,7 @@ type CategoryBarsProps = {
 export function CategoryBars({ columns }: Readonly<CategoryBarsProps>) {
   return (
     <div className="flex flex-col">
-      <Responsive height={COLUMNS_HEIGHT + 1}>
-        {(width) => <BarsSvg width={width} columns={columns} />}
-      </Responsive>
+      <Responsive>{(width) => <BarsSvg width={width} columns={columns} />}</Responsive>
       <ul
         aria-hidden
         className="flex gap-2 text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70"

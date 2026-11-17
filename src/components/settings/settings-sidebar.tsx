@@ -12,6 +12,7 @@ import { CropDatesSetting, useCropDatesLabel } from '@/components/settings/crop-
 import { SettingsSection } from '@/components/settings/settings-section';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { analysedViewAtom } from '@/store/mode';
+import { paperLayoutAtom } from '@/store/report';
 
 type SectionKey = 'analysisType' | 'area' | 'cropDates';
 
@@ -33,6 +34,8 @@ function Sections() {
   const [open, setOpen] = useState<SectionKey | null>(parcelAnalysis ? 'area' : null);
   const areaLabel = useAreaSelectionLabel();
   const analysed = useAtomValue(analysedViewAtom);
+  // The report prints the área open, so its map is in the PDF whatever the reader left open.
+  const paperLayout = useAtomValue(paperLayoutAtom);
   const toggle = (key: SectionKey) => setOpen((value) => (value === key ? null : key));
 
   return (
@@ -50,7 +53,7 @@ function Sections() {
         <SettingsSection
           name="Área de interés"
           selection={areaLabel}
-          open={open === 'area'}
+          open={open === 'area' || paperLayout}
           onToggle={() => toggle('area')}
         >
           <AreaSetting />

@@ -4,13 +4,21 @@ import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { stubBasemap } from './fixtures/map';
 
-/** Every map: credits ⓘ then the scale top left, zoom in the bottom-right quarter. */
+/** Every map: credits ⓘ then the scale beside it top left, zoom in the bottom-right quarter. */
 async function expectCorners(page: Page, map: Locator) {
   const topLeft = map.locator('.maplibregl-ctrl-top-left > .maplibregl-ctrl');
 
   await expect(topLeft).toHaveCount(2);
   await expect(topLeft.nth(0)).toHaveClass(/maplibregl-ctrl-attrib/);
   await expect(topLeft.nth(1)).toHaveClass(/maplibregl-ctrl-scale/);
+
+  // The ⓘ is a 32px disc; the scale sits on its right, centred on the same row.
+  const info = (await topLeft.nth(0).boundingBox())!;
+  const scale = (await topLeft.nth(1).boundingBox())!;
+  expect(info.width).toBe(32);
+  expect(info.height).toBe(32);
+  expect(scale.x).toBeGreaterThan(info.x + info.width);
+  expect(Math.abs(scale.y + scale.height / 2 - (info.y + info.height / 2))).toBeLessThan(1);
   await expect(map.locator('.maplibregl-ctrl-bottom-left > .maplibregl-ctrl')).toHaveCount(0);
 
   const mapBox = (await map.boundingBox())!;

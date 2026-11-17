@@ -9,8 +9,11 @@ export const PAPER_LAYOUT_CLASS = 'paper-layout';
 
 /** How long the charts take to re-measure their cards: a resize observation plus their debounce. */
 export const RELAYOUT_MS = 200;
-/** The most the print waits for the map's image (its tiles may be loading). */
-export const MAX_WAIT_MS = 3_000;
+/**
+ * The most the print waits for the map's image: its section may open just now, so the
+ * map can be starting from nothing, and its tiles at paper width must load.
+ */
+export const MAX_WAIT_MS = 6_000;
 
 /**
  * Resolves once the report is ready to print: the mini map's image is in and the charts

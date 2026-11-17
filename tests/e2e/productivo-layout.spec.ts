@@ -186,3 +186,56 @@ test('the gate swaps the login card for the reset request and back', async ({ pa
   await expect(main.getByRole('heading', { name: 'Solicitud enviada' })).toBeVisible();
   await expect(page).toHaveURL(/\/analisis\/productivo/);
 });
+
+test('Exportar informe lays the report out in one column, every chart inside its widget', async ({
+  page,
+}) => {
+  // The dialog itself is the browser's: the report is checked in the paper layout before it.
+  await page.addInitScript(() => {
+    window.print = () => {};
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await analyseOnRedesign(page, '/analisis/productivo');
+  await loginAtGate(page);
+
+  const main = page.getByRole('main');
+  await main.getByRole('button', { name: 'Exportar informe' }).click();
+  await expect(page.locator('html.paper-layout')).toHaveCount(1);
+
+  // The settings stack above the content, which takes the paper's width (194mm).
+  const settings = page.getByRole('complementary', { name: 'Configuración' });
+  await expect.poll(async () => (await main.boundingBox())!.width).toBeGreaterThan(700);
+  expect((await settings.boundingBox())!.y).toBeLessThan((await main.boundingBox())!.y);
+
+  // Each chart's drawing, axis included, stays within its widget.
+  const projection = widget(
+    page,
+    'Producción proyectada a escenario pesimista, central y optimista',
+  );
+  for (const card of [projection, widget(page, 'Producción base histórica de soja')]) {
+    const cardBox = (await card.boundingBox())!;
+    const chartBox = (await card.locator('svg[data-slot="chart"]').boundingBox())!;
+    expect(chartBox.y + chartBox.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);
+  }
+
+  // The área prints open: its map with the legend's rows and the credits written out,
+  // the parcel named in the heading in place of the picker and Editar parcelas.
+  const area = settings.getByRole('region', { name: 'Área de interés' });
+  await expect(area.getByRole('button', { name: /^Área de interés/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await page.emulateMedia({ media: 'print' });
+  await expect(area.getByRole('button', { name: /^Área de interés/ })).toContainText(
+    'Área de interés - Todas',
+  );
+  await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
+  await expect(area.getByRole('button', { name: 'Editar parcelas' })).toBeHidden();
+  await expect(area.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
+  await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
+  await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
+  await expect(area.locator('.maplibregl-ctrl-attrib-button')).toBeHidden();
+
+  // No summary generated: the AI card stays out of the report.
+  await expect(main.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
+});

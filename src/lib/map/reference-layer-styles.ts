@@ -6,7 +6,7 @@ import type { FillPaint } from '@/lib/map/global-layer-styles';
  */
 
 /** The districts layer: clear, so it still reports hover and clicks, with faint edges. */
-export const DISTRICTS_FILL: FillPaint = {
+export const DISTRICTS_FILL: FillPaint & { opacity: number } = {
   color: 'rgba(0, 0, 0, 0)',
   opacity: 1,
   outlineColor: 'rgba(0, 0, 0, 0.2)',
@@ -24,7 +24,8 @@ const SOJA = '#6d8067';
 export type ReferenceLayer = {
   id: number;
   label: string;
-  fill: FillPaint;
+  /** One opacity for the whole layer, which the legend fades. */
+  fill: FillPaint & { opacity: number };
   /** The legend swatch's fill and edge, matching the layer. */
   swatch: { fill: string; edge: string };
 };

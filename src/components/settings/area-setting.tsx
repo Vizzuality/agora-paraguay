@@ -179,7 +179,8 @@ function AnalysedArea() {
 
   return (
     <>
-      <div className="flex items-center gap-6">
+      {/* The report names the parcel in the heading instead (`SettingsSection`). */}
+      <div className="flex items-center gap-6 print:hidden">
         <ParcelSelect />
         <Button
           variant="ghost"

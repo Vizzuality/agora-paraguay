@@ -5,6 +5,7 @@ import {
   exposureClasses,
   exposureFill,
   exposureLabel,
+  exposureOpacity,
   exposureOutline,
 } from '@/lib/map/exposure-districts';
 
@@ -121,8 +122,44 @@ describe('exposureFill / exposureOutline', () => {
     ]);
   });
 
+  it('clears a class the legend hides, fill and outline, and keeps the others', () => {
+    const hidden = new Set(['Alto']);
+
+    expect(exposureFill(classes, hidden)).toEqual([
+      'match',
+      ['get', 'Ex_class'],
+      'Sin soja',
+      '#657690',
+      'Alto',
+      'rgba(0, 0, 0, 0)',
+      '#657690',
+    ]);
+    expect(exposureOutline(classes, hidden)).toContain('rgba(0, 0, 0, 0)');
+  });
+
   it('paints everything grey with no classes, since match needs a label', () => {
     expect(exposureFill([])).toBe('#657690');
     expect(exposureOutline([])).toBe('#96A3B5');
+  });
+});
+
+describe('exposureOpacity', () => {
+  const classes = [
+    { label: 'Sin soja', tone: 'medium' as const },
+    { label: 'Alto', tone: 'high' as const },
+  ];
+
+  it('is the base opacity while the legend sets none', () => {
+    expect(exposureOpacity(classes, {}, 0.6)).toBe(0.6);
+  });
+
+  it("scales the base by each set class's share, the base for the rest", () => {
+    expect(exposureOpacity(classes, { Alto: 0.5 }, 0.6)).toEqual([
+      'match',
+      ['get', 'Ex_class'],
+      'Alto',
+      0.3,
+      0.6,
+    ]);
   });
 });
