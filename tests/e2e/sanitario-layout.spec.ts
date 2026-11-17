@@ -66,6 +66,13 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
     'Severo: 1',
   ]);
 
+  // The info tip sits in the card's top-right corner, inside its 24px padding.
+  const tip = rust.getByRole('button', { name: 'Más información sobre Phakopsora pachyrhizi' });
+  const tipBox = (await tip.boundingBox())!;
+  const rustBox = (await rust.boundingBox())!;
+  expect(Math.abs(rustBox.x + rustBox.width - 24 - (tipBox.x + tipBox.width))).toBeLessThan(1);
+  expect(tipBox.y - rustBox.y).toBeLessThan(32);
+
   // The text facts share one summary card.
   const info = page.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
   await expect(info).toContainText('Tipo de cultivo');
