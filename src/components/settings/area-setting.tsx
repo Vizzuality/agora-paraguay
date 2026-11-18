@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, LayoutGrid, SquarePen, Undo2, Upload } from 'lucide-react';
-import { useId, useRef } from 'react';
+import { useRef } from 'react';
 
 import {
   NO_PARCEL_INTERSECTION_MESSAGE,
@@ -8,17 +8,10 @@ import {
 } from '@/components/error-toast';
 import { AnalysedParcelsLayers } from '@/components/map/analysed-parcels-layers';
 import { PanelMap } from '@/components/map/panel-map';
+import { ParcelPicker } from '@/components/settings/parcel-picker';
 import { SettingCardButton } from '@/components/settings/setting-card';
 import { UploadFeedback } from '@/components/sidebar/upload-feedback';
 import { Button } from '@/components/ui/button';
-import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import { selectionStep } from '@/lib/selection-steps';
 import { UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
@@ -187,7 +180,7 @@ function AnalysedArea() {
     <>
       {/* The report names the parcel in the heading instead (`SettingsSection`). */}
       <div className="flex items-end gap-3 pt-2 print:hidden">
-        <ParcelSelect />
+        <ParcelPicker />
         {parcels.length > 1 && (
           <Button
             variant="secondary"
@@ -216,36 +209,5 @@ function AnalysedArea() {
         </PanelMap>
       </div>
     </>
-  );
-}
-
-/** Parcela: each analysed parcel, as "Parcela N"; under Todas nothing is picked and the label rests in the field. */
-function ParcelSelect() {
-  const parcels = useAtomValue(analysedParcelIdsAtom);
-  const activeId = useAtomValue(activeParcelIdAtom);
-  const setActiveTab = useSetAtom(activeParcelTabAtom);
-  const id = useId();
-
-  return (
-    <div className="relative min-w-0 flex-1">
-      <Select
-        // Todas is the button beside the picker: here it is no value at all.
-        value={activeId ?? ''}
-        onValueChange={(value) => setActiveTab(value)}
-        disabled={parcels.length === 1}
-      >
-        <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
-          <SelectValue />
-        </SelectTrigger>
-        <FloatingLabel htmlFor={id}>Parcela</FloatingLabel>
-        <SelectContent>
-          {parcels.map((parcel) => (
-            <SelectItem key={parcel} value={parcel}>
-              {parcelLabel(parcel, parcels)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
   );
 }

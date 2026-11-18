@@ -146,8 +146,19 @@ test('the productivo widgets read the selection under Todas and one parcel when 
     .getByRole('region', { name: 'Área de interés' })
     .getByRole('combobox', { name: 'Parcela' });
   await parcel.click();
+  // The search narrows the list by label (or cadastral id).
+  await page.getByRole('searchbox', { name: 'Buscar parcela' }).fill('parcela 2');
+  await expect(page.getByRole('option')).toHaveText(['Parcela 2']);
   await page.getByRole('option', { name: 'Parcela 2' }).click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  // Reopened, the search starts empty and the picked parcel is marked.
+  await parcel.click();
+  await expect(page.getByRole('searchbox', { name: 'Buscar parcela' })).toHaveValue('');
+  await expect(page.getByRole('option', { name: 'Parcela 2' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.keyboard.press('Escape');
   // One parcel's resilience reads in the context panel instead; the seasons count stays a
   // card, that parcel's figure.
   await expect(resilience).toHaveCount(0);
