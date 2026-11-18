@@ -43,8 +43,8 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * number per scope — one parcel as a number card (the "Numerical individual" design),
  * several binned (the "Numerical multiple" design) — an open number on the set's scale,
  * a range on its own (`min`–`max`, one bin per step when short): a productivo range is a
- * count or a percentage, not a risk, so it never gets the ruler's classes. Text is a fact
- * on both. Exposición climática charts only what has a scale of its own: a percentage
+ * count or a percentage, not a risk, so it never gets the ruler's classes. Text and lists
+ * are facts on both. Exposición climática charts only what has a scale of its own: a percentage
  * on 0–100 as a number card; its hectares are facts, since the only scale they could
  * take is the largest district's, which leaves almost every marker at zero. A few
  * sanitario indicators are facts whatever their type (`SANITARIO_FACT_IDS`).
@@ -62,9 +62,7 @@ export function widgetFor(
 
   if (key === AREA_ID) return 'fact';
   if (riesgo === 'sanitario' && key !== undefined && SANITARIO_FACT_IDS.has(key)) return 'fact';
-  if (riesgo === 'productivo' && scope === 'individual' && key !== undefined) {
-    if (key === 'resiliencia' || SEASONS_COUNTER.test(key)) return 'fact';
-  }
+  if (riesgo === 'productivo' && scope === 'individual' && key === 'resiliencia') return 'fact';
 
   switch (type.type) {
     case 'range':
@@ -72,6 +70,7 @@ export function widgetFor(
     case 'category':
       return scope === 'multiple' ? 'bar-chart' : 'ruler';
     case 'text':
+    case 'list':
       return 'fact';
     case 'numeric':
       if (riesgo === 'exposicion_climatica' && unit !== '%') return 'fact';
@@ -82,9 +81,6 @@ export function widgetFor(
 
 /** The selection's area: a fact everywhere, summed under Todas (`combinedParcel`). */
 const AREA_ID = 'area';
-
-/** Productivo's seasons counter per crop (`N_soja`): one parcel's count is a fact. */
-const SEASONS_COUNTER = /^n_[a-z]+$/;
 
 /** Sanitario indicators that describe the reading rather than a risk: summary facts, not widgets. */
 const SANITARIO_FACT_IDS: ReadonlySet<string> = new Set(['data_quality']);

@@ -64,22 +64,17 @@ describe('numberWidgets', () => {
   });
 
   it('draws a range on its own scale, whatever the set: a 0–8 count with a tick per step, a 0–100 % every ten', () => {
-    // N_soja itself is a fact on a parcel tab; the same 0–8 range under another id is drawn.
-    const counted = parcels.map((entry) => ({
-      ...entry,
-      properties: { ...entry.properties, Conteo: entry.properties.N_soja },
-    }));
     const [count, stable] = numberWidgets(
-      counted,
+      parcels,
       ['A', 'B'],
-      [{ ...seasons, id: 'Conteo' }, stability],
+      [seasons, stability],
       'productivo',
       'individual',
-      counted[1],
+      parcels[1],
     );
 
     expect(count).toMatchObject({
-      id: 'Conteo',
+      id: 'N_soja',
       unit: null,
       value: 3,
       text: '3',

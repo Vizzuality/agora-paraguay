@@ -46,7 +46,8 @@ export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }
               className="mt-0.5 text-accent-foreground"
             />
           </dt>
-          <dd className="text-base">{item.value}</dd>
+          {/* A list under Todas reads one element a line. */}
+          <dd className="text-base whitespace-pre-line">{item.value}</dd>
         </div>
       ))}
     </dl>

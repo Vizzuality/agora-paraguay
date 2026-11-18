@@ -70,10 +70,10 @@ export function combinedParcel(
         : combineReadings(readings, typeOf.get(column.toLowerCase()));
   }
 
-  // A list column reads as each element with the number of parcels that carry it.
+  // A list column reads as each element with the number of parcels that carry it, one a line.
   const lists = listCounts(parcels);
   for (const [column, counts] of Object.entries(lists)) {
-    properties[column] = counts.map(([element, count]) => `${element} (${count})`).join(', ');
+    properties[column] = counts.map(([element, count]) => `${element} (${count})`).join('\n');
   }
   const combinedLists = Object.fromEntries(
     Object.entries(lists).map(([column, counts]) => [column, counts.map(([element]) => element)]),
@@ -211,8 +211,8 @@ export function isGeneralInfo(
   riesgo: IndicatorsRiesgo = 'sanitario',
   scope: ParcelScope = 'individual',
 ): boolean {
-  // Text and the area are facts under any scope; on productivo one parcel's Resiliencia and
-  // seasons counter join them (`widgetFor`).
+  // Text, lists and the area are facts under any scope; on productivo one parcel's
+  // Resiliencia joins them (`widgetFor`).
   return (
     widgetFor(indicator.indicator_type, {
       riesgo,

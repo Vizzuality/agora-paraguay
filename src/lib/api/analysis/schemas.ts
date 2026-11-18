@@ -90,6 +90,7 @@ export function indicatorReadingSchema(type: IndicatorType): z.ZodType<string | 
     case 'range':
       return numberReadingSchema;
     case 'text':
+    case 'list':
       return z.string();
     case 'category':
       return categoryReadingSchema;

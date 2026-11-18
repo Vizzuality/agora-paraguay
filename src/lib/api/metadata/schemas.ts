@@ -112,8 +112,11 @@ const categoryIndicatorTypeSchema = z.looseObject({
   categories: z.array(z.string()),
 });
 
-/** Free text (`weather_station`, `phenology_stage`) and open numbers (`Pro_soja` t/ha). */
-const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric']) });
+/**
+ * Free text (`weather_station`, `phenology_stage`), open numbers (`Pro_soja` t/ha) and
+ * lists (`Zafras_soja`, answered as an array and read joined).
+ */
+const plainIndicatorTypeSchema = z.looseObject({ type: z.enum(['text', 'numeric', 'list']) });
 
 /**
  * How a parcel's reading of the indicator is typed — see `indicatorReadingSchema` in
@@ -168,6 +171,7 @@ const DRAWN_INDICATOR_TYPES: ReadonlySet<string> = new Set<IndicatorType['type']
   'category',
   'text',
   'numeric',
+  'list',
 ]);
 
 function isDrawnType(raw: unknown): boolean {

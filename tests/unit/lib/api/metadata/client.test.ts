@@ -215,6 +215,16 @@ describe('fetchIndicators', () => {
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
   });
 
+  it('keeps a list indicator (`Zafras_soja`), a fact like text', async () => {
+    const zafras = { id: 'Zafras_soja', name: 'Zafras', indicator_type: { type: 'list' } };
+    fetchMock.mockResolvedValueOnce(Response.json([...indicators, zafras]));
+
+    await expect(fetchIndicators({ riesgo: 'productivo' })).resolves.toEqual([
+      ...indicators,
+      zafras,
+    ]);
+  });
+
   it('still rejects an entry that is malformed otherwise', async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json([...indicators, { name: 'No id', indicator_type: { type: 'text' } }]),

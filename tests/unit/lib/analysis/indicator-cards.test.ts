@@ -178,11 +178,11 @@ describe('indicatorCards', () => {
     );
 
     expect(generalInfo(todas, [zafras])).toEqual([
-      { id: 'Zafras_soja', label: 'Zafras', value: '2017-2018 (3), 2018-2019 (1), 2024-2025 (1)' },
+      { id: 'Zafras_soja', label: 'Zafras', value: '2017-2018 (3)\n2018-2019 (1)\n2024-2025 (1)' },
     ]);
   });
 
-  it('productivo: Resiliencia and the seasons counter join the facts on a parcel tab only', () => {
+  it('productivo: Resiliencia joins the facts on a parcel tab only; the seasons list always, the counter never', () => {
     const resilience: Indicator = {
       id: 'Resiliencia',
       name: 'Resiliencia',
@@ -196,7 +196,7 @@ describe('indicatorCards', () => {
     const zafras: Indicator = {
       id: 'Zafras_soja',
       name: 'Zafras',
-      indicator_type: { type: 'text' },
+      indicator_type: { type: 'list' },
     };
     const p = parcel({ Resiliencia: 'Media', N_soja: 3, Zafras_soja: '2019-2020, 2021-2022' });
     const list = [resilience, seasons, zafras];
@@ -205,7 +205,6 @@ describe('indicatorCards', () => {
       generalInfo(p, list, 'productivo', 'individual').map(({ id, value }) => [id, value]),
     ).toEqual([
       ['Resiliencia', 'Media'],
-      ['N_soja', '3'],
       ['Zafras_soja', '2019-2020, 2021-2022'],
     ]);
     expect(generalInfo(p, list, 'productivo', 'multiple').map(({ id }) => id)).toEqual([

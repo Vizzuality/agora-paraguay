@@ -87,10 +87,11 @@ export const PRODUCTIVO_INDICATORS = [
   AREA_INDICATOR,
   {
     id: 'Zafras_soja',
-    name: 'Zafras de soja detectadas',
+    name: 'Listado de Zafras de soja',
+    description: 'Qué años de Zafra soja ha habido exactamente.',
     unit: null,
     default: true,
-    indicator_type: { type: 'text' },
+    indicator_type: { type: 'list' },
   },
   {
     id: 'Resiliencia',
