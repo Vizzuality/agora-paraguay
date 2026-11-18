@@ -100,6 +100,11 @@ describe('resolveFilterSelection', () => {
     expect(resolveFilterSelection({ crop_type: 'wheat' }, FILTERS).crop_type).toBe('soja');
   });
 
+  it('starts the crop at the given default when offered, and keeps a pick over it', () => {
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS, 'rice').crop_type).toBe('rice');
+    expect(resolveFilterSelection({ crop_type: 'soja' }, FILTERS, 'rice').crop_type).toBe('soja');
+  });
+
   it('ignores picks for filters the API no longer lists', () => {
     expect(resolveFilterSelection({ cultivo: 'soja' }, FILTERS)).not.toHaveProperty('cultivo');
   });
