@@ -43,29 +43,33 @@ test('Exposición climática fills the content column with its map and prompts f
   await map.getByRole('button', { name: 'Mostrar leyenda' }).click();
   await expect(legend).toBeVisible();
 
-  // Each row hides its class from the map and back.
-  const rows = legend.getByRole('listitem');
-  const first = (await rows.first().textContent())!;
-  const hide = legend.getByRole('button', { name: `Ocultar ${first}` });
-  await expect(hide).toHaveAttribute('aria-pressed', 'true');
-  await hide.click();
-  const show = legend.getByRole('button', { name: `Mostrar ${first}` });
-  await expect(show).toHaveAttribute('aria-pressed', 'false');
-  await show.click();
-
-  // Each row's opacity opens a slider; the arrow keys step it by 5 %.
-  await legend.getByRole('button', { name: `Opacidad de ${first}: 100 %` }).click();
-  await page.getByRole('slider', { name: `Opacidad de ${first}` }).press('ArrowLeft');
-  await expect(legend.getByRole('button', { name: `Opacidad de ${first}: 95 %` })).toBeVisible();
-  await page.keyboard.press('Escape');
-
-  // A row's handle moves it with the arrow keys.
-  await legend.getByRole('button', { name: `Reordenar ${first}` }).press('ArrowDown');
-  await expect(rows.nth(1)).toHaveText(first);
-  await legend.getByRole('button', { name: `Reordenar ${first}` }).press('ArrowUp');
-  await expect(rows.first()).toHaveText(first);
+  // Nivel de exposición's legend is a key only: no eye, slider or handle on its rows.
+  await expect(legend.getByRole('button')).toHaveCount(0);
 
   await surface.click();
   await expect(surface).toHaveAttribute('aria-selected', 'true');
-  await expect(map.getByRole('list', { name: 'Leyenda de capas' })).toBeVisible();
+  const layers = map.getByRole('list', { name: 'Leyenda de capas' });
+  await expect(layers).toBeVisible();
+
+  // Superficie expuesta's layers get every control: each row hides its layer and back,
+  const rows = layers.getByRole('listitem');
+  const first = (await rows.first().textContent())!;
+  const hide = layers.getByRole('button', { name: `Ocultar ${first}` });
+  await expect(hide).toHaveAttribute('aria-pressed', 'true');
+  await hide.click();
+  const show = layers.getByRole('button', { name: `Mostrar ${first}` });
+  await expect(show).toHaveAttribute('aria-pressed', 'false');
+  await show.click();
+
+  // fades it from a slider, stepped by 5 % with the arrow keys,
+  await layers.getByRole('button', { name: `Opacidad de ${first}: 100 %` }).click();
+  await page.getByRole('slider', { name: `Opacidad de ${first}` }).press('ArrowLeft');
+  await expect(layers.getByRole('button', { name: `Opacidad de ${first}: 95 %` })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // and moves it with its handle's arrow keys.
+  await layers.getByRole('button', { name: `Reordenar ${first}` }).press('ArrowDown');
+  await expect(rows.nth(1)).toHaveText(first);
+  await layers.getByRole('button', { name: `Reordenar ${first}` }).press('ArrowUp');
+  await expect(rows.first()).toHaveText(first);
 });

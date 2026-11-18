@@ -73,8 +73,12 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   expect(Math.abs(rustBox.x + rustBox.width - 24 - (tipBox.x + tipBox.width))).toBeLessThan(1);
   expect(tipBox.y - rustBox.y).toBeLessThan(32);
 
-  // The text facts share one summary card.
-  const info = page.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
+  // Under Todas sanitario keeps its columns: the widget does not take the full width.
+  const mainBox = (await page.getByRole('main').boundingBox())!;
+  expect(rustBox.width).toBeLessThan(mainBox.width * 0.75);
+
+  // The text facts share one context card.
+  const info = page.getByRole('heading', { name: 'Información de contexto' }).locator('..');
   await expect(info).toContainText('Tipo de cultivo');
   await expect(info).toContainText('Soja');
 
@@ -150,7 +154,7 @@ test('Personalizar indicadores drops an indicator from the analysis and its card
   await expect.poll(() => bodies.length).toBe(before + 1);
   expect(bodies.at(-1)?.indicators).not.toContain('asian_rust');
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
-  await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Información de contexto' })).toBeVisible();
 });
 
 test('says why when the indicator list cannot be loaded', async ({ page }) => {
@@ -195,6 +199,30 @@ test('shows a loader while a filter change re-runs the analysis', async ({ page 
   // The previous results stay on screen, inert, until the answer lands.
   await expect(status).toHaveText('Actualizando análisis…');
   await expect(page.locator('[aria-busy="true"]')).toContainText('Phakopsora pachyrhizi');
+  release();
+  await expect(status).toHaveCount(0);
+});
+
+test('the first analysis waits in a bordered frame as tall as the map it replaces', async ({
+  page,
+}) => {
+  let release: () => void = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await analyseOnRedesign(page, '/analisis/sanitario', (target) =>
+    target.route('**/api/parcels/analysis/diseases/', async (route) => {
+      await held;
+      await route.fallback();
+    }),
+  );
+
+  const status = page.getByRole('status').filter({ hasText: 'Analizando…' });
+  await expect(status).toBeVisible();
+  await expect(status).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(status).toHaveCSS('border-top-width', '3px');
+  const viewport = page.viewportSize()!;
+  const box = (await status.boundingBox())!;
+  expect(Math.abs(box.height - (viewport.height - 80))).toBeLessThan(2);
+
   release();
   await expect(status).toHaveCount(0);
 });

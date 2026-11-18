@@ -6,6 +6,7 @@ import { es } from 'react-day-picker/locale';
 import { InfoTip } from '@/components/info-tip';
 import { Calendar } from '@/components/ui/calendar';
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
@@ -21,6 +22,7 @@ import {
   isoToDate,
   orderHeroFilters,
   todayIso,
+  YEAR_FILTER_ID,
 } from '@/lib/analysis/filters';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import type { AnalysisOption, Filter, Riesgo } from '@/lib/api/metadata/schemas';
@@ -99,6 +101,17 @@ function HeroField({
 }>) {
   const field = filter.field_type;
 
+  if (filter.id === YEAR_FILTER_ID) {
+    return (
+      <HeroReadOnly
+        label={filter.name}
+        description={description}
+        value={value}
+        className={className}
+      />
+    );
+  }
+
   switch (field.type) {
     case 'category':
       return (
@@ -124,6 +137,32 @@ function HeroField({
         />
       );
   }
+}
+
+/** A value the app sets on its own (the current year): the field's look, nothing to pick. */
+function HeroReadOnly({
+  label,
+  description,
+  value,
+  className,
+}: Readonly<{ label: string; description?: string; value: string; className?: string }>) {
+  const id = useId();
+
+  return (
+    <div className={cn('relative', className)}>
+      <Input
+        id={id}
+        readOnly
+        value={value}
+        placeholder=" "
+        className={cn(FLOATING_FIELD_CLASS, 'focus-visible:border-muted-foreground')}
+      />
+      <FloatingLabel htmlFor={id}>
+        {label}
+        <InfoTip description={description} subject={label} />
+      </FloatingLabel>
+    </div>
+  );
 }
 
 /** A date filter, ISO `YYYY-MM-DD` in and out; the calendar offers only min–max. */

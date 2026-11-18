@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Session } from '@/lib/api/auth/schemas';
 import { useLogout, useSession } from '@/lib/auth/use-session';
-import { loginOpenAtom } from '@/store/auth';
+import { loginOpenAtom, loginRedirectAtom } from '@/store/auth';
 
 export function UserButton(props: Readonly<React.ComponentProps<typeof Button>>) {
   return (
@@ -38,19 +38,26 @@ export function LoginDialog() {
 
 /**
  * The user button that opens the login form in a modal, centred over a backdrop. The
- * gated pages open it too (`LoginRequired`); Restablecer contraseña leaves it for its own
- * page. Reads atoms: render inside `<ClientOnly>`.
+ * gated pages open it too (`LoginRequired`), and so does choosing a private analysis type
+ * signed out, which signing in then goes on to (`loginRedirectAtom`); Restablecer
+ * contraseña leaves it for its own page. Reads atoms: render inside `<ClientOnly>`.
  */
 export function LoginModal() {
   const [open, setOpen] = useAtom(loginOpenAtom);
+  const [redirect, setRedirect] = useAtom(loginRedirectAtom);
   const navigate = useNavigate();
+  // Closing without signing in drops the page the user was on the way to.
+  const onOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) setRedirect(null);
+  };
 
   return (
     // Not modal, and only the backdrop dismisses: a modal dialog disables pointer events
     // on the page and closes on any pointer-down or focus outside its content, which is
     // what a password manager's inline suggestion is, so it could never be picked. Being
     // non-modal, Radix renders no overlay: the backdrop is ours. Escape still closes.
-    <Dialog modal={false} open={open} onOpenChange={setOpen}>
+    <Dialog modal={false} open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <UserButton />
       </DialogTrigger>
@@ -75,9 +82,12 @@ export function LoginModal() {
         <DialogTitle className="sr-only">Área privada</DialogTitle>
         <LoginCard
           className="w-full"
-          onSuccess={() => setOpen(false)}
+          onSuccess={() => {
+            onOpenChange(false);
+            if (redirect) void navigate({ to: redirect, replace: true });
+          }}
           onReset={() => {
-            setOpen(false);
+            onOpenChange(false);
             void navigate({ to: '/restablecer-contrasena' });
           }}
         />

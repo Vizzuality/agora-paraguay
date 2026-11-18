@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
  * The indicator widgets, as many as are selected — no empty frames. Auto-fill columns keep
  * every widget the same width whether it has company or not: at least 278px (two to the
  * analysis page's content column), never wider than the container, and as tall as its
- * text needs. `stacked` gives every widget the full width instead, as Todas does.
+ * text needs. `stacked` gives every widget the full width instead, as productivo's Todas does.
  */
 export function WidgetGrid({
   stacked = false,

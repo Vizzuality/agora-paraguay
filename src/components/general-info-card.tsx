@@ -18,14 +18,14 @@ type GeneralInfoCardProps = {
 
 /**
  * Widget for the parcel's context — station, crop, phenology — as one list of
- * facts, the analysis summary heading the content column. These are not risks, so no
+ * facts, the context heading the content column. These are not risks, so no
  * figure and no ruler; the heading sits right in the card, no subtitle, and the facts
  * flow top to bottom through as many columns as the card's width holds.
  */
 export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
   return (
     <WidgetCard className={cn('min-h-0 justify-start gap-2', className)}>
-      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
+      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Información de contexto</h3>
 
       <GeneralInfoList items={items} />
     </WidgetCard>
