@@ -113,24 +113,24 @@ describe('globalLayerStyles', () => {
     });
   });
 
-  it('traces the highlighted district again in `highlightColor`, over the class lines', () => {
+  it('fades every feature but the highlighted one by `othersOpacity`, fill and trace', () => {
     const fill = { color: '#e06900', opacity: 0.6, outlineColor: 'rgba(0, 0, 0, 0)' };
-    const options = { id: 9, color: '#ff871f', fill, lineWidth: 2, highlightColor: '#FFFFFF' };
-    const styles = globalLayerStyles({ ...options, highlightedId: '0101' });
+    const options = { id: 9, color: '#ff871f', fill, lineWidth: 2, othersOpacity: 0.3 };
+    const isHighlighted = ['==', DISTRICT_KEY_EXPRESSION, '0101'];
+    const [fillLayer, line] = globalLayerStyles({ ...options, highlightedId: '0101' });
 
-    expect(styles.map((style) => style.id)).toEqual([
-      'global-layer-9-fill',
-      'global-layer-9-line',
-      'global-layer-9-highlight',
-    ]);
-    expect(styles[2].filter).toEqual([
-      'all',
-      ['!=', ['geometry-type'], 'Point'],
-      ['==', DISTRICT_KEY_EXPRESSION, '0101'],
-    ]);
-    expect(styles[2].paint).toEqual({ 'line-color': '#FFFFFF', 'line-width': 3 });
-    // No pick, no highlight layer.
-    expect(globalLayerStyles(options)).toHaveLength(2);
+    expect(fillLayer.paint).toMatchObject({
+      'fill-opacity': ['case', isHighlighted, 0.6, ['*', 0.6, 0.3]],
+    });
+    expect(line.paint).toEqual({
+      'line-color': '#ff871f',
+      'line-width': ['case', isHighlighted, 3, 2],
+      'line-opacity': ['case', isHighlighted, 1, 0.3],
+    });
+    // Nothing picked, nothing fades.
+    const [plainFill, plainLine] = globalLayerStyles(options);
+    expect(plainFill.paint).toMatchObject({ 'fill-opacity': 0.6 });
+    expect(plainLine.paint).not.toHaveProperty('line-opacity');
   });
 
   it('hides every layer when hidden, so the source stays loaded', () => {

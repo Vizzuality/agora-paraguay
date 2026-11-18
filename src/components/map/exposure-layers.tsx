@@ -19,7 +19,8 @@ import {
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
-import { stackBeforeIds, toggled } from '@/lib/map/legend-order';
+import { LEGEND_KEY_ONLY } from '@/lib/map/legend-config';
+import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legend-order';
 import { DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
@@ -33,10 +34,13 @@ export type ExposureMapView = 'exposicion' | 'capas';
  * The districts layer: Nivel de exposición fills and traces each district in its class
  * colour; Capas keeps faint edges and traces the pick over them.
  */
-const EXPOSURE_LAYER = { id: 9 };
+const EXPOSURE_LAYER = { id: 9, legendConfig: LEGEND_KEY_ONLY };
 
-/** The pick's outline, in the parcel outline's white. */
+/** The pick's outline on Capas, in the parcel outline's white. */
 const PICK_OUTLINE_COLOR = '#FFFFFF';
+
+/** On Nivel de exposición, the share of their opacity the districts around a pick keep. */
+const UNPICKED_OPACITY = 0.3;
 
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
 
@@ -54,8 +58,8 @@ const TONE_SWATCH: Record<RiskTone, string> = {
  * district by its exposure class, with the legend; Capas traces the districts faintly
  * under the reference layers.
  * A district on the exposure layer names itself on hover and is picked on click: the
- * panel shows it, the map traces it in white over its neighbours, the camera flies to
- * it, and Capas paints only its features. Clicking
+ * panel shows it, the districts around it fade, the camera flies to it, and Capas paints
+ * only its features. Clicking
  * it again clears the pick. The pick holds across both tabs: Capas traces its outline
  * over the reference layers, and a click there picks the district under the pointer too.
  */
@@ -71,11 +75,15 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   // The legend's classes and colours, the same as the panel's exposure ruler.
   const classes = exposureClasses(useIndicators('exposicion_climatica').data);
 
-  // The legend's eyes: a hidden class paints clear, a hidden reference layer goes. The
-  // reference layers paint in the legend's order, top row on top.
-  const [hiddenClasses, setHiddenClasses] = useState<ReadonlySet<string>>(new Set());
+  // The reference layers' legend controls (each layer's `legendConfig`): a hidden one goes,
+  // a faded one scales its opacity, and they paint in the legend's order, top row on top.
+  // Nivel de exposición's legend is a key only.
   const [hiddenLayers, setHiddenLayers] = useState<ReadonlySet<string>>(new Set());
-  const layersTopFirst = REFERENCE_LAYERS.toReversed();
+  const [layerOpacity, setLayerOpacity] = useState<Readonly<Record<string, number>>>({});
+  const [layerOrder, setLayerOrder] = useState(() =>
+    REFERENCE_LAYERS.map(({ id }) => String(id)).toReversed(),
+  );
+  const layersTopFirst = ordered(REFERENCE_LAYERS, layerOrder, ({ id }) => String(id));
   const beforeIds = stackBeforeIds(
     layersTopFirst.map(({ id }) => globalLayerFillId(id)),
     EXPOSURE_FILL_ID,
@@ -132,43 +140,46 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
         <MapLegend
           label="Leyenda de exposición"
           className="bottom-2 left-2"
+          legendConfig={EXPOSURE_LAYER.legendConfig}
           items={classes.map(({ label, tone }) => ({
             id: label,
             label: exposureLabel(label),
             className: cn('border-2', TONE_SWATCH[tone]),
           }))}
-          hidden={hiddenClasses}
-          onToggle={(id) => setHiddenClasses((ids) => toggled(ids, id))}
         />
       ) : (
         <MapLegend
           label="Leyenda de capas"
           className="bottom-2 left-2"
-          items={layersTopFirst.map(({ id, label, swatch }) => ({
+          items={layersTopFirst.map(({ id, label, swatch, legendConfig }) => ({
             id: String(id),
             label,
             className: 'border-2',
             style: { backgroundColor: swatch.fill, borderColor: swatch.edge },
+            legendConfig,
           }))}
           hidden={hiddenLayers}
           onToggle={(id) => setHiddenLayers((ids) => toggled(ids, id))}
+          onReorder={setLayerOrder}
+          opacity={layerOpacity}
+          onOpacity={(id, value) => setLayerOpacity((values) => ({ ...values, [id]: value }))}
         />
       )}
       {exposure && hovered && <DistrictTooltip {...hovered} />}
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
       {/* Mounted on both tabs, so a switch restyles it instead of reloading it. */}
       <GlobalLayer
-        {...EXPOSURE_LAYER}
+        id={EXPOSURE_LAYER.id}
         {...(exposure
           ? {
-              color: exposureOutline(classes, hiddenClasses),
+              color: exposureOutline(classes),
               fill: {
-                color: exposureFill(classes, hiddenClasses),
+                color: exposureFill(classes),
                 opacity: EXPOSURE_FILL_OPACITY,
                 outlineColor: 'rgba(0, 0, 0, 0)',
               },
               lineWidth: EXPOSURE_LINE_WIDTH,
-              highlightColor: PICK_OUTLINE_COLOR,
+              othersOpacity: UNPICKED_OPACITY,
             }
           : { color: PICK_OUTLINE_COLOR, fill: DISTRICTS_FILL, outline: true })}
         highlightedId={selected?.id}
@@ -182,7 +193,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
             key={id}
             id={id}
             color={fill.color}
-            fill={fill}
+            fill={{ ...fill, opacity: scaledOpacity(fill.opacity, layerOpacity[String(id)]) }}
             districtId={selected?.id}
             hidden={exposure || hiddenLayers.has(String(id))}
             beforeId={beforeIds[globalLayerFillId(id)]}

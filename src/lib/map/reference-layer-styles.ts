@@ -1,4 +1,5 @@
 import type { FillPaint } from '@/lib/map/global-layer-styles';
+import { LEGEND_ALL_CONTROLS, type LegendConfig } from '@/lib/map/legend-config';
 
 /*
  * How the exposición climática map paints its global layers: the districts layer on both
@@ -28,6 +29,8 @@ export type ReferenceLayer = {
   fill: FillPaint & { opacity: number };
   /** The legend swatch's fill and edge, matching the layer. */
   swatch: { fill: string; edge: string };
+  /** The controls its legend row gets. */
+  legendConfig: LegendConfig;
 };
 
 /** Capas's layers in paint order: the country-wide hazards first, soy on top. */
@@ -49,17 +52,20 @@ export const REFERENCE_LAYERS: ReferenceLayer[] = [
       outlineColor: DROUGHT_LIGHT,
     },
     swatch: { fill: DROUGHT_DARK, edge: DROUGHT_LIGHT },
+    legendConfig: LEGEND_ALL_CONTROLS,
   },
   {
     id: 7,
     label: 'Expuesto a inundación',
     fill: { color: FLOOD, opacity: 0.75, outlineColor: '#9bbec0' },
     swatch: { fill: FLOOD, edge: '#9bbec0' },
+    legendConfig: LEGEND_ALL_CONTROLS,
   },
   {
     id: 8,
     label: 'Soja',
     fill: { color: SOJA, opacity: 0.9, outlineColor: 'rgba(92, 107, 84, 0)' },
     swatch: { fill: SOJA, edge: SOJA },
+    legendConfig: LEGEND_ALL_CONTROLS,
   },
 ];
