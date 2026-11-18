@@ -4,6 +4,7 @@ import { type CSSProperties, type KeyboardEvent, useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
+import { LEGEND_KEY_ONLY, type LegendConfig } from '@/lib/map/legend-config';
 import { moveItem } from '@/lib/map/legend-order';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +14,8 @@ export type MapLegendItem = {
   /** The swatch's classes over its 16px disc. */
   className?: string;
   style?: CSSProperties;
+  /** This row's controls, from its layer; the legend's `legendConfig` when left out. */
+  legendConfig?: LegendConfig;
 };
 
 type MapLegendProps = {
@@ -20,12 +23,14 @@ type MapLegendProps = {
   /** In the order the rows read. */
   items: MapLegendItem[];
   className?: string;
-  /** The rows the map hides; with `onToggle`, each row gets its eye. */
+  /** The rows' controls unless a row names its own; a key only when left out. */
+  legendConfig?: LegendConfig;
+  /** The rows the map hides; with `onToggle`, rows whose config allows it get an eye. */
   hidden?: ReadonlySet<string>;
   onToggle?: (id: string) => void;
-  /** With it, each row gets a drag handle; called with the ids in their new order. */
+  /** With it, rows whose config allows it get a drag handle; called with the ids in their new order. */
   onReorder?: (ids: string[]) => void;
-  /** Each row's opacity, 0–1 (1 when absent); with `onOpacity`, each row gets a slider. */
+  /** Each row's opacity, 0–1 (1 when absent); with `onOpacity`, rows whose config allows it get a slider. */
   opacity?: Readonly<Record<string, number>>;
   onOpacity?: (id: string, value: number) => void;
 };
@@ -35,15 +40,16 @@ const CONTROL_CLASS =
 
 /**
  * A map's key, bottom left: Mostrar/Ocultar leyenda over the swatches on a light panel,
- * open until folded. Every map's legend uses it, so they read and fold alike. A map that
- * lets its rows be faded, hidden or reordered passes the handlers, and the rows grow an
- * opacity slider, an eye and a drag handle: drag it along the handles, or move the row
- * with the arrow keys.
+ * open until folded. Every map's legend uses it, so they read and fold alike. Each row's
+ * `legendConfig` (its layer's) says which controls it gets, given the map passes the
+ * handler: an opacity slider, an eye and a drag handle (drag it along the handles, or move
+ * the row with the arrow keys).
  */
 export function MapLegend({
   label,
   items,
   className,
+  legendConfig = LEGEND_KEY_ONLY,
   hidden,
   onToggle,
   onReorder,
@@ -65,7 +71,12 @@ export function MapLegend({
   };
 
   return (
-    <div className={cn('absolute z-10 flex min-w-52 flex-col items-start gap-1', className)}>
+    <div
+      className={cn(
+        'absolute z-10 flex min-w-52 flex-col items-start gap-1 print:min-w-0',
+        className,
+      )}
+    >
       <Button
         variant="secondary"
         aria-expanded={open}
@@ -80,18 +91,23 @@ export function MapLegend({
         id={id}
         aria-label={label}
         className={cn(
-          'flex w-full flex-col gap-1 rounded-2xl bg-background py-2 pr-2 pl-4 backdrop-blur-xs',
+          'flex w-full flex-col gap-1 rounded-2xl bg-background py-2 pr-2 pl-4 backdrop-blur-xs print:gap-0 print:rounded-lg print:py-1 print:pl-2',
           !open && 'hidden print:flex',
         )}
       >
         {items.map((item, index) => {
           const off = hidden?.has(item.id) ?? false;
+          const { toggle, reorder, fade } = rowControls(item.legendConfig ?? legendConfig, {
+            onToggle,
+            onReorder,
+            onOpacity,
+          });
 
           return (
             <li
               key={item.id}
               className={cn(
-                'flex h-7.5 items-center gap-1 text-xs whitespace-nowrap text-foreground',
+                'flex h-7.5 items-center gap-1 text-xs whitespace-nowrap text-foreground print:h-5',
                 dragged === index && 'opacity-50',
               )}
             >
@@ -107,28 +123,28 @@ export function MapLegend({
               <span className={cn('flex-1 transition-opacity', off && 'opacity-50')}>
                 {item.label}
               </span>
-              {(onToggle || onReorder || onOpacity) && (
+              {(toggle || reorder || fade) && (
                 <span aria-hidden className="w-1 shrink-0 print:hidden" />
               )}
-              {onOpacity && (
+              {fade && (
                 <OpacityControl
                   label={item.label}
                   value={opacity?.[item.id] ?? 1}
-                  onChange={(value) => onOpacity(item.id, value)}
+                  onChange={(value) => fade(item.id, value)}
                 />
               )}
-              {onToggle && (
+              {toggle && (
                 <button
                   type="button"
                   aria-label={`${off ? 'Mostrar' : 'Ocultar'} ${item.label}`}
                   aria-pressed={!off}
-                  onClick={() => onToggle(item.id)}
+                  onClick={() => toggle(item.id)}
                   className={cn(CONTROL_CLASS, 'size-7.5')}
                 >
                   {off ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                 </button>
               )}
-              {onReorder && (
+              {reorder && (
                 <button
                   type="button"
                   aria-label={`Reordenar ${item.label}`}
@@ -161,6 +177,18 @@ export function MapLegend({
       </ul>
     </div>
   );
+}
+
+/** The handlers a row's config lets through; the rest are left out, and so is their control. */
+function rowControls(
+  config: LegendConfig,
+  handlers: Pick<MapLegendProps, 'onToggle' | 'onReorder' | 'onOpacity'>,
+) {
+  return {
+    toggle: config.visibility ? handlers.onToggle : undefined,
+    reorder: config.order ? handlers.onReorder : undefined,
+    fade: config.opacity ? handlers.onOpacity : undefined,
+  };
 }
 
 /** A row's opacity: its button opens a slider, 0–100 % in steps of 5. */

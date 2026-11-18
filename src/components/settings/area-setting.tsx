@@ -193,7 +193,7 @@ function AnalysedArea() {
       </div>
 
       {/* Edge to edge under the controls, as the design bleeds it to the card's corners. */}
-      <div className="relative -mx-6 -mb-6 h-67 overflow-hidden rounded-3xl bg-muted">
+      <div className="relative -mx-6 -mb-6 h-67 overflow-hidden rounded-3xl bg-muted print:h-120 paper:h-120">
         <PanelMap>
           <AnalysedParcelsLayers />
         </PanelMap>
@@ -202,7 +202,7 @@ function AnalysedArea() {
   );
 }
 
-/** Parcela: Todas (more than one parcel) then each analysed parcel, as "Parcela N". */
+/** Parcela: Todas (more than one parcel, pinned on top) then each analysed parcel, as "Parcela N". */
 function ParcelSelect() {
   const parcels = useAtomValue(analysedParcelIdsAtom);
   const activeId = useAtomValue(activeParcelIdAtom);
@@ -221,12 +221,19 @@ function ParcelSelect() {
           <SelectValue placeholder="Seleccionar parcela" />
         </SelectTrigger>
         <FloatingLabel htmlFor={id}>Parcela</FloatingLabel>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option === ALL ? 'Todas' : parcelLabel(option, parcels)}
-            </SelectItem>
-          ))}
+        {/* Todas stays pinned over the scrolling parcels, so no top fade under it. */}
+        <SelectContent viewportClassName="[--scroll-fade-top:0px]!">
+          {options.map((option) =>
+            option === ALL ? (
+              <SelectItem key={option} value={option} className="sticky top-0 z-10 bg-popover">
+                Todas
+              </SelectItem>
+            ) : (
+              <SelectItem key={option} value={option}>
+                {parcelLabel(option, parcels)}
+              </SelectItem>
+            ),
+          )}
         </SelectContent>
       </Select>
     </div>

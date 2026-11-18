@@ -38,8 +38,11 @@ export type GlobalLayerStyleOptions = {
   fill?: FillPaint;
   /** With `fill`: also trace every feature in `color` this wide, the highlighted one thicker. */
   lineWidth?: number;
-  /** With `lineWidth`: the trace's opacity, one or per feature; opaque when left out. */
-  lineOpacity?: number | ExpressionSpecification;
+  /**
+   * With `fill` and a `highlightedId`: the share of their opacity (0–1) every other
+   * feature keeps, fill and trace, so the pick stands out in its own colours.
+   */
+  othersOpacity?: number;
   /** Paint only this district's features, plus any that belong to no district. */
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
@@ -72,7 +75,7 @@ export function globalLayerStyles({
   color,
   fill,
   lineWidth,
-  lineOpacity,
+  othersOpacity,
   districtId,
   highlightedId,
   outline = false,
@@ -119,13 +122,19 @@ export function globalLayerStyles({
   }
 
   if (fill) {
+    // The others fade only while something is picked; with nothing picked all paint alike.
+    const share = highlightedId ? othersOpacity : undefined;
     const fillLayer: GlobalLayerStyle = {
       id: globalLayerFillId(id),
       type: 'fill',
       'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
       filter: inDistrict(['==', ['geometry-type'], 'Polygon']),
       layout: { visibility },
-      paint: fillPaint(fill),
+      paint: fillPaint(
+        share === undefined
+          ? fill
+          : { ...fill, opacity: ['case', isHighlighted, fill.opacity, ['*', fill.opacity, share]] },
+      ),
     };
 
     if (lineWidth === undefined) return [fillLayer];
@@ -141,7 +150,7 @@ export function globalLayerStyles({
         paint: {
           'line-color': color,
           'line-width': ['case', isHighlighted, lineWidth + 1, lineWidth],
-          ...(lineOpacity === undefined ? {} : { 'line-opacity': lineOpacity }),
+          ...(share === undefined ? {} : { 'line-opacity': ['case', isHighlighted, 1, share] }),
         },
       },
     ];

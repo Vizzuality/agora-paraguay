@@ -13,19 +13,19 @@ type ProjectionCardProps = Omit<ProjectionWidget, 'id'> & { className?: string }
 const LEGEND: Record<ProjectionWidget['scope'], { band: string; line: string; method?: string }> = {
   multiple: {
     band: '[Percentiles 10-90] Rango pesimista-optimista de las parcelas',
-    line: '[Promedio] Central de las parcelas',
+    line: '[Promedio] Neutro de las parcelas',
     method:
-      'Cada punto combina las parcelas seleccionadas: la banda va del percentil 10 de sus valores pesimistas al percentil 90 de los optimistas, y la línea es el promedio de los centrales. La base histórica usa la producción histórica para los tres.',
+      'Cada punto combina las parcelas seleccionadas: la banda va del percentil 10 de sus valores pesimistas al percentil 90 de los optimistas, y la línea es el promedio de los neutros. La base histórica usa la producción histórica para los tres.',
   },
   individual: {
     band: 'Rango pesimista-optimista de la parcela',
-    line: 'Central de la parcela',
+    line: 'Neutro de la parcela',
   },
 };
 
 /**
  * Projected production as one chart across the widget's row: the historical base and each
- * horizon, the pessimist–optimist band and the central line. The figures are listed for
+ * horizon, the pessimist–optimist band and the neutral line. The figures are listed for
  * assistive tech; the chart is decoration over that list.
  */
 export function ProjectionCard({
@@ -49,7 +49,7 @@ export function ProjectionCard({
       <ul className="sr-only">
         {points.map((point) => (
           <li key={point.label}>
-            {point.label}: central {formatNumber(point.mid)}
+            {point.label}: neutro {formatNumber(point.mid)}
             {suffix}, pesimista {formatNumber(point.low)}
             {suffix}, optimista {formatNumber(point.high)}
             {suffix}

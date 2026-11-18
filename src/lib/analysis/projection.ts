@@ -7,7 +7,7 @@ import type { Indicators } from '@/lib/api/metadata/schemas';
 /*
  * Projected production on Riesgo productivo: `LOW` / `MID` / `HIGH` × `H5` / `H10`,
  * per crop, drawn as one chart instead of six number widgets — the pessimist–optimist
- * band and the central line, from the historical base (`Pro_*`) to each horizon.
+ * band and the neutral line, from the historical base (`Pro_*`) to each horizon.
  *
  * Recognised by id (api-filters): the API lists these flat, with no group, scenario or
  * horizon attribute, so the id carries them, like the crop suffix
@@ -21,18 +21,16 @@ const HORIZONS = [
   { key: 'H10', label: 'Horizonte 10 años' },
 ] as const;
 
-export const PROJECTION_TITLE = 'Producción proyectada a escenario pesimista, central y optimista';
+export const PROJECTION_TITLE = 'Producción proyectada a escenario pesimista, neutro y optimista';
 
 /**
- * One point of the chart: the band from `low` to `high`, the central line through `mid`.
- * The base carries the hero's `year`, which the tooltip names it by.
+ * One point of the chart: the band from `low` to `high`, the neutral line through `mid`.
  */
 export type ProjectionPoint = {
   label: string;
   low: number;
   mid: number;
   high: number;
-  year?: string;
 };
 
 export type ProjectionWidget = NumberScale & {
@@ -156,8 +154,9 @@ export function projectionWidgets(
     if (horizons.length === 0) return [];
 
     const pro = `Pro_${crop}`;
-    const base = point('Base histórica', { low: pro, mid: pro, high: pro });
-    const points = base ? [year ? { ...base, year } : base, ...horizons] : horizons;
+    // The base is named by the year it stands for, the current one.
+    const base = point(year ?? 'Base histórica', { low: pro, mid: pro, high: pro });
+    const points = base ? [base, ...horizons] : horizons;
     const central = indicators.find((indicator) => indicator.id.toLowerCase() === `mid_h5_${crop}`);
     const unit =
       indicators.find((indicator) => projectionCrop(indicator.id) === crop)?.unit ?? null;

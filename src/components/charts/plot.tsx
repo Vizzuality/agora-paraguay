@@ -171,7 +171,15 @@ type CappedBarProps = {
   gradientId: string;
 };
 
-/** One bar as the designs draw it: the body fading into the card away from a solid cap. */
+/** A printed bar body's strength: solid, so it reads filled on paper without the card behind. */
+const PRINT_BODY_OPACITY = 0.35;
+
+/**
+ * One bar as the designs draw it: the body fading into the card away from a solid cap.
+ * Printed, the body is a solid fill in its tone instead: the gradient fades into the
+ * card's fill, which the report drops, and some print engines (Safari's) lose gradient
+ * stops set through CSS variables, which left bars looking empty.
+ */
 export function CappedBar({
   y,
   width,
@@ -189,6 +197,16 @@ export function CappedBar({
         rx={RADIUS}
         fill={toneFill(gradientId, tone, capAt === 'top' ? 'down' : 'up')}
         opacity={0.2}
+        className="print:hidden"
+      />
+      <Bar
+        y={y}
+        width={width}
+        height={height}
+        rx={RADIUS}
+        style={{ fill: TONE_COLOR[tone] }}
+        opacity={PRINT_BODY_OPACITY}
+        className="hidden print:inline"
       />
       <Bar
         y={capAt === 'top' ? y : y + height - CAP_HEIGHT}

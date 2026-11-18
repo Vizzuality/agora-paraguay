@@ -77,6 +77,26 @@ test('a reload keeps the analysis', async ({ page }) => {
   await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
 });
 
+test('the logo goes back to the initial state: nothing drawn, nothing analysed', async ({
+  page,
+}) => {
+  const section = area(page);
+
+  await section.getByRole('button', { name: 'Dibujar polígono' }).click();
+  await drawPolygon(page, POLYGON);
+  await section.getByRole('button', { name: 'Analizar' }).click();
+  await expect(section.getByRole('combobox', { name: 'Parcela' })).toBeVisible();
+
+  await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
+
+  // Riesgo sanitario at the default camera, the map back with no polygon on it.
+  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+  await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
+  await expect(section.getByRole('button', { name: 'Dibujar polígono' })).toBeEnabled();
+  await expect(section.getByRole('button', { name: 'Analizar' })).toHaveCount(0);
+  await expect(page.getByRole('main').locator('canvas.maplibregl-canvas')).toBeVisible();
+});
+
 test('Borrar mapa clears the drawing and disarms the tool', async ({ page }) => {
   const section = area(page);
 
