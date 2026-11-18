@@ -233,13 +233,25 @@ test('the login backdrop dims the widgets as well as the sidebar', async ({ page
   await expect(rust).toBeVisible();
 
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page.getByRole('dialog', { name: 'Área privada' })).toBeVisible();
+  const login = page.getByRole('dialog', { name: 'Área privada' });
+  await expect(login).toBeVisible();
 
-  // Whatever paints topmost at the widget's top-left corner must be the backdrop.
+  // Probe a corner of the widget the centred card does not cover: the backdrop paints there.
   const box = (await rust.boundingBox())!;
+  const dialog = (await login.boundingBox())!;
+  const outsideDialog = ([x, y]: number[]) =>
+    x < dialog.x || x > dialog.x + dialog.width || y < dialog.y || y > dialog.y + dialog.height;
+  const point = [
+    [box.x + 8, box.y + 8],
+    [box.x + box.width - 8, box.y + 8],
+    [box.x + 8, box.y + box.height - 8],
+    [box.x + box.width - 8, box.y + box.height - 8],
+  ].find(outsideDialog);
+  expect(point).toBeDefined();
+
   const topmost = await page.evaluate(
     ([x, y]) => document.elementFromPoint(x, y)?.getAttribute('data-slot'),
-    [box.x + 8, box.y + 8],
+    point!,
   );
   expect(topmost).toBe('login-backdrop');
 });
