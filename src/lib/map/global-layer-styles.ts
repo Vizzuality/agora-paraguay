@@ -48,10 +48,15 @@ export type GlobalLayerStyleOptions = {
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
   highlightedId?: string | null;
   /**
-   * Trace only the highlighted district, in `color`; the fill stays transparent but still
-   * reports clicks. How Capas shows the pick over the reference layers.
+   * Trace only the highlighted (3px) and hovered (2px) districts, in `color`; the fill
+   * stays transparent but still reports clicks. How Capas shows the pick over the
+   * reference layers.
    */
   outline?: boolean;
+  /** With `outline`: the district under the pointer. */
+  hoveredId?: string | null;
+  /** With `outline` and `fill`: the hovered district's fill. */
+  hoverFill?: string;
   /** Hide the layer without removing its source, so showing it again needs no reload. */
   hidden?: boolean;
 };
@@ -79,6 +84,8 @@ export function globalLayerStyles({
   districtId,
   highlightedId,
   outline = false,
+  hoveredId,
+  hoverFill,
   hidden = false,
 }: GlobalLayerStyleOptions): GlobalLayerStyle[] {
   const source = globalLayerSourceId(id);
@@ -101,24 +108,7 @@ export function globalLayerStyles({
   ];
 
   if (outline) {
-    return [
-      {
-        id: globalLayerFillId(id),
-        type: 'fill',
-        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
-        filter: ['==', ['geometry-type'], 'Polygon'],
-        layout: { visibility },
-        paint: fill ? fillPaint(fill) : { 'fill-color': color, 'fill-opacity': 0 },
-      },
-      {
-        id: `${source}-line`,
-        type: 'line',
-        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
-        filter: ['all', ['!=', ['geometry-type'], 'Point'], isHighlighted],
-        layout: { visibility },
-        paint: { 'line-color': color, 'line-width': 2.5 },
-      },
-    ];
+    return outlineStyles({ id, color, fill, hoveredId, hoverFill, isHighlighted, visibility });
   }
 
   if (fill) {
@@ -187,6 +177,50 @@ export function globalLayerStyles({
       filter: inDistrict(['==', ['geometry-type'], 'Point']),
       layout: { visibility },
       paint: { 'circle-color': color, 'circle-radius': 3 },
+    },
+  ];
+}
+
+/**
+ * Outline mode: a clear fill that still reports clicks, darkened under the pointer, and a
+ * trace of the highlighted (3px) and hovered (2px) districts only.
+ */
+function outlineStyles({
+  id,
+  color,
+  fill,
+  hoveredId,
+  hoverFill,
+  isHighlighted,
+  visibility,
+}: Pick<GlobalLayerStyleOptions, 'id' | 'color' | 'fill' | 'hoveredId' | 'hoverFill'> & {
+  isHighlighted: ExpressionSpecification;
+  visibility: 'visible' | 'none';
+}): GlobalLayerStyle[] {
+  const source = globalLayerSourceId(id);
+  const isHovered: ExpressionSpecification = ['==', DISTRICT_KEY_EXPRESSION, hoveredId ?? ''];
+  const outlineFill =
+    fill && hoverFill
+      ? { ...fill, color: ['case', isHovered, hoverFill, fill.color] as ExpressionSpecification }
+      : fill;
+
+  return [
+    {
+      id: globalLayerFillId(id),
+      type: 'fill',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+      filter: ['==', ['geometry-type'], 'Polygon'],
+      layout: { visibility },
+      paint: outlineFill ? fillPaint(outlineFill) : { 'fill-color': color, 'fill-opacity': 0 },
+    },
+    {
+      id: `${source}-line`,
+      type: 'line',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+      filter: ['all', ['!=', ['geometry-type'], 'Point'], ['any', isHighlighted, isHovered]],
+      // The selection draws last, over a hovered neighbour's shared edge.
+      layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
+      paint: { 'line-color': color, 'line-width': ['case', isHighlighted, 3, 2] },
     },
   ];
 }

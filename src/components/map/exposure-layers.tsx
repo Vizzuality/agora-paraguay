@@ -20,7 +20,7 @@ import {
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
 import { LEGEND_KEY_ONLY } from '@/lib/map/legend-config';
 import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legend-order';
-import { DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
+import { DISTRICT_PICK, DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
 import { cn } from '@/lib/utils';
@@ -63,6 +63,12 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const selected = useAtomValue(selectedDistrictAtom);
   const pickDistrict = useSetAtom(pickDistrictAtom);
   const [hovered, setHovered] = useState<Hovered | null>(null);
+  // A tab switch moves no pointer, so the last tab's hover would linger without this.
+  const [hoveredView, setHoveredView] = useState(view);
+  if (hoveredView !== view) {
+    setHoveredView(view);
+    setHovered(null);
+  }
   const exposure = view === 'exposicion';
   // The reference layers mount on the first visit to Capas and then stay, hidden off it:
   // tens of MB, too much to load before anyone asks, too much to load twice.
@@ -102,11 +108,13 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     );
   };
 
+  const hover = (event: MapLayerMouseEvent) => {
+    const district = districtAt(event);
+    setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
+  };
+
   useLayerPointer(exposure ? EXPOSURE_FILL_ID : null, {
-    onMove: (event) => {
-      const district = districtAt(event);
-      setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
-    },
+    onMove: hover,
     onLeave: () => setHovered(null),
     onClick: (event) => {
       const district = pickAt(event);
@@ -114,9 +122,11 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     },
   });
 
-  // On Capas a click picks the district under the pointer; no toggle, so a click inside
-  // the pick keeps it.
+  // On Capas the district under the pointer darkens, and a click picks it; no toggle, so
+  // a click inside the pick keeps it.
   useLayerPointer(exposure ? null : EXPOSURE_FILL_ID, {
+    onMove: hover,
+    onLeave: () => setHovered(null),
     onClick: (event) => {
       const district = pickAt(event);
       if (district && district.id !== selected?.id) pickDistrict(district);
@@ -177,8 +187,13 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
               lineWidth: EXPOSURE_LINE_WIDTH,
               othersOpacity: UNPICKED_OPACITY,
             }
-          : // The pick traced in the districts' own edge colour, at the outline's width.
-            { color: DISTRICTS_FILL.outlineColor, fill: DISTRICTS_FILL, outline: true })}
+          : {
+              color: DISTRICT_PICK.stroke,
+              fill: DISTRICTS_FILL,
+              outline: true,
+              hoveredId: hovered?.district.id,
+              hoverFill: DISTRICT_PICK.hoverFill,
+            })}
         highlightedId={selected?.id}
       />
       {capasOpened &&
