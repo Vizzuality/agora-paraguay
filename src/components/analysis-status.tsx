@@ -23,8 +23,8 @@ export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisS
         </p>
       )}
       {analysis.isFetching && !analysis.data && (
-        // Inside a card the size of a widget: the results take its place.
-        <output className="flex min-h-64 items-center justify-center gap-2 rounded-3xl bg-card p-6 text-sm text-muted-foreground backdrop-blur-xs">
+        // A bordered frame as tall as the selection map it replaces, so nothing jumps.
+        <output className="flex h-[calc(100dvh-5rem)] min-h-96 items-center justify-center gap-2 rounded-3xl border-3 border-border p-6 text-sm text-muted-foreground">
           <Spinner />
           Analizando…
         </output>
