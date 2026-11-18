@@ -1,0 +1,15 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Backend the server relays /api to, baked into the build (see Dockerfile).
+        # Defaults to a backend on the host's port 8000, like `pnpm dev`.
+        API_PROXY_TARGET: ${API_PROXY_TARGET:-http://host.docker.internal:8000}
+        VITE_API_URL: ${VITE_API_URL:-}
+    image: agora-paraguay
+    ports:
+      - '${PORT:-3000}:3000'
+    # Docker Desktop resolves host.docker.internal on its own; Linux needs this.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

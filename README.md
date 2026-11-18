@@ -175,6 +175,14 @@ The client's backend team deploys the container. CI builds the image on every PR
 between now and then.
 
 ```sh
+API_PROXY_TARGET=http://<backend-host>:<port> docker compose up --build
+```
+
+`compose.yaml` builds the image and serves it on port 3000 (`PORT` changes the host port). It reads
+`API_PROXY_TARGET` from the shell or `.env`; unset, it targets a backend on the host's port 8000,
+as `pnpm dev` does. Without Compose:
+
+```sh
 docker build --build-arg API_PROXY_TARGET=http://<backend-host>:<port> -t agora-paraguay .
 docker run -p 3000:3000 agora-paraguay
 ```
