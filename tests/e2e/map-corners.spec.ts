@@ -45,3 +45,31 @@ test('the panel map keeps credits and scale top left, zoom bottom right', async 
 
   await expectCorners(page, page.locator('.maplibregl-map').first());
 });
+
+test('opening the credits covers the scale without moving it', async ({ page }) => {
+  await page.goto('/analisis/sanitario');
+  const map = page.locator('.maplibregl-map').first();
+  const scale = map.locator('.maplibregl-ctrl-scale');
+  const before = (await scale.boundingBox())!;
+
+  // MapLibre's ⓘ is a `<summary>`, not a button.
+  await map.locator('.maplibregl-ctrl-attrib-button').click();
+  await expect(map.locator('.maplibregl-compact-show')).toBeVisible();
+
+  expect(await scale.boundingBox()).toEqual(before);
+
+  // Same 8px inset at both ends as the closed disc: 8 + 16px icon + 8 before the text.
+  const credits = (await map.locator('.maplibregl-compact-show').boundingBox())!;
+  const text = (await map.locator('.maplibregl-ctrl-attrib-inner').boundingBox())!;
+  expect(text.x - credits.x).toBe(32);
+  expect(credits.x + credits.width - (text.x + text.width)).toBeCloseTo(8, 0);
+
+  // As wide as the credits need, but never closer than 40px to the map's right edge.
+  const mapBox = (await map.boundingBox())!;
+  expect(credits.x + credits.width).toBeLessThanOrEqual(mapBox.x + mapBox.width - 40);
+  const topmost = await page.evaluate(
+    ([x, y]) => !!document.elementFromPoint(x, y)?.closest('.maplibregl-ctrl-attrib'),
+    [before.x + before.width / 2, before.y + before.height / 2],
+  );
+  expect(topmost).toBe(true);
+});
