@@ -18,18 +18,19 @@ export const CROP_FILTER_ID = 'crop_type';
 export const SOWING_DATE_FILTER_ID = 'sowing_date';
 export const DATE_FILTER_ID = 'date';
 
-/** Productivo's year. Is required for the AI summary and determines the baseline year for projections. */
+/**
+ * Productivo's year: the AI summary needs it and it names the projection's base. Not a
+ * field: it is always the current year.
+ */
 export const YEAR_FILTER_ID = 'year';
 
-/**
- * How the hero lays the filters out: the sowing date, then the date it must come before
- * (productivo's is the `year`), then the crop.
- */
-const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, YEAR_FILTER_ID, CROP_FILTER_ID];
+/** How the hero lays the filters out: the sowing date, then the date it must come before, then the crop. */
+const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, CROP_FILTER_ID];
 
 /**
- * The filters in the hero's order rather than the API's: the two dates first, the crop
- * last (it takes the whole row). Anything the API adds beyond those follows, in its order.
+ * The hero's fields in its order rather than the API's: the two dates first, the crop
+ * last. Anything the API adds beyond those follows, in its order. The year is left out:
+ * the user does not pick it.
  */
 export function orderHeroFilters(filters: Filters): Filters {
   const rank = (filter: Filter) => {
@@ -38,13 +39,12 @@ export function orderHeroFilters(filters: Filters): Filters {
     return index === -1 ? HERO_FILTER_ORDER.length : index;
   };
 
-  return [...filters].sort((a, b) => rank(a) - rank(b));
+  return filters.filter((filter) => filter.id !== YEAR_FILTER_ID).sort((a, b) => rank(a) - rank(b));
 }
 
 /**
  * Whether a hero field takes a whole row of the two-column grid: only an odd last one
- * (sanitario's crop after its two dates), so an even set (productivo's year and crop)
- * pairs up.
+ * (the crop after sanitario's two dates, or productivo's crop alone), so an even set pairs up.
  */
 export function heroFieldSpansRow(index: number, count: number): boolean {
   return count % 2 === 1 && index === count - 1;
@@ -104,9 +104,9 @@ export function dateBounds(
 }
 
 /**
- * Every filter resolved to what the hero displays and Analizar sends. A category keeps a
- * pick still among its options, else takes the first one (the crop `DEFAULT_CROP` when
- * offered). A date keeps whatever was typed, else its default (`dateDefault`), moved into
+ * Every filter resolved to what the hero displays and Analizar sends. The year is the
+ * current one, whatever was picked or offered. A category keeps a pick still among its
+ * options, else takes the first one (the crop `DEFAULT_CROP` when offered). A date keeps whatever was typed, else its default (`dateDefault`), moved into
  * the accepted range; then a sowing date on or after the date moves to the day before it.
  * A category with no options is left out, so the request omits it.
  */
@@ -117,30 +117,31 @@ export function resolveFilterSelection(
   const resolved: Record<string, string> = {};
 
   for (const filter of filters) {
-    const pick = selected[filter.id];
-    const field = filter.field_type;
+    const value = resolveFilter(filter, selected[filter.id]);
 
-    switch (field.type) {
-      case 'category': {
-        const values = field.options.map((option) => option.value);
-
-        const fallback =
-          filter.id === CROP_FILTER_ID && values.includes(DEFAULT_CROP) ? DEFAULT_CROP : values[0];
-
-        if (pick !== undefined && values.includes(pick)) resolved[filter.id] = pick;
-        else if (fallback !== undefined) resolved[filter.id] = fallback;
-        break;
-      }
-      case 'date': {
-        const value = pick ?? dateDefault(filter.id, field.default);
-
-        if (value !== '') resolved[filter.id] = withinRange(value);
-        break;
-      }
-    }
+    if (value !== undefined) resolved[filter.id] = value;
   }
 
   return withSowingBeforeDate(resolved);
+}
+
+/** One filter's value, as `resolveFilterSelection` describes; `undefined` leaves it out. */
+function resolveFilter(filter: Filter, pick: string | undefined): string | undefined {
+  if (filter.id === YEAR_FILTER_ID) return todayIso().slice(0, 4);
+
+  const field = filter.field_type;
+
+  if (field.type === 'date') {
+    const value = pick ?? dateDefault(filter.id, field.default);
+
+    return value === '' ? undefined : withinRange(value);
+  }
+
+  const values = field.options.map((option) => option.value);
+
+  if (pick !== undefined && values.includes(pick)) return pick;
+
+  return filter.id === CROP_FILTER_ID && values.includes(DEFAULT_CROP) ? DEFAULT_CROP : values[0];
 }
 
 /** Moves a sowing date on or after the date to the day before it; the backend rejects that pair. */

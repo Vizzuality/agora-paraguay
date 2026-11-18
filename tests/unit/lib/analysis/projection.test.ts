@@ -104,10 +104,14 @@ describe('projectionWidgets', () => {
     expect(h5.high).toBeCloseTo(4.9);
   });
 
-  it('dates the base, and only the base, with the hero year', () => {
+  it('names the base by the year, the horizons as before', () => {
     const [widget] = projectionWidgets([A, B], ['A', 'B'], INDICATORS, 'individual', A, '2026');
 
-    expect(widget.points.map((point) => point.year)).toEqual(['2026', undefined, undefined]);
+    expect(widget.points.map((point) => point.label)).toEqual([
+      '2026',
+      'Horizonte 5 años',
+      'Horizonte 10 años',
+    ]);
   });
 
   it('leaves out a horizon without readings and the base when Pro was not answered', () => {
