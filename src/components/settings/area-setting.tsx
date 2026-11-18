@@ -221,11 +221,15 @@ function ParcelSelect() {
           <SelectValue placeholder="Seleccionar parcela" />
         </SelectTrigger>
         <FloatingLabel htmlFor={id}>Parcela</FloatingLabel>
-        {/* Todas stays pinned over the scrolling parcels, so no top fade under it. */}
+        {/* Todas stays pinned over the scrolling parcels: no top fade, and its shadow covers the list padding above it. */}
         <SelectContent viewportClassName="[--scroll-fade-top:0px]!">
           {options.map((option) =>
             option === ALL ? (
-              <SelectItem key={option} value={option} className="sticky top-0 z-10 bg-popover">
+              <SelectItem
+                key={option}
+                value={option}
+                className="sticky top-0 z-10 rounded-none border-b bg-popover shadow-[0_-0.25rem_0_var(--popover)]"
+              >
                 Todas
               </SelectItem>
             ) : (
