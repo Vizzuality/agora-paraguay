@@ -129,7 +129,7 @@ describe('projectionWidgets', () => {
 });
 
 describe('analysisWidgets with projections', () => {
-  it('replaces the six scenario widgets with one chart ahead of the rest, Pro kept', () => {
+  it('replaces the six scenario widgets with one chart in their place, Pro kept', () => {
     const widgets = analysisWidgets({
       parcels: [A],
       parcelIds: ['A'],
@@ -140,8 +140,8 @@ describe('analysisWidgets with projections', () => {
     });
 
     expect(widgets.map((widget) => [widget.kind, widget.id])).toEqual([
-      ['projection', 'projection_soja'],
       ['number', 'Pro_soja'],
+      ['projection', 'projection_soja'],
     ]);
   });
 });

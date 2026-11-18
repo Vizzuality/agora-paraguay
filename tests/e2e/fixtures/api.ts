@@ -91,6 +91,7 @@ export const PRODUCTIVO_INDICATORS = [
     name: 'Producción base histórica de arroz',
     unit: 't/ha',
     default: true,
+    category: 'historic',
     indicator_type: { type: 'numeric' },
   },
   {
@@ -98,6 +99,7 @@ export const PRODUCTIVO_INDICATORS = [
     name: 'Producción base histórica de soja',
     unit: 't/ha',
     default: true,
+    category: 'historic',
     indicator_type: { type: 'numeric' },
   },
   {
@@ -114,6 +116,7 @@ export const PRODUCTIVO_INDICATORS = [
       name: `Producción proyectada ${scenario} ${horizon} de soja`,
       unit: 't/ha',
       default: true,
+      category: 'future',
       indicator_type: { type: 'numeric' },
     })),
   ),
