@@ -70,7 +70,7 @@ describe('analysisWidgets', () => {
     expect(widgets[1]).not.toHaveProperty('classes');
   });
 
-  it('productivo: the projection chart leads, wherever its scenarios sit in the metadata', () => {
+  it('productivo: the projection chart sits where its scenarios sit in the metadata', () => {
     const scenarios: Indicator[] = ['LOW', 'MID', 'HIGH'].map((level) => ({
       id: `${level}_H5_soja`,
       name: `Producción proyectada ${level}`,
@@ -86,15 +86,51 @@ describe('analysisWidgets', () => {
       const widgets = analysisWidgets({
         parcels: projected,
         parcelIds: ['A', 'B'],
-        indicators: [resilience, production, ...scenarios],
+        indicators: [resilience, ...scenarios, production],
         riesgo: 'productivo',
         scope,
         parcel: projected[0],
       });
 
-      expect(widgets.map((widget) => widget.kind)[0]).toBe('projection');
-      expect(widgets.filter((widget) => widget.kind === 'projection')).toHaveLength(1);
+      // On a parcel tab Resiliencia reads in the context panel instead.
+      const expected = ['projection_soja', 'Pro_soja'];
+      expect(widgets.map(({ id }) => id)).toEqual(
+        scope === 'multiple' ? ['Resiliencia', ...expected] : expected,
+      );
     }
+  });
+
+  it('orders agnostic widgets first, then historic, then future, each group in metadata order', () => {
+    const future = (indicator: Indicator): Indicator => ({ ...indicator, category: 'future' });
+    const historic = (indicator: Indicator): Indicator => ({ ...indicator, category: 'historic' });
+    const scenarios: Indicator[] = ['LOW', 'MID', 'HIGH'].map((level) => ({
+      id: `${level}_H5_soja`,
+      name: `Producción proyectada ${level}`,
+      unit: 't/ha',
+      category: 'future',
+      indicator_type: { type: 'numeric' },
+    }));
+    const projected = parcels.map((entry) => ({
+      ...entry,
+      properties: { ...entry.properties, LOW_H5_soja: 3, MID_H5_soja: 3.5, HIGH_H5_soja: 4 },
+    }));
+
+    const indicators = [...scenarios, future(resilience), historic(production), coverage];
+    const widgets = analysisWidgets({
+      parcels: projected,
+      parcelIds: ['A', 'B'],
+      indicators,
+      riesgo: 'productivo',
+      scope: 'multiple',
+      parcel: combinedParcel(projected, indicators),
+    });
+
+    expect(widgets.map(({ id }) => id)).toEqual([
+      'coverage_index',
+      'Pro_soja',
+      'projection_soja',
+      'Resiliencia',
+    ]);
   });
 
   it("productivo, a parcel tab: Resiliencia goes to the context panel, the number is that parcel's figure", () => {

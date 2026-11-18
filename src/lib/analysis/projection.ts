@@ -2,7 +2,7 @@ import { linearTicks, tickStep, type NumberScale } from '@/lib/analysis/number-s
 import { numberOf } from '@/lib/analysis/readings';
 import type { ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { Indicators } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 /*
  * Projected production on Riesgo productivo: `LOW` / `MID` / `HIGH` × `H5` / `H10`,
@@ -35,6 +35,7 @@ export type ProjectionPoint = {
 
 export type ProjectionWidget = NumberScale & {
   id: string;
+  category: Indicator['category'];
   label: string;
   description?: string;
   unit: string | null;
@@ -158,15 +159,15 @@ export function projectionWidgets(
     const base = point(year ?? 'Base histórica', { low: pro, mid: pro, high: pro });
     const points = base ? [base, ...horizons] : horizons;
     const central = indicators.find((indicator) => indicator.id.toLowerCase() === `mid_h5_${crop}`);
-    const unit =
-      indicators.find((indicator) => projectionCrop(indicator.id) === crop)?.unit ?? null;
+    const scenario = indicators.find((indicator) => projectionCrop(indicator.id) === crop);
 
     return [
       {
         id: `projection_${crop}`,
+        category: scenario?.category,
         label: PROJECTION_TITLE,
         description: central?.description ?? undefined,
-        unit,
+        unit: scenario?.unit ?? null,
         scope,
         points,
         ...projectionScale(points.flatMap(({ low, high }) => [low, high])),

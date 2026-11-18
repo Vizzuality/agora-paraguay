@@ -159,6 +159,8 @@ export const indicatorSchema = z.preprocess(
     unit: z.string().nullable().optional(),
     /** Whether the indicator is selected before the user touches anything. */
     default: z.boolean().optional(),
+    /** Whether the indicator reads the past or projects ahead; agnostic when missing. */
+    category: z.enum(['historic', 'future']).nullable().catch(null).optional(),
     indicator_type: indicatorTypeSchema,
   }),
 );
