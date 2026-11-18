@@ -16,5 +16,9 @@ export function useLastCrop() {
   const activeId = useAtomValue(activeParcelIdAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
 
-  return data ? lastCrop(data.results, activeId === null ? analysedIds : [activeId]) : undefined;
+  if (!data) return undefined;
+
+  const parcelIds = activeId === null ? analysedIds : [activeId];
+
+  return lastCrop(data.results, parcelIds);
 }
