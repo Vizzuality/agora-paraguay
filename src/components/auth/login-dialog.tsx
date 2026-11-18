@@ -5,7 +5,13 @@ import { useEffect } from 'react';
 
 import { LoginCard } from '@/components/auth/login-card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,13 +67,15 @@ export function LoginModal() {
       <DialogTrigger asChild>
         <UserButton />
       </DialogTrigger>
-      {open && (
+      {/* Portaled like the content: rendered inline it would stay in the header's stacking
+          context, under the widgets column. */}
+      <DialogPortal>
         <div
           aria-hidden
           data-slot="login-backdrop"
           className="fixed inset-0 z-40 animate-in bg-black/50 fade-in-0"
         />
-      )}
+      </DialogPortal>
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
