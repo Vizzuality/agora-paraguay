@@ -83,7 +83,7 @@ test('a reload keeps the analysis', async ({ page }) => {
   );
 });
 
-test('the logo goes back to the initial state: nothing drawn, nothing analysed', async ({
+test('the logo goes back to the first screen with the parcels kept, as Nuevo análisis', async ({
   page,
 }) => {
   const section = area(page);
@@ -95,11 +95,10 @@ test('the logo goes back to the initial state: nothing drawn, nothing analysed',
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
 
-  // Riesgo sanitario at the default camera, the map back with no polygon on it.
+  // Riesgo sanitario, the map back with the parcels still selected, ready to analyse again.
   await expect(page).toHaveURL(/\/analisis\/sanitario$/);
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
-  await expect(section.getByRole('button', { name: 'Dibujar polígono' })).toBeEnabled();
-  await expect(section.getByRole('button', { name: 'Analizar' })).toHaveCount(0);
+  await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
   await expect(page.getByRole('main').locator('canvas.maplibregl-canvas')).toBeVisible();
 });
 
