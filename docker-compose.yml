@@ -1,5 +1,6 @@
 services:
-  web:
+  # Named `frontend` like its service in the full platform stack, where `web` is the backend.
+  frontend:
     build:
       context: .
       args:
@@ -8,8 +9,10 @@ services:
         API_PROXY_TARGET: ${API_PROXY_TARGET:-http://host.docker.internal:8000}
         VITE_API_URL: ${VITE_API_URL:-}
     image: agora-paraguay
+    # Loopback by default: the server relays /api to the backend, so publishing on
+    # every interface would expose a host-local backend to the network.
     ports:
-      - '${PORT:-3000}:3000'
+      - '${BIND_ADDR:-127.0.0.1}:${PORT:-3000}:3000'
     # Docker Desktop resolves host.docker.internal on its own; Linux needs this.
     extra_hosts:
       - 'host.docker.internal:host-gateway'

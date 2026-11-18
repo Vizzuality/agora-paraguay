@@ -175,12 +175,15 @@ The client's backend team deploys the container. CI builds the image on every PR
 between now and then.
 
 ```sh
-API_PROXY_TARGET=http://<backend-host>:<port> docker compose up --build
+API_PROXY_TARGET=http://<backend-host>:<port> docker compose up -d --build
 ```
 
-`compose.yaml` builds the image and serves it on port 3000 (`PORT` changes the host port). It reads
-`API_PROXY_TARGET` from the shell or `.env`; unset, it targets a backend on the host's port 8000,
-as `pnpm dev` does. Without Compose:
+`docker-compose.yml` builds the image and serves it as the `frontend` service, the name it has in
+the full platform stack (where `web` is the backend). It reads `API_PROXY_TARGET` from the shell or
+`.env`; unset, it targets a backend on the host's port 8000, as `pnpm dev` does. Port 3000 is
+published on `127.0.0.1` only, because the server relays `/api` to the backend; set
+`BIND_ADDR=0.0.0.0` to reach it from other machines, and `PORT` to change the host port. Without
+Compose:
 
 ```sh
 docker build --build-arg API_PROXY_TARGET=http://<backend-host>:<port> -t agora-paraguay .
@@ -188,11 +191,14 @@ docker run -p 3000:3000 agora-paraguay
 ```
 
 `API_PROXY_TARGET` is where the server relays `/api`, and the build fails without it. When the
-container shares a network with the backend, use the internal address (e.g. `http://backend:8000`)
-so the backend port need not be public.
+container shares a network with the backend, use the internal address (in the platform stack,
+`http://web:<port>`, the port the backend listens on inside its container) so the backend port need
+not be public. Behind the stack's nginx the browser calls `/api` on nginx, which routes it to the
+backend; the relay only serves requests that reach this container directly.
 
 `VITE_*` variables and `API_PROXY_TARGET` are read by the **build**, so they are `ARG`s in the
-Dockerfile, not runtime environment variables.
+Dockerfile, not runtime environment variables: after changing them, rebuild with
+`docker compose up -d --build frontend`.
 
 ## Decisions
 
