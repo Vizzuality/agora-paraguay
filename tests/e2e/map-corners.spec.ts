@@ -52,7 +52,8 @@ test('opening the credits covers the scale without moving it', async ({ page }) 
   const scale = map.locator('.maplibregl-ctrl-scale');
   const before = (await scale.boundingBox())!;
 
-  await map.getByRole('button', { name: /attribution/i }).click();
+  // MapLibre's ⓘ is a `<summary>`, not a button.
+  await map.locator('.maplibregl-ctrl-attrib-button').click();
   await expect(map.locator('.maplibregl-compact-show')).toBeVisible();
 
   expect(await scale.boundingBox()).toEqual(before);
