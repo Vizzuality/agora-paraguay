@@ -108,34 +108,7 @@ export function globalLayerStyles({
   ];
 
   if (outline) {
-    const isHovered: ExpressionSpecification = ['==', DISTRICT_KEY_EXPRESSION, hoveredId ?? ''];
-    const hoverColor: ExpressionSpecification = [
-      'case',
-      isHovered,
-      hoverFill ?? '',
-      fill?.color ?? color,
-    ];
-    const outlineFill = fill && hoverFill ? { ...fill, color: hoverColor } : fill;
-
-    return [
-      {
-        id: globalLayerFillId(id),
-        type: 'fill',
-        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
-        filter: ['==', ['geometry-type'], 'Polygon'],
-        layout: { visibility },
-        paint: outlineFill ? fillPaint(outlineFill) : { 'fill-color': color, 'fill-opacity': 0 },
-      },
-      {
-        id: `${source}-line`,
-        type: 'line',
-        'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
-        filter: ['all', ['!=', ['geometry-type'], 'Point'], ['any', isHighlighted, isHovered]],
-        // The selection draws last, over a hovered neighbour's shared edge.
-        layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
-        paint: { 'line-color': color, 'line-width': ['case', isHighlighted, 3, 2] },
-      },
-    ];
+    return outlineStyles({ id, color, fill, hoveredId, hoverFill, isHighlighted, visibility });
   }
 
   if (fill) {
@@ -204,6 +177,50 @@ export function globalLayerStyles({
       filter: inDistrict(['==', ['geometry-type'], 'Point']),
       layout: { visibility },
       paint: { 'circle-color': color, 'circle-radius': 3 },
+    },
+  ];
+}
+
+/**
+ * Outline mode: a clear fill that still reports clicks, darkened under the pointer, and a
+ * trace of the highlighted (3px) and hovered (2px) districts only.
+ */
+function outlineStyles({
+  id,
+  color,
+  fill,
+  hoveredId,
+  hoverFill,
+  isHighlighted,
+  visibility,
+}: Pick<GlobalLayerStyleOptions, 'id' | 'color' | 'fill' | 'hoveredId' | 'hoverFill'> & {
+  isHighlighted: ExpressionSpecification;
+  visibility: 'visible' | 'none';
+}): GlobalLayerStyle[] {
+  const source = globalLayerSourceId(id);
+  const isHovered: ExpressionSpecification = ['==', DISTRICT_KEY_EXPRESSION, hoveredId ?? ''];
+  const outlineFill =
+    fill && hoverFill
+      ? { ...fill, color: ['case', isHovered, hoverFill, fill.color] as ExpressionSpecification }
+      : fill;
+
+  return [
+    {
+      id: globalLayerFillId(id),
+      type: 'fill',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+      filter: ['==', ['geometry-type'], 'Polygon'],
+      layout: { visibility },
+      paint: outlineFill ? fillPaint(outlineFill) : { 'fill-color': color, 'fill-opacity': 0 },
+    },
+    {
+      id: `${source}-line`,
+      type: 'line',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+      filter: ['all', ['!=', ['geometry-type'], 'Point'], ['any', isHighlighted, isHovered]],
+      // The selection draws last, over a hovered neighbour's shared edge.
+      layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
+      paint: { 'line-color': color, 'line-width': ['case', isHighlighted, 3, 2] },
     },
   ];
 }
