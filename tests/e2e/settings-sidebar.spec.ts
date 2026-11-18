@@ -46,3 +46,31 @@ test('the heading closes an open section again', async ({ page }) => {
   await expect(heading).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByRole('navigation', { name: 'Tipo de análisis' })).toHaveCount(0);
 });
+
+test('Riesgo productivo asks for the login first, and signing in goes on to it', async ({
+  page,
+}) => {
+  const section = page.getByRole('region', { name: 'Tipo de análisis' });
+  const heading = section.getByRole('button', { name: /Tipo de análisis/ });
+  const productivo = section.getByRole('link', { name: 'Riesgo productivo' });
+  const login = page.getByRole('dialog', { name: 'Área privada' });
+
+  // Signed out: the card opens the login modal and the page stays where it was.
+  await heading.click();
+  await productivo.click();
+  await expect(login).toBeVisible();
+  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+
+  // Closing the modal forgets the way: the user button opens a plain login.
+  await page.keyboard.press('Escape');
+  await expect(login).toBeHidden();
+  await productivo.click();
+  await expect(login).toBeVisible();
+
+  // Signing in goes on to productivo.
+  await login.getByLabel('Email').fill('analista@example.com');
+  await login.getByLabel('Contraseña').fill('cualquiera');
+  await login.getByRole('button', { name: 'Acceder' }).click();
+  await expect(login).toBeHidden();
+  await expect(page).toHaveURL(/\/analisis\/productivo$/);
+});

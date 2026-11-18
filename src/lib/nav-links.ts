@@ -18,9 +18,17 @@ export const RISK_TABS: {
   riesgo: Riesgo;
   to: LinkProps['to'];
   icon: LucideIcon;
+  /** Private: choosing it signed out asks for the login first. */
+  requiresLogin?: boolean;
 }[] = [
   { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/analisis/sanitario', icon: Bug },
-  { label: 'Riesgo productivo', riesgo: 'productivo', to: '/analisis/productivo', icon: ChartPie },
+  {
+    label: 'Riesgo productivo',
+    riesgo: 'productivo',
+    to: '/analisis/productivo',
+    icon: ChartPie,
+    requiresLogin: true,
+  },
 ];
 
 /** Exposición climática: by district, no parcel selection. */
@@ -51,4 +59,6 @@ export const ANALYSIS_TYPES: {
   icon: LucideIcon;
   /** The riesgo a parcel analysis runs; Exposición climática works by district instead. */
   riesgo?: Riesgo;
+  /** Private: choosing it signed out asks for the login first. */
+  requiresLogin?: boolean;
 }[] = [EXPOSURE_TAB, ...RISK_TABS];

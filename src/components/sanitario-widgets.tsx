@@ -7,7 +7,7 @@ import { generalInfo } from '@/lib/analysis/indicator-cards';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
 
 /**
- * Riesgo sanitario's analysis: the open tab's text facts in the summary card (always on),
+ * Riesgo sanitario's analysis: the open tab's text facts in Información de contexto (always on),
  * then the widgets (`useRiesgoWidgets`); under Todas the facts read the parcels combined.
  * Shared by `/analisis/sanitario` and the redesign. Reads atoms: render inside `<ClientOnly>`.
  */

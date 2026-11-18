@@ -77,6 +77,8 @@ export const EAST_PARCEL_ID = 'D07D23P00000008';
 
 // No area here, as in the live list: the thumbnail reads it from the sanitario analysis.
 export const PRODUCTIVO_INDICATORS = [
+  // The crop filter echoed into the list, as on sanitario: a fact for Información de contexto.
+  HERO_FILTERS[0],
   {
     id: 'Resiliencia',
     name: 'Proxy de resiliencia operativa',
@@ -141,29 +143,13 @@ export const PARCEL_PROJECTIONS: Record<string, Record<string, number>> = {
 };
 
 /**
- * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
- * filtering, the indicator list and the analysis itself — plus the filters the /analisis
- * hero lists (`GET /api/parcels/filters/`). Keeps the specs hermetic — the backend is
- * never running under Playwright — while still exercising the real client code, so a
- * body the schemas reject fails the spec.
- *
- * Matched on the exact pathname, never a glob: `**\/api/**` would also catch Vite
- * serving `/src/lib/api/analysis/client.ts` and break the app's module graph.
+ * Stubs `filter-parcels`: two selected parcels with real-shaped geometry (MultiPolygons),
+ * the bounding box of the first drawn polygon, grown a little, split down the middle into
+ * a west and an east half. `lastCrops` names a parcel's `last_crop_type` as the cadastre
+ * writes it (`Soja`, `Arroz`); unnamed ones have none. Registered again after the other
+ * stubs (`analyseOnRedesign`'s `override`), it replaces the default one.
  */
-export async function stubAnalysisApi(page: Page) {
-  await page.route(
-    (url) => url.pathname === '/api/parcels/filters/',
-    (route) =>
-      route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify(
-          new URL(route.request().url()).searchParams.get('riesgo') === 'productivo'
-            ? PRODUCTIVO_FILTERS
-            : HERO_FILTERS,
-        ),
-      }),
-  );
-
+export async function stubFilterParcels(page: Page, lastCrops: Record<string, string> = {}) {
   await page.route(
     (url) => url.pathname === '/api/parcels/filter-parcels/',
     (route) => {
@@ -210,6 +196,7 @@ export async function stubAnalysisApi(page: Page) {
           ],
         },
         selected: true,
+        last_crop_type: lastCrops[parcelId] ?? null,
       });
 
       return route.fulfill({
@@ -223,6 +210,33 @@ export async function stubAnalysisApi(page: Page) {
       });
     },
   );
+}
+
+/**
+ * Stubs the endpoints the analysis page chains (`useAnalysis`): parcel
+ * filtering, the indicator list and the analysis itself — plus the filters the /analisis
+ * hero lists (`GET /api/parcels/filters/`). Keeps the specs hermetic — the backend is
+ * never running under Playwright — while still exercising the real client code, so a
+ * body the schemas reject fails the spec.
+ *
+ * Matched on the exact pathname, never a glob: `**\/api/**` would also catch Vite
+ * serving `/src/lib/api/analysis/client.ts` and break the app's module graph.
+ */
+export async function stubAnalysisApi(page: Page) {
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filters/',
+    (route) =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify(
+          new URL(route.request().url()).searchParams.get('riesgo') === 'productivo'
+            ? PRODUCTIVO_FILTERS
+            : HERO_FILTERS,
+        ),
+      }),
+  );
+
+  await stubFilterParcels(page);
 
   // The indicator list of the riesgo asked for in the query string.
   await page.route(
