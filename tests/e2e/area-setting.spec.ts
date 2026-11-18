@@ -95,8 +95,9 @@ test('the logo goes back to the first screen with the parcels kept, as Nuevo an√
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
 
-  // Riesgo sanitario, the map back with the parcels still selected, ready to analyse again.
-  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+  // Riesgo sanitario, the map back with the parcels still selected, ready to analyse again;
+  // the camera stays on them, so it rides along in the URL.
+  await expect(page).toHaveURL(/\/analisis\/sanitario(\?|$)/);
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
   await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
   await expect(page.getByRole('main').locator('canvas.maplibregl-canvas')).toBeVisible();
