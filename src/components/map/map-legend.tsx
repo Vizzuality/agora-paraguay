@@ -65,7 +65,12 @@ export function MapLegend({
   };
 
   return (
-    <div className={cn('absolute z-10 flex min-w-52 flex-col items-start gap-1', className)}>
+    <div
+      className={cn(
+        'absolute z-10 flex min-w-52 flex-col items-start gap-1 print:min-w-0',
+        className,
+      )}
+    >
       <Button
         variant="secondary"
         aria-expanded={open}
@@ -80,7 +85,7 @@ export function MapLegend({
         id={id}
         aria-label={label}
         className={cn(
-          'flex w-full flex-col gap-1 rounded-2xl bg-background py-2 pr-2 pl-4 backdrop-blur-xs',
+          'flex w-full flex-col gap-1 rounded-2xl bg-background py-2 pr-2 pl-4 backdrop-blur-xs print:gap-0 print:rounded-lg print:py-1 print:pl-2',
           !open && 'hidden print:flex',
         )}
       >
@@ -91,7 +96,7 @@ export function MapLegend({
             <li
               key={item.id}
               className={cn(
-                'flex h-7.5 items-center gap-1 text-xs whitespace-nowrap text-foreground',
+                'flex h-7.5 items-center gap-1 text-xs whitespace-nowrap text-foreground print:h-5',
                 dragged === index && 'opacity-50',
               )}
             >

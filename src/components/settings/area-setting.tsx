@@ -193,7 +193,7 @@ function AnalysedArea() {
       </div>
 
       {/* Edge to edge under the controls, as the design bleeds it to the card's corners. */}
-      <div className="relative -mx-6 -mb-6 h-67 overflow-hidden rounded-3xl bg-muted">
+      <div className="relative -mx-6 -mb-6 h-67 overflow-hidden rounded-3xl bg-muted print:h-120 paper:h-120">
         <PanelMap>
           <AnalysedParcelsLayers />
         </PanelMap>

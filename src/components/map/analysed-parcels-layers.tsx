@@ -42,6 +42,15 @@ export function AnalysedParcelsLayers() {
 
   useFrameOnMount(bounds);
 
+  // The report frames what it is about: the open tab's parcel, or every one under Todas.
+  const reported = activeParcelId === null ? analysedIds : [activeParcelId];
+  const reportBounds =
+    featuresBounds(
+      parcels?.results
+        .filter((parcel) => reported.includes(parcel.parcel_id))
+        .flatMap((parcel) => parcel.geometry.features) ?? [],
+    ) ?? bounds;
+
   return (
     <>
       <FilteredParcelsLayer
@@ -52,7 +61,7 @@ export function AnalysedParcelsLayers() {
       />
       <ParcelLegend className="bottom-1 left-2" />
       <AnalysedParcelsBehaviour />
-      <ReportSnapshot />
+      <ReportSnapshot frame={reportBounds} />
       <ReportMapImage />
       {(parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
@@ -108,22 +117,37 @@ function AnalysedParcelsBehaviour() {
  * The map for the report: a WebGL canvas prints blank, so while the page is laid out for
  * paper (`printReport`) the map is rendered to an image `ReportMapImage` prints in its place.
  * The paper layout widens the map (and opens its section, a slide), so the snapshot waits
- * for the layout to settle, resizes the map to it, and is taken at the next `idle` — only
- * once the tiles the wider map needs are in, or its new edges would print empty. Taken
- * from inside a render, the only moment the canvas can be read without preserving its buffer.
+ * for the layout to settle, resizes the map to it, frames the reported parcels and is
+ * taken at the next `idle` — only once the tiles the framed view needs are in, or its
+ * edges would print empty. Rendered at twice the pixel density, so it stays sharp on
+ * paper. Taken from inside a render, the only moment the canvas can be read without
+ * preserving its buffer. The screen's camera and density come back when the dialog closes.
  */
 /** Long enough for the área's slide (`SettingsSection`, 200ms) to end. */
 const LAYOUT_SETTLE_MS = 250;
 
-function ReportSnapshot() {
+/** The snapshot's pixel density: print resolution, whatever the screen's. */
+const REPORT_PIXEL_RATIO = 2;
+
+/** Room round the parcels for what prints over the map: scale top left, legend and credits below. */
+const REPORT_PADDING = { top: 48, right: 40, bottom: 96, left: 40 };
+
+function ReportSnapshot({ frame }: Readonly<{ frame: ReturnType<typeof featuresBounds> }>) {
   const { current: map } = useMap();
   const paperLayout = useAtomValue(paperLayoutAtom);
   const setSnapshot = useSetAtom(reportMapAtom);
+  // Read when the snapshot starts, not a reason to take another.
+  const framing = useEffectEvent(() => frame);
 
   useEffect(() => {
     if (!paperLayout || !map) return;
 
     const instance = map.getMap();
+    const screen = {
+      center: instance.getCenter(),
+      zoom: instance.getZoom(),
+      pixelRatio: instance.getPixelRatio(),
+    };
     let cancelled = false;
 
     const take = () => {
@@ -134,8 +158,11 @@ function ReportSnapshot() {
     };
 
     const settled = setTimeout(() => {
+      instance.setPixelRatio(Math.max(REPORT_PIXEL_RATIO, screen.pixelRatio));
       // Size the canvas to the paper layout now, not on the resize observer's next frame.
       instance.resize();
+      const bounds = framing();
+      if (bounds) instance.fitBounds(bounds, { padding: REPORT_PADDING, duration: 0 });
       instance.once('idle', take);
       // A repaint guarantees an `idle` even when the paper layout changed nothing.
       instance.triggerRepaint();
@@ -145,6 +172,8 @@ function ReportSnapshot() {
       cancelled = true;
       clearTimeout(settled);
       instance.off('idle', take);
+      instance.setPixelRatio(screen.pixelRatio);
+      instance.jumpTo({ center: screen.center, zoom: screen.zoom });
     };
   }, [paperLayout, map, setSnapshot]);
 

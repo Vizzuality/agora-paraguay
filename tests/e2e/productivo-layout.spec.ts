@@ -257,6 +257,14 @@ test('Exportar informe lays the report out in one column, every chart inside its
   await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
   await expect(area.locator('.maplibregl-ctrl-attrib-button')).toBeHidden();
 
+  // The map prints 480px tall from an image at twice its printed density, so it stays sharp.
+  const snapshot = area.locator('img[src^="data:image/png"]');
+  await expect(snapshot).toBeVisible();
+  const printed = (await snapshot.boundingBox())!;
+  expect(printed.height).toBeGreaterThanOrEqual(480);
+  const pixels = await snapshot.evaluate((img: HTMLImageElement) => img.naturalWidth);
+  expect(pixels).toBeGreaterThanOrEqual(2 * Math.floor(printed.width));
+
   // No summary generated: the AI card stays out of the report.
   await expect(main.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
 });
