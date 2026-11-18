@@ -53,17 +53,9 @@ test('Exposición climática fills the content column with its map and prompts f
   await expect(show).toHaveAttribute('aria-pressed', 'false');
   await show.click();
 
-  // Each row's opacity opens a slider; the arrow keys step it by 5 %.
-  await legend.getByRole('button', { name: `Opacidad de ${first}: 100 %` }).click();
-  await page.getByRole('slider', { name: `Opacidad de ${first}` }).press('ArrowLeft');
-  await expect(legend.getByRole('button', { name: `Opacidad de ${first}: 95 %` })).toBeVisible();
-  await page.keyboard.press('Escape');
-
-  // A row's handle moves it with the arrow keys.
-  await legend.getByRole('button', { name: `Reordenar ${first}` }).press('ArrowDown');
-  await expect(rows.nth(1)).toHaveText(first);
-  await legend.getByRole('button', { name: `Reordenar ${first}` }).press('ArrowUp');
-  await expect(rows.first()).toHaveText(first);
+  // The rows only hide: no opacity slider, no reordering.
+  await expect(legend.getByRole('button', { name: /^Opacidad de/ })).toHaveCount(0);
+  await expect(legend.getByRole('button', { name: /^Reordenar/ })).toHaveCount(0);
 
   await surface.click();
   await expect(surface).toHaveAttribute('aria-selected', 'true');

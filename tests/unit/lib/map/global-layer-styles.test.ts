@@ -113,6 +113,26 @@ describe('globalLayerStyles', () => {
     });
   });
 
+  it('traces the highlighted district again in `highlightColor`, over the class lines', () => {
+    const fill = { color: '#e06900', opacity: 0.6, outlineColor: 'rgba(0, 0, 0, 0)' };
+    const options = { id: 9, color: '#ff871f', fill, lineWidth: 2, highlightColor: '#FFFFFF' };
+    const styles = globalLayerStyles({ ...options, highlightedId: '0101' });
+
+    expect(styles.map((style) => style.id)).toEqual([
+      'global-layer-9-fill',
+      'global-layer-9-line',
+      'global-layer-9-highlight',
+    ]);
+    expect(styles[2].filter).toEqual([
+      'all',
+      ['!=', ['geometry-type'], 'Point'],
+      ['==', DISTRICT_KEY_EXPRESSION, '0101'],
+    ]);
+    expect(styles[2].paint).toEqual({ 'line-color': '#FFFFFF', 'line-width': 3 });
+    // No pick, no highlight layer.
+    expect(globalLayerStyles(options)).toHaveLength(2);
+  });
+
   it('hides every layer when hidden, so the source stays loaded', () => {
     const shown = globalLayerStyles({ id: 8, color: '#000' });
     const hidden = globalLayerStyles({ id: 8, color: '#000', hidden: true });

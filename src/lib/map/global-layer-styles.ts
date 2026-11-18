@@ -38,8 +38,8 @@ export type GlobalLayerStyleOptions = {
   fill?: FillPaint;
   /** With `fill`: also trace every feature in `color` this wide, the highlighted one thicker. */
   lineWidth?: number;
-  /** With `lineWidth`: the trace's opacity, one or per feature; opaque when left out. */
-  lineOpacity?: number | ExpressionSpecification;
+  /** With `lineWidth`: trace the highlighted district again in this colour, over the rest. */
+  highlightColor?: string;
   /** Paint only this district's features, plus any that belong to no district. */
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
@@ -72,7 +72,7 @@ export function globalLayerStyles({
   color,
   fill,
   lineWidth,
-  lineOpacity,
+  highlightColor,
   districtId,
   highlightedId,
   outline = false,
@@ -130,19 +130,30 @@ export function globalLayerStyles({
 
     if (lineWidth === undefined) return [fillLayer];
 
+    const lineLayer: GlobalLayerStyle = {
+      id: `${source}-line`,
+      type: 'line',
+      'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
+      filter: inDistrict(['!=', ['geometry-type'], 'Point']),
+      layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
+      paint: {
+        'line-color': color,
+        'line-width': ['case', isHighlighted, lineWidth + 1, lineWidth],
+      },
+    };
+
+    if (!highlightColor || !highlightedId) return [fillLayer, lineLayer];
+
     return [
       fillLayer,
+      lineLayer,
       {
-        id: `${source}-line`,
+        id: `${source}-highlight`,
         type: 'line',
         'source-layer': GLOBAL_LAYER_SOURCE_LAYER,
-        filter: inDistrict(['!=', ['geometry-type'], 'Point']),
-        layout: { visibility, 'line-sort-key': ['case', isHighlighted, 1, 0] },
-        paint: {
-          'line-color': color,
-          'line-width': ['case', isHighlighted, lineWidth + 1, lineWidth],
-          ...(lineOpacity === undefined ? {} : { 'line-opacity': lineOpacity }),
-        },
+        filter: ['all', ['!=', ['geometry-type'], 'Point'], isHighlighted],
+        layout: { visibility },
+        paint: { 'line-color': highlightColor, 'line-width': lineWidth + 1 },
       },
     ];
   }
