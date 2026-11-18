@@ -13,6 +13,9 @@ export const DISTRICTS_FILL: FillPaint & { opacity: number } = {
   outlineColor: 'rgba(0, 0, 0, 0.2)',
 };
 
+/** How Capas marks districts over the reference layers: the pick and the pointer's. */
+export const DISTRICT_PICK = { stroke: '#000', hoverFill: 'rgba(0, 0, 0, 0.3)' };
+
 /** Drought-exposed hectares a parcel needs to start the drought ramp, and to end it. */
 export const DROUGHT_RAMP_START_HA = 264_864;
 export const DROUGHT_RAMP_END_HA = 1_000_000;

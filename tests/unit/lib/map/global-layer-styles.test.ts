@@ -54,7 +54,48 @@ describe('globalLayerStyles', () => {
     expect(line.filter).toEqual([
       'all',
       ['!=', ['geometry-type'], 'Point'],
-      ['==', DISTRICT_KEY_EXPRESSION, '0101'],
+      ['any', ['==', DISTRICT_KEY_EXPRESSION, '0101'], ['==', DISTRICT_KEY_EXPRESSION, '']],
+    ]);
+  });
+
+  it('traces the selected district 3px and the hovered one 2px, filling only the hovered', () => {
+    const fill = { color: 'rgba(0, 0, 0, 0)', opacity: 1, outlineColor: 'rgba(0, 0, 0, 0.2)' };
+    const isSelected = ['==', DISTRICT_KEY_EXPRESSION, '0101'];
+    const isHovered = ['==', DISTRICT_KEY_EXPRESSION, '0202'];
+    const [fillLayer, line] = globalLayerStyles({
+      id: 9,
+      color: '#000',
+      fill,
+      outline: true,
+      highlightedId: '0101',
+      hoveredId: '0202',
+      hoverFill: 'rgba(0, 0, 0, 0.3)',
+    });
+
+    expect(fillLayer.paint).toMatchObject({
+      'fill-color': ['case', isHovered, 'rgba(0, 0, 0, 0.3)', 'rgba(0, 0, 0, 0)'],
+      'fill-outline-color': 'rgba(0, 0, 0, 0.2)',
+    });
+    expect(line.filter).toEqual([
+      'all',
+      ['!=', ['geometry-type'], 'Point'],
+      ['any', isSelected, isHovered],
+    ]);
+    expect(line.paint).toMatchObject({
+      'line-color': '#000',
+      'line-width': ['case', isSelected, 3, 2],
+    });
+    // The selection draws over a hovered neighbour's shared edge.
+    expect(line.layout).toMatchObject({ 'line-sort-key': ['case', isSelected, 1, 0] });
+  });
+
+  it('traces nothing in outline mode with nothing selected or hovered', () => {
+    const [, line] = globalLayerStyles({ id: 9, color: '#000', outline: true });
+
+    expect(line.filter).toEqual([
+      'all',
+      ['!=', ['geometry-type'], 'Point'],
+      ['any', ['==', DISTRICT_KEY_EXPRESSION, ''], ['==', DISTRICT_KEY_EXPRESSION, '']],
     ]);
   });
 
@@ -90,7 +131,7 @@ describe('globalLayerStyles', () => {
     expect(line.filter).toEqual([
       'all',
       ['!=', ['geometry-type'], 'Point'],
-      ['==', DISTRICT_KEY_EXPRESSION, '0101'],
+      ['any', ['==', DISTRICT_KEY_EXPRESSION, '0101'], ['==', DISTRICT_KEY_EXPRESSION, '']],
     ]);
   });
 
