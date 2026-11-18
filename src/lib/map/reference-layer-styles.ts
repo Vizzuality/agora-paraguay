@@ -8,7 +8,7 @@ import { LEGEND_ALL_CONTROLS, type LegendConfig } from '@/lib/map/legend-config'
 
 /** The districts layer: clear, so it still reports hover and clicks, with faint edges. */
 export const DISTRICTS_FILL: FillPaint & { opacity: number } = {
-  color: 'rgba(0, 0, 0, 0)',
+  color: 'rgba(109, 128, 103, 0)',
   opacity: 1,
   outlineColor: 'rgba(0, 0, 0, 0.2)',
 };
@@ -16,14 +16,28 @@ export const DISTRICTS_FILL: FillPaint & { opacity: number } = {
 /** How Capas marks districts over the reference layers: the pick and the pointer's. */
 export const DISTRICT_PICK = { stroke: '#000', hoverFill: 'rgba(0, 0, 0, 0.3)' };
 
-/** Drought-exposed hectares a parcel needs to start the drought ramp, and to end it. */
-export const DROUGHT_RAMP_START_HA = 264_864;
-export const DROUGHT_RAMP_END_HA = 1_000_000;
+/** Exposed hectares where the drought and flood ramps start and end. */
+const RAMP_START_HA = 0;
+const RAMP_END_HA = 1_000_000;
 
-const DROUGHT_DARK = '#c98763';
-const DROUGHT_LIGHT = '#e3b570';
-const FLOOD = '#6a898a';
+// Both ramps hold one colour at each end for now; the stops stay so either can be retuned.
+const DROUGHT = '#c98763';
+const FLOOD = '#9bbec0';
+const FLOOD_EDGE = '#9bbebf';
 const SOJA = '#6d8067';
+
+/** A fill that ramps a parcel's exposed hectares (`property`) from `from` to `to`. */
+function hectareRamp(property: string, from: string, to: string): FillPaint['color'] {
+  return [
+    'interpolate',
+    ['linear'],
+    ['to-number', ['coalesce', ['get', property], 0]],
+    RAMP_START_HA,
+    from,
+    RAMP_END_HA,
+    to,
+  ];
+}
 
 export type ReferenceLayer = {
   id: number;
@@ -42,26 +56,18 @@ export const REFERENCE_LAYERS: ReferenceLayer[] = [
     id: 6,
     label: 'Expuesto a sequía',
     fill: {
-      color: [
-        'interpolate',
-        ['linear'],
-        ['to-number', ['coalesce', ['get', 'Drought_ha'], 0]],
-        DROUGHT_RAMP_START_HA,
-        DROUGHT_DARK,
-        DROUGHT_RAMP_END_HA,
-        DROUGHT_LIGHT,
-      ],
+      color: hectareRamp('Drought_ha', DROUGHT, DROUGHT),
       opacity: 0.85,
-      outlineColor: DROUGHT_LIGHT,
+      outlineColor: DROUGHT,
     },
-    swatch: { fill: DROUGHT_DARK, edge: DROUGHT_LIGHT },
+    swatch: { fill: DROUGHT, edge: DROUGHT },
     legendConfig: LEGEND_ALL_CONTROLS,
   },
   {
     id: 7,
     label: 'Expuesto a inundación',
-    fill: { color: FLOOD, opacity: 0.75, outlineColor: '#9bbec0' },
-    swatch: { fill: FLOOD, edge: '#9bbec0' },
+    fill: { color: hectareRamp('Flood_ha', FLOOD, FLOOD), opacity: 0.8, outlineColor: FLOOD_EDGE },
+    swatch: { fill: FLOOD, edge: FLOOD_EDGE },
     legendConfig: LEGEND_ALL_CONTROLS,
   },
   {
