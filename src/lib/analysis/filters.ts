@@ -117,35 +117,31 @@ export function resolveFilterSelection(
   const resolved: Record<string, string> = {};
 
   for (const filter of filters) {
-    const pick = selected[filter.id];
-    const field = filter.field_type;
+    const value = resolveFilter(filter, selected[filter.id]);
 
-    if (filter.id === YEAR_FILTER_ID) {
-      resolved[filter.id] = todayIso().slice(0, 4);
-      continue;
-    }
-
-    switch (field.type) {
-      case 'category': {
-        const values = field.options.map((option) => option.value);
-
-        const fallback =
-          filter.id === CROP_FILTER_ID && values.includes(DEFAULT_CROP) ? DEFAULT_CROP : values[0];
-
-        if (pick !== undefined && values.includes(pick)) resolved[filter.id] = pick;
-        else if (fallback !== undefined) resolved[filter.id] = fallback;
-        break;
-      }
-      case 'date': {
-        const value = pick ?? dateDefault(filter.id, field.default);
-
-        if (value !== '') resolved[filter.id] = withinRange(value);
-        break;
-      }
-    }
+    if (value !== undefined) resolved[filter.id] = value;
   }
 
   return withSowingBeforeDate(resolved);
+}
+
+/** One filter's value, as `resolveFilterSelection` describes; `undefined` leaves it out. */
+function resolveFilter(filter: Filter, pick: string | undefined): string | undefined {
+  if (filter.id === YEAR_FILTER_ID) return todayIso().slice(0, 4);
+
+  const field = filter.field_type;
+
+  if (field.type === 'date') {
+    const value = pick ?? dateDefault(filter.id, field.default);
+
+    return value === '' ? undefined : withinRange(value);
+  }
+
+  const values = field.options.map((option) => option.value);
+
+  if (pick !== undefined && values.includes(pick)) return pick;
+
+  return filter.id === CROP_FILTER_ID && values.includes(DEFAULT_CROP) ? DEFAULT_CROP : values[0];
 }
 
 /** Moves a sowing date on or after the date to the day before it; the backend rejects that pair. */
