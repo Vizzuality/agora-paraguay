@@ -175,23 +175,32 @@ export function categoryClasses(categories: readonly string[]): RiskClass[] {
 export const EXPOSURE_CLASS_INDICATOR = 'ex_class';
 
 /**
- * Exposure's own five-class scale: "Sin soja" grey and "Sin exposición identificada" blue
- * stand apart from the exposure levels, which run green, orange, red.
+ * Exposure's own scale, by class name (lower case): "Sin soja" grey and "Sin exposición
+ * identificada" blue stand apart from the exposure levels, which run green, orange, red.
  */
-const EXPOSURE_TONES: readonly RiskTone[] = ['medium', 'low', 'none', 'elevated', 'high'];
+const EXPOSURE_TONES: Readonly<Record<string, RiskTone>> = {
+  'sin soja': 'medium',
+  'sin exposición identificada': 'low',
+  bajo: 'none',
+  medio: 'elevated',
+  alto: 'high',
+};
 
 /**
- * An indicator's classes: `categoryClasses`, except the exposure classification when it
- * lists its five classes, which takes exposure's own scale.
+ * An indicator's classes: `categoryClasses`, except the exposure classification, whose
+ * classes take exposure's own scale by name, however many the metadata lists. One it
+ * does not know sends the whole list back to `categoryClasses`.
  */
 export function indicatorClasses(indicatorId: string, categories: readonly string[]): RiskClass[] {
   const axis = categoryAxis(categories);
+  const tones = axis.map((label) => EXPOSURE_TONES[label.toLowerCase()]);
 
   if (
     indicatorId.toLowerCase() === EXPOSURE_CLASS_INDICATOR &&
-    axis.length === EXPOSURE_TONES.length
+    axis.length > 0 &&
+    tones.every((tone) => tone !== undefined)
   ) {
-    return axis.map((label, index) => ({ label, tone: EXPOSURE_TONES[index] }));
+    return axis.map((label, index) => ({ label, tone: tones[index] }));
   }
 
   return categoryClasses(categories);

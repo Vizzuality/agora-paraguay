@@ -13,9 +13,8 @@ import {
   EXPOSURE_FILL_OPACITY,
   EXPOSURE_LINE_WIDTH,
   exposureClasses,
-  exposureFill,
   exposureLabel,
-  exposureOutline,
+  exposureColor,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
@@ -35,9 +34,6 @@ export type ExposureMapView = 'exposicion' | 'capas';
  * colour; Capas keeps faint edges and traces the pick over them.
  */
 const EXPOSURE_LAYER = { id: 9, legendConfig: LEGEND_KEY_ONLY };
-
-/** The pick's outline on Capas, in the parcel outline's white. */
-const PICK_OUTLINE_COLOR = '#FFFFFF';
 
 /** On Nivel de exposición, the share of their opacity the districts around a pick keep. */
 const UNPICKED_OPACITY = 0.3;
@@ -172,16 +168,17 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
         id={EXPOSURE_LAYER.id}
         {...(exposure
           ? {
-              color: exposureOutline(classes),
+              color: exposureColor(classes),
               fill: {
-                color: exposureFill(classes),
+                color: exposureColor(classes),
                 opacity: EXPOSURE_FILL_OPACITY,
                 outlineColor: 'rgba(0, 0, 0, 0)',
               },
               lineWidth: EXPOSURE_LINE_WIDTH,
               othersOpacity: UNPICKED_OPACITY,
             }
-          : { color: PICK_OUTLINE_COLOR, fill: DISTRICTS_FILL, outline: true })}
+          : // The pick traced in the districts' own edge colour, at the outline's width.
+            { color: DISTRICTS_FILL.outlineColor, fill: DISTRICTS_FILL, outline: true })}
         highlightedId={selected?.id}
       />
       {capasOpened &&
