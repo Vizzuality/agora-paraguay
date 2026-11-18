@@ -25,20 +25,41 @@ const parcels = [
 ];
 
 describe('cropOfIndicator', () => {
-  it('reads the crop an id is bound to, none for an id without a crop suffix', () => {
-    expect(cropOfIndicator({ id: 'Pro_soja', name: '', indicator_type: { type: 'numeric' } })).toBe(
-      'soja',
-    );
-    expect(
-      cropOfIndicator({ id: 'IEP_H5_arroz', name: '', indicator_type: { type: 'numeric' } }),
-    ).toBe('arroz');
-    expect(
-      cropOfIndicator({ id: 'Resiliencia', name: '', indicator_type: { type: 'numeric' } }),
-    ).toBeNull();
+  const crop = (id: string) =>
+    cropOfIndicator({ id, name: '', indicator_type: { type: 'numeric' } });
+
+  it('reads soy from a `_soja` or `_soy` part, wherever it sits in the id', () => {
+    expect(crop('Pro_soja')).toBe('soja');
+    expect(crop('Pro_soy')).toBe('soja');
+    expect(crop('ITR_soja_H5')).toBe('soja');
+  });
+
+  it('reads rice from an `_arroz` or `_rice` part', () => {
+    expect(crop('IEP_H5_arroz')).toBe('rice');
+    expect(crop('Yield_rice')).toBe('rice');
+    expect(crop('RICE_trend')).toBeNull();
+  });
+
+  it('has no crop for an id without one, nor for a crop word that only starts a longer part', () => {
+    expect(crop('Resiliencia')).toBeNull();
+    expect(crop('Pro_soybean')).toBeNull();
   });
 });
 
 describe('applicableIndicators', () => {
+  it('lists for rice every indicator without `_soy`, for soy every one without `_rice`', () => {
+    const english: Indicators = [
+      { id: 'Yield_soy', name: 'Soy', indicator_type: { type: 'numeric' } },
+      { id: 'Yield_rice', name: 'Rice', indicator_type: { type: 'numeric' } },
+      { id: 'IEP', name: 'IEP', indicator_type: { type: 'range', min: 0, max: 100 } },
+    ];
+    const ids = (crop: string) =>
+      applicableIndicators(english, [], [], 'productivo', crop)?.map((i) => i.id);
+
+    expect(ids('rice')).toEqual(['Yield_rice', 'IEP']);
+    expect(ids('soja')).toEqual(['Yield_soy', 'IEP']);
+  });
+
   it("keeps the hero's crop and the crop-free indicators, drops the other crop's", () => {
     const soyAnswered = [parcel('A', { pro_soja: 3.5, Pro_arroz: 4.1, Vol_arroz: 'Alta' })];
 
@@ -102,10 +123,13 @@ describe('applicableIndicators', () => {
     ).toEqual(['Pro_soja', 'Vol_arroz', 'IEP']);
   });
 
-  it('leaves sanitario alone and passes an unloaded list through', () => {
+  it('applies only the crop rule on sanitario, and passes an unloaded list through', () => {
     expect(applicableIndicators(indicators, parcels, ['A', 'B'], 'sanitario', undefined)).toBe(
       indicators,
     );
+    expect(
+      applicableIndicators(indicators, parcels, ['A', 'B'], 'sanitario', 'rice')?.map((i) => i.id),
+    ).toEqual(['Pro_arroz', 'Vol_arroz', 'IEP']);
     expect(
       applicableIndicators(undefined, parcels, ['A'], 'productivo', undefined),
     ).toBeUndefined();

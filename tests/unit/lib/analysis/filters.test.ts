@@ -100,6 +100,11 @@ describe('resolveFilterSelection', () => {
     expect(resolveFilterSelection({ crop_type: 'wheat' }, FILTERS).crop_type).toBe('soja');
   });
 
+  it('starts the crop at the given default when offered, and keeps a pick over it', () => {
+    expect(resolveFilterSelection(EMPTY_ANALYSIS_FILTERS, FILTERS, 'rice').crop_type).toBe('rice');
+    expect(resolveFilterSelection({ crop_type: 'soja' }, FILTERS, 'rice').crop_type).toBe('soja');
+  });
+
   it('ignores picks for filters the API no longer lists', () => {
     expect(resolveFilterSelection({ cultivo: 'soja' }, FILTERS)).not.toHaveProperty('cultivo');
   });
@@ -204,7 +209,7 @@ describe('orderHeroFilters', () => {
     ]);
   });
 
-  it("leaves productivo's year out of the fields and resolves it to the current year", () => {
+  it("puts productivo's year before the crop and resolves it to the current year", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 10, 12, 12));
     const year: Filters[number] = {
@@ -213,7 +218,7 @@ describe('orderHeroFilters', () => {
       field_type: { type: 'category', options: [{ value: '2027', label: '2027' }] },
     };
 
-    expect(orderHeroFilters([crop, year]).map((f) => f.id)).toEqual(['crop_type']);
+    expect(orderHeroFilters([crop, year]).map((f) => f.id)).toEqual(['year', 'crop_type']);
     expect(resolveFilterSelection({ year: '2027' }, [crop, year])).toEqual({ year: '2026' });
     vi.useRealTimers();
   });

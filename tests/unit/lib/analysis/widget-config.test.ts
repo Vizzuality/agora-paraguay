@@ -194,13 +194,16 @@ describe('indicatorClasses', () => {
     ]);
   });
 
-  it('keeps the shared scale for any other five-class indicator', () => {
-    expect(indicatorClasses('crop_phase', exposure)).toEqual(categoryClasses(exposure));
+  it('names the tones by class, so a shorter list keeps them, and an unknown class drops the scale', () => {
+    expect(indicatorClasses('Ex_class', ['Bajo', 'Medio', 'Alto']).map(({ tone }) => tone)).toEqual(
+      ['none', 'elevated', 'high'],
+    );
+    expect(indicatorClasses('Ex_class', ['Bajo', 'Extremo'])).toEqual(
+      categoryClasses(['Bajo', 'Extremo']),
+    );
   });
 
-  it('keeps the shared scale for the exposure classification with another class count', () => {
-    expect(indicatorClasses('ex_class', ['Bajo', 'Medio', 'Alto'])).toEqual(
-      categoryClasses(['Bajo', 'Medio', 'Alto']),
-    );
+  it('keeps the shared scale for any other five-class indicator', () => {
+    expect(indicatorClasses('crop_phase', exposure)).toEqual(categoryClasses(exposure));
   });
 });
