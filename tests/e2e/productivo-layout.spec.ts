@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { EAST_PARCEL_ID, stubFilterParcels, WEST_PARCEL_ID } from './fixtures/api';
 import { analyseOnRedesign } from './fixtures/redesign';
 
 /** The projection's base is named by the current year. */
@@ -142,6 +143,41 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(todas).toHaveCSS('position', 'sticky');
   await todas.click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
+});
+
+test('Tipo de cultivo starts at the crop the parcels in view last grew', async ({ page }) => {
+  const crops: (string | undefined)[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/parcels/analysis/production/') {
+      crops.push((request.postDataJSON() as { crop_type?: string }).crop_type);
+    }
+  });
+  await analyseOnRedesign(page, '/analisis/productivo', (target) =>
+    stubFilterParcels(target, { [WEST_PARCEL_ID]: 'Soja', [EAST_PARCEL_ID]: 'Arroz' }),
+  );
+  await loginAtGate(page);
+
+  const filters = page.getByRole('region', { name: 'Cultivo y fechas' });
+  await filters.getByRole('button', { name: /Cultivo y fechas/ }).click();
+  const crop = filters.getByRole('combobox', { name: 'Tipo de cultivo' });
+
+  // Under Todas one soy parcel and one rice parcel tie: soy, the platform's default.
+  await expect(crop).toHaveText('Soja');
+
+  // The east parcel last grew rice: its tab starts there, and the analysis asks for rice.
+  await page.getByRole('combobox', { name: 'Parcela' }).click();
+  await page.getByRole('option', { name: 'Parcela 2' }).click();
+  await expect(crop).toHaveText('Arroz');
+  await expect.poll(() => crops.at(-1)).toBe('rice');
+
+  // A pick outlasts the default.
+  await crop.click();
+  await page.getByRole('option', { name: 'Soja' }).click();
+  await page.getByRole('combobox', { name: 'Parcela' }).click();
+  await page.getByRole('option', { name: 'Parcela 1' }).click();
+  await page.getByRole('combobox', { name: 'Parcela' }).click();
+  await page.getByRole('option', { name: 'Parcela 2' }).click();
+  await expect(crop).toHaveText('Soja');
 });
 
 test('Generar resumen asks for the open selection, then for one parcel', async ({ page }) => {
