@@ -254,6 +254,43 @@
   }
 }
 
+/* A widget never splits across two pages. WebKit ignores `break-inside: avoid` inside
+   flex and grid layout, and the widgets sit several levels deep in both, so in print every
+   box from the body down to the widget grid lays out as a plain block (the page frame's
+   wrappers included), and each widget is an inline box: a line is never split, so a
+   widget that does not fit moves whole to the next page. Chrome's result is the same.
+   Spacing moves from the containers' gaps to margins. */
+@media print {
+  body :is(div, main):has([data-slot='widget-grid']),
+  [data-slot='widget-grid'] {
+    display: block;
+  }
+
+  body :is(div, main):has([data-slot='widget-grid']) > * + * {
+    margin-top: 1rem;
+  }
+
+  /* Every widget carries a 1rem gutter on its right, which the grid takes back with a
+     negative margin: two halves fill a line whatever order the widths come in. */
+  [data-slot='widget-grid'] {
+    margin-right: -1rem;
+  }
+
+  [data-slot='widget-grid'] > * {
+    display: inline-flex;
+    width: calc(100% - 1rem);
+    margin: 0 1rem 1rem 0;
+    vertical-align: top;
+    break-inside: avoid;
+  }
+
+  /* Two to a line, as the grid printed them; a hair under half so a line never wraps early.
+     A widget that spans the grid on screen (the projection, `col-span-full`) keeps the line. */
+  [data-slot='widget-grid']:not([data-stacked]) > :not(.col-span-full) {
+    width: calc(50% - 1.01rem);
+  }
+}
+
 /* The page at paper width on screen while the print dialog is up (`printReport`): A4
    portrait less the page's side margins (210mm − 2 × 8mm), so the charts measure the width they will print at,
    and the mini map renders its image at the size the report shows it (`paper:`). */
