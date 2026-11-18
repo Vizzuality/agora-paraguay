@@ -226,3 +226,20 @@ test('the first analysis waits in a bordered frame as tall as the map it replace
   release();
   await expect(status).toHaveCount(0);
 });
+
+test('the login backdrop dims the widgets as well as the sidebar', async ({ page }) => {
+  await analyseOnRedesign(page, '/analisis/sanitario');
+  const rust = card(page, 'Phakopsora pachyrhizi');
+  await expect(rust).toBeVisible();
+
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(page.getByRole('dialog', { name: 'Área privada' })).toBeVisible();
+
+  // Whatever paints topmost at the widget's top-left corner must be the backdrop.
+  const box = (await rust.boundingBox())!;
+  const topmost = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x, y)?.getAttribute('data-slot'),
+    [box.x + 8, box.y + 8],
+  );
+  expect(topmost).toBe('login-backdrop');
+});
