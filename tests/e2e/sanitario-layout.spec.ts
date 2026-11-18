@@ -73,6 +73,10 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   expect(Math.abs(rustBox.x + rustBox.width - 24 - (tipBox.x + tipBox.width))).toBeLessThan(1);
   expect(tipBox.y - rustBox.y).toBeLessThan(32);
 
+  // Under Todas sanitario keeps its columns: the widget does not take the full width.
+  const mainBox = (await page.getByRole('main').boundingBox())!;
+  expect(rustBox.width).toBeLessThan(mainBox.width * 0.75);
+
   // The text facts share one summary card.
   const info = page.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
   await expect(info).toContainText('Tipo de cultivo');

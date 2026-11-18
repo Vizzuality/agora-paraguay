@@ -204,15 +204,18 @@ describe('orderHeroFilters', () => {
     ]);
   });
 
-  it("puts productivo's year before the crop, where the date goes", () => {
+  it("leaves productivo's year out of the fields and resolves it to the current year", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 12, 12));
     const year: Filters[number] = {
       id: 'year',
       name: 'Año',
       field_type: { type: 'category', options: [{ value: '2027', label: '2027' }] },
     };
 
-    expect(orderHeroFilters([crop, year]).map((f) => f.id)).toEqual(['year', 'crop_type']);
-    expect(resolveFilterSelection({}, [crop, year])).toEqual({ year: '2027' });
+    expect(orderHeroFilters([crop, year]).map((f) => f.id)).toEqual(['crop_type']);
+    expect(resolveFilterSelection({ year: '2027' }, [crop, year])).toEqual({ year: '2026' });
+    vi.useRealTimers();
   });
 
   it('keeps anything else after the known filters, in the API order', () => {
