@@ -7,21 +7,24 @@ describe('REFERENCE_LAYERS', () => {
     expect(REFERENCE_LAYERS.map(({ id }) => id)).toEqual([6, 7, 8]);
   });
 
-  it('ramps drought over ascending stops, which interpolate requires', () => {
-    const [drought] = REFERENCE_LAYERS;
-    const color = drought.fill.color;
+  it.each([
+    ['drought', 0, 'Drought_ha'],
+    ['flood', 1, 'Flood_ha'],
+  ])(
+    'ramps %s on its hectares over ascending stops, which interpolate requires',
+    (_, index, property) => {
+      const color = REFERENCE_LAYERS[index].fill.color;
 
-    expect(Array.isArray(color) && color[0]).toBe('interpolate');
-    const stops = (color as unknown[]).slice(3).filter((_, index) => index % 2 === 0);
-    expect(stops).toEqual([...stops].sort((a, b) => Number(a) - Number(b)));
-    expect(new Set(stops).size).toBe(stops.length);
-  });
+      expect(Array.isArray(color) && color[0]).toBe('interpolate');
+      expect(JSON.stringify(color)).toContain(`["get","${property}"]`);
+      const stops = (color as unknown[]).slice(3).filter((_, i) => i % 2 === 0);
+      expect(stops).toEqual([...stops].sort((a, b) => Number(a) - Number(b)));
+      expect(new Set(stops).size).toBe(stops.length);
+    },
+  );
 
-  it('fills flood and soy with one colour', () => {
-    const [, flood, soja] = REFERENCE_LAYERS;
-
-    expect(typeof flood.fill.color).toBe('string');
-    expect(typeof soja.fill.color).toBe('string');
+  it('fills soy with one colour', () => {
+    expect(typeof REFERENCE_LAYERS[2].fill.color).toBe('string');
   });
 
   it('keeps every opacity between 0 and 1', () => {
