@@ -65,10 +65,11 @@ export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }
  * Todas, comma-separated on a parcel, where the line may break only after a comma.
  */
 function ListValue({ value }: Readonly<{ value: string }>) {
-  return value.split('\n').map((line, row) => (
-    <span key={row} className="block">
+  // Seasons are distinct within a list, so each line and element keys by its own text.
+  return value.split('\n').map((line) => (
+    <span key={line} className="block">
       {line.split(', ').map((element, index) => (
-        <Fragment key={index}>
+        <Fragment key={element}>
           {index > 0 && ', '}
           <span className="whitespace-nowrap">{element}</span>
         </Fragment>
