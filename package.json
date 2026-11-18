@@ -39,7 +39,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "fflate": "0.8.3",
-    "jotai": "3.0.1",
+    "jotai": "3.0.2",
     "lucide-react": "1.73.0",
     "maplibre-gl": "6.17.0",
     "nuqs": "2.10.3",
