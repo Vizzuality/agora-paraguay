@@ -102,19 +102,37 @@ describe('analysisResponseSchema', () => {
     });
   });
 
-  it('marks a non-scalar column unreadable instead of failing the whole analysis', () => {
+  it('reads a list of scalars as one comma-separated value', () => {
     const parsed = analysisResponseSchema.parse({
       ...response,
       indicators: [
         {
           parcel_id: 'D07D21P00000002',
-          properties: { Asian_rust: 2, possible_phenology_stages: ['V1', 'V2'] },
+          properties: { Asian_rust: 2, Zafras_soja: ['2019-2020', '2021-2022'] },
+        },
+      ],
+    });
+
+    expect(parsed.indicators[0].properties).toEqual({
+      Asian_rust: 2,
+      Zafras_soja: '2019-2020, 2021-2022',
+    });
+    expect(parsed.indicators[0].unreadable).toBeUndefined();
+  });
+
+  it('marks an empty list or any other non-scalar unreadable instead of failing the whole analysis', () => {
+    const parsed = analysisResponseSchema.parse({
+      ...response,
+      indicators: [
+        {
+          parcel_id: 'D07D21P00000002',
+          properties: { Asian_rust: 2, stages: [], station: { name: 'Hohenau' } },
         },
       ],
     });
 
     expect(parsed.indicators[0].properties).toEqual({ Asian_rust: 2 });
-    expect(parsed.indicators[0].unreadable).toEqual(['possible_phenology_stages']);
+    expect(parsed.indicators[0].unreadable).toEqual(['stages', 'station']);
   });
 
   it('rejects a parcel without parcel_id, and the old FeatureCollection shape', () => {

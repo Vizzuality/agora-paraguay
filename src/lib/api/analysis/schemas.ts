@@ -100,6 +100,15 @@ function isParcelValue(value: unknown): value is ParcelValue {
   return value === null || typeof value === 'string' || typeof value === 'number';
 }
 
+/** A non-empty list of strings or numbers (`Zafras_soja`): read as one comma-separated value. */
+function isScalarList(value: unknown): value is (string | number)[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === 'string' || typeof item === 'number')
+  );
+}
+
 /**
  * The diseases answer puts the disease columns beside `parcel_id` and the rest under
  * `properties`; production puts everything under `properties`. Both become one
@@ -131,23 +140,35 @@ const analysisParcelSchema = z.preprocess(
     .transform(({ parcel_id, properties }): AnalysisParcel => {
       const readable: Record<string, ParcelValue> = {};
       const unreadable: string[] = [];
+      const lists: Record<string, string[]> = {};
 
       for (const [column, value] of Object.entries(properties)) {
-        if (isParcelValue(value)) readable[column] = value;
-        else unreadable.push(column);
+        if (isParcelValue(value)) {
+          readable[column] = value;
+        } else if (isScalarList(value)) {
+          readable[column] = value.join(', ');
+          lists[column] = value.map(String);
+        } else {
+          unreadable.push(column);
+        }
       }
 
-      return unreadable.length > 0
-        ? { parcel_id, properties: readable, unreadable }
-        : { parcel_id, properties: readable };
+      return {
+        parcel_id,
+        properties: readable,
+        ...(unreadable.length > 0 && { unreadable }),
+        ...(Object.keys(lists).length > 0 && { lists }),
+      };
     }),
 );
 
 export type AnalysisParcel = {
   parcel_id: string | number;
   properties: Record<string, ParcelValue>;
-  /** Columns whose value is no scalar (`possible_phenology_stages` arrives as an array): each fails alone, as "Sin datos". */
+  /** Columns whose value is neither a scalar nor a list of them: each fails alone, as "Sin datos". */
   unreadable?: string[];
+  /** Columns that arrived as lists, element by element; `properties` holds them joined. */
+  lists?: Record<string, string[]>;
 };
 
 /**

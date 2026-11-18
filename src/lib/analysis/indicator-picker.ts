@@ -18,7 +18,7 @@ export function selectableIndicators(
   riesgo: Riesgo = 'sanitario',
 ): Indicators {
   return indicators.filter(
-    (indicator) => !isGeneralInfo(indicator, riesgo) && !isAreaIndicator(indicator),
+    (indicator) => !isGeneralInfo(indicator, riesgo, 'multiple') && !isAreaIndicator(indicator),
   );
 }
 

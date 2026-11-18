@@ -39,7 +39,9 @@ export function requestedIndicatorIds(
   return indicators
     .filter(
       (indicator) =>
-        isGeneralInfo(indicator, riesgo) || isAreaIndicator(indicator) || visible.has(indicator.id),
+        isGeneralInfo(indicator, riesgo, 'multiple') ||
+        isAreaIndicator(indicator) ||
+        visible.has(indicator.id),
     )
     .map((indicator) => indicator.id);
 }

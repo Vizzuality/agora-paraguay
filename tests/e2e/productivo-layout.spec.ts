@@ -119,6 +119,12 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   expect(todasBoxes[0]!.width).toBe(todasBoxes[1]!.width);
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
+  // Información de contexto sums the area and counts the parcels per soy season.
+  const info = page.getByRole('heading', { name: 'Información de contexto' }).locator('..');
+  await expect(info).toContainText('17,5 ha');
+  await expect(info).toContainText(
+    '2017-2018 (1), 2018-2019 (1), 2019-2020 (1), 2020-2021 (1), 2022-2023 (2), 2023-2024 (1), 2024-2025 (1)',
+  );
 
   // The arroz indicator belongs to the other crop: no widget.
   await expect(
@@ -132,8 +138,14 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await parcel.click();
   await page.getByRole('option', { name: 'Parcela 2' }).click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
-  await expect(seasons.locator('[data-slot="figure"]')).toHaveText('3');
-  await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  // One parcel's resilience, seasons count and seasons read in the context panel instead.
+  await expect(seasons).toHaveCount(0);
+  await expect(resilience).toHaveCount(0);
+  for (const fact of ['Proxy de resiliencia operativa', 'Contador de zafras de soja detectadas']) {
+    await expect(info.getByRole('term').filter({ hasText: fact })).toBeVisible();
+  }
+  await expect(info).toContainText('7,3 ha');
+  await expect(info).toContainText('2022-2023, 2023-2024, 2024-2025');
   // On one parcel the projection reads its own scenarios; its base is one value.
   await expect(projection.getByRole('listitem')).toHaveText([
     `${YEAR}: neutro 3,81 t/ha, pesimista 3,81 t/ha, optimista 3,81 t/ha`,

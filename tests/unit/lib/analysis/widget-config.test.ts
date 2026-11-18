@@ -37,6 +37,25 @@ describe('widgetFor', () => {
     ).toBe('histogram');
   });
 
+  it('productivo, one parcel: Resiliencia and the seasons counters are facts; under Todas, widgets', () => {
+    for (const id of ['Resiliencia', 'N_soja', 'N_arroz']) {
+      const type = id === 'Resiliencia' ? category : index;
+      expect(widgetFor(type, { riesgo: 'productivo', scope: 'individual', id })).toBe('fact');
+      expect(widgetFor(type, { riesgo: 'productivo', scope: 'multiple', id })).not.toBe('fact');
+    }
+    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual', id: 'Pro_soja' })).toBe(
+      'number',
+    );
+  });
+
+  it('the area is a fact on every riesgo and scope', () => {
+    for (const riesgo of ['sanitario', 'productivo', 'exposicion_climatica'] as const) {
+      for (const scope of ['individual', 'multiple'] as const) {
+        expect(widgetFor(numeric, { riesgo, scope, id: 'area', unit: 'ha' })).toBe('fact');
+      }
+    }
+  });
+
   it("productivo: a range is one parcel's number or the set's histogram, short or long; text is general info", () => {
     expect(widgetFor(index, { riesgo: 'productivo', scope: 'individual' })).toBe('number');
     expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');

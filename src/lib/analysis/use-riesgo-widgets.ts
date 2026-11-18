@@ -6,6 +6,7 @@ import { combinedParcel } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicators } from '@/lib/analysis/indicator-picker';
 import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
 import { useDescribe } from '@/lib/analysis/use-describe';
+import type { ParcelScope } from '@/lib/analysis/widget-config';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { activeParcelIdAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
 
@@ -26,7 +27,7 @@ export function useRiesgoWidgets(riesgo: Riesgo) {
   const describe = useDescribe(riesgo);
 
   const answered = analysis.data?.indicators ?? [];
-  const scope = activeId === null ? 'multiple' : 'individual';
+  const scope: ParcelScope = activeId === null ? 'multiple' : 'individual';
   const parcel =
     activeId === null
       ? combinedParcel(

@@ -58,8 +58,12 @@ export function widgetFor(
     id,
   }: { riesgo: IndicatorsRiesgo; scope: ParcelScope; unit?: string | null; id?: string },
 ): WidgetKind {
-  if (riesgo === 'sanitario' && id !== undefined && SANITARIO_FACT_IDS.has(id.toLowerCase())) {
-    return 'fact';
+  const key = id?.toLowerCase();
+
+  if (key === AREA_ID) return 'fact';
+  if (riesgo === 'sanitario' && key !== undefined && SANITARIO_FACT_IDS.has(key)) return 'fact';
+  if (riesgo === 'productivo' && scope === 'individual' && key !== undefined) {
+    if (key === 'resiliencia' || SEASONS_COUNTER.test(key)) return 'fact';
   }
 
   switch (type.type) {
@@ -75,6 +79,12 @@ export function widgetFor(
       return numberWidget(riesgo, scope, 'number', 'histogram');
   }
 }
+
+/** The selection's area: a fact everywhere, summed under Todas (`combinedParcel`). */
+const AREA_ID = 'area';
+
+/** Productivo's seasons counter per crop (`N_soja`): one parcel's count is a fact. */
+const SEASONS_COUNTER = /^n_[a-z]+$/;
 
 /** Sanitario indicators that describe the reading rather than a risk: summary facts, not widgets. */
 const SANITARIO_FACT_IDS: ReadonlySet<string> = new Set(['data_quality']);
