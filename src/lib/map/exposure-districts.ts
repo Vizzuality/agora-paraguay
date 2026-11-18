@@ -119,26 +119,6 @@ export function exposureClasses(
     : FALLBACK_CLASSES;
 }
 
-/**
- * An exposure opacity per district: `base` scaled by its class's share in `byClass`
- * (0–1, from the legend), `base` for a class it does not name.
- */
-export function exposureOpacity(
-  classes: readonly RiskClass[],
-  byClass: Readonly<Record<string, number>>,
-  base: number,
-): ExpressionSpecification | number {
-  const named = classes.filter(({ label }) => byClass[label] !== undefined);
-  if (named.length === 0) return base;
-
-  return [
-    'match',
-    ['get', 'Ex_class'],
-    ...named.flatMap(({ label }) => [label, base * byClass[label]]),
-    base,
-  ] as unknown as ExpressionSpecification;
-}
-
 /** The exposure layer's fill: each district's class in the deeper chart colour, `hidden` ones clear. */
 export function exposureFill(
   classes: readonly RiskClass[],
