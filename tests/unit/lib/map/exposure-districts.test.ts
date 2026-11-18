@@ -4,9 +4,8 @@ import {
   districtFlight,
   districtFromProperties,
   exposureClasses,
-  exposureFill,
+  exposureColor,
   exposureLabel,
-  exposureOutline,
 } from '@/lib/map/exposure-districts';
 
 describe('districtFromProperties', () => {
@@ -82,64 +81,49 @@ describe('exposureClasses', () => {
     ]);
   });
 
-  it('falls back to Bajo, Medio and Alto until the metadata lists Ex_class', () => {
-    expect(exposureClasses(undefined).map(({ label }) => label)).toEqual(['Bajo', 'Medio', 'Alto']);
-    expect(exposureClasses(exClass([])).map(({ label }) => label)).toEqual([
-      'Bajo',
-      'Medio',
-      'Alto',
+  it('keeps Bajo green, Medio orange and Alto red however many classes the metadata lists', () => {
+    expect(exposureClasses(exClass(['Bajo', 'Medio', 'Alto']))).toEqual([
+      { label: 'Bajo', tone: 'none' },
+      { label: 'Medio', tone: 'elevated' },
+      { label: 'Alto', tone: 'high' },
     ]);
+  });
+
+  it('falls back to Bajo, Medio and Alto on the same scale until the metadata lists Ex_class', () => {
+    const fallback = [
+      { label: 'Bajo', tone: 'none' },
+      { label: 'Medio', tone: 'elevated' },
+      { label: 'Alto', tone: 'high' },
+    ];
+
+    expect(exposureClasses(undefined)).toEqual(fallback);
+    expect(exposureClasses(exClass([]))).toEqual(fallback);
   });
 });
 
-describe('exposureFill / exposureOutline', () => {
-  const classes = [
-    { label: 'Sin soja', tone: 'medium' as const },
-    { label: 'Alto', tone: 'high' as const },
-  ];
-
-  it("fills each class's label in its tone's deeper colour, grey for any other", () => {
-    expect(exposureFill(classes)).toEqual([
+describe('exposureColor', () => {
+  it("paints each class's label in its tone's colour, fill and outline alike, grey for any other", () => {
+    expect(
+      exposureColor([
+        { label: 'Bajo', tone: 'none' },
+        { label: 'Medio', tone: 'elevated' },
+        { label: 'Alto', tone: 'high' },
+      ]),
+    ).toEqual([
       'match',
       ['get', 'Ex_class'],
-      'Sin soja',
-      '#657690',
+      'Bajo',
+      '#109704',
+      'Medio',
+      '#E06900',
       'Alto',
       '#EC1919',
       '#657690',
     ]);
   });
 
-  it("traces each class's label in its tone's bright colour, grey for any other", () => {
-    expect(exposureOutline(classes)).toEqual([
-      'match',
-      ['get', 'Ex_class'],
-      'Sin soja',
-      '#96A3B5',
-      'Alto',
-      '#FF3838',
-      '#96A3B5',
-    ]);
-  });
-
-  it('clears a class the legend hides, fill and outline, and keeps the others', () => {
-    const hidden = new Set(['Alto']);
-
-    expect(exposureFill(classes, hidden)).toEqual([
-      'match',
-      ['get', 'Ex_class'],
-      'Sin soja',
-      '#657690',
-      'Alto',
-      'rgba(0, 0, 0, 0)',
-      '#657690',
-    ]);
-    expect(exposureOutline(classes, hidden)).toContain('rgba(0, 0, 0, 0)');
-  });
-
   it('paints everything grey with no classes, since match needs a label', () => {
-    expect(exposureFill([])).toBe('#657690');
-    expect(exposureOutline([])).toBe('#96A3B5');
+    expect(exposureColor([])).toBe('#657690');
   });
 });
 

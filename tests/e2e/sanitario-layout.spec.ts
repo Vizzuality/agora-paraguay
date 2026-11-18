@@ -77,8 +77,8 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   const mainBox = (await page.getByRole('main').boundingBox())!;
   expect(rustBox.width).toBeLessThan(mainBox.width * 0.75);
 
-  // The text facts share one summary card.
-  const info = page.getByRole('heading', { name: 'Resumen del análisis' }).locator('..');
+  // The text facts share one context card.
+  const info = page.getByRole('heading', { name: 'Información de contexto' }).locator('..');
   await expect(info).toContainText('Tipo de cultivo');
   await expect(info).toContainText('Soja');
 
@@ -154,7 +154,7 @@ test('Personalizar indicadores drops an indicator from the analysis and its card
   await expect.poll(() => bodies.length).toBe(before + 1);
   expect(bodies.at(-1)?.indicators).not.toContain('asian_rust');
   await expect(page.getByRole('heading', { name: 'Phakopsora pachyrhizi' })).toBeHidden();
-  await expect(page.getByRole('heading', { name: 'Resumen del análisis' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Información de contexto' })).toBeVisible();
 });
 
 test('says why when the indicator list cannot be loaded', async ({ page }) => {
