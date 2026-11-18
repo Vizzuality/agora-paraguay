@@ -215,6 +215,20 @@ describe('fetchIndicators', () => {
     await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toEqual(indicators);
   });
 
+  it('reads the category, historic or future, and drops any other value', async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([
+        { ...indicators[0], category: 'historic' },
+        { ...indicators[1], category: 'future' },
+        { ...indicators[2], category: 'someday' },
+      ]),
+    );
+
+    const list = await fetchIndicators({ riesgo: 'sanitario' });
+
+    expect(list.map(({ category }) => category)).toEqual(['historic', 'future', null]);
+  });
+
   it('still rejects an entry that is malformed otherwise', async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json([...indicators, { name: 'No id', indicator_type: { type: 'text' } }]),
