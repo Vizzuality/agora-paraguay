@@ -5,7 +5,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CheckIcon, ChevronDownIcon, SearchIcon } from 'lucide-react';
-import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useId, useState } from 'react';
 
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -26,7 +26,6 @@ export function ParcelPicker() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
   const id = useId();
   const listId = `${id}-list`;
   const optionId = (parcel: string) => `${id}-${parcel}`;
@@ -45,13 +44,12 @@ export function ParcelPicker() {
     setOpen(false);
   };
 
-  // Reopened, the picked parcel heads the list rather than sitting wherever it scrolled to.
-  useEffect(() => {
-    if (!open) return;
-    const list = listRef.current;
+  // Opened, the picked parcel heads the list. A ref callback, not an effect on `open`: the
+  // popover's portal mounts the list a render after `open` flips.
+  const headPicked = useCallback((list: HTMLDivElement | null) => {
     const picked = list?.querySelector<HTMLElement>('[aria-selected="true"]');
-    if (list && picked) list.scrollTop = picked.offsetTop - list.clientTop;
-  }, [open]);
+    if (list && picked) list.scrollTop = picked.offsetTop;
+  }, []);
 
   // Keyboard moves keep the highlighted row in view.
   useEffect(() => {
@@ -121,11 +119,12 @@ export function ParcelPicker() {
           </label>
 
           <div
-            ref={listRef}
+            ref={headPicked}
             id={listId}
             role="listbox"
             aria-label="Parcelas"
-            className="scroll-fade-y relative max-h-72 overflow-y-auto"
+            // No top fade: the picked parcel scrolls to the top and must read in full.
+            className="scroll-fade-y relative max-h-72 overflow-y-auto [--scroll-fade-top:0px]!"
           >
             {matches.length === 0 && (
               <p className="px-2 py-1.5 text-sm text-muted-foreground">Sin resultados</p>
