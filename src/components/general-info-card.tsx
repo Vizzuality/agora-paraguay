@@ -20,7 +20,7 @@ type GeneralInfoCardProps = {
  * Widget for the parcel's context — station, crop, phenology — as one list of
  * facts, the context heading the content column. These are not risks, so no
  * figure and no ruler; the heading sits right in the card, no subtitle, and the facts
- * flow top to bottom through as many columns as the card's width holds.
+ * sit side by side across the card's width, wrapping onto new rows.
  */
 export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
   return (
@@ -32,13 +32,13 @@ export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardPr
   );
 }
 
-/** The facts alone, top to bottom through as many columns as the width holds. */
+/** The facts alone, side by side across the full width, wrapping onto new rows, never their text. */
 export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }>) {
   return (
-    <dl className="columns-[172px] gap-8">
+    <dl className="flex flex-wrap gap-x-8 gap-y-4">
       {items.map((item) => (
-        <div key={item.id} className="mb-4 flex break-inside-avoid flex-col gap-1">
-          <dt className="flex items-start justify-between gap-2 text-sm text-muted-foreground">
+        <div key={item.id} className="flex grow break-inside-avoid flex-col gap-1">
+          <dt className="flex items-start justify-between gap-2 text-sm whitespace-nowrap text-muted-foreground">
             {item.label}
             <InfoTip
               description={item.description}
@@ -47,7 +47,7 @@ export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }
             />
           </dt>
           {/* A list under Todas reads one element a line. */}
-          <dd className="text-base whitespace-pre-line">{item.value}</dd>
+          <dd className="text-base whitespace-pre">{item.value}</dd>
         </div>
       ))}
     </dl>

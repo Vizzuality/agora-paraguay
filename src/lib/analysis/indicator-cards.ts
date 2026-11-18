@@ -73,7 +73,9 @@ export function combinedParcel(
   // A list column reads as each element with the number of parcels that carry it, one a line.
   const lists = listCounts(parcels);
   for (const [column, counts] of Object.entries(lists)) {
-    properties[column] = counts.map(([element, count]) => `${element} (${count})`).join('\n');
+    properties[column] = counts
+      .map(([element, count]) => `${element} (${count} ${count === 1 ? 'parcela' : 'parcelas'})`)
+      .join('\n');
   }
   const combinedLists = Object.fromEntries(
     Object.entries(lists).map(([column, counts]) => [column, counts.map(([element]) => element)]),

@@ -178,7 +178,11 @@ describe('indicatorCards', () => {
     );
 
     expect(generalInfo(todas, [zafras])).toEqual([
-      { id: 'Zafras_soja', label: 'Zafras', value: '2017-2018 (3)\n2018-2019 (1)\n2024-2025 (1)' },
+      {
+        id: 'Zafras_soja',
+        label: 'Zafras',
+        value: '2017-2018 (3 parcelas)\n2018-2019 (1 parcela)\n2024-2025 (1 parcela)',
+      },
     ]);
   });
 

@@ -130,10 +130,10 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(
     info.getByRole('button', { name: 'Más información sobre Listado de Zafras de soja' }),
   ).toBeVisible();
-  const zafras = info.getByRole('definition').filter({ hasText: '2022-2023 (2)' });
+  const zafras = info.getByRole('definition').filter({ hasText: '2022-2023 (2 parcelas)' });
   await expect(zafras).not.toContainText(',');
   expect(await zafras.innerText()).toBe(
-    '2017-2018 (1)\n2018-2019 (1)\n2019-2020 (1)\n2020-2021 (1)\n2022-2023 (2)\n2023-2024 (1)\n2024-2025 (1)',
+    '2017-2018 (1 parcela)\n2018-2019 (1 parcela)\n2019-2020 (1 parcela)\n2020-2021 (1 parcela)\n2022-2023 (2 parcelas)\n2023-2024 (1 parcela)\n2024-2025 (1 parcela)',
   );
 
   // The arroz indicator belongs to the other crop: no widget.
