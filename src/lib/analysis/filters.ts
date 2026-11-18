@@ -19,18 +19,20 @@ export const SOWING_DATE_FILTER_ID = 'sowing_date';
 export const DATE_FILTER_ID = 'date';
 
 /**
- * Productivo's year: the AI summary needs it and it names the projection's base. Not a
- * field: it is always the current year.
+ * Productivo's year: the AI summary needs it and it names the projection's base. Always
+ * the current year, shown but not picked.
  */
 export const YEAR_FILTER_ID = 'year';
 
-/** How the hero lays the filters out: the sowing date, then the date it must come before, then the crop. */
-const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, CROP_FILTER_ID];
+/**
+ * How the hero lays the filters out: the sowing date, then the date it must come before
+ * (productivo's is the `year`), then the crop.
+ */
+const HERO_FILTER_ORDER = [SOWING_DATE_FILTER_ID, DATE_FILTER_ID, YEAR_FILTER_ID, CROP_FILTER_ID];
 
 /**
- * The hero's fields in its order rather than the API's: the two dates first, the crop
- * last. Anything the API adds beyond those follows, in its order. The year is left out:
- * the user does not pick it.
+ * The filters in the hero's order rather than the API's: the dates (or the year) first,
+ * the crop last. Anything the API adds beyond those follows, in its order.
  */
 export function orderHeroFilters(filters: Filters): Filters {
   const rank = (filter: Filter) => {
@@ -39,12 +41,12 @@ export function orderHeroFilters(filters: Filters): Filters {
     return index === -1 ? HERO_FILTER_ORDER.length : index;
   };
 
-  return filters.filter((filter) => filter.id !== YEAR_FILTER_ID).sort((a, b) => rank(a) - rank(b));
+  return [...filters].sort((a, b) => rank(a) - rank(b));
 }
 
 /**
  * Whether a hero field takes a whole row of the two-column grid: only an odd last one
- * (the crop after sanitario's two dates, or productivo's crop alone), so an even set pairs up.
+ * (sanitario's crop after its two dates), so an even set (productivo's year and crop) pairs up.
  */
 export function heroFieldSpansRow(index: number, count: number): boolean {
   return count % 2 === 1 && index === count - 1;

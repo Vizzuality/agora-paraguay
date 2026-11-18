@@ -72,6 +72,11 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   const filters = page.getByRole('region', { name: 'Cultivo y fechas' });
   await filters.getByRole('button', { name: /Cultivo y fechas/ }).click();
   await expect(filters.getByRole('combobox', { name: 'Tipo de cultivo' })).toBeVisible();
+  // The year is shown, not picked: the current one, read-only, and no dropdown for it.
+  const year = filters.getByRole('textbox', { name: 'Año' });
+  await expect(year).toHaveValue(YEAR);
+  await expect(year).toHaveAttribute('readonly', '');
+  await expect(filters.getByRole('combobox', { name: 'Año' })).toHaveCount(0);
   await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
 
