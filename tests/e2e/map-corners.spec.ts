@@ -45,3 +45,20 @@ test('the panel map keeps credits and scale top left, zoom bottom right', async 
 
   await expectCorners(page, page.locator('.maplibregl-map').first());
 });
+
+test('opening the credits covers the scale without moving it', async ({ page }) => {
+  await page.goto('/analisis/sanitario');
+  const map = page.locator('.maplibregl-map').first();
+  const scale = map.locator('.maplibregl-ctrl-scale');
+  const before = (await scale.boundingBox())!;
+
+  await map.getByRole('button', { name: /attribution/i }).click();
+  await expect(map.locator('.maplibregl-compact-show')).toBeVisible();
+
+  expect(await scale.boundingBox()).toEqual(before);
+  const topmost = await page.evaluate(
+    ([x, y]) => !!document.elementFromPoint(x, y)?.closest('.maplibregl-ctrl-attrib'),
+    [before.x + before.width / 2, before.y + before.height / 2],
+  );
+  expect(topmost).toBe(true);
+});

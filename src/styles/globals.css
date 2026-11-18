@@ -328,12 +328,25 @@ html.paper-layout body {
   background-color: var(--background);
 }
 
-/* Open, the credits read beside the ⓘ. */
+/* Open, the credits read beside the ⓘ, over the scale. */
 .maplibregl-map .maplibregl-ctrl-top-left > .maplibregl-ctrl-attrib.maplibregl-compact-show {
+  z-index: 1;
   padding: 6px 12px 6px 36px;
   border-radius: 16px;
 }
 
+/* The scale is pinned beside the closed ⓘ, so opening the credits covers it. */
+@media screen {
+  .maplibregl-map .maplibregl-ctrl-top-left > .maplibregl-ctrl-scale {
+    position: absolute;
+    top: 16px;
+    left: 40px;
+    translate: 0 -50%;
+  }
+}
+
+/* No tint when open: the ⓘ keeps the panel's colour. */
+.maplibregl-map .maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-button,
 .maplibregl-map .maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
   top: 0;
   left: 0;
