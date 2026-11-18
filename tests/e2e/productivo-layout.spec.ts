@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { EAST_PARCEL_ID, stubFilterParcels, WEST_PARCEL_ID } from './fixtures/api';
 import { analyseOnRedesign } from './fixtures/redesign';
 
 /** The projection's base is named by the current year. */
@@ -143,6 +144,60 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await todas.click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 });
+
+test('Tipo de cultivo starts at the crop the parcels in view last grew', async ({ page }) => {
+  const crops: (string | undefined)[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/parcels/analysis/production/') {
+      crops.push((request.postDataJSON() as { crop_type?: string }).crop_type);
+    }
+  });
+  await analyseOnRedesign(page, '/analisis/productivo', (target) =>
+    stubFilterParcels(target, { [WEST_PARCEL_ID]: 'Soja', [EAST_PARCEL_ID]: 'Arroz' }),
+  );
+  await loginAtGate(page);
+
+  // One settings section is open at a time: Cultivo y fechas holds the crop, Área de
+  // interés the parcel tabs, and opening one closes the other.
+  const crop = page
+    .getByRole('region', { name: 'Cultivo y fechas' })
+    .getByRole('combobox', { name: 'Tipo de cultivo' });
+  const pickParcel = async (name: string) => {
+    await openSection(page, 'Área de interés');
+    await page
+      .getByRole('region', { name: 'Área de interés' })
+      .getByRole('combobox', { name: 'Parcela' })
+      .click();
+    await page.getByRole('option', { name }).click();
+  };
+
+  // Under Todas one soy parcel and one rice parcel tie: soy, the platform's default.
+  await openSection(page, 'Cultivo y fechas');
+  await expect(crop).toHaveText('Soja');
+
+  // The east parcel last grew rice: its tab starts there, and the analysis asks for rice.
+  await pickParcel('Parcela 2');
+  await expect.poll(() => crops.at(-1)).toBe('rice');
+  await openSection(page, 'Cultivo y fechas');
+  await expect(crop).toHaveText('Arroz');
+
+  // A pick outlasts the default.
+  await crop.click();
+  await page.getByRole('option', { name: 'Soja' }).click();
+  await pickParcel('Parcela 1');
+  await pickParcel('Parcela 2');
+  await openSection(page, 'Cultivo y fechas');
+  await expect(crop).toHaveText('Soja');
+});
+
+/** Opens a settings section unless it already is (its trigger would close it). */
+async function openSection(page: Page, name: string) {
+  const trigger = page
+    .getByRole('region', { name })
+    .getByRole('button', { name: new RegExp(`^${name}`) });
+  if ((await trigger.getAttribute('aria-expanded')) !== 'true') await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+}
 
 test('Generar resumen asks for the open selection, then for one parcel', async ({ page }) => {
   let releaseSummary!: () => void;

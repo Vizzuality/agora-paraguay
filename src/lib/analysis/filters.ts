@@ -1,5 +1,5 @@
 import { formatIsoDate } from '@/lib/analysis/describe';
-import { DEFAULT_CROP, type Filter, type Filters } from '@/lib/api/metadata/schemas';
+import { type Crop, DEFAULT_CROP, type Filter, type Filters } from '@/lib/api/metadata/schemas';
 
 /**
  * The analysis hero fields: one per filter `GET /api/parcels/filters/` returns, keyed by
@@ -106,18 +106,20 @@ export function dateBounds(
 /**
  * Every filter resolved to what the hero displays and Analizar sends. The year is the
  * current one, whatever was picked or offered. A category keeps a pick still among its
- * options, else takes the first one (the crop `DEFAULT_CROP` when offered). A date keeps whatever was typed, else its default (`dateDefault`), moved into
- * the accepted range; then a sowing date on or after the date moves to the day before it.
+ * options, else takes the first one; the crop takes `defaultCrop` when offered, then
+ * `DEFAULT_CROP`. A date keeps whatever was typed, else its default (`dateDefault`), moved
+ * into the accepted range; then a sowing date on or after the date moves to the day before it.
  * A category with no options is left out, so the request omits it.
  */
 export function resolveFilterSelection(
   selected: AnalysisFilterSelection,
   filters: Filters,
+  defaultCrop: Crop = DEFAULT_CROP,
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
 
   for (const filter of filters) {
-    const value = resolveFilter(filter, selected[filter.id]);
+    const value = resolveFilter(filter, selected[filter.id], defaultCrop);
 
     if (value !== undefined) resolved[filter.id] = value;
   }
@@ -126,7 +128,11 @@ export function resolveFilterSelection(
 }
 
 /** One filter's value, as `resolveFilterSelection` describes; `undefined` leaves it out. */
-function resolveFilter(filter: Filter, pick: string | undefined): string | undefined {
+function resolveFilter(
+  filter: Filter,
+  pick: string | undefined,
+  defaultCrop: Crop,
+): string | undefined {
   if (filter.id === YEAR_FILTER_ID) return todayIso().slice(0, 4);
 
   const field = filter.field_type;
@@ -141,7 +147,9 @@ function resolveFilter(filter: Filter, pick: string | undefined): string | undef
 
   if (pick !== undefined && values.includes(pick)) return pick;
 
-  return filter.id === CROP_FILTER_ID && values.includes(DEFAULT_CROP) ? DEFAULT_CROP : values[0];
+  if (filter.id !== CROP_FILTER_ID) return values[0];
+
+  return [defaultCrop, DEFAULT_CROP].find((crop) => values.includes(crop)) ?? values[0];
 }
 
 /** Moves a sowing date on or after the date to the day before it; the backend rejects that pair. */
