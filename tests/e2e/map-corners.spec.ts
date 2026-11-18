@@ -56,6 +56,12 @@ test('opening the credits covers the scale without moving it', async ({ page }) 
   await expect(map.locator('.maplibregl-compact-show')).toBeVisible();
 
   expect(await scale.boundingBox()).toEqual(before);
+
+  // Same 8px inset at both ends as the closed disc: 8 + 16px icon + 8 before the text.
+  const credits = (await map.locator('.maplibregl-compact-show').boundingBox())!;
+  const text = (await map.locator('.maplibregl-ctrl-attrib-inner').boundingBox())!;
+  expect(text.x - credits.x).toBe(32);
+  expect(credits.x + credits.width - (text.x + text.width)).toBeCloseTo(8, 0);
   const topmost = await page.evaluate(
     ([x, y]) => !!document.elementFromPoint(x, y)?.closest('.maplibregl-ctrl-attrib'),
     [before.x + before.width / 2, before.y + before.height / 2],

@@ -328,10 +328,11 @@ html.paper-layout body {
   background-color: var(--background);
 }
 
-/* Open, the credits read beside the ⓘ, over the scale. */
+/* Open, the credits read beside the ⓘ, over the scale. Both ends keep the closed disc's
+   8px inset: icon 8px from the left edge, then 8px to the text, text 8px from the right. */
 .maplibregl-map .maplibregl-ctrl-top-left > .maplibregl-ctrl-attrib.maplibregl-compact-show {
   z-index: 1;
-  padding: 6px 12px 6px 36px;
+  padding: 6px 8px 6px 32px;
   border-radius: 16px;
 }
 
