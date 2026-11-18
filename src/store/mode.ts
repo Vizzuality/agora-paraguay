@@ -39,7 +39,7 @@ export const backToSelectionAtom = atom(null, (_get, set) => {
 
 /**
  * The redesign shows the analysis in place of the selection map (no `/analisis` to land
- * on): analysing, with parcels analysed. Editar parcelas (`backToSelectionAtom`) flips it
+ * on): analysing, with parcels analysed. Nuevo análisis (`backToSelectionAtom`) flips it
  * back with the parcels kept.
  */
 export const analysedViewAtom = atom(

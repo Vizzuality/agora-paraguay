@@ -5,7 +5,7 @@ import {
 } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
-import { isAreaIndicator } from './area';
+import { AREA_INDICATOR_ID, isAreaIndicator } from './area';
 import { asReading, isNoReading, isUnreadable, readingOf, type Reading } from './readings';
 import {
   categoryAxis,
@@ -64,16 +64,54 @@ export function combinedParcel(
 
     if (readings.length === 0) continue;
 
-    properties[column] = combineReadings(readings, typeOf.get(column.toLowerCase()));
+    properties[column] =
+      column.toLowerCase() === AREA_INDICATOR_ID
+        ? readings.reduce<number>((sum, reading) => sum + Number(reading), 0)
+        : combineReadings(readings, typeOf.get(column.toLowerCase()));
   }
+
+  // A list column reads as each element with the number of parcels that carry it, one a line.
+  const lists = listCounts(parcels);
+  for (const [column, counts] of Object.entries(lists)) {
+    properties[column] = counts
+      .map(([element, count]) => `${element} (${count} ${count === 1 ? 'parcela' : 'parcelas'})`)
+      .join('\n');
+  }
+  const combinedLists = Object.fromEntries(
+    Object.entries(lists).map(([column, counts]) => [column, counts.map(([element]) => element)]),
+  );
 
   const unreadable = [...new Set(parcels.flatMap((parcel) => parcel.unreadable ?? []))].filter(
     (column) => !(column in properties),
   );
 
-  return unreadable.length > 0
-    ? { parcel_id: COMBINED_PARCEL_ID, properties, unreadable }
-    : { parcel_id: COMBINED_PARCEL_ID, properties };
+  return {
+    parcel_id: COMBINED_PARCEL_ID,
+    properties,
+    ...(unreadable.length > 0 && { unreadable }),
+    ...(Object.keys(combinedLists).length > 0 && { lists: combinedLists }),
+  };
+}
+
+/** Per list column, each element and how many parcels carry it, sorted by element. */
+function listCounts(parcels: AnalysisParcel[]): Record<string, [string, number][]> {
+  const counts: Record<string, Map<string, number>> = {};
+
+  for (const parcel of parcels) {
+    for (const [column, elements] of Object.entries(parcel.lists ?? {})) {
+      const columnCounts = (counts[column] ??= new Map());
+      for (const element of new Set(elements)) {
+        columnCounts.set(element, (columnCounts.get(element) ?? 0) + 1);
+      }
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(counts).map(([column, byElement]) => [
+      column,
+      [...byElement].sort(([a], [b]) => a.localeCompare(b)),
+    ]),
+  );
 }
 
 function combineReadings(readings: (string | number)[], type: string | undefined): ParcelValue {
@@ -127,6 +165,10 @@ const PLURAL_LABELS: Record<string, string> = {
 /** A fact's heading: plural when the combined parcel lists several values for it. */
 function factLabel(parcel: AnalysisParcel, id: string, name: string, value: string): string {
   if (parcel.parcel_id !== COMBINED_PARCEL_ID) return name;
+  // A list column's counts name each element already.
+  if (Object.keys(parcel.lists ?? {}).some((column) => column.toLowerCase() === id.toLowerCase())) {
+    return name;
+  }
 
   const count = value.split(LIST_SEPARATOR).length;
   if (count < 2) return name;
@@ -160,6 +202,8 @@ export type GeneralInfoRow = {
   /** The metadata's description, behind the label's info icon. */
   description?: string;
   value: string;
+  /** A list indicator (`Zafras_soja`): its elements never break mid-element. */
+  list?: true;
 };
 
 /**
@@ -169,12 +213,14 @@ export type GeneralInfoRow = {
 export function isGeneralInfo(
   indicator: Indicator,
   riesgo: IndicatorsRiesgo = 'sanitario',
+  scope: ParcelScope = 'individual',
 ): boolean {
-  // A fact is a fact under any scope; the scope only moves the classed types.
+  // Text, lists and the area are facts under any scope; on productivo one parcel's
+  // Resiliencia joins them (`widgetFor`).
   return (
     widgetFor(indicator.indicator_type, {
       riesgo,
-      scope: 'individual',
+      scope,
       unit: indicator.unit,
       id: indicator.id,
     }) === 'fact'
@@ -255,11 +301,12 @@ export function generalInfo(
   parcel: AnalysisParcel | null | undefined,
   indicators: Indicators | undefined,
   riesgo: IndicatorsRiesgo = 'sanitario',
+  scope: ParcelScope = 'individual',
 ): GeneralInfoRow[] {
   if (!parcel || !indicators) return [];
 
   const known = indicators.flatMap((indicator) => {
-    if (!isGeneralInfo(indicator, riesgo) || isAreaIndicator(indicator)) return [];
+    if (!isGeneralInfo(indicator, riesgo, scope)) return [];
 
     const value = readingOf(parcel, indicator.id);
 
@@ -276,6 +323,7 @@ export function generalInfo(
         label: listed ? factLabel(parcel, indicator.id, indicator.name, text) : indicator.name,
         description: indicator.description,
         value: text,
+        ...(indicator.indicator_type.type === 'list' && { list: true as const }),
       },
     ];
   });

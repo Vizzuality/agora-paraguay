@@ -5,17 +5,17 @@ import { UserButton } from '@/components/auth/login-dialog';
 import { AccountMenu } from '@/components/frame/account-menu';
 import { Logo } from '@/components/logo';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
-import { startOverAtom } from '@/store/home';
+import { goHomeAtom } from '@/store/home';
 
 /** Logo on the left; theme switch and account on the right. Sits atop the settings column. */
 export function TopBar() {
   // Only written on a click, never read: safe outside `<ClientOnly>`.
-  const startOver = useSetAtom(startOverAtom);
+  const goHome = useSetAtom(goHomeAtom);
 
   return (
     <header className="flex w-full items-center justify-between print:hidden">
-      {/* Home is the initial state: Riesgo sanitario, nothing drawn, default camera. */}
-      <Link to="/" aria-label="Inicio" onClick={() => startOver()}>
+      {/* Home is the first screen: Riesgo sanitario, the selection with its parcels kept. */}
+      <Link to="/" aria-label="Inicio" onClick={() => goHome()}>
         <Logo className="h-[30px] w-auto text-primary" />
       </Link>
 

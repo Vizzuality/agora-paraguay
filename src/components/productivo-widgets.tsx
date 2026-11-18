@@ -17,7 +17,7 @@ export function ProductivoWidgets() {
   const { analysis, indicators, indicatorsError, parcel, scope, widgets, describe } =
     useRiesgoWidgets('productivo');
 
-  const info = generalInfo(parcel, indicators, 'productivo').map((row) => ({
+  const info = generalInfo(parcel, indicators, 'productivo', scope).map((row) => ({
     ...row,
     description: describe(row.description),
   }));

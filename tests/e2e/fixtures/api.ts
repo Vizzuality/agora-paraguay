@@ -36,7 +36,7 @@ export const PRODUCTIVO_FILTERS = [
  * The indicator lists `GET /api/parcels/indicators?riesgo={sanitario|productivo}` answers, with the ids the
  * analysis stub has columns for. Ids and names are what the specs look for.
  */
-/** The parcel area, answered as one more column; the thumbnail prints it, never a card. */
+/** The parcel area, answered as one more column: a context fact, summed under Todas, never a card. */
 const AREA_INDICATOR = {
   id: 'area',
   name: 'Área',
@@ -71,14 +71,28 @@ export const SANITARIO_INDICATORS = [
 /** Seasons of soy detected per parcel (0–8): west, then east. */
 export const PARCEL_SEASONS: Record<string, number> = { D07D21P00000002: 5, D07D23P00000008: 3 };
 
+/** The soy seasons behind each count, as the backend lists them: west five, east three. */
+export const PARCEL_ZAFRAS: Record<string, string[]> = {
+  D07D21P00000002: ['2017-2018', '2018-2019', '2019-2020', '2020-2021', '2022-2023'],
+  D07D23P00000008: ['2022-2023', '2023-2024', '2024-2025'],
+};
+
 /** The two parcels `filter-parcels` answers for any drawing: west half, east half. */
 export const WEST_PARCEL_ID = 'D07D21P00000002';
 export const EAST_PARCEL_ID = 'D07D23P00000008';
 
-// No area here, as in the live list: the thumbnail reads it from the sanitario analysis.
 export const PRODUCTIVO_INDICATORS = [
   // The crop filter echoed into the list, as on sanitario: a fact for Información de contexto.
   HERO_FILTERS[0],
+  AREA_INDICATOR,
+  {
+    id: 'Zafras_soja',
+    name: 'Listado de Zafras de soja',
+    description: 'Qué años de Zafra soja ha habido exactamente.',
+    unit: null,
+    default: true,
+    indicator_type: { type: 'list' },
+  },
   {
     id: 'Resiliencia',
     name: 'Proxy de resiliencia operativa',
@@ -286,12 +300,13 @@ export async function stubAnalysisApi(page: Page) {
       // (`Asian_rust`).
       const { indicators } = route.request().postDataJSON() as { indicators: string[] };
       const answer = (parcelId: string, rust: number) => {
-        const columns: Record<string, string | number> = {
+        const columns: Record<string, string | number | string[]> = {
           crop_type: 'Soja',
           area: PARCEL_AREAS[parcelId],
           Asian_rust: rust,
           Pro_soja: PARCEL_PRODUCTION[parcelId],
           N_soja: PARCEL_SEASONS[parcelId],
+          Zafras_soja: PARCEL_ZAFRAS[parcelId],
           ...PARCEL_PROJECTIONS[parcelId],
           // The selection is soy: the arroz indicator does not apply, the backend says NA.
           Pro_arroz: 'NA',

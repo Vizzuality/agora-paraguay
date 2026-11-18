@@ -142,11 +142,85 @@ describe('indicatorCards', () => {
     ]);
   });
 
-  it('keeps the area out of the cards and the facts: it is the thumbnail figure', () => {
+  it('lists the area among the facts, never as a card', () => {
     const p = parcel({ Area: 10.2, asian_rust: 1 });
 
     expect(indicatorCards(p, [area, asianRust]).map((card) => card.id)).toEqual(['asian_rust']);
-    expect(generalInfo(p, [area, asianRust])).toEqual([]);
+    expect(generalInfo(p, [area, asianRust])).toEqual([
+      { id: 'area', label: 'Área', value: '10,2 ha' },
+    ]);
+  });
+
+  it('sums the area under Todas, where other numbers average', () => {
+    const todas = combinedParcel([parcel({ area: 10 }), parcel({ area: 5.5 })], [area]);
+
+    expect(generalInfo(todas, [area])).toEqual([{ id: 'area', label: 'Área', value: '15,5 ha' }]);
+  });
+
+  it('counts the parcels per element of a list column under Todas, sorted', () => {
+    const zafras: Indicator = {
+      id: 'Zafras_soja',
+      name: 'Zafras',
+      indicator_type: { type: 'text' },
+    };
+    const listed = (id: string, seasons: string[]): AnalysisParcel => ({
+      parcel_id: id,
+      properties: { Zafras_soja: seasons.join(', ') },
+      lists: { Zafras_soja: seasons },
+    });
+    const todas = combinedParcel(
+      [
+        listed('A', ['2018-2019', '2017-2018']),
+        listed('B', ['2017-2018']),
+        listed('C', ['2024-2025', '2017-2018']),
+      ],
+      [zafras],
+    );
+
+    expect(generalInfo(todas, [zafras])).toEqual([
+      {
+        id: 'Zafras_soja',
+        label: 'Zafras',
+        value: '2017-2018 (3 parcelas)\n2018-2019 (1 parcela)\n2024-2025 (1 parcela)',
+      },
+    ]);
+  });
+
+  it('productivo: Resiliencia joins the facts on a parcel tab only; the seasons list always, the counter never', () => {
+    const resilience: Indicator = {
+      id: 'Resiliencia',
+      name: 'Resiliencia',
+      indicator_type: { type: 'category', categories: ['Alta', 'Media', 'Baja'] },
+    };
+    const seasons: Indicator = {
+      id: 'N_soja',
+      name: 'Contador de zafras',
+      indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
+    };
+    const zafras: Indicator = {
+      id: 'Zafras_soja',
+      name: 'Zafras',
+      indicator_type: { type: 'list' },
+    };
+    const p = parcel({ Resiliencia: 'Media', N_soja: 3, Zafras_soja: '2019-2020, 2021-2022' });
+    const list = [resilience, seasons, zafras];
+
+    expect(
+      generalInfo(p, list, 'productivo', 'individual').map(({ id, value }) => [id, value]),
+    ).toEqual([
+      ['Resiliencia', 'Media'],
+      ['Zafras_soja', '2019-2020, 2021-2022'],
+    ]);
+    expect(generalInfo(p, list, 'productivo', 'multiple').map(({ id }) => id)).toEqual([
+      'Zafras_soja',
+    ]);
+    // Only the list indicator is flagged, so its elements render unbroken.
+    expect(
+      generalInfo(p, list, 'productivo', 'individual').map(({ id, list: isList }) => [id, isList]),
+    ).toEqual([
+      ['Resiliencia', undefined],
+      ['Zafras_soja', true],
+    ]);
   });
 
   it('keeps metadata order, not column order', () => {
