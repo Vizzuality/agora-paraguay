@@ -28,16 +28,13 @@ function PointReading({ point, unit }: Readonly<{ point: ProjectionPoint; unit: 
   const suffix = unit ? ` ${unit}` : '';
   const rows = [
     ['Optimista', point.high],
-    ['Central', point.mid],
+    ['Neutro', point.mid],
     ['Pesimista', point.low],
   ] as const;
 
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="font-medium">
-        {point.label}
-        {point.year && ` (${point.year})`}
-      </p>
+      <p className="font-medium">{point.label}</p>
       {rows.map(([name, value]) => (
         <p key={name}>
           {name}: {formatNumber(value)}
@@ -48,7 +45,7 @@ function PointReading({ point, unit }: Readonly<{ point: ProjectionPoint; unit: 
   );
 }
 
-/** The pessimist–optimist band and the central line over the points, on a t/ha axis. */
+/** The pessimist–optimist band and the neutral line over the points, on a t/ha axis. */
 export function ProjectionBand({ points, min, max, ticks, unit }: Readonly<ProjectionBandProps>) {
   return (
     <Responsive>
