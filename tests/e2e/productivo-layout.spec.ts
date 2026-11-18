@@ -159,11 +159,10 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // A parcel tab goes back to columns: the widgets narrow below the full width.
   const parcelBox = await production.boundingBox();
   expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
-  await parcel.click();
-  // Todas stays pinned on top while the parcels scroll under it.
-  const todas = page.getByRole('option', { name: 'Todas' });
-  await expect(todas).toHaveCSS('position', 'sticky');
-  await todas.click();
+  await page
+    .getByRole('region', { name: 'Área de interés' })
+    .getByRole('button', { name: 'Todas' })
+    .click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 });
 
@@ -317,7 +316,7 @@ test('Exportar informe lays the report out in one column, every chart inside its
   }
 
   // The área prints open: its map with the legend's rows and the credits written out,
-  // the parcel named in the heading in place of the picker and Editar parcelas.
+  // the parcel named in the heading in place of the picker, Todas and Nuevo análisis.
   const area = settings.getByRole('region', { name: 'Área de interés' });
   await expect(area.getByRole('button', { name: /^Área de interés/ })).toHaveAttribute(
     'aria-expanded',
@@ -328,7 +327,7 @@ test('Exportar informe lays the report out in one column, every chart inside its
     'Área de interés - Todas',
   );
   await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
-  await expect(area.getByRole('button', { name: 'Editar parcelas' })).toBeHidden();
+  await expect(area.getByRole('button', { name: 'Nuevo análisis' })).toBeHidden();
   await expect(area.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
   await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
   await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
