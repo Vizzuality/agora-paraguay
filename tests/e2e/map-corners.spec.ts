@@ -63,6 +63,10 @@ test('opening the credits covers the scale without moving it', async ({ page }) 
   const text = (await map.locator('.maplibregl-ctrl-attrib-inner').boundingBox())!;
   expect(text.x - credits.x).toBe(32);
   expect(credits.x + credits.width - (text.x + text.width)).toBeCloseTo(8, 0);
+
+  // As wide as the credits need, but never closer than 40px to the map's right edge.
+  const mapBox = (await map.boundingBox())!;
+  expect(credits.x + credits.width).toBeLessThanOrEqual(mapBox.x + mapBox.width - 40);
   const topmost = await page.evaluate(
     ([x, y]) => !!document.elementFromPoint(x, y)?.closest('.maplibregl-ctrl-attrib'),
     [before.x + before.width / 2, before.y + before.height / 2],
