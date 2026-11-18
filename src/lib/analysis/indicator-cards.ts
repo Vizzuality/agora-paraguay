@@ -202,6 +202,8 @@ export type GeneralInfoRow = {
   /** The metadata's description, behind the label's info icon. */
   description?: string;
   value: string;
+  /** A list indicator (`Zafras_soja`): its elements never break mid-element. */
+  list?: true;
 };
 
 /**
@@ -321,6 +323,7 @@ export function generalInfo(
         label: listed ? factLabel(parcel, indicator.id, indicator.name, text) : indicator.name,
         description: indicator.description,
         value: text,
+        ...(indicator.indicator_type.type === 'list' && { list: true as const }),
       },
     ];
   });

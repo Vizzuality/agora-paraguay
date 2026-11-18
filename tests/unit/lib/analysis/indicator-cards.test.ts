@@ -214,6 +214,13 @@ describe('indicatorCards', () => {
     expect(generalInfo(p, list, 'productivo', 'multiple').map(({ id }) => id)).toEqual([
       'Zafras_soja',
     ]);
+    // Only the list indicator is flagged, so its elements render unbroken.
+    expect(
+      generalInfo(p, list, 'productivo', 'individual').map(({ id, list: isList }) => [id, isList]),
+    ).toEqual([
+      ['Resiliencia', undefined],
+      ['Zafras_soja', true],
+    ]);
   });
 
   it('keeps metadata order, not column order', () => {
