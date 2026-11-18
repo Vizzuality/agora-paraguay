@@ -77,6 +77,8 @@ export const EAST_PARCEL_ID = 'D07D23P00000008';
 
 // No area here, as in the live list: the thumbnail reads it from the sanitario analysis.
 export const PRODUCTIVO_INDICATORS = [
+  // The crop filter echoed into the list, as on sanitario: a fact for Información de contexto.
+  HERO_FILTERS[0],
   {
     id: 'Resiliencia',
     name: 'Proxy de resiliencia operativa',

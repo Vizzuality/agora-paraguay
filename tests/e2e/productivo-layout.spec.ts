@@ -62,6 +62,11 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
     main.getByRole('heading', { name: /^Producción proyectada (LOW|MID|HIGH)/ }),
   ).toHaveCount(0);
 
+  // The text facts share one context card, as on sanitario.
+  const context = main.getByRole('heading', { name: 'Información de contexto' }).locator('..');
+  await expect(context).toContainText('Tipo de cultivo');
+  await expect(context).toContainText('Soja');
+
   // Productivo keeps the picker out of Cultivo y fechas.
   const filters = page.getByRole('region', { name: 'Cultivo y fechas' });
   await filters.getByRole('button', { name: /Cultivo y fechas/ }).click();
