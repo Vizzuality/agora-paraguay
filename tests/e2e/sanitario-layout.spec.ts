@@ -202,3 +202,27 @@ test('shows a loader while a filter change re-runs the analysis', async ({ page 
   release();
   await expect(status).toHaveCount(0);
 });
+
+test('the first analysis waits in a bordered frame as tall as the map it replaces', async ({
+  page,
+}) => {
+  let release: () => void = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await analyseOnRedesign(page, '/analisis/sanitario', (target) =>
+    target.route('**/api/parcels/analysis/diseases/', async (route) => {
+      await held;
+      await route.fallback();
+    }),
+  );
+
+  const status = page.getByRole('status').filter({ hasText: 'Analizando…' });
+  await expect(status).toBeVisible();
+  await expect(status).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(status).toHaveCSS('border-top-width', '3px');
+  const viewport = page.viewportSize()!;
+  const box = (await status.boundingBox())!;
+  expect(Math.abs(box.height - (viewport.height - 80))).toBeLessThan(2);
+
+  release();
+  await expect(status).toHaveCount(0);
+});
