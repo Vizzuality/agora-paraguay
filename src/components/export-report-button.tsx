@@ -26,22 +26,24 @@ export function ExportReportButton({
   // A report printed mid-generation would go out without the summary: wait for it.
   const generatingSummary =
     useIsMutating({ mutationKey: analysisMutations.summary().mutationKey }) > 0;
+  const blocked = blockedReason(loadingIndicators, generatingSummary);
 
   return (
     <Button
       className={className}
-      disabled={loadingIndicators || generatingSummary}
-      title={
-        loadingIndicators
-          ? 'Espere a que terminen de cargar los indicadores'
-          : generatingSummary
-            ? 'Espere a que termine el resumen del análisis'
-            : undefined
-      }
+      disabled={blocked !== undefined}
+      title={blocked}
       onClick={() => printReport(reportFileName(riesgo, new Date()), store)}
     >
       <Upload aria-hidden />
       Exportar informe
     </Button>
   );
+}
+
+/** Why the report cannot go out yet, as the button's title; `undefined` when it can. */
+function blockedReason(loadingIndicators: boolean, generatingSummary: boolean) {
+  if (loadingIndicators) return 'Espere a que terminen de cargar los indicadores';
+  if (generatingSummary) return 'Espere a que termine el resumen del análisis';
+  return undefined;
 }
