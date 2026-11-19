@@ -16,7 +16,7 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   const login = page.getByRole('dialog', { name: 'Área privada' });
   await expect(login).toBeVisible();
   await expect(main.getByRole('heading', { name: 'Área privada' })).toHaveCount(0);
-  await expect(main.getByRole('button', { name: 'Exportar informe' })).toHaveCount(0);
+  await expect(main.getByRole('button', { name: 'Exportar informe' }).first()).toHaveCount(0);
 
   // Stubbed login (`stubAuth`): any credentials open the analysis in place.
   await login.getByLabel('Email').fill('analista@example.com');
@@ -25,8 +25,10 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   await expect(login).toBeHidden();
 
   // Personalizar indicadores beside Exportar informe, then the widgets.
-  await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
-  await expect(main.getByRole('button', { name: 'Exportar informe' })).toBeEnabled();
+  await expect(
+    main.getByRole('button', { name: 'Personalizar indicadores' }).first(),
+  ).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Exportar informe' }).first()).toBeEnabled();
   await expect(
     main.getByRole('heading', { name: 'Producción base histórica de soja' }),
   ).toBeVisible();
@@ -64,7 +66,7 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   ).toHaveCount(0);
 
   // Personalizar lists the projection as one row, not six; unticking it drops the chart.
-  await main.getByRole('button', { name: 'Personalizar indicadores' }).click();
+  await main.getByRole('button', { name: 'Personalizar indicadores' }).first().click();
   const indicators = page.getByRole('list', { name: 'Indicadores' });
   await expect(indicators.getByText(/^Producción proyectada/)).toHaveText([
     'Producción proyectada a 5 y 10 años',
@@ -75,8 +77,9 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   await expect(projection.getByRole('listitem')).toHaveCount(3);
   await page.keyboard.press('Escape');
 
-  // The text facts share one context card, as on sanitario.
-  const context = main.getByRole('heading', { name: 'Información de contexto' }).locator('..');
+  // The text facts share one context card, as on sanitario; under Todas it heads the
+  // Información de contexto section, which titles it.
+  const context = main.getByRole('region', { name: 'Información de contexto' }).locator('dl');
   await expect(context).toContainText('Tipo de cultivo');
   await expect(context).toContainText('Soja');
 
@@ -118,6 +121,10 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
   const resilience = widget(page, 'Proxy de resiliencia operativa');
   await expect(resilience.getByRole('listitem').filter({ hasText: /^Media: 2$/ })).toHaveCount(1);
+  // Resiliencia is context: under Todas it sits in Información de contexto, after the facts.
+  await expect(page.getByRole('region', { name: 'Información de contexto' })).toContainText(
+    'Proxy de resiliencia operativa',
+  );
   // The projection chart is future, so it follows the agnostic and historic widgets; under
   // Todas every widget takes the full width.
   const projection = widget(
@@ -132,6 +139,7 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   expect(todasBoxes[0]!.width).toBe(todasBoxes[1]!.width);
   // Each category's run sits under its title: historic, then projected.
   await expect(page.getByRole('heading', { level: 2 })).toHaveText([
+    'Información de contexto',
     'Análisis histórico de productividad',
     'Análisis de productividad proyectada',
   ]);
@@ -142,7 +150,8 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
   // Información de contexto sums the area and counts the parcels per soy season, one a
   // line, under the indicator's name with its description.
-  const info = page.getByRole('heading', { name: 'Información de contexto' }).locator('..');
+  // The facts list itself: under Todas the section titles it, on a parcel the card does.
+  const info = page.getByRole('main').locator('dl');
   await expect(info).toContainText('17,5 ha');
   await expect(
     info.getByRole('term').filter({ hasText: 'Listado de Zafras de soja' }),
@@ -350,7 +359,7 @@ test('Exportar informe lays the report out in one column, every chart inside its
   await loginAtGate(page);
 
   const main = page.getByRole('main');
-  await main.getByRole('button', { name: 'Exportar informe' }).click();
+  await main.getByRole('button', { name: 'Exportar informe' }).first().click();
   await expect(page.locator('html.paper-layout')).toHaveCount(1);
 
   // The settings stack above the content, which takes the paper's width (194mm).

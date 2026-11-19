@@ -17,7 +17,12 @@ test('an unknown URL gets the 404 page, bare, with a way back', async ({ page })
   await expect(page.getByRole('contentinfo')).toHaveCount(0);
 
   await page.getByRole('link', { name: 'Volver al inicio' }).click();
-  // `/` opens Riesgo sanitario on its Área de interés.
-  await expect(page).toHaveURL(/\/analisis\/sanitario/);
-  await expect(page.getByRole('region', { name: 'Área de interés' })).toBeVisible();
+  // `/` opens the first screen: Exposición climática, the analysis types open.
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
+  await expect(
+    page.getByRole('region', { name: 'Tipo de análisis' }).getByRole('button', {
+      name: /Tipo de análisis/,
+    }),
+  ).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
 });

@@ -1,9 +1,16 @@
+import type { ReactNode } from 'react';
+
+import { AnalysisActions } from '@/components/analysis-actions';
 import { AnalysisPanel } from '@/components/analysis-panel';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { WidgetGrid } from '@/components/widget-grid';
-import { widgetGroups } from '@/lib/analysis/analysis-widgets';
+import {
+  CATEGORY_TITLES,
+  widgetGroups,
+  type AnalysisWidget,
+} from '@/lib/analysis/analysis-widgets';
 import { generalInfo } from '@/lib/analysis/indicator-cards';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
 
@@ -13,6 +20,10 @@ import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
  * category counts them per class; on a parcel tab the number is that parcel's figure on
  * the same scale and the category reads its class on the ruler. Shared by
  * `/analisis/productivo` and the redesign. Reads atoms: render inside `<ClientOnly>`.
+ *
+ * Under Todas, Información de contexto is a titled section: the facts, then the context
+ * widgets (`isContextIndicator`). On one parcel those widgets are facts, so the facts card
+ * stands alone, titled in itself.
  */
 export function ProductivoWidgets() {
   const { analysis, indicators, indicatorsError, parcel, scope, widgets, describe } =
@@ -22,6 +33,10 @@ export function ProductivoWidgets() {
     ...row,
     description: describe(row.description),
   }));
+  const groups = widgetGroups(widgets, indicators, 'productivo');
+  const context = groups.find((group) => group.key === 'context');
+  const rest = groups.filter((group) => group !== context);
+  const stacked = scope === 'multiple';
 
   return (
     // Fills the content column, so the first-run frame can take the height left.
@@ -30,24 +45,54 @@ export function ProductivoWidgets() {
       {/* Nothing to show before the first answer: no empty panel (and gap) under the frame. */}
       {analysis.data && (
         <AnalysisPanel busy={analysis.isPlaceholderData}>
-          {info.length > 0 && <GeneralInfoCard items={info} />}
+          {scope === 'multiple' ? (
+            <CategorySection title={CATEGORY_TITLES.context}>
+              {info.length > 0 && <GeneralInfoCard items={info} titled={false} />}
+              {context && <Widgets widgets={context.widgets} stacked={stacked} />}
+            </CategorySection>
+          ) : (
+            info.length > 0 && <GeneralInfoCard items={info} />
+          )}
           {/* One titled run per category: historic, then projected. */}
-          {widgetGroups(widgets, indicators).map((group) => (
-            <section
-              key={group.key}
-              aria-label={group.title ?? undefined}
-              className="flex flex-col gap-4"
-            >
-              {group.title && <h2 className="text-lg font-medium">{group.title}</h2>}
-              <WidgetGrid stacked={scope === 'multiple'}>
-                {group.widgets.map((widget) => (
-                  <AnalysisWidgetCard key={widget.id} widget={widget} />
-                ))}
-              </WidgetGrid>
-            </section>
+          {rest.map((group) => (
+            <CategorySection key={group.key} title={group.title}>
+              <Widgets widgets={group.widgets} stacked={stacked} />
+            </CategorySection>
           ))}
         </AnalysisPanel>
       )}
+      {analysis.data && <AnalysisActions riesgo="productivo" />}
     </div>
+  );
+}
+
+/** A run of widgets under its uppercase title; untitled for the agnostic run. */
+function CategorySection({
+  title,
+  children,
+}: Readonly<{ title: string | null; children: ReactNode }>) {
+  return (
+    <section
+      aria-label={title ?? undefined}
+      // 32px between categories: the panel's 16px gap plus this margin.
+      className="flex flex-col gap-4 not-first:mt-4"
+    >
+      {title && (
+        <h2 className="text-base leading-4 font-normal tracking-[0.28px] text-foreground uppercase">
+          {title}
+        </h2>
+      )}
+      {children}
+    </section>
+  );
+}
+
+function Widgets({ widgets, stacked }: Readonly<{ widgets: AnalysisWidget[]; stacked: boolean }>) {
+  return (
+    <WidgetGrid stacked={stacked}>
+      {widgets.map((widget) => (
+        <AnalysisWidgetCard key={widget.id} widget={widget} />
+      ))}
+    </WidgetGrid>
   );
 }

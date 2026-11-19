@@ -10,6 +10,7 @@ import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
 import { useAnalysedParcelClick } from '@/lib/map/use-analysed-parcel-click';
 import { useFitActiveParcel } from '@/lib/map/use-fit-active-parcel';
+import { usePainted } from '@/lib/map/use-painted';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawPolygonsAtom } from '@/store/draw';
 import { paperLayoutAtom, reportMapAtom } from '@/store/report';
@@ -23,7 +24,7 @@ const AREA_COLOR = '#F1FF28';
  * out stay behind), with the open tab's parcel in yellow — every one under Todas — and
  * the rest outlined; clicking one opens its tab. The parcels stand in for the drawn
  * areas as on the main map; the areas themselves only paint once the answer has no parcels:
- * while it loads, a loader covers the map instead of the drawn areas.
+ * until the answer is on screen, a loader covers the map instead of the drawn areas.
  * Framed by the analysed parcels' combined bounds on mount, re-framed on the open tab's
  * parcel(s) when it changes, the user's in between. The camera is not written to the
  * URL — that is the main map's, and this one is gone with the page.
@@ -33,7 +34,9 @@ export function AnalysedParcelsLayers() {
   const analysedIds = useAtomValue(analysedParcelIdsAtom);
   const activeParcelId = useAtomValue(activeParcelIdAtom);
   const { data: parcels, isLoading, isPlaceholderData } = useQuery(parcelQueries.filtered(areas));
-  const loading = isLoading || isPlaceholderData;
+  // Up until the parcels show, not just until they arrive: the source still has to draw.
+  const painted = usePainted(parcels);
+  const loading = isLoading || isPlaceholderData || !painted;
   const zoom = useZoom();
 
   const bounds = featuresBounds([

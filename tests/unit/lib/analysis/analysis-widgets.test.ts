@@ -28,12 +28,19 @@ const coverage: Indicator = {
   indicator_type: { type: 'range', min: 0, max: 100 },
 };
 const crop: Indicator = { id: 'crop_type', name: 'Cultivo', indicator_type: { type: 'text' } };
+/** A plain category indicator, for the ordering tests: Resiliencia is productivo's context. */
+const trend: Indicator = {
+  id: 'ITR_soja',
+  name: 'Tendencia',
+  indicator_type: { type: 'category', categories: ['Positiva', 'Negativa'] },
+};
 
 const parcels: AnalysisParcel[] = [
   {
     parcel_id: 'A',
     properties: {
       Resiliencia: 'Media',
+      ITR_soja: 'Positiva',
       Pro_soja: 3.5,
       asian_rust: 3,
       coverage_index: 12,
@@ -43,6 +50,7 @@ const parcels: AnalysisParcel[] = [
     parcel_id: 'B',
     properties: {
       Resiliencia: 'Alta',
+      ITR_soja: 'Negativa',
       Pro_soja: 3.8,
       asian_rust: 1,
       coverage_index: 87,
@@ -115,7 +123,7 @@ describe('analysisWidgets', () => {
       properties: { ...entry.properties, LOW_H5_soja: 3, MID_H5_soja: 3.5, HIGH_H5_soja: 4 },
     }));
 
-    const indicators = [...scenarios, future(resilience), historic(production), coverage];
+    const indicators = [...scenarios, future(trend), historic(production), coverage];
     const widgets = analysisWidgets({
       parcels: projected,
       parcelIds: ['A', 'B'],
@@ -129,7 +137,7 @@ describe('analysisWidgets', () => {
       'coverage_index',
       'Pro_soja',
       'projection_soja',
-      'Resiliencia',
+      'ITR_soja',
     ]);
   });
 
@@ -222,8 +230,8 @@ describe('analysisWidgets', () => {
 
 describe('widgetGroups', () => {
   const historicProduction: Indicator = { ...production, category: 'historic' };
-  const futureResilience: Indicator = { ...resilience, category: 'future' };
-  const indicators = [coverage, historicProduction, futureResilience];
+  const futureTrend: Indicator = { ...trend, category: 'future' };
+  const indicators = [coverage, historicProduction, futureTrend];
   const widgets = analysisWidgets({
     parcels,
     parcelIds: ['A', 'B'],
@@ -235,26 +243,52 @@ describe('widgetGroups', () => {
 
   it('cuts the sorted widgets into one run per category, titled, agnostic untitled', () => {
     expect(
-      widgetGroups(widgets, indicators).map(({ title, widgets: run }) => [
+      widgetGroups(widgets, indicators, 'productivo').map(({ title, widgets: run }) => [
         title,
         run.map(({ id }) => id),
       ]),
     ).toEqual([
       [null, ['coverage_index']],
       ['Análisis histórico de productividad', ['Pro_soja']],
-      ['Análisis de productividad proyectada', ['Resiliencia']],
+      ['Análisis de productividad proyectada', ['ITR_soja']],
+    ]);
+  });
+
+  it("puts productivo's context widgets first, under Información de contexto, whatever their category", () => {
+    const withContext = [
+      coverage,
+      historicProduction,
+      { ...resilience, category: 'future' as const },
+    ];
+    const contextWidgets = analysisWidgets({
+      parcels,
+      parcelIds: ['A', 'B'],
+      indicators: withContext,
+      riesgo: 'productivo',
+      scope: 'multiple',
+      parcel: combinedParcel(parcels, withContext),
+    });
+
+    expect(
+      widgetGroups(contextWidgets, withContext, 'productivo').map(
+        ({ key, title, widgets: run }) => [key, title, run.map(({ id }) => id)],
+      ),
+    ).toEqual([
+      ['context', 'Información de contexto', ['Resiliencia']],
+      ['agnostic', null, ['coverage_index']],
+      ['historic', 'Análisis histórico de productividad', ['Pro_soja']],
     ]);
   });
 
   it('is one untitled run when no indicator has a category, as on sanitario', () => {
     const plain = [coverage, production];
 
-    expect(widgetGroups(widgets.slice(0, 2), plain)).toEqual([
+    expect(widgetGroups(widgets.slice(0, 2), plain, 'sanitario')).toEqual([
       { key: 'agnostic', title: null, widgets: widgets.slice(0, 2) },
     ]);
   });
 
   it('is empty without widgets', () => {
-    expect(widgetGroups([], indicators)).toEqual([]);
+    expect(widgetGroups([], indicators, 'productivo')).toEqual([]);
   });
 });

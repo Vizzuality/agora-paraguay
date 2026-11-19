@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { SELECTION_LINK } from '@/lib/nav-links';
 
 /**
- * "Personalización del análisis" link (the analysis card's Editar, the footer): goes back to `/` and resumes the
+ * "Personalización del análisis" link (the analysis card's Editar, the footer): goes back to the parcel selection and resumes the
  * selection, like the browser's Back — the areas and parcels are still in the store,
  * the panel lands on step 3 with the user's flips kept, the map framed on the areas
  * (`useFitToAreas`). Starting over is Reiniciar's job.
