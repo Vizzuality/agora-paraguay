@@ -380,7 +380,11 @@ test('Exportar informe lays the report out in one column, every chart inside its
   );
   await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
   await expect(area.getByRole('button', { name: 'Nuevo análisis' })).toBeHidden();
-  await expect(area.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
+  const legend = area.getByRole('list', { name: 'Leyenda de parcelas' });
+  await expect(legend).toBeVisible();
+  // The crops are the 2025 season's: the asterisked rows say so in a footnote.
+  await expect(legend.getByRole('listitem')).toHaveText(['Selección activa', 'Soja*', 'Arroz*']);
+  await expect(area.getByText('*Cultivos de 2025')).toBeVisible();
   await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
   await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
   await expect(area.locator('.maplibregl-ctrl-attrib-button')).toBeHidden();
