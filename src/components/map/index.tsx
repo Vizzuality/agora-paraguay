@@ -12,7 +12,7 @@ import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelLegend } from '@/components/map/parcel-legend';
 import { ZoomControl } from '@/components/map/zoom-control';
 import { BASEMAP_STYLE, dimBasemap, MAX_BOUNDS } from '@/lib/map/basemap';
-import { addCropPatterns } from '@/lib/map/crop-patterns';
+import { resolveCropPatterns } from '@/lib/map/crop-patterns';
 import { INITIAL_VIEW_STATE, normalizeViewState } from '@/lib/map/view-state';
 import { drawAtom, redrawAfterRejectionAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
@@ -94,10 +94,11 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       }}
       mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
-      onLoad={(event) => {
-        dimBasemap(event.target);
-        addCropPatterns(event.target);
+      // The ref lands before any layer mounts: crop textures resolve on first use.
+      ref={(map) => {
+        if (map) resolveCropPatterns(map.getMap());
       }}
+      onLoad={(event) => dimBasemap(event.target)}
       onMoveEnd={handleMoveEnd}
       // A press after a rejected drawing starts the next one there (the atom checks for the
       // rejection). On the press, not `click`: by then Terra Draw has handled it in static mode.
