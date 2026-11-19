@@ -128,8 +128,9 @@ test('the logo goes home, and Riesgo sanitario still has the parcels, as Nuevo a
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
 
-  // Home is Exposición climática, the analysis types open.
-  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
+  // Home is Exposición climática, the analysis types open. Going back to the selection
+  // writes the map's camera one last time, so it may ride along in the URL.
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica(\?|$)/);
   const types = page.getByRole('region', { name: 'Tipo de análisis' });
   await expect(types.getByRole('button', { name: /Tipo de análisis/ })).toHaveAttribute(
     'aria-expanded',
