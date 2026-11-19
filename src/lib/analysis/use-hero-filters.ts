@@ -2,39 +2,39 @@ import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 
 import { CROP_FILTER_ID, resolveFilterSelection } from '@/lib/analysis/filters';
-import { useLastCrop } from '@/lib/analysis/use-last-crop';
+import { withParcelCropOptions } from '@/lib/analysis/parcel-crops';
+import { useParcelCrops } from '@/lib/analysis/use-parcel-crops';
 import { metadataQueries } from '@/lib/api/metadata/queries';
 import { isCrop, type Riesgo } from '@/lib/api/metadata/schemas';
 import { analysisFiltersAtom } from '@/store/analysis';
 
 /**
  * The hero filters of a riesgo and what they resolve to — the user's picks over the
- * API's defaults (`resolveFilterSelection`); on productivo the crop defaults to what the
- * parcels in view last grew (`useLastCrop`). The list depends on the crop, so it is keyed
- * by the crop in force: the user's pick, else the default crop. Soy's list is the first one asked,
- * so landing makes one request, re-picking soy makes none (same key), and only another
- * crop asks again. A crop value the app does not know reads as soy. `resolvedFilters`
- * is `null` until the list has loaded. Reads an atom, so callers render inside
- * `<ClientOnly>`.
+ * API's defaults (`resolveFilterSelection`). The crop dropdown offers the crops the
+ * analysed parcels grew, Todos too when more than one (`withParcelCropOptions`), and
+ * starts at what the parcels in view last grew (`useParcelCrops`). The list depends on
+ * the crop, so it is keyed by the crop in force: the user's pick, else the default crop.
+ * Soy's list is the first one asked, so landing makes one request, re-picking soy makes
+ * none (same key), and only another crop asks again; Todos asks for no crop. A crop
+ * value the app does not know reads as soy. `resolvedFilters` is `null` until the list
+ * has loaded. Reads an atom, so callers render inside `<ClientOnly>`.
  */
 export function useHeroFilters(riesgo: Riesgo) {
   const selected = useAtomValue(analysisFiltersAtom);
-  const lastCrop = useLastCrop();
-  // Productivo's crop starts at what the parcels in view last grew.
-  const defaultCrop = riesgo === 'productivo' ? lastCrop : undefined;
+  const { lastCrop, crops } = useParcelCrops();
   const seed = useQuery(metadataQueries.filters({ riesgo }));
-  const picked = seed.data
-    ? resolveFilterSelection(selected, seed.data, defaultCrop)[CROP_FILTER_ID]
+  const seedFilters = seed.data && withParcelCropOptions(seed.data, crops);
+  const picked = seedFilters
+    ? resolveFilterSelection(selected, seedFilters, lastCrop)[CROP_FILTER_ID]
     : undefined;
   const crop = isCrop(picked) ? picked : undefined;
   const byCrop = useQuery({
     ...metadataQueries.filters({ riesgo, crop_type: crop }),
     enabled: crop !== undefined,
   });
-  const filters = byCrop.data ? byCrop : seed;
-  const resolvedFilters = filters.data
-    ? resolveFilterSelection(selected, filters.data, defaultCrop)
-    : null;
+  const source = byCrop.data ? byCrop : seed;
+  const data = source.data && withParcelCropOptions(source.data, crops);
+  const resolvedFilters = data ? resolveFilterSelection(selected, data, lastCrop) : null;
 
-  return { filters, resolvedFilters };
+  return { filters: { data, error: source.error }, resolvedFilters, lastCrop };
 }

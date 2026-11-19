@@ -14,6 +14,7 @@ function parcel(id: string, x: number, y: number, selected: boolean): FilteredPa
     parcel_id: id,
     selected,
     last_crop_type: null,
+    crop_types: [],
     geometry: {
       type: 'FeatureCollection',
       features: [
@@ -88,6 +89,7 @@ describe('parcelAtPoint', () => {
       parcel_id: 'P7',
       selected: false,
       last_crop_type: null,
+      crop_types: [],
       geometry: {
         type: 'FeatureCollection',
         features: [
