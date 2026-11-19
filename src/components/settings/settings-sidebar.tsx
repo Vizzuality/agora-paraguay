@@ -21,6 +21,13 @@ import { paperLayoutAtom } from '@/store/report';
 
 type SectionKey = 'analysisType' | 'area' | 'cropDates';
 
+/** The types on the first screen, else the área de interés on an analysis page, else none. */
+function initialSection(onFirstScreen: boolean, onAnalysisPage: boolean): SectionKey | null {
+  if (onFirstScreen) return 'analysisType';
+  if (onAnalysisPage) return 'area';
+  return null;
+}
+
 /**
  * The redesign's settings column, one section open at a time: the analysis type, then
  * the área de interés, open to start with since that is where the work is: parcels on a
@@ -40,9 +47,7 @@ function Sections() {
   const arrivingHome = useAtomValue(arrivingHomeAtom);
   const settleArrival = useSetAtom(arrivingHomeAtom);
   const onFirstScreen = arrivingHome && current !== undefined && !current.riesgo;
-  const [open, setOpen] = useState<SectionKey | null>(
-    onFirstScreen ? 'analysisType' : current ? 'area' : null,
-  );
+  const [open, setOpen] = useState(() => initialSection(onFirstScreen, current !== undefined));
   // The logo can bring the user home while already there, with no remount: open here too.
   if (onFirstScreen && open !== 'analysisType') setOpen('analysisType');
   useEffect(() => {
