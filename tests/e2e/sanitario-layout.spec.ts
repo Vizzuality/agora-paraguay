@@ -199,11 +199,18 @@ test('shows a loader while a filter change re-runs the analysis', async ({ page 
   await filters.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
   await page.getByRole('option', { name: 'Arroz' }).click();
 
-  // The previous results stay on screen, inert, until the answer lands.
+  // The previous results stay on screen, inert, until the answer lands; no report of them.
+  const exportReport = page.getByRole('main').getByRole('button', { name: 'Exportar informe' });
   await expect(status).toHaveText('Actualizando análisis…');
   await expect(page.locator('[aria-busy="true"]')).toContainText('Phakopsora pachyrhizi');
+  await expect(exportReport).toBeDisabled();
+  await expect(exportReport).toHaveAttribute(
+    'title',
+    'Espere a que terminen de cargar los indicadores',
+  );
   release();
   await expect(status).toHaveCount(0);
+  await expect(exportReport).toBeEnabled();
 });
 
 test('the first analysis waits in a bordered frame that ends inside the window, under the actions', async ({
@@ -220,6 +227,9 @@ test('the first analysis waits in a bordered frame that ends inside the window, 
 
   const status = page.getByRole('status').filter({ hasText: 'Analizando…' });
   await expect(status).toBeVisible();
+  // Nothing to report yet: Exportar informe waits for the indicators.
+  const exportReport = page.getByRole('main').getByRole('button', { name: 'Exportar informe' });
+  await expect(exportReport).toBeDisabled();
   await expect(status).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(status).toHaveCSS('border-top-width', '3px');
   // The actions sit above it: its bottom on the content column's 40px padding.
@@ -229,6 +239,7 @@ test('the first analysis waits in a bordered frame that ends inside the window, 
 
   release();
   await expect(status).toHaveCount(0);
+  await expect(exportReport).toBeEnabled();
 });
 
 test('the login backdrop dims the widgets as well as the sidebar', async ({ page }) => {
