@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { CircleArrowRight, LayoutGrid, SquarePen, Undo2, Upload } from 'lucide-react';
+import { CircleArrowRight, SquarePen, Undo2, Upload } from 'lucide-react';
 import { useRef } from 'react';
 
 import {
@@ -17,8 +17,7 @@ import { selectionStep } from '@/lib/selection-steps';
 import { UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { useUploadFile } from '@/lib/upload/use-upload-file';
 import { useConfirmedParcels } from '@/lib/use-confirmed-parcels';
-import { cn } from '@/lib/utils';
-import { activeParcelIdAtom, activeParcelTabAtom, analysedParcelIdsAtom } from '@/store/analysis';
+import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { drawAtom, restartSelectionAtom, startDrawAtom } from '@/store/draw';
 import { analysedViewAtom, backToSelectionAtom, startAnalysisAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
@@ -37,7 +36,7 @@ export function useAreaSelectionLabel(): string | undefined {
 
 /**
  * Área de interés: building the selection (upload or draw, then Reiniciar / Analizar,
- * the map in the content column), or, once analysed, the parcel picker, Todas, Nuevo análisis
+ * the map in the content column), or, once analysed, the parcel picker (Todas included), Nuevo análisis
  * and the mini map. Reads atoms: render inside `<ClientOnly>`.
  */
 export function AreaSetting() {
@@ -168,34 +167,16 @@ function ConfirmCards() {
 const AREA_ACTION_CLASS =
   'h-12 gap-2.5 rounded-2xl px-8 font-normal max-md:px-4 [&_svg:not([class*=size-])]:size-6';
 
-/** Once analysed: which parcel the page reads, Todas, Nuevo análisis, the mini map. */
+/** Once analysed: which parcel the page reads (Todas among them), Nuevo análisis, the mini map. */
 function AnalysedArea() {
-  const parcels = useAtomValue(analysedParcelIdsAtom);
-  const activeId = useAtomValue(activeParcelIdAtom);
-  const setActiveTab = useSetAtom(activeParcelTabAtom);
   const backToSelection = useSetAtom(backToSelectionAtom);
-  const all = activeId === null;
 
   return (
     <>
       {/* The report names the parcel in the heading instead (`SettingsSection`). */}
       <div className="flex items-end gap-3 pt-2 print:hidden">
+        {/* Todas is one of its options: the picker takes the row's free width. */}
         <ParcelPicker />
-        {parcels.length > 1 && (
-          <Button
-            variant="secondary"
-            aria-pressed={all}
-            className={cn(
-              AREA_ACTION_CLASS,
-              'text-primary',
-              all ? 'border-3 border-primary' : 'border border-border',
-            )}
-            onClick={() => setActiveTab(null)}
-          >
-            <LayoutGrid aria-hidden strokeWidth={1.5} />
-            Todas
-          </Button>
-        )}
         <Button className={AREA_ACTION_CLASS} onClick={() => backToSelection()}>
           <SquarePen aria-hidden strokeWidth={1.5} />
           Nuevo análisis
