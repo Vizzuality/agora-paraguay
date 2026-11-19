@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
 
+const NEXT_YEAR = new Date().getFullYear() + 1;
+
 /** The hero filters as the live API shapes them: a category and two dates, one defaulted. */
 export const HERO_FILTERS = [
   {
@@ -29,7 +31,12 @@ export const HERO_FILTERS = [
 /** Productivo's hero filters as the live API shapes them: the crop and a year picked from numbers. */
 export const PRODUCTIVO_FILTERS = [
   HERO_FILTERS[0],
-  { id: 'year', name: 'Año', field_type: { type: 'number', options: [2026, 2025] } },
+  // As the API lists them: years ahead only, so the hero takes the first, next year.
+  {
+    id: 'year',
+    name: 'Año',
+    field_type: { type: 'number', options: [NEXT_YEAR, NEXT_YEAR + 1, NEXT_YEAR + 2] },
+  },
 ];
 
 /**

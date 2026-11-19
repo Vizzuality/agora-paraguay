@@ -3,8 +3,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { EAST_PARCEL_ID, stubFilterParcels, WEST_PARCEL_ID } from './fixtures/api';
 import { analyseOnRedesign } from './fixtures/redesign';
 
-/** The projection's base is named by the current year. */
-const YEAR = String(new Date().getFullYear());
+/** The hero's year, the first the API offers (`NEXT_YEAR` in the fixture); it names the projection's base. */
+const YEAR = String(new Date().getFullYear() + 1);
 
 test('Riesgo productivo gates its analysis, then shows the actions and widgets in the content column', async ({
   page,
@@ -43,7 +43,7 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
     'Horizonte 5 años: neutro 3,55 t/ha, pesimista 2,92 t/ha, optimista 4,17 t/ha',
     'Horizonte 10 años: neutro 3,35 t/ha, pesimista 2,52 t/ha, optimista 4,27 t/ha',
   ]);
-  // Hovering a column names its three scenarios; the base is named by the current year.
+  // Hovering a column names its three scenarios; the base is named by the hero's year.
   const columns = projection.locator('svg rect[fill="transparent"]');
   await columns.nth(0).hover();
   await expect(page.getByRole('tooltip')).toContainText(YEAR);

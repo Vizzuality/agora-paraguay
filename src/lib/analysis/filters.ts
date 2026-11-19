@@ -19,8 +19,8 @@ export const SOWING_DATE_FILTER_ID = 'sowing_date';
 export const DATE_FILTER_ID = 'date';
 
 /**
- * Productivo's year: the AI summary needs it and it names the projection's base. Always
- * the current year, shown but not picked.
+ * Productivo's year: the AI summary needs it and it names the projection's base. The current
+ * year, else the next the API offers (`heroYear`); shown but not picked.
  */
 export const YEAR_FILTER_ID = 'year';
 
@@ -106,8 +106,8 @@ export function dateBounds(
 }
 
 /**
- * Every filter resolved to what the hero displays and Analizar sends. The year is the
- * current one, whatever was picked or offered. A category keeps a pick still among its
+ * Every filter resolved to what the hero displays and Analizar sends. The year is
+ * the current one if offered, else the next one offered (`heroYear`), whatever was picked. A category keeps a pick still among its
  * options, else takes the first one; the crop takes `defaultCrop` when offered, then
  * `DEFAULT_CROP`. A date keeps whatever was typed, else its default (`dateDefault`), moved
  * into the accepted range; then a sowing date on or after the date moves to the day before it.
@@ -129,15 +129,33 @@ export function resolveFilterSelection(
   return withSowingBeforeDate(resolved);
 }
 
+/**
+ * The year the hero shows: `current` when offered, else the first offered after it, else
+ * the last offered; `current` when the API offers none.
+ */
+export function heroYear(current: number, offered: readonly string[]): string {
+  const years = offered
+    .map(Number)
+    .filter(Number.isInteger)
+    .toSorted((a, b) => a - b);
+  const year = years.find((option) => option >= current) ?? years.at(-1) ?? current;
+
+  return String(year);
+}
+
 /** One filter's value, as `resolveFilterSelection` describes; `undefined` leaves it out. */
 function resolveFilter(
   filter: Filter,
   pick: string | undefined,
   defaultCrop: Crop,
 ): string | undefined {
-  if (filter.id === YEAR_FILTER_ID) return todayIso().slice(0, 4);
-
   const field = filter.field_type;
+
+  if (filter.id === YEAR_FILTER_ID) {
+    const offered = field.type === 'category' ? field.options.map((option) => option.value) : [];
+
+    return heroYear(Number(todayIso().slice(0, 4)), offered);
+  }
 
   if (field.type === 'date') {
     const value = pick ?? dateDefault(filter.id, field.default);
