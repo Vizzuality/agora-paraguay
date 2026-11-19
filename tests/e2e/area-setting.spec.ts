@@ -4,7 +4,7 @@ import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
 
 import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
-import { cameraUrl, drawPolygon, mapCanvas, stubBasemap } from './fixtures/map';
+import { cameraUrl, drawPolygon, mapCanvas, stubBasemap, yellowPixelCount } from './fixtures/map';
 import { savedAnalysedParcelCount } from './fixtures/saved-selection';
 
 // Farm scale, where the test triangle is a few farms rather than a department.
@@ -83,7 +83,7 @@ test('a reload keeps the analysis', async ({ page }) => {
   );
 });
 
-test('after a reload the mini map shows a loader, not the drawn area, until the parcels arrive', async ({
+test('after a reload the mini map shows a loader, not the drawn area, until the parcels show', async ({
   page,
 }) => {
   const section = area(page);
@@ -113,6 +113,8 @@ test('after a reload the mini map shows a loader, not the drawn area, until the 
 
   release();
   await expect(loader).toHaveCount(0);
+  // The loader lifts once the parcels are drawn, not merely answered: they show at once.
+  expect(await yellowPixelCount(page)).toBeGreaterThan(0);
   await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toBeVisible();
 });
 
