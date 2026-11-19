@@ -34,11 +34,20 @@ export function dotsImage(): PatternImage {
   return tile(8, (x, y) => y % 4 < 2 && (x + (y < 4 ? 0 : 4)) % 8 < 2);
 }
 
-/** Registers both crop textures from the map's `onLoad`, before any layer names them. */
-export function addCropPatterns(map: Map) {
-  const images = { soja: stripesImage, rice: dotsImage };
+const PATTERN_IMAGES: Record<string, () => PatternImage> = {
+  [CROP_PATTERN_IDS.soja]: stripesImage,
+  [CROP_PATTERN_IDS.rice]: dotsImage,
+};
 
-  for (const [crop, image] of Object.entries(images) as [Crop, () => PatternImage][]) {
-    if (!map.hasImage(CROP_PATTERN_IDS[crop])) map.addImage(CROP_PATTERN_IDS[crop], image());
-  }
+/**
+ * Draws a crop texture the moment a layer first asks for it. Set before any layer mounts
+ * (the map's `ref`): adding them on `load` came after the parcels layer's first render,
+ * and MapLibre warned for each missing image. Other ids stay missing.
+ */
+export function resolveCropPatterns(map: Map) {
+  map.setMissingStyleImageResolver((id) => {
+    const image = PATTERN_IMAGES[id];
+
+    if (image && !map.hasImage(id)) map.addImage(id, image());
+  });
 }

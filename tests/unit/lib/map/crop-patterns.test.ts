@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { dotsImage, stripesImage } from '@/lib/map/crop-patterns';
+import {
+  CROP_PATTERN_IDS,
+  dotsImage,
+  resolveCropPatterns,
+  stripesImage,
+} from '@/lib/map/crop-patterns';
 
 /** The tile as rows of `W` (mark) and `.` (transparent). */
 function rows(image: { width: number; height: number; data: Uint8ClampedArray }) {
@@ -45,5 +50,45 @@ describe('dotsImage', () => {
 
   it('paints marks opaque white, so the layer opacity alone sets their strength', () => {
     expect(Array.from(dotsImage().data.slice(0, 4))).toEqual([255, 255, 255, 255]);
+  });
+});
+
+describe('resolveCropPatterns', () => {
+  /** Just what the resolver touches of a MapLibre map. */
+  function fakeMap() {
+    const images = new Map<string, unknown>();
+    let resolver: ((id: string) => void) | null = null;
+    const map = {
+      hasImage: (id: string) => images.has(id),
+      addImage: (id: string, image: unknown) => images.set(id, image),
+      setMissingStyleImageResolver: (next: (id: string) => void) => {
+        resolver = next;
+      },
+    };
+
+    return { map, images, resolve: (id: string) => resolver?.(id) };
+  }
+
+  it('draws a crop texture the first time a layer asks for it, once', () => {
+    const { map, images, resolve } = fakeMap();
+    resolveCropPatterns(map as unknown as Parameters<typeof resolveCropPatterns>[0]);
+
+    resolve(CROP_PATTERN_IDS.soja);
+    const stripes = images.get(CROP_PATTERN_IDS.soja);
+    resolve(CROP_PATTERN_IDS.soja);
+    resolve(CROP_PATTERN_IDS.rice);
+
+    expect(stripes).toMatchObject({ width: 10, height: 10 });
+    expect(images.get(CROP_PATTERN_IDS.soja)).toBe(stripes);
+    expect(images.get(CROP_PATTERN_IDS.rice)).toMatchObject({ width: 8, height: 8 });
+  });
+
+  it('leaves any other missing image missing', () => {
+    const { map, images, resolve } = fakeMap();
+    resolveCropPatterns(map as unknown as Parameters<typeof resolveCropPatterns>[0]);
+
+    resolve('some-basemap-icon');
+
+    expect(images.size).toBe(0);
   });
 });

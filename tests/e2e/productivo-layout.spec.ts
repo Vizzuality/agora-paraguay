@@ -63,6 +63,18 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
     main.getByRole('heading', { name: /^Producción proyectada (LOW|MID|HIGH)/ }),
   ).toHaveCount(0);
 
+  // Personalizar lists the projection as one row, not six; unticking it drops the chart.
+  await main.getByRole('button', { name: 'Personalizar indicadores' }).click();
+  const indicators = page.getByRole('list', { name: 'Indicadores' });
+  await expect(indicators.getByText(/^Producción proyectada/)).toHaveText([
+    'Producción proyectada a 5 y 10 años',
+  ]);
+  await indicators.getByText(/^Producción proyectada/).click();
+  await expect(projection).toHaveCount(0);
+  await indicators.getByText(/^Producción proyectada/).click();
+  await expect(projection.getByRole('listitem')).toHaveCount(3);
+  await page.keyboard.press('Escape');
+
   // The text facts share one context card, as on sanitario.
   const context = main.getByRole('heading', { name: 'Información de contexto' }).locator('..');
   await expect(context).toContainText('Tipo de cultivo');

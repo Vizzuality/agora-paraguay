@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   matchesIndicator,
+  pickerEntries,
   selectableIndicators,
   visibleIndicatorIds,
 } from '@/lib/analysis/indicator-picker';
@@ -78,7 +79,12 @@ function IndicatorChecklist({
   const listId = useId();
 
   const visibleIds = visibleIndicatorIds(indicators, selected);
-  const matching = indicators.filter((indicator) => matchesIndicator(indicator, query));
+  // A crop's six projection scenarios are one row, as they are one chart.
+  const matching = pickerEntries(indicators).filter(
+    (entry) =>
+      matchesIndicator(entry, query) ||
+      entry.ids.some((id) => matchesIndicator({ id, name: '' }, query)),
+  );
 
   return (
     <>
@@ -103,11 +109,11 @@ function IndicatorChecklist({
           aria-label="Indicadores"
           className="scroll-fade-y max-h-80 overflow-y-auto px-1 py-1.5"
         >
-          {matching.map((indicator) => {
-            const checked = visibleIds.includes(indicator.id);
+          {matching.map((entry) => {
+            const checked = entry.ids.every((id) => visibleIds.includes(id));
 
             return (
-              <li key={indicator.id}>
+              <li key={entry.id}>
                 {/* A real checkbox, visually hidden: the check glyph is the only state cue
                   in the design, and the label row is the click target. */}
                 <label className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground has-focus-visible:bg-accent">
@@ -115,10 +121,10 @@ function IndicatorChecklist({
                     type="checkbox"
                     className="sr-only"
                     checked={checked}
-                    onChange={() => toggle({ riesgo, indicators, id: indicator.id })}
+                    onChange={() => toggle({ riesgo, indicators, ids: entry.ids })}
                   />
                   <Check aria-hidden className={cn('size-4 shrink-0', !checked && 'invisible')} />
-                  <span className="min-w-0 flex-1 wrap-break-word">{indicator.name}</span>
+                  <span className="min-w-0 flex-1 wrap-break-word">{entry.name}</span>
                 </label>
               </li>
             );
