@@ -23,7 +23,7 @@ function controls(page: Page) {
     // Only once an area is on the map.
     analyze: area.getByRole('button', { name: 'Analizar' }),
     restart: area.getByRole('button', { name: 'Reiniciar' }),
-    todas: area.getByRole('button', { name: 'Todas' }),
+    parcel: area.getByRole('combobox', { name: 'Parcela' }),
   };
 }
 
@@ -56,7 +56,7 @@ test('imports a GeoJSON upload, exploding its MultiPolygon', async ({ page }) =>
 });
 
 test('Reiniciar clears an upload so the next one starts fresh', async ({ page }) => {
-  const { uploadStatus, analyze, restart, todas } = controls(page);
+  const { uploadStatus, analyze, restart, parcel } = controls(page);
 
   await upload(page, 'farms.geojson');
   await expect(uploadStatus).toHaveText('Se importaron 3 áreas de farms.geojson.');
@@ -70,7 +70,7 @@ test('Reiniciar clears an upload so the next one starts fresh', async ({ page })
 
   // Only the last upload made it, and the analysis goes through in place.
   await analyze.click();
-  await expect(todas).toHaveAttribute('aria-pressed', 'true');
+  await expect(parcel).toHaveText('Todas');
 });
 
 test('imports a KMZ with names from the KML inside', async ({ page }) => {

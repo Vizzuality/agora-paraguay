@@ -10,29 +10,49 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('Tipo de análisis names the open type and switches between them', async ({ page }) => {
-  // Bare /analisis lands on the public type.
-  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+  // Bare /analisis lands on the first screen: Exposición climática, the types open.
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
 
   const section = page.getByRole('region', { name: 'Tipo de análisis' });
   const heading = section.getByRole('button', { name: /Tipo de análisis/ });
+  await expect(heading).toHaveAttribute('aria-expanded', 'true');
 
-  // Closed, the heading carries the current choice.
-  await expect(heading).toHaveAttribute('aria-expanded', 'false');
-  await expect(heading).toContainText('Riesgo sanitario');
-
-  await heading.click();
   const types = section.getByRole('navigation', { name: 'Tipo de análisis' }).getByRole('link');
   await expect(types).toHaveText(['Exposición climática', 'Riesgo sanitario', 'Riesgo productivo']);
-  await expect(types.filter({ hasText: 'Riesgo sanitario' })).toHaveAttribute(
+  await expect(types.filter({ hasText: 'Exposición climática' })).toHaveAttribute(
     'aria-current',
     'page',
   );
 
-  // Choosing navigates, closes the section, and the heading follows.
+  // Choosing navigates, closes the section, and the closed heading carries the choice.
+  await types.filter({ hasText: 'Riesgo sanitario' }).click();
+  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+  await expect(heading).toHaveAttribute('aria-expanded', 'false');
+  await expect(heading).toContainText('Riesgo sanitario');
+
+  // Chosen from the menu, Exposición climática is no arrival: the section stays closed.
+  await heading.click();
   await types.filter({ hasText: 'Exposición climática' }).click();
   await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
   await expect(heading).toHaveAttribute('aria-expanded', 'false');
   await expect(heading).toContainText('Exposición climática');
+});
+
+test('the logo goes back to the first screen with the types open', async ({ page }) => {
+  const section = page.getByRole('region', { name: 'Tipo de análisis' });
+  const heading = section.getByRole('button', { name: /Tipo de análisis/ });
+  await section.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await expect(heading).toHaveAttribute('aria-expanded', 'false');
+
+  await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
+  await expect(heading).toHaveAttribute('aria-expanded', 'true');
+
+  // Already home, closed, the logo opens the types again.
+  await heading.click();
+  await expect(heading).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
+  await expect(heading).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('the heading closes an open section again', async ({ page }) => {
@@ -40,11 +60,12 @@ test('the heading closes an open section again', async ({ page }) => {
     .getByRole('region', { name: 'Tipo de análisis' })
     .getByRole('button', { name: /Tipo de análisis/ });
 
-  await heading.click();
   await expect(heading).toHaveAttribute('aria-expanded', 'true');
   await heading.click();
   await expect(heading).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByRole('navigation', { name: 'Tipo de análisis' })).toHaveCount(0);
+  await heading.click();
+  await expect(heading).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('Riesgo productivo asks for the login first, and signing in goes on to it', async ({
@@ -56,10 +77,10 @@ test('Riesgo productivo asks for the login first, and signing in goes on to it',
   const login = page.getByRole('dialog', { name: 'Área privada' });
 
   // Signed out: the card opens the login modal and the page stays where it was.
-  await heading.click();
+  await expect(heading).toHaveAttribute('aria-expanded', 'true');
   await productivo.click();
   await expect(login).toBeVisible();
-  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
 
   // Closing the modal forgets the way: the user button opens a plain login.
   await page.keyboard.press('Escape');

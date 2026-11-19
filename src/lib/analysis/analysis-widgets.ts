@@ -7,7 +7,7 @@ import {
   type ProjectionWidget,
 } from '@/lib/analysis/projection';
 import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
-import type { ParcelScope } from '@/lib/analysis/widget-config';
+import { isContextIndicator, type ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
@@ -36,8 +36,12 @@ export type AnalysisWidgetsInput = {
   year?: string;
 };
 
-/** Agnostic widgets first, then the ones reading the past, then the ones projecting ahead. */
-const CATEGORY_RANK: Record<NonNullable<Indicator['category']>, number> = {
+/** A widget's run: Información de contexto (productivo, `isContextIndicator`) or its indicator's category. */
+export type WidgetCategory = NonNullable<Indicator['category']> | 'context';
+
+/** Context first, then agnostic widgets, then the ones reading the past, then the ones projecting ahead. */
+const CATEGORY_RANK: Record<WidgetCategory, number> = {
+  context: -1,
   historic: 1,
   future: 2,
 };
@@ -116,22 +120,27 @@ export function analysisWidgets({
     return [];
   });
 
-  const categoryOf = widgetCategory(indicators);
+  const categoryOf = widgetCategory(indicators, riesgo);
 
   // Stable: each group keeps metadata order.
   return widgets.toSorted((a, b) => rankOf(categoryOf(a)) - rankOf(categoryOf(b)));
 }
 
-/** A widget's category: the projection's own, else its indicator's. */
-function widgetCategory(indicators: Indicators | undefined) {
+/** A widget's category: context for the context indicators, the projection's own, else its indicator's. */
+function widgetCategory(indicators: Indicators | undefined, riesgo: IndicatorsRiesgo) {
   const rank = new Map((indicators ?? []).map(({ id, category }) => [id, category]));
 
-  return (widget: AnalysisWidget): Indicator['category'] =>
-    widget.kind === 'projection' ? widget.category : rank.get(widget.id);
+  return (widget: AnalysisWidget): WidgetCategory | null | undefined => {
+    if (widget.kind === 'projection') return widget.category;
+    if (isContextIndicator(widget.id, riesgo)) return 'context';
+
+    return rank.get(widget.id);
+  };
 }
 
 /** The title over each category's widgets; agnostic ones go untitled. */
-export const CATEGORY_TITLES: Record<NonNullable<Indicator['category']>, string> = {
+export const CATEGORY_TITLES: Record<WidgetCategory, string> = {
+  context: 'Información de contexto',
   historic: 'Análisis histórico de productividad',
   future: 'Análisis de productividad proyectada',
 };
@@ -145,8 +154,9 @@ export type WidgetGroup = { key: string; title: string | null; widgets: Analysis
 export function widgetGroups(
   widgets: AnalysisWidget[],
   indicators: Indicators | undefined,
+  riesgo: IndicatorsRiesgo,
 ): WidgetGroup[] {
-  const categoryOf = widgetCategory(indicators);
+  const categoryOf = widgetCategory(indicators, riesgo);
   const groups: WidgetGroup[] = [];
 
   for (const widget of widgets) {
@@ -161,6 +171,6 @@ export function widgetGroups(
   return groups;
 }
 
-function rankOf(category: Indicator['category']): number {
+function rankOf(category: WidgetCategory | null | undefined): number {
   return category ? CATEGORY_RANK[category] : 0;
 }

@@ -17,6 +17,8 @@ export type GeneralInfoItem = {
 type GeneralInfoCardProps = {
   /** Label/value pairs, in the order to list them. */
   items: GeneralInfoItem[];
+  /** Off under a section already titled Información de contexto (productivo's Todas). */
+  titled?: boolean;
   className?: string;
 };
 
@@ -26,10 +28,16 @@ type GeneralInfoCardProps = {
  * figure and no ruler; the heading sits right in the card, no subtitle, and the facts
  * flow top to bottom through as many columns as the card's width holds.
  */
-export function GeneralInfoCard({ items, className }: Readonly<GeneralInfoCardProps>) {
+export function GeneralInfoCard({
+  items,
+  titled = true,
+  className,
+}: Readonly<GeneralInfoCardProps>) {
   return (
     <WidgetCard className={cn('min-h-0 justify-start gap-2', className)}>
-      <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Información de contexto</h3>
+      {titled && (
+        <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Información de contexto</h3>
+      )}
 
       <GeneralInfoList items={items} />
     </WidgetCard>

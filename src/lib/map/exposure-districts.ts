@@ -66,8 +66,8 @@ const TONE_HEX: Record<RiskTone, string> = {
   high: '#EC1919',
 };
 
-/** How much of the satellite shows through a district's fill. */
-export const EXPOSURE_FILL_OPACITY = 0.6;
+/** A district's fill at half its class colour, as the legend swatch; the outline stays solid. */
+export const EXPOSURE_FILL_OPACITY = 0.5;
 
 /** The width of every district's outline; the picked one is a pixel wider. */
 export const EXPOSURE_LINE_WIDTH = 2;
