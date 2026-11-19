@@ -13,7 +13,7 @@ export function NavBar({ children, below }: Readonly<{ children?: ReactNode; bel
   return (
     <header className="flex w-full flex-col print:hidden">
       <div className="flex w-full items-center justify-between p-2 md:p-10">
-        <Link to="/" aria-label="Inicio">
+        <Link to="/" aria-label="AGORA, inicio">
           <Logo className="h-[30px] w-auto text-primary" />
         </Link>
         {children && <nav className="flex items-center gap-2">{children}</nav>}
