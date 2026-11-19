@@ -46,11 +46,19 @@ export const analysedViewAtom = atom(
   (get) => get(appModeAtom) === 'analysis' && get(analysedParcelIdsAtom).length > 0,
 );
 
+/** Whether this page load has already resumed (or had nothing to resume). */
+const analysisResumedAtom = atom(false);
+
 /**
  * A reload starts in 'selection' with the analysed parcels restored from disk: resume
- * the analysis they were. The redesign's layout calls it once the saved record is read.
+ * the analysis they were. The redesign's layout calls it once the saved record is read —
+ * on every mount, so it acts only the first time per page load: leaving `/analisis` for
+ * the landing and coming back must not undo Nuevo análisis.
  */
 export const resumeAnalysisAtom = atom(null, (get, set) => {
+  if (get(analysisResumedAtom)) return;
+  set(analysisResumedAtom, true);
+
   const parcelIds = get(analysedParcelIdsAtom);
 
   if (get(appModeAtom) === 'selection' && parcelIds.length > 0) set(startAnalysisAtom, parcelIds);

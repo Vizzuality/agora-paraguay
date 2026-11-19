@@ -43,6 +43,7 @@ test('Tipo de análisis names the open type and switches between them', async ({
 
 test('the logo goes to the landing, whose cards lead to each analysis', async ({ page }) => {
   const section = page.getByRole('region', { name: 'Tipo de análisis' });
+  await section.getByRole('button', { name: /Tipo de análisis/ }).click();
   await section.getByRole('link', { name: 'Riesgo sanitario' }).click();
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();

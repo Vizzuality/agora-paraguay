@@ -70,4 +70,16 @@ describe('resumeAnalysisAtom', () => {
     store.set(resumeAnalysisAtom);
     expect(store.get(modeAtom)).toBe('selection');
   });
+
+  it('acts once per page load: back on the selection, a remount does not resume again', () => {
+    const store = createStore();
+
+    store.set(analysedParcelIdsAtom, ['D07D21P00000002']);
+    store.set(resumeAnalysisAtom);
+    store.set(backToSelectionAtom);
+    // The layout remounts (landing → analysis page) and calls it again.
+    store.set(resumeAnalysisAtom);
+
+    expect(store.get(analysedViewAtom)).toBe(false);
+  });
 });
