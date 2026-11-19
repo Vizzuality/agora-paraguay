@@ -116,12 +116,49 @@ export function analysisWidgets({
     return [];
   });
 
-  const rank = new Map((indicators ?? []).map(({ id, category }) => [id, category]));
-  const categoryOf = (widget: AnalysisWidget) =>
-    widget.kind === 'projection' ? widget.category : rank.get(widget.id);
+  const categoryOf = widgetCategory(indicators);
 
   // Stable: each group keeps metadata order.
   return widgets.toSorted((a, b) => rankOf(categoryOf(a)) - rankOf(categoryOf(b)));
+}
+
+/** A widget's category: the projection's own, else its indicator's. */
+function widgetCategory(indicators: Indicators | undefined) {
+  const rank = new Map((indicators ?? []).map(({ id, category }) => [id, category]));
+
+  return (widget: AnalysisWidget): Indicator['category'] =>
+    widget.kind === 'projection' ? widget.category : rank.get(widget.id);
+}
+
+/** The title over each category's widgets; agnostic ones go untitled. */
+export const CATEGORY_TITLES: Record<NonNullable<Indicator['category']>, string> = {
+  historic: 'Análisis histórico de productividad',
+  future: 'Análisis de productividad proyectada',
+};
+
+export type WidgetGroup = { key: string; title: string | null; widgets: AnalysisWidget[] };
+
+/**
+ * The sorted widgets (`analysisWidgets`) cut into runs of one category, each titled
+ * (`CATEGORY_TITLES`). Without categories, one untitled run.
+ */
+export function widgetGroups(
+  widgets: AnalysisWidget[],
+  indicators: Indicators | undefined,
+): WidgetGroup[] {
+  const categoryOf = widgetCategory(indicators);
+  const groups: WidgetGroup[] = [];
+
+  for (const widget of widgets) {
+    const category = categoryOf(widget) ?? null;
+    const key = category ?? 'agnostic';
+    const last = groups.at(-1);
+
+    if (last?.key === key) last.widgets.push(widget);
+    else groups.push({ key, title: category && CATEGORY_TITLES[category], widgets: [widget] });
+  }
+
+  return groups;
 }
 
 function rankOf(category: Indicator['category']): number {

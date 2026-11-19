@@ -3,6 +3,7 @@ import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
 import { WidgetGrid } from '@/components/widget-grid';
+import { widgetGroups } from '@/lib/analysis/analysis-widgets';
 import { generalInfo } from '@/lib/analysis/indicator-cards';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
 
@@ -30,11 +31,21 @@ export function ProductivoWidgets() {
       {analysis.data && (
         <AnalysisPanel busy={analysis.isPlaceholderData}>
           {info.length > 0 && <GeneralInfoCard items={info} />}
-          <WidgetGrid stacked={scope === 'multiple'}>
-            {widgets.map((widget) => (
-              <AnalysisWidgetCard key={widget.id} widget={widget} />
-            ))}
-          </WidgetGrid>
+          {/* One titled run per category: historic, then projected. */}
+          {widgetGroups(widgets, indicators).map((group) => (
+            <section
+              key={group.key}
+              aria-label={group.title ?? undefined}
+              className="flex flex-col gap-4"
+            >
+              {group.title && <h2 className="text-lg font-medium">{group.title}</h2>}
+              <WidgetGrid stacked={scope === 'multiple'}>
+                {group.widgets.map((widget) => (
+                  <AnalysisWidgetCard key={widget.id} widget={widget} />
+                ))}
+              </WidgetGrid>
+            </section>
+          ))}
         </AnalysisPanel>
       )}
     </div>
