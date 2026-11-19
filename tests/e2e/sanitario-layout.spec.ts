@@ -93,7 +93,7 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
 
-test('the report footer closes the dashboard, above the actions, naming the identifier', async ({
+test('the report footer closes the printed dashboard only, naming the identifier', async ({
   page,
 }) => {
   await analyseOnRedesign(page, '/analisis/sanitario');
@@ -103,14 +103,14 @@ test('the report footer closes the dashboard, above the actions, naming the iden
 
   const main = page.getByRole('main');
   const footer = main.getByText(/^Resultados generados mediante la plataforma AGORA/);
+  // Not on screen: it is the report's closing line.
+  await expect(footer).toBeHidden();
+
+  await page.emulateMedia({ media: 'print' });
   await expect(footer).toBeVisible();
   // The identifier and the date are the filled-in values, in italics.
   await expect(footer.locator('em').first()).toHaveText('123456ABC');
   await expect(footer.locator('em').last()).toHaveText(/^\d+ de \w+ de \d{4}$/);
-
-  // Right before the actions at the foot.
-  const lastExport = main.getByRole('button', { name: 'Exportar informe' }).last();
-  expect((await footer.boundingBox())!.y).toBeLessThan((await lastExport.boundingBox())!.y);
 });
 
 test('the analysis runs with the default filters, and each change re-runs it', async ({ page }) => {
