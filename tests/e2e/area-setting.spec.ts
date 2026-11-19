@@ -170,3 +170,36 @@ test('once analysed, Cultivo y fechas holds the filters and names them closed', 
   // One section open at a time: the área closes.
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
 });
+
+test('Identificador de análisis holds for the session, and a cleared selection empties it', async ({
+  page,
+}) => {
+  const section = page.getByRole('region', { name: 'Identificador de análisis' });
+  const heading = section.getByRole('button', { name: /Identificador de análisis/ });
+  await heading.click();
+  await section.getByLabel('Identificador').fill('123456ABC');
+
+  // Closed, the heading carries it, as Tipo de análisis carries the type.
+  await heading.click();
+  await expect(heading).toContainText('123456ABC');
+
+  // Away and back, then a reload: still there.
+  const types = page.getByRole('region', { name: 'Tipo de análisis' });
+  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  await types.getByRole('link', { name: 'Exposición climática' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
+  await expect(section).toHaveCount(0);
+  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  await types.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await expect(heading).toContainText('123456ABC');
+  await page.reload();
+  await expect(heading).toContainText('123456ABC');
+
+  // Drawing keeps it; clearing the selection takes it along.
+  const areaSection = area(page);
+  await areaSection.getByRole('button', { name: 'Dibujar polígono' }).click();
+  await drawPolygon(page, POLYGON);
+  await expect(heading).toContainText('123456ABC');
+  await areaSection.getByRole('button', { name: 'Reiniciar' }).click();
+  await expect(heading).not.toContainText('123456ABC');
+});

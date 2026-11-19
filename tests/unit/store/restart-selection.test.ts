@@ -10,7 +10,8 @@ import {
   selectedIndicatorIdsAtom,
   setAnalysisFilterAtom,
 } from '@/store/analysis';
-import { drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
+import { analysisIdentifierAtom } from '@/store/analysis-identifier';
+import { clearSelectionAtom, drawPolygonsAtom, restartSelectionAtom } from '@/store/draw';
 import { drawStateAtom } from '@/store/draw-core';
 import { modeAtom, startAnalysisAtom } from '@/store/mode';
 import { toggledParcelIdsAtom, toggleParcelAtom } from '@/store/parcels';
@@ -88,5 +89,21 @@ describe('restartSelectionAtom', () => {
     store.set(drawStateAtom, { type: 'bound' });
 
     expect(store.get(drawPolygonsAtom)).toEqual([]);
+  });
+});
+
+describe('clearSelectionAtom', () => {
+  it('empties the analysis identifier with the selection; a plain restart keeps it', () => {
+    const store = storeAfterAnalysis();
+    store.set(analysisIdentifierAtom, '123456ABC');
+
+    // A new drawing or upload restarts the selection without touching the identifier.
+    store.set(restartSelectionAtom);
+    expect(store.get(analysisIdentifierAtom)).toBe('123456ABC');
+
+    // Reiniciar / Borrar mapa clear it.
+    store.set(clearSelectionAtom);
+    expect(store.get(drawPolygonsAtom)).toEqual([]);
+    expect(store.get(analysisIdentifierAtom)).toBe('');
   });
 });

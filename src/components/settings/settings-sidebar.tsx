@@ -3,6 +3,10 @@ import { useState } from 'react';
 
 import { DistrictPrompt } from '@/components/district-panel';
 import {
+  AnalysisIdentifierSetting,
+  useAnalysisIdentifierLabel,
+} from '@/components/settings/analysis-identifier-setting';
+import {
   AnalysisTypeSetting,
   useCurrentAnalysisType,
 } from '@/components/settings/analysis-type-setting';
@@ -18,7 +22,7 @@ import { selectedDistrictAtom } from '@/store/exposure';
 import { analysedViewAtom } from '@/store/mode';
 import { paperLayoutAtom } from '@/store/report';
 
-type SectionKey = 'analysisType' | 'area' | 'cropDates';
+type SectionKey = 'analysisType' | 'identifier' | 'area' | 'cropDates';
 
 /**
  * The redesign's settings column, one section open at a time: the analysis type, then
@@ -37,6 +41,7 @@ function Sections() {
   const current = useCurrentAnalysisType();
   const [open, setOpen] = useState<SectionKey | null>(current ? 'area' : null);
   const areaLabel = useAreaSelectionLabel();
+  const identifierLabel = useAnalysisIdentifierLabel();
   const analysed = useAtomValue(analysedViewAtom);
   // The report prints the área open, so its map is in the PDF whatever the reader left open.
   const paperLayout = useAtomValue(paperLayoutAtom);
@@ -52,6 +57,18 @@ function Sections() {
       >
         <AnalysisTypeSetting onChoose={() => setOpen(null)} />
       </SettingsSection>
+
+      {/* The user's reference for the parcel analysis: the riesgos only. */}
+      {current?.riesgo && (
+        <SettingsSection
+          name="Identificador de análisis"
+          selection={identifierLabel}
+          open={open === 'identifier'}
+          onToggle={() => toggle('identifier')}
+        >
+          <AnalysisIdentifierSetting />
+        </SettingsSection>
+      )}
 
       {current?.riesgo && (
         <SettingsSection

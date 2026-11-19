@@ -19,7 +19,7 @@ import { useUploadFile } from '@/lib/upload/use-upload-file';
 import { useConfirmedParcels } from '@/lib/use-confirmed-parcels';
 import { cn } from '@/lib/utils';
 import { activeParcelIdAtom, activeParcelTabAtom, analysedParcelIdsAtom } from '@/store/analysis';
-import { drawAtom, restartSelectionAtom, startDrawAtom } from '@/store/draw';
+import { clearSelectionAtom, drawAtom, startDrawAtom } from '@/store/draw';
 import { analysedViewAtom, backToSelectionAtom, startAnalysisAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
 import { uploadResultAtom } from '@/store/upload';
@@ -77,7 +77,7 @@ function AreaCards() {
   const rejection = useAtomValue(areaRejectionAtom);
   const setRejection = useSetAtom(areaRejectionAtom);
   const startDraw = useSetAtom(startDrawAtom);
-  const restart = useSetAtom(restartSelectionAtom);
+  const restart = useSetAtom(clearSelectionAtom);
   const handleChange = useUploadFile();
   const inputRef = useRef<HTMLInputElement>(null);
   const drawing = draw.tool === 'draw';
@@ -137,7 +137,7 @@ function AreaCards() {
 /** Reiniciar or Analizar the parcels the areas selected; Analizar stays an explicit step. */
 function ConfirmCards() {
   const { parcelIds, isError, noIntersection } = useConfirmedParcels();
-  const restart = useSetAtom(restartSelectionAtom);
+  const restart = useSetAtom(clearSelectionAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
 
   return (
