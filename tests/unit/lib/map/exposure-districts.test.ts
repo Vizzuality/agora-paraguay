@@ -6,6 +6,7 @@ import {
   exposureClasses,
   exposureColor,
   exposureLabel,
+  exposureLegendLabel,
 } from '@/lib/map/exposure-districts';
 
 describe('districtFromProperties', () => {
@@ -59,6 +60,17 @@ describe('exposureLabel', () => {
   it('words the legend classes as the legend does and passes the others through', () => {
     expect(exposureLabel('Medio')).toBe('Media exposición');
     expect(exposureLabel('Sin soja')).toBe('Sin soja');
+  });
+});
+
+describe('exposureLegendLabel', () => {
+  it('gives each class its range, whatever its case, and passes unknown ones through', () => {
+    expect(exposureLegendLabel('Sin soja')).toBe('Sin soja (sin superficie identificada)');
+    expect(exposureLegendLabel('Sin exposición identificada')).toBe('Sin exposición (0%)');
+    expect(exposureLegendLabel('Bajo')).toBe('Baja (>0-10%)');
+    expect(exposureLegendLabel('MEDIO')).toBe('Media (>10-50%)');
+    expect(exposureLegendLabel('Alto')).toBe('Alta (>50%)');
+    expect(exposureLegendLabel('Extremo')).toBe('Extremo');
   });
 });
 
