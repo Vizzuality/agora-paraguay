@@ -1,5 +1,6 @@
 import { useSetAtom } from 'jotai';
 
+import { AnalysisActions } from '@/components/analysis-actions';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoList } from '@/components/general-info-card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,8 @@ export function DistrictPanel() {
         </div>
         {info.length > 0 && <GeneralInfoList items={info} />}
       </div>
+
+      <AnalysisActions riesgo="exposicion_climatica" />
 
       {indicators.isPending && (
         <p className="text-sm text-muted-foreground">Cargando indicadores…</p>

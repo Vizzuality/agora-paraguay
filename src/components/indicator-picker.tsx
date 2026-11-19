@@ -11,26 +11,61 @@ import {
   visibleIndicatorIds,
 } from '@/lib/analysis/indicator-picker';
 import { useApplicableIndicators } from '@/lib/analysis/use-applicable-indicators';
+import { useExposureIndicators } from '@/lib/analysis/use-exposure-widgets';
 import { errorReason } from '@/lib/api/http';
-import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicators, IndicatorsRiesgo, Riesgo } from '@/lib/api/metadata/schemas';
 import { cn } from '@/lib/utils';
 import { selectedIndicatorIdsAtom } from '@/store/analysis';
 
-type IndicatorPickerProps = {
-  riesgo: Riesgo;
+type PickerSourceProps = {
   /** Extra classes for the trigger button (the side column sizes it). */
   className?: string;
 };
 
-/**
- * Personalizar indicadores: the button closing the hero opens a popover with a
- * search box and the riesgo's measured indicators as a checklist; checked ones are the
- * cards on the page. General info is not listed: it is always shown. Renders inside
- * `<ClientOnly>` (it reads the analysis atoms).
- */
-export function IndicatorPicker({ riesgo, className }: Readonly<IndicatorPickerProps>) {
-  const { indicators, indicatorsError: error } = useApplicableIndicators(riesgo);
+/** The riesgo pages' picker: the indicators that apply to the analysed parcels. */
+export function RiskIndicatorPicker({
+  riesgo,
+  className,
+}: Readonly<PickerSourceProps & { riesgo: Riesgo }>) {
+  const { indicators, indicatorsError } = useApplicableIndicators(riesgo);
 
+  return (
+    <IndicatorPicker
+      riesgo={riesgo}
+      indicators={indicators && selectableIndicators(indicators, riesgo)}
+      error={indicatorsError}
+      className={className}
+    />
+  );
+}
+
+/** Exposición climática's picker: its own indicator list, nothing to analyse first. */
+export function ExposureIndicatorPicker({ className }: Readonly<PickerSourceProps>) {
+  const { indicators, selectable } = useExposureIndicators();
+
+  return (
+    <IndicatorPicker
+      riesgo="exposicion_climatica"
+      indicators={selectable}
+      error={indicators.error}
+      className={className}
+    />
+  );
+}
+
+type IndicatorPickerProps = PickerSourceProps & {
+  riesgo: IndicatorsRiesgo;
+  /** The checklist, already narrowed to what the page lets the user pick. */
+  indicators: Indicators | undefined;
+  error: Error | null | undefined;
+};
+
+/**
+ * Personalizar indicadores: a popover with a search box and the page's measured
+ * indicators as a checklist; checked ones are the cards on the page. General info is not
+ * listed: it is always shown. Renders inside `<ClientOnly>` (it reads the analysis atoms).
+ */
+function IndicatorPicker({ riesgo, indicators, error, className }: Readonly<IndicatorPickerProps>) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -51,10 +86,7 @@ export function IndicatorPicker({ riesgo, className }: Readonly<IndicatorPickerP
         className="w-auto min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
       >
         {indicators ? (
-          <IndicatorChecklist
-            riesgo={riesgo}
-            indicators={selectableIndicators(indicators, riesgo)}
-          />
+          <IndicatorChecklist riesgo={riesgo} indicators={indicators} />
         ) : error ? (
           <p role="alert" className="px-3 py-2.5 text-sm text-destructive">
             No se pudieron cargar los indicadores: {errorReason(error)}
@@ -72,7 +104,7 @@ export function IndicatorPicker({ riesgo, className }: Readonly<IndicatorPickerP
 function IndicatorChecklist({
   riesgo,
   indicators,
-}: Readonly<{ riesgo: Riesgo; indicators: Indicators }>) {
+}: Readonly<{ riesgo: IndicatorsRiesgo; indicators: Indicators }>) {
   const [selection, toggle] = useAtom(selectedIndicatorIdsAtom);
   const selected = selection[riesgo];
   const [query, setQuery] = useState('');

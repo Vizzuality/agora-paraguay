@@ -5,6 +5,7 @@ import { Bug, ThermometerSun, type LucideIcon } from 'lucide-react';
 import { CapasBasemap } from '@/components/map/capas-basemap';
 import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
 import { PanelMap } from '@/components/map/panel-map';
+import { ReportMapImage, ReportSnapshot } from '@/components/map/report-snapshot';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { exposureMapViewAtom, selectedDistrictAtom } from '@/store/exposure';
@@ -73,9 +74,10 @@ function ExposureViewTabs() {
   );
 }
 
-/** The exposure map in the open view; a district is picked on it. */
+/** The exposure map in the open view; a district is picked on it, and the report prints it. */
 function ExposureMap({ className }: Readonly<{ className?: string }>) {
   const view = useAtomValue(exposureMapViewAtom);
+  const district = useAtomValue(selectedDistrictAtom);
 
   return (
     <div className={cn('relative overflow-hidden rounded-3xl bg-muted', className)}>
@@ -83,6 +85,9 @@ function ExposureMap({ className }: Readonly<{ className?: string }>) {
         <PanelMap>
           <CapasBasemap showOverlay={view === 'capas'} />
           <ExposureLayers view={view} />
+          {/* Without bounds the camera stays where the pick flew it: on the district. */}
+          {district && <ReportSnapshot frame={district.bounds ?? null} />}
+          {district && <ReportMapImage />}
         </PanelMap>
       </ClientOnly>
     </div>

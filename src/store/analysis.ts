@@ -3,7 +3,7 @@ import { atomWithReset, RESET } from 'jotai/utils';
 
 import { EMPTY_ANALYSIS_FILTERS, type AnalysisFilterSelection } from '@/lib/analysis/filters';
 import { toggleIndicatorIds } from '@/lib/analysis/indicator-picker';
-import type { Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 import type { FeatureId } from '@/lib/map/draw-features';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 
@@ -122,19 +122,23 @@ export const resetAnalysisAtom = atom(null, (_get, set) => {
 /**
  * Personalizar indicadores: the indicator ids each analysis page shows, or `null` while
  * the user has not touched that page's list (the API's `default` flags apply —
- * `visibleIndicatorIds`). One list per riesgo: the two pages list different indicators,
- * so a pick on one must not filter the other. Reads the record; writes toggle one id on
- * one riesgo, so the raw lists are never set from a component.
+ * `visibleIndicatorIds`). One list per page (Exposición climática included): each lists
+ * different indicators, so a pick on one must not filter another. Reads the record; writes
+ * toggle one id on one page, so the raw lists are never set from a component.
  */
-export type IndicatorSelection = Record<Riesgo, string[] | null>;
+export type IndicatorSelection = Record<IndicatorsRiesgo, string[] | null>;
 
-const NO_SELECTION: IndicatorSelection = { sanitario: null, productivo: null };
+const NO_SELECTION: IndicatorSelection = {
+  sanitario: null,
+  productivo: null,
+  exposicion_climatica: null,
+};
 
 const selectedIndicatorIdsBaseAtom = atomWithReset<IndicatorSelection>(NO_SELECTION);
 
 export const selectedIndicatorIdsAtom = atom(
   (get) => get(selectedIndicatorIdsBaseAtom),
-  (get, set, update: { riesgo: Riesgo; indicators: Indicators; ids: string[] }) => {
+  (get, set, update: { riesgo: IndicatorsRiesgo; indicators: Indicators; ids: string[] }) => {
     const current = get(selectedIndicatorIdsBaseAtom);
 
     set(selectedIndicatorIdsBaseAtom, {
