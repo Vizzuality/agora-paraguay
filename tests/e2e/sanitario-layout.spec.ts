@@ -28,7 +28,7 @@ async function pickDate(page: Page, field: Locator, iso: string) {
   await expect(field).toHaveAttribute('data-value', iso);
 }
 
-/** Opens Cultivo y fechas, where the filters and Personalizar indicadores live on sanitario. */
+/** Opens Cultivo y fechas, where the analysis filters live. */
 async function openFilters(page: Page) {
   const filters = page.getByRole('region', { name: 'Cultivo y fechas' });
   await filters.getByRole('button', { name: /Cultivo y fechas/ }).click();
@@ -82,9 +82,13 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   await expect(info).toContainText('Tipo de cultivo');
   await expect(info).toContainText('Soja');
 
-  // Personalizar indicadores closes the Cultivo y fechas section on sanitario.
+  // Personalizar indicadores sits beside Exportar informe in the content column, as on
+  // productivo, and no longer in the sidebar.
+  const main = page.getByRole('main');
+  await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Exportar informe' })).toBeEnabled();
   const filters = await openFilters(page);
-  await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
+  await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
 
 test('the analysis runs with the default filters, and each change re-runs it', async ({ page }) => {
@@ -135,8 +139,7 @@ test('Personalizar indicadores drops an indicator from the analysis and its card
   await analyseOnRedesign(page, '/analisis/sanitario');
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
 
-  const filters = await openFilters(page);
-  await filters.getByRole('button', { name: 'Personalizar indicadores' }).click();
+  await page.getByRole('main').getByRole('button', { name: 'Personalizar indicadores' }).click();
   const list = page.getByRole('list', { name: 'Indicadores' });
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).toBeChecked();
   // General info is always shown, so it is not in the list.
@@ -203,7 +206,7 @@ test('shows a loader while a filter change re-runs the analysis', async ({ page 
   await expect(status).toHaveCount(0);
 });
 
-test('the first analysis waits in a bordered frame as tall as the map it replaces', async ({
+test('the first analysis waits in a bordered frame that ends inside the window, under the actions', async ({
   page,
 }) => {
   let release: () => void = () => {};
@@ -219,9 +222,10 @@ test('the first analysis waits in a bordered frame as tall as the map it replace
   await expect(status).toBeVisible();
   await expect(status).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(status).toHaveCSS('border-top-width', '3px');
+  // The actions sit above it: its bottom on the content column's 40px padding.
   const viewport = page.viewportSize()!;
   const box = (await status.boundingBox())!;
-  expect(Math.abs(box.height - (viewport.height - 80))).toBeLessThan(2);
+  expect(Math.abs(box.y + box.height - (viewport.height - 40))).toBeLessThan(2);
 
   release();
   await expect(status).toHaveCount(0);
@@ -254,4 +258,32 @@ test('the login backdrop dims the widgets as well as the sidebar', async ({ page
     point!,
   );
   expect(topmost).toBe('login-backdrop');
+});
+
+test('Exportar informe prints sanitario as its report, the map as an image', async ({ page }) => {
+  // The dialog itself is the browser's: the report is checked in the paper layout before it.
+  await page.addInitScript(() => {
+    window.print = () => {};
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await analyseOnRedesign(page, '/analisis/sanitario');
+  await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
+
+  const main = page.getByRole('main');
+  await main.getByRole('button', { name: 'Exportar informe' }).click();
+  await expect(page.locator('html.paper-layout')).toHaveCount(1);
+  await expect(page).toHaveTitle(/^agora-sanitario-\d{4}-\d{2}-\d{2}$/);
+
+  // The settings stack above the content, which takes the paper's width.
+  const settings = page.getByRole('complementary', { name: 'Configuración' });
+  await expect.poll(async () => (await main.boundingBox())!.width).toBeGreaterThan(700);
+  expect((await settings.boundingBox())!.y).toBeLessThan((await main.boundingBox())!.y);
+
+  // The mini map prints from an image; the actions stay off the paper.
+  const area = settings.getByRole('region', { name: 'Área de interés' });
+  await expect(area.locator('img[src^="data:image/png"]')).toBeVisible();
+  await page.emulateMedia({ media: 'print' });
+  await expect(main.getByRole('button', { name: 'Exportar informe' })).toBeHidden();
+  await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeHidden();
+  await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
 });
