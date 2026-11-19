@@ -9,6 +9,7 @@ const parcel = (parcel_id: string, last_crop_type: Crop | null): FilteredParcel 
   geometry: { type: 'FeatureCollection', features: [] },
   selected: true,
   last_crop_type,
+  crop_types: last_crop_type ? [last_crop_type] : [],
 });
 
 const PARCELS = [

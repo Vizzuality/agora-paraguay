@@ -47,8 +47,8 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
 export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
   const mutation = useMutation(analysisMutations.summary());
   const activeId = useAtomValue(activeParcelIdAtom);
-  const { resolvedFilters } = useHeroFilters('productivo');
-  const request = toSummaryRequest(parcels, activeId, resolvedFilters);
+  const { resolvedFilters, lastCrop } = useHeroFilters('productivo');
+  const request = toSummaryRequest(parcels, activeId, resolvedFilters, lastCrop);
   const generate = () => request && mutation.mutate(request);
 
   return (
