@@ -29,6 +29,7 @@ export function AnalysisIdentifierSetting() {
         id={id}
         value={identifier}
         onChange={(event) => setIdentifier(event.target.value)}
+        placeholder="Inserte código de proyecto"
         autoComplete="off"
         className={cn(FLOATING_FIELD_CLASS, 'border-border')}
       />

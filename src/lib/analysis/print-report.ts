@@ -1,6 +1,6 @@
 import type { createStore } from 'jotai';
 
-import { paperLayoutAtom, reportMapAtom } from '@/store/report';
+import { paperLayoutAtom, reportGeneratedAtAtom, reportMapAtom } from '@/store/report';
 
 type Store = ReturnType<typeof createStore>;
 
@@ -66,6 +66,7 @@ export function printReport(fileName: string, store: Store): void {
   root.classList.remove('dark');
   root.classList.add(PAPER_LAYOUT_CLASS);
   store.set(reportMapAtom, null);
+  store.set(reportGeneratedAtAtom, new Date());
   store.set(paperLayoutAtom, true);
   void whenReportReady(store).then(() => window.print());
 }

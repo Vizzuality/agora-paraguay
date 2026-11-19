@@ -298,4 +298,10 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
   await expect(main.getByRole('button', { name: 'Exportar informe' })).toBeHidden();
   await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeHidden();
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
+  // The last line says where, for which analysis and when; no identifier was given.
+  await expect(
+    main.getByText(
+      /^Estos resultados se han generado mediante la plataforma AGORA para este análisis, el \d+ de \w+ de \d{4}\.$/,
+    ),
+  ).toBeVisible();
 });
