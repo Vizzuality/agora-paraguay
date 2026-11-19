@@ -139,7 +139,7 @@ function HeroField({
   }
 }
 
-/** A value the app sets on its own (the current year): the field's look, nothing to pick. */
+/** A value the app sets on its own (the year): the field's look, nothing to pick. */
 function HeroReadOnly({
   label,
   description,
