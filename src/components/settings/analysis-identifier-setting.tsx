@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { useId } from 'react';
 
 import { InfoTip } from '@/components/info-tip';
@@ -19,8 +19,7 @@ const DESCRIPTION =
  * inside `<ClientOnly>`.
  */
 export function AnalysisIdentifierSetting() {
-  const identifier = useAtomValue(analysisIdentifierAtom);
-  const setIdentifier = useSetAtom(analysisIdentifierAtom);
+  const [identifier, setIdentifier] = useAtom(analysisIdentifierAtom);
   const id = useId();
 
   return (

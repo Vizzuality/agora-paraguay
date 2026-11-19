@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, LayoutGrid, SquarePen, Undo2, Upload } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -74,8 +74,7 @@ function SelectingArea() {
 function AreaCards() {
   const draw = useAtomValue(drawAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
-  const rejection = useAtomValue(areaRejectionAtom);
-  const setRejection = useSetAtom(areaRejectionAtom);
+  const [rejection, setRejection] = useAtom(areaRejectionAtom);
   const startDraw = useSetAtom(startDrawAtom);
   const restart = useSetAtom(clearSelectionAtom);
   const handleChange = useUploadFile();

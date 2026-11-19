@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { X } from 'lucide-react';
 
 import { ErrorToast, NO_PARCEL_INTERSECTION_MESSAGE } from '@/components/error-toast';
@@ -72,8 +72,7 @@ function uploadStatus(result: UploadResult): string {
 
 /** The visible counterpart of the live region: upload errors and per-polygon warnings. */
 function UploadNotices() {
-  const uploadResult = useAtomValue(uploadResultAtom);
-  const setUploadResult = useSetAtom(uploadResultAtom);
+  const [uploadResult, setUploadResult] = useAtom(uploadResultAtom);
 
   if (uploadResult === null) return null;
   if (uploadResult.error === null && uploadResult.warnings.length === 0) return null;
