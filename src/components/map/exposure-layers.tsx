@@ -25,6 +25,7 @@ import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district'
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
 import { cn } from '@/lib/utils';
 import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
+import { themeAtom } from '@/store/theme';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
 export type ExposureMapView = 'exposicion' | 'capas';
@@ -64,6 +65,8 @@ const TONE_SWATCH: Record<RiskTone, string> = {
  */
 export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const selected = useAtomValue(selectedDistrictAtom);
+  // The districts take the theme's chart colours, as the legend's tokens do.
+  const theme = useAtomValue(themeAtom);
   const pickDistrict = useSetAtom(pickDistrictAtom);
   const [hovered, setHovered] = useState<Hovered | null>(null);
   // A tab switch moves no pointer, so the last tab's hover would linger without this.
@@ -181,9 +184,9 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
         id={EXPOSURE_LAYER.id}
         {...(exposure
           ? {
-              color: exposureColor(classes),
+              color: exposureColor(classes, theme),
               fill: {
-                color: exposureColor(classes),
+                color: exposureColor(classes, theme),
                 opacity: EXPOSURE_FILL_OPACITY,
                 outlineColor: 'rgba(0, 0, 0, 0)',
               },

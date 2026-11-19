@@ -9,6 +9,7 @@ import {
 import type { AnalysisParcel, ParcelValue } from '@/lib/api/analysis/schemas';
 import type { IndicatorType } from '@/lib/api/metadata/schemas';
 import type { Bounds } from '@/lib/map/area-bounds';
+import type { Theme } from '@/lib/theme';
 
 /** A district on the exposure layer, read from its feature's properties. */
 export type ExposureDistrict = {
@@ -55,15 +56,25 @@ const FALLBACK_CLASSES: readonly RiskClass[] = [
 ];
 
 /**
- * The hex each ruler tone paints a district with, fill and outline alike: the light-theme
- * chart values. MapLibre cannot read the CSS tokens the widgets paint with.
+ * The hex each ruler tone paints a district with, per theme: the outline solid, the fill
+ * at `EXPOSURE_FILL_OPACITY`. The chart tokens' values (`--chart-*` in `globals.css`),
+ * restated because MapLibre cannot read CSS tokens.
  */
-const TONE_HEX: Record<RiskTone, string> = {
-  none: '#109704',
-  low: '#2A7BF1',
-  medium: '#657690',
-  elevated: '#E06900',
-  high: '#EC1919',
+const TONE_HEX: Record<Theme, Record<RiskTone, string>> = {
+  light: {
+    none: '#109704',
+    low: '#2A7BF1',
+    medium: '#657690',
+    elevated: '#E06900',
+    high: '#EC1919',
+  },
+  dark: {
+    none: '#1AF807',
+    low: '#4C95FF',
+    medium: '#96A3B5',
+    elevated: '#FF871F',
+    high: '#FF3838',
+  },
 };
 
 /** A district's fill at half its class colour, as the legend swatch; the outline stays solid. */
@@ -73,17 +84,23 @@ export const EXPOSURE_FILL_OPACITY = 0.5;
 export const EXPOSURE_LINE_WIDTH = 2;
 
 /**
- * Each district in its class's colour, fill and outline alike: `Ex_class` matched to
- * `classes`, grey for a class not listed (or no classes at all, since match needs one).
+ * Each district in its class's colour for the theme, fill and outline alike: `Ex_class`
+ * matched to `classes`, grey for a class not listed (or no classes at all, since match
+ * needs one).
  */
-export function exposureColor(classes: readonly RiskClass[]): ExpressionSpecification | string {
-  if (classes.length === 0) return TONE_HEX.medium;
+export function exposureColor(
+  classes: readonly RiskClass[],
+  theme: Theme = 'light',
+): ExpressionSpecification | string {
+  const hex = TONE_HEX[theme];
+
+  if (classes.length === 0) return hex.medium;
 
   return [
     'match',
     ['get', 'Ex_class'],
-    ...classes.flatMap(({ label, tone }) => [label, TONE_HEX[tone]]),
-    TONE_HEX.medium,
+    ...classes.flatMap(({ label, tone }) => [label, hex[tone]]),
+    hex.medium,
   ] as unknown as ExpressionSpecification;
 }
 

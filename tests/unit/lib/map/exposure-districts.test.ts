@@ -125,6 +125,32 @@ describe('exposureColor', () => {
   it('paints everything grey with no classes, since match needs a label', () => {
     expect(exposureColor([])).toBe('#657690');
   });
+
+  it("takes the dark theme's chart colours in dark mode", () => {
+    expect(
+      exposureColor(
+        [
+          { label: 'Bajo', tone: 'none' },
+          { label: 'Medio', tone: 'elevated' },
+          { label: 'Alto', tone: 'high' },
+          { label: 'Sin exposición', tone: 'low' },
+        ],
+        'dark',
+      ),
+    ).toEqual([
+      'match',
+      ['get', 'Ex_class'],
+      'Bajo',
+      '#1AF807',
+      'Medio',
+      '#FF871F',
+      'Alto',
+      '#FF3838',
+      'Sin exposición',
+      '#4C95FF',
+      '#96A3B5',
+    ]);
+  });
 });
 
 describe('districtFlight', () => {
