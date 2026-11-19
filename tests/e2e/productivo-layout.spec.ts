@@ -204,10 +204,12 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // A parcel tab goes back to columns: the widgets narrow below the full width.
   const parcelBox = await production.boundingBox();
   expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
+  // Todas is the picker's first option.
   await page
     .getByRole('region', { name: 'Área de interés' })
-    .getByRole('button', { name: 'Todas' })
+    .getByRole('combobox', { name: 'Parcela' })
     .click();
+  await page.getByRole('option', { name: 'Todas' }).click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 });
 

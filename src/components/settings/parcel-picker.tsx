@@ -14,10 +14,14 @@ import { searchParcels } from '@/lib/analysis/parcel-search';
 import { cn } from '@/lib/utils';
 import { activeParcelIdAtom, activeParcelTabAtom, analysedParcelIdsAtom } from '@/store/analysis';
 
+/** Todas as a picker option: every analysed parcel at once (`activeParcelTabAtom` null). */
+const TODAS_LABEL = 'Todas';
+
 /**
- * Parcela: the analysed parcels as "Parcela N", searchable by label or cadastral id. Under
- * Todas nothing is picked and the label rests in the field; reopened, the picked parcel
- * heads the list. Reads atoms: render inside `<ClientOnly>`.
+ * Parcela: Todas, then the analysed parcels as "Parcela N", searchable by label or
+ * cadastral id. Todas is the field's value when it is the open tab, and only an option
+ * while there is more than one parcel; reopened, the picked option heads the list.
+ * Reads atoms: render inside `<ClientOnly>`.
  */
 export function ParcelPicker() {
   const parcels = useAtomValue(analysedParcelIdsAtom);
@@ -28,19 +32,28 @@ export function ParcelPicker() {
   const [highlighted, setHighlighted] = useState(0);
   const id = useId();
   const listId = `${id}-list`;
-  const optionId = (parcel: string) => `${id}-${parcel}`;
-  const matches = searchParcels(parcels, query);
-  const highlightedParcel = matches[highlighted];
+  // `null` is Todas, as in `activeParcelTabAtom`.
+  const optionId = (option: string | null) => `${id}-${option ?? 'todas'}`;
+  const optionLabel = (option: string | null) =>
+    option === null ? TODAS_LABEL : parcelLabel(option, parcels);
+  const showTodas =
+    parcels.length > 1 && TODAS_LABEL.toLowerCase().includes(query.trim().toLowerCase());
+  const options: (string | null)[] = [
+    ...(showTodas ? [null] : []),
+    ...searchParcels(parcels, query),
+  ];
+  const highlightedOption = options.at(highlighted);
 
   const openChange = (next: boolean) => {
     setOpen(next);
     if (!next) return;
     setQuery('');
-    setHighlighted(Math.max(0, activeId === null ? 0 : parcels.indexOf(activeId)));
+    // Unfiltered, the list is Todas then the parcels in order.
+    setHighlighted(Math.max(0, activeId === null ? 0 : parcels.indexOf(activeId) + 1));
   };
 
-  const choose = (parcel: string) => {
-    setActiveTab(parcel);
+  const choose = (option: string | null) => {
+    setActiveTab(option);
     setOpen(false);
   };
 
@@ -52,19 +65,20 @@ export function ParcelPicker() {
   }, []);
 
   // Keyboard moves keep the highlighted row in view.
+  const highlightedId = highlightedOption === undefined ? undefined : optionId(highlightedOption);
   useEffect(() => {
-    if (!open || highlightedParcel === undefined) return;
-    document.getElementById(`${id}-${highlightedParcel}`)?.scrollIntoView({ block: 'nearest' });
-  }, [open, highlightedParcel, id]);
+    if (!open || highlightedId === undefined) return;
+    document.getElementById(highlightedId)?.scrollIntoView({ block: 'nearest' });
+  }, [open, highlightedId]);
 
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const step = event.key === 'ArrowDown' ? 1 : -1;
-      setHighlighted((index) => Math.min(Math.max(index + step, 0), matches.length - 1));
-    } else if (event.key === 'Enter' && highlightedParcel !== undefined) {
+      setHighlighted((index) => Math.min(Math.max(index + step, 0), options.length - 1));
+    } else if (event.key === 'Enter' && highlightedOption !== undefined) {
       event.preventDefault();
-      choose(highlightedParcel);
+      choose(highlightedOption);
     }
   };
 
@@ -79,16 +93,12 @@ export function ParcelPicker() {
             aria-expanded={open}
             aria-controls={listId}
             disabled={parcels.length === 1}
-            // Empty under Todas: the floating label rests in the field (`field-empty`).
-            data-placeholder={activeId === null ? '' : undefined}
             className={cn(
               FLOATING_FIELD_CLASS,
               'flex cursor-pointer items-center justify-between gap-2 border text-left whitespace-nowrap text-primary outline-none disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
-            <span className="truncate">
-              {activeId === null ? '' : parcelLabel(activeId, parcels)}
-            </span>
+            <span className="truncate">{optionLabel(activeId)}</span>
             <ChevronDownIcon aria-hidden className="size-4 shrink-0 opacity-50 print:hidden" />
           </button>
         </PopoverTrigger>
@@ -111,9 +121,7 @@ export function ParcelPicker() {
               placeholder="Buscar parcela"
               aria-label="Buscar parcela"
               aria-controls={listId}
-              aria-activedescendant={
-                highlightedParcel === undefined ? undefined : optionId(highlightedParcel)
-              }
+              aria-activedescendant={highlightedId}
               className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </label>
@@ -126,12 +134,12 @@ export function ParcelPicker() {
             // No top fade: the picked parcel scrolls to the top and must read in full.
             className="scroll-fade-y relative max-h-72 overflow-y-auto [--scroll-fade-top:0px]!"
           >
-            {matches.length === 0 && (
+            {options.length === 0 && (
               <p className="px-2 py-1.5 text-sm text-muted-foreground">Sin resultados</p>
             )}
-            {matches.map((parcel, index) => (
+            {options.map((parcel, index) => (
               <div
-                key={parcel}
+                key={optionId(parcel)}
                 id={optionId(parcel)}
                 role="option"
                 // Focus stays on the search box (`aria-activedescendant`); a click on a
@@ -148,7 +156,7 @@ export function ParcelPicker() {
                 onMouseMove={() => setHighlighted(index)}
                 className="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
               >
-                {parcelLabel(parcel, parcels)}
+                {optionLabel(parcel)}
                 {parcel === activeId && (
                   <CheckIcon aria-hidden className="absolute right-2 size-4" />
                 )}
