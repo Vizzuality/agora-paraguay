@@ -55,10 +55,9 @@ test('draws an area, analyses it, and edits the parcels back', async ({ page }) 
   await analyze.click();
   await expect(page.getByRole('main').locator('canvas')).toHaveCount(0);
   await expect(section.locator('canvas.maplibregl-canvas')).toBeVisible();
-  await expect(section.getByRole('button', { name: 'Todas' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  // Todas is the picker's value; no button of its own.
+  await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
+  await expect(section.getByRole('button', { name: 'Todas' })).toHaveCount(0);
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
 
   // Nuevo análisis goes back to the selection with the parcels kept.
@@ -77,10 +76,7 @@ test('a reload keeps the analysis', async ({ page }) => {
   await expect.poll(() => savedAnalysedParcelCount(page)).toBeGreaterThan(0);
 
   await page.reload();
-  await expect(area(page).getByRole('button', { name: 'Todas' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
 });
 
 test('after a reload the mini map shows a loader, not the drawn area, until the parcels show', async ({
