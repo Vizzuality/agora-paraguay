@@ -5,11 +5,10 @@ import { TopBar } from '@/components/frame/top-bar';
 
 /**
  * The redesign's page frame: the top bar and the settings on the left, the content on
- * the right, the footer below. The columns stop growing at 1440px and centre beyond it;
- * at that width they split in halves. From `lg` the left column stays in view while the
- * content scrolls; one taller than the window scrolls on its own. Below 1440px the
- * content keeps the width it has there and the settings column gives up the rest. The
- * column stretches to the row, up to the window, so a setting can fill it to the bottom.
+ * the right, the footer below. From `lg` the two columns split the width in halves; they
+ * stop growing at 1440px and centre beyond it. The left column stays in view while the
+ * content scrolls; one taller than the window scrolls on its own. The column stretches
+ * to the row, up to the window, so a setting can fill it to the bottom.
  * Below `lg` the columns stack, settings first.
  *
  * The report stacks them too, in print and in the paper layout before it (`printReport`):
@@ -31,8 +30,7 @@ export function PageFrame({
           </aside>
         </div>
 
-        {/* 168 = 672px, its half at 1440: (1440 − 2 × 40 padding − 16 gap) / 2. */}
-        <main className="flex min-w-0 flex-1 flex-col gap-4 pb-10 lg:min-w-168 lg:pt-10 print:min-w-0 print:pt-0 paper:min-w-0 paper:pt-0">
+        <main className="flex min-w-0 flex-1 flex-col gap-4 pb-10 lg:pt-10 print:pt-0 paper:pt-0">
           {children}
         </main>
       </div>

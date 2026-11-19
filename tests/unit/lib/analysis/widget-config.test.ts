@@ -37,6 +37,33 @@ describe('widgetFor', () => {
     ).toBe('histogram');
   });
 
+  it('productivo, one parcel: Resiliencia is a fact, the seasons counters stay cards; under Todas, widgets', () => {
+    expect(
+      widgetFor(category, { riesgo: 'productivo', scope: 'individual', id: 'Resiliencia' }),
+    ).toBe('fact');
+    expect(
+      widgetFor(category, { riesgo: 'productivo', scope: 'multiple', id: 'Resiliencia' }),
+    ).not.toBe('fact');
+    for (const id of ['N_soja', 'N_rice']) {
+      expect(widgetFor(index, { riesgo: 'productivo', scope: 'individual', id })).toBe('number');
+      expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple', id })).toBe('histogram');
+    }
+    expect(
+      widgetFor({ type: 'list' }, { riesgo: 'productivo', scope: 'multiple', id: 'Zafras_soja' }),
+    ).toBe('fact');
+    expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual', id: 'Pro_soja' })).toBe(
+      'number',
+    );
+  });
+
+  it('the area is a fact on every riesgo and scope', () => {
+    for (const riesgo of ['sanitario', 'productivo', 'exposicion_climatica'] as const) {
+      for (const scope of ['individual', 'multiple'] as const) {
+        expect(widgetFor(numeric, { riesgo, scope, id: 'area', unit: 'ha' })).toBe('fact');
+      }
+    }
+  });
+
   it("productivo: a range is one parcel's number or the set's histogram, short or long; text is general info", () => {
     expect(widgetFor(index, { riesgo: 'productivo', scope: 'individual' })).toBe('number');
     expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple' })).toBe('histogram');

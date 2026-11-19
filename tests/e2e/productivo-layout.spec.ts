@@ -120,6 +120,21 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   expect(todasBoxes[0]!.width).toBe(todasBoxes[1]!.width);
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
+  // Información de contexto sums the area and counts the parcels per soy season, one a
+  // line, under the indicator's name with its description.
+  const info = page.getByRole('heading', { name: 'Información de contexto' }).locator('..');
+  await expect(info).toContainText('17,5 ha');
+  await expect(
+    info.getByRole('term').filter({ hasText: 'Listado de Zafras de soja' }),
+  ).toBeVisible();
+  await expect(
+    info.getByRole('button', { name: 'Más información sobre Listado de Zafras de soja' }),
+  ).toBeVisible();
+  const zafras = info.getByRole('definition').filter({ hasText: '2022-2023 (2 parcelas)' });
+  await expect(zafras).not.toContainText(',');
+  expect(await zafras.innerText()).toBe(
+    '2017-2018 (1 parcela)\n2018-2019 (1 parcela)\n2019-2020 (1 parcela)\n2020-2021 (1 parcela)\n2022-2023 (2 parcelas)\n2023-2024 (1 parcela)\n2024-2025 (1 parcela)',
+  );
 
   // The arroz indicator belongs to the other crop: no widget.
   await expect(
@@ -131,10 +146,31 @@ test('the productivo widgets read the selection under Todas and one parcel when 
     .getByRole('region', { name: 'Área de interés' })
     .getByRole('combobox', { name: 'Parcela' });
   await parcel.click();
+  // The search narrows the list by label (or cadastral id).
+  await page.getByRole('searchbox', { name: 'Buscar parcela' }).fill('parcela 2');
+  await expect(page.getByRole('option')).toHaveText(['Parcela 2']);
   await page.getByRole('option', { name: 'Parcela 2' }).click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  // Reopened, the search starts empty and the picked parcel is marked.
+  await parcel.click();
+  await expect(page.getByRole('searchbox', { name: 'Buscar parcela' })).toHaveValue('');
+  await expect(page.getByRole('option', { name: 'Parcela 2' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.keyboard.press('Escape');
+  // One parcel's resilience reads in the context panel instead; the seasons count stays a
+  // card, that parcel's figure.
+  await expect(resilience).toHaveCount(0);
   await expect(seasons.locator('[data-slot="figure"]')).toHaveText('3');
-  await expect(resilience.locator('[data-slot="risk-level"]')).toHaveText('Media');
+  await expect(
+    info.getByRole('term').filter({ hasText: 'Proxy de resiliencia operativa' }),
+  ).toBeVisible();
+  await expect(
+    info.getByRole('term').filter({ hasText: 'Contador de zafras de soja detectadas' }),
+  ).toHaveCount(0);
+  await expect(info).toContainText('7,3 ha');
+  await expect(info).toContainText('2022-2023, 2023-2024, 2024-2025');
   // On one parcel the projection reads its own scenarios; its base is one value.
   await expect(projection.getByRole('listitem')).toHaveText([
     `${YEAR}: neutro 3,81 t/ha, pesimista 3,81 t/ha, optimista 3,81 t/ha`,
@@ -148,11 +184,10 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // A parcel tab goes back to columns: the widgets narrow below the full width.
   const parcelBox = await production.boundingBox();
   expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
-  await parcel.click();
-  // Todas stays pinned on top while the parcels scroll under it.
-  const todas = page.getByRole('option', { name: 'Todas' });
-  await expect(todas).toHaveCSS('position', 'sticky');
-  await todas.click();
+  await page
+    .getByRole('region', { name: 'Área de interés' })
+    .getByRole('button', { name: 'Todas' })
+    .click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
 });
 
@@ -313,7 +348,7 @@ test('Exportar informe lays the report out in one column, every chart inside its
   }
 
   // The área prints open: its map with the legend's rows and the credits written out,
-  // the parcel named in the heading in place of the picker and Editar parcelas.
+  // the parcel named in the heading in place of the picker, Todas and Nuevo análisis.
   const area = settings.getByRole('region', { name: 'Área de interés' });
   await expect(area.getByRole('button', { name: /^Área de interés/ })).toHaveAttribute(
     'aria-expanded',
@@ -324,7 +359,7 @@ test('Exportar informe lays the report out in one column, every chart inside its
     'Área de interés - Todas',
   );
   await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
-  await expect(area.getByRole('button', { name: 'Editar parcelas' })).toBeHidden();
+  await expect(area.getByRole('button', { name: 'Nuevo análisis' })).toBeHidden();
   await expect(area.getByRole('list', { name: 'Leyenda de parcelas' })).toBeVisible();
   await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
   await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();

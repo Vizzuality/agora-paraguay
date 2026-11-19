@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { CircleArrowRight, SquarePen, Undo2, Upload } from 'lucide-react';
-import { useId, useRef } from 'react';
+import { CircleArrowRight, LayoutGrid, SquarePen, Undo2, Upload } from 'lucide-react';
+import { useRef } from 'react';
 
 import {
   NO_PARCEL_INTERSECTION_MESSAGE,
@@ -8,17 +8,10 @@ import {
 } from '@/components/error-toast';
 import { AnalysedParcelsLayers } from '@/components/map/analysed-parcels-layers';
 import { PanelMap } from '@/components/map/panel-map';
+import { ParcelPicker } from '@/components/settings/parcel-picker';
 import { SettingCardButton } from '@/components/settings/setting-card';
 import { UploadFeedback } from '@/components/sidebar/upload-feedback';
 import { Button } from '@/components/ui/button';
-import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { parcelLabel } from '@/lib/analysis/parcel-label';
 import { selectionStep } from '@/lib/selection-steps';
 import { UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
@@ -30,8 +23,6 @@ import { drawAtom, restartSelectionAtom, startDrawAtom } from '@/store/draw';
 import { analysedViewAtom, backToSelectionAtom, startAnalysisAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
 import { uploadResultAtom } from '@/store/upload';
-
-const ALL = 'todas';
 
 /** What the closed heading says: the open parcel once analysed, nothing before. */
 export function useAreaSelectionLabel(): string | undefined {
@@ -46,7 +37,7 @@ export function useAreaSelectionLabel(): string | undefined {
 
 /**
  * Área de interés: building the selection (upload or draw, then Reiniciar / Analizar,
- * the map in the content column), or, once analysed, the parcel picker, Editar parcelas
+ * the map in the content column), or, once analysed, the parcel picker, Todas, Nuevo análisis
  * and the mini map. Reads atoms: render inside `<ClientOnly>`.
  */
 export function AreaSetting() {
@@ -173,73 +164,50 @@ function ConfirmCards() {
   );
 }
 
-/** Once analysed: which parcel the page reads, the way back to the selection, the mini map. */
+/** An área action: icon left of its label, 48px tall, as the setting cards' row form. */
+const AREA_ACTION_CLASS =
+  'h-12 gap-2.5 rounded-2xl px-8 font-normal max-md:px-4 [&_svg:not([class*=size-])]:size-6';
+
+/** Once analysed: which parcel the page reads, Todas, Nuevo análisis, the mini map. */
 function AnalysedArea() {
+  const parcels = useAtomValue(analysedParcelIdsAtom);
+  const activeId = useAtomValue(activeParcelIdAtom);
+  const setActiveTab = useSetAtom(activeParcelTabAtom);
   const backToSelection = useSetAtom(backToSelectionAtom);
+  const all = activeId === null;
 
   return (
     <>
       {/* The report names the parcel in the heading instead (`SettingsSection`). */}
-      <div className="flex items-center gap-6 print:hidden">
-        <ParcelSelect />
-        <Button
-          variant="ghost"
-          className="h-12 shrink-0 rounded-2xl px-4 font-normal text-primary"
-          onClick={() => backToSelection()}
-        >
-          <SquarePen aria-hidden />
-          Editar parcelas
+      <div className="flex items-end gap-3 pt-2 print:hidden">
+        <ParcelPicker />
+        {parcels.length > 1 && (
+          <Button
+            variant="secondary"
+            aria-pressed={all}
+            className={cn(
+              AREA_ACTION_CLASS,
+              'text-primary',
+              all ? 'border-3 border-primary' : 'border border-border',
+            )}
+            onClick={() => setActiveTab(null)}
+          >
+            <LayoutGrid aria-hidden strokeWidth={1.5} />
+            Todas
+          </Button>
+        )}
+        <Button className={AREA_ACTION_CLASS} onClick={() => backToSelection()}>
+          <SquarePen aria-hidden strokeWidth={1.5} />
+          Nuevo análisis
         </Button>
       </div>
 
       {/* Edge to edge under the controls, as the design bleeds it to the card's corners. */}
-      <div className="relative -mx-6 -mb-6 h-67 overflow-hidden rounded-3xl bg-muted print:h-120 paper:h-120">
+      <div className="relative -mx-6 -mb-6 h-70 overflow-hidden rounded-3xl bg-muted print:h-120 paper:h-120">
         <PanelMap>
           <AnalysedParcelsLayers />
         </PanelMap>
       </div>
     </>
-  );
-}
-
-/** Parcela: Todas (more than one parcel, pinned on top) then each analysed parcel, as "Parcela N". */
-function ParcelSelect() {
-  const parcels = useAtomValue(analysedParcelIdsAtom);
-  const activeId = useAtomValue(activeParcelIdAtom);
-  const setActiveTab = useSetAtom(activeParcelTabAtom);
-  const id = useId();
-  const options = parcels.length > 1 ? [ALL, ...parcels] : parcels;
-
-  return (
-    <div className="relative min-w-0 flex-1">
-      <Select
-        value={activeId ?? ALL}
-        onValueChange={(value) => setActiveTab(value === ALL ? null : value)}
-        disabled={options.length === 1}
-      >
-        <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
-          <SelectValue placeholder="Seleccionar parcela" />
-        </SelectTrigger>
-        <FloatingLabel htmlFor={id}>Parcela</FloatingLabel>
-        {/* Todas stays pinned over the scrolling parcels: no top fade, and its shadow covers the list padding above it. */}
-        <SelectContent viewportClassName="[--scroll-fade-top:0px]!">
-          {options.map((option) =>
-            option === ALL ? (
-              <SelectItem
-                key={option}
-                value={option}
-                className="sticky top-0 z-10 rounded-none border-b bg-popover shadow-[0_-0.25rem_0_var(--popover)]"
-              >
-                Todas
-              </SelectItem>
-            ) : (
-              <SelectItem key={option} value={option}>
-                {parcelLabel(option, parcels)}
-              </SelectItem>
-            ),
-          )}
-        </SelectContent>
-      </Select>
-    </div>
   );
 }

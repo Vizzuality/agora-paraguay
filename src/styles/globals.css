@@ -307,9 +307,9 @@ html.paper-layout body {
    in this corner they sit in a row instead. */
 .maplibregl-map .maplibregl-ctrl-top-left {
   top: 8px;
-  /* Right bounds the open credits 40px short of the map's edge; the corner itself
-     ignores the pointer (MapLibre), so the strip it spans stays draggable. */
-  right: 40px;
+  /* Right bounds the open credits 8px short of the map's edge, the inset of every side;
+     the corner itself ignores the pointer (MapLibre), so the strip it spans stays draggable. */
+  right: 8px;
   left: 8px;
   display: flex;
   align-items: center;

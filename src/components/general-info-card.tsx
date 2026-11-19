@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 import { InfoTip } from '@/components/info-tip';
 import { WidgetCard } from '@/components/widget-card';
 import { cn } from '@/lib/utils';
@@ -8,6 +10,8 @@ export type GeneralInfoItem = {
   /** The metadata's description, behind the label's info icon. */
   description?: string;
   value: string;
+  /** A list (`Zafras_soja`): each element stays on one line. */
+  list?: true;
 };
 
 type GeneralInfoCardProps = {
@@ -46,9 +50,30 @@ export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }
               className="mt-0.5 text-accent-foreground"
             />
           </dt>
-          <dd className="text-base">{item.value}</dd>
+          {/* A list under Todas reads one element a line. */}
+          <dd className="text-base whitespace-pre-line">
+            {item.list ? <ListValue value={item.value} /> : item.value}
+          </dd>
         </div>
       ))}
     </dl>
   );
+}
+
+/**
+ * A list's text, each element unbroken ("2017-2018 (546 parcelas)"): one a line under
+ * Todas, comma-separated on a parcel, where the line may break only after a comma.
+ */
+function ListValue({ value }: Readonly<{ value: string }>) {
+  // Seasons are distinct within a list, so each line and element keys by its own text.
+  return value.split('\n').map((line) => (
+    <span key={line} className="block">
+      {line.split(', ').map((element, index) => (
+        <Fragment key={element}>
+          {index > 0 && ', '}
+          <span className="whitespace-nowrap">{element}</span>
+        </Fragment>
+      ))}
+    </span>
+  ));
 }

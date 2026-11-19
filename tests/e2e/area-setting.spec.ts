@@ -55,11 +55,14 @@ test('draws an area, analyses it, and edits the parcels back', async ({ page }) 
   await analyze.click();
   await expect(page.getByRole('main').locator('canvas')).toHaveCount(0);
   await expect(section.locator('canvas.maplibregl-canvas')).toBeVisible();
-  await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
+  await expect(section.getByRole('button', { name: 'Todas' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
 
-  // Editar parcelas goes back to the selection with the parcels kept.
-  await section.getByRole('button', { name: 'Editar parcelas' }).click();
+  // Nuevo análisis goes back to the selection with the parcels kept.
+  await section.getByRole('button', { name: 'Nuevo análisis' }).click();
   await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
 });
 
@@ -74,10 +77,13 @@ test('a reload keeps the analysis', async ({ page }) => {
   await expect.poll(() => savedAnalysedParcelCount(page)).toBeGreaterThan(0);
 
   await page.reload();
-  await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
+  await expect(area(page).getByRole('button', { name: 'Todas' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 });
 
-test('the logo goes back to the initial state: nothing drawn, nothing analysed', async ({
+test('the logo goes back to the first screen with the parcels kept, as Nuevo análisis', async ({
   page,
 }) => {
   const section = area(page);
@@ -89,11 +95,11 @@ test('the logo goes back to the initial state: nothing drawn, nothing analysed',
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
 
-  // Riesgo sanitario at the default camera, the map back with no polygon on it.
-  await expect(page).toHaveURL(/\/analisis\/sanitario$/);
+  // Riesgo sanitario, the map back with the parcels still selected, ready to analyse again;
+  // the camera stays on them, so it rides along in the URL.
+  await expect(page).toHaveURL(/\/analisis\/sanitario(\?|$)/);
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
-  await expect(section.getByRole('button', { name: 'Dibujar polígono' })).toBeEnabled();
-  await expect(section.getByRole('button', { name: 'Analizar' })).toHaveCount(0);
+  await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
   await expect(page.getByRole('main').locator('canvas.maplibregl-canvas')).toBeVisible();
 });
 

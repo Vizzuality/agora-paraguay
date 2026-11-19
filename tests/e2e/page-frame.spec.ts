@@ -55,20 +55,21 @@ test('past 1440 the columns stop growing and centre', async ({ page }) => {
   expect(settingsBox?.x).toBe(120);
 });
 
-test('below 1440 the content keeps its width and the settings column narrows', async ({ page }) => {
+test('below 1440 the columns keep splitting in halves', async ({ page }) => {
   await stubAuth(page);
   await page.goto('/analisis');
 
-  // 672 = the content's half at 1440.
   for (const width of [1440, 1152, 1024]) {
     await page.setViewportSize({ width, height: 800 });
     const settingsBox = await page
       .getByRole('complementary', { name: 'Configuración' })
       .boundingBox();
     const mainBox = await page.getByRole('main').boundingBox();
+    // The window less the 40px padding each side and the 16px gap, halved.
+    const half = (width - 80 - 16) / 2;
 
-    expect(mainBox!.width).toBe(672);
-    expect(settingsBox!.width).toBe(width - 80 - 16 - 672);
+    expect(mainBox!.width).toBe(half);
+    expect(settingsBox!.width).toBe(half);
   }
 });
 

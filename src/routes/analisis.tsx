@@ -33,7 +33,7 @@ function RedesignLayout() {
 
 /**
  * The selection survives a reload, saved on every change; an analysed one comes back
- * analysed, once the saved record has been read. Once per visit: Editar parcelas after
+ * analysed, once the saved record has been read. Once per visit: Nuevo análisis after
  * that stays in the selection.
  */
 function PersistSelection() {
