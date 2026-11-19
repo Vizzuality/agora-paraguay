@@ -52,7 +52,7 @@ function storeAfterAnalysis() {
   store.set(selectedIndicatorIdsAtom, {
     riesgo: 'sanitario',
     indicators: INDICATORS,
-    id: 'asian_rust',
+    ids: ['asian_rust'],
   });
   store.set(drawStateAtom, { type: 'unbound' });
 
