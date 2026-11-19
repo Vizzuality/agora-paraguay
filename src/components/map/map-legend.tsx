@@ -178,7 +178,12 @@ export function MapLegend({
             );
           })}
         </ul>
-        {note && <p className="text-xs text-muted-foreground">{note}</p>}
+        {/* Under a rule, wrapping at the rows' width (w-0 min-w-full) rather than widening the panel. */}
+        {note && (
+          <p className="w-0 min-w-full border-t pt-1 text-xs leading-normal text-muted-foreground">
+            {note}
+          </p>
+        )}
       </div>
     </div>
   );

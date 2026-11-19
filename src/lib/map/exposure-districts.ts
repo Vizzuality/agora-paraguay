@@ -47,6 +47,19 @@ export function exposureLabel(exposure: string): string {
   return labels[exposure] ?? exposure;
 }
 
+/** How the legend words a class, with its range; one it does not know passes through. */
+export function exposureLegendLabel(exposure: string): string {
+  const labels: Record<string, string> = {
+    'sin soja': 'Sin soja (sin superficie identificada)',
+    'sin exposición identificada': 'Sin exposición (0%)',
+    bajo: 'Baja (>0-10%)',
+    medio: 'Media (>10-50%)',
+    alto: 'Alta (>50%)',
+  };
+
+  return labels[exposure.toLowerCase()] ?? exposure;
+}
+
 /** Until the metadata answers: the three classes the legend has always shown. */
 const FALLBACK_CLASSES: readonly RiskClass[] = [
   { label: 'Bajo', tone: 'none' },
