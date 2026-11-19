@@ -68,3 +68,21 @@ export const ANALYSIS_TYPES: {
   /** Private: choosing it signed out asks for the login first. */
   requiresLogin?: boolean;
 }[] = [EXPOSURE_TAB, ...RISK_TABS];
+
+/** What each analysis type is for, as the landing's cards say it. */
+const ANALYSIS_DESCRIPTIONS: Record<string, string> = {
+  [EXPOSURE_TAB.label]:
+    'Consulte la exposición de cada distrito a la sequía y la inundación, y la superficie de cultivo expuesta.',
+  'Riesgo sanitario':
+    'Evalúe el riesgo de enfermedades en las parcelas que seleccione, según las condiciones climáticas recientes.',
+  'Riesgo productivo':
+    'Analice la producción histórica y proyectada de sus parcelas, su tendencia y su resiliencia.',
+};
+
+/** The landing's entries: every analysis type with its description, linking to its page. */
+export const LANDING_ENTRIES = ANALYSIS_TYPES.map((type) => ({
+  ...type,
+  description: ANALYSIS_DESCRIPTIONS[type.label] ?? '',
+}));
+
+export type LandingEntry = (typeof LANDING_ENTRIES)[number];
