@@ -40,13 +40,16 @@ const UNPICKED_OPACITY = 0.3;
 
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
 
-/** A class's legend swatch, in the token its ruler band paints (`TONE_COLOR`). */
+/**
+ * A class's legend swatch, in the token its ruler band paints (`TONE_COLOR`): the fill at
+ * half, the 2px border solid, as the map draws a district's fill and outline.
+ */
 const TONE_SWATCH: Record<RiskTone, string> = {
-  none: 'border-risk-none bg-risk-none/50',
-  low: 'border-risk-low bg-risk-low/50',
-  medium: 'border-risk-neutral bg-risk-neutral/50',
-  elevated: 'border-risk-medium bg-risk-medium/50',
-  high: 'border-risk-high bg-risk-high/50',
+  none: 'border-2 border-risk-none bg-risk-none/50',
+  low: 'border-2 border-risk-low bg-risk-low/50',
+  medium: 'border-2 border-risk-neutral bg-risk-neutral/50',
+  elevated: 'border-2 border-risk-medium bg-risk-medium/50',
+  high: 'border-2 border-risk-high bg-risk-high/50',
 };
 
 /**
