@@ -85,8 +85,10 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   // Personalizar indicadores sits beside Exportar informe in the content column, as on
   // productivo, and no longer in the sidebar.
   const main = page.getByRole('main');
-  await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeVisible();
-  await expect(main.getByRole('button', { name: 'Exportar informe' })).toBeEnabled();
+  await expect(
+    main.getByRole('button', { name: 'Personalizar indicadores' }).first(),
+  ).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Exportar informe' }).first()).toBeEnabled();
   const filters = await openFilters(page);
   await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
@@ -139,7 +141,11 @@ test('Personalizar indicadores drops an indicator from the analysis and its card
   await analyseOnRedesign(page, '/analisis/sanitario');
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
 
-  await page.getByRole('main').getByRole('button', { name: 'Personalizar indicadores' }).click();
+  await page
+    .getByRole('main')
+    .getByRole('button', { name: 'Personalizar indicadores' })
+    .first()
+    .click();
   const list = page.getByRole('list', { name: 'Indicadores' });
   await expect(list.getByRole('checkbox', { name: 'Phakopsora pachyrhizi' })).toBeChecked();
   // General info is always shown, so it is not in the list.
@@ -200,7 +206,10 @@ test('shows a loader while a filter change re-runs the analysis', async ({ page 
   await page.getByRole('option', { name: 'Arroz' }).click();
 
   // The previous results stay on screen, inert, until the answer lands; no report of them.
-  const exportReport = page.getByRole('main').getByRole('button', { name: 'Exportar informe' });
+  const exportReport = page
+    .getByRole('main')
+    .getByRole('button', { name: 'Exportar informe' })
+    .first();
   await expect(status).toHaveText('Actualizando análisis…');
   await expect(page.locator('[aria-busy="true"]')).toContainText('Phakopsora pachyrhizi');
   await expect(exportReport).toBeDisabled();
@@ -228,7 +237,10 @@ test('the first analysis waits in a bordered frame that ends inside the window, 
   const status = page.getByRole('status').filter({ hasText: 'Analizando…' });
   await expect(status).toBeVisible();
   // Nothing to report yet: Exportar informe waits for the indicators.
-  const exportReport = page.getByRole('main').getByRole('button', { name: 'Exportar informe' });
+  const exportReport = page
+    .getByRole('main')
+    .getByRole('button', { name: 'Exportar informe' })
+    .first();
   await expect(exportReport).toBeDisabled();
   await expect(status).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(status).toHaveCSS('border-top-width', '3px');
@@ -281,7 +293,7 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
 
   const main = page.getByRole('main');
-  await main.getByRole('button', { name: 'Exportar informe' }).click();
+  await main.getByRole('button', { name: 'Exportar informe' }).first().click();
   await expect(page.locator('html.paper-layout')).toHaveCount(1);
   await expect(page).toHaveTitle(/^agora-sanitario-\d{4}-\d{2}-\d{2}$/);
 
@@ -295,7 +307,7 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
   const area = settings.getByRole('region', { name: 'Área de interés' });
   await page.emulateMedia({ media: 'print' });
   await expect(area.locator('img[src^="data:image/png"]')).toBeVisible();
-  await expect(main.getByRole('button', { name: 'Exportar informe' })).toBeHidden();
-  await expect(main.getByRole('button', { name: 'Personalizar indicadores' })).toBeHidden();
+  await expect(main.getByRole('button', { name: 'Exportar informe' }).first()).toBeHidden();
+  await expect(main.getByRole('button', { name: 'Personalizar indicadores' }).first()).toBeHidden();
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
 });
