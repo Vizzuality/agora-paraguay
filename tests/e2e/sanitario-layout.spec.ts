@@ -317,3 +317,20 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
     ),
   ).toBeVisible();
 });
+
+test('the analysis is titled, with its Identificador de análisis once one is entered', async ({
+  page,
+}) => {
+  await analyseOnRedesign(page, '/analisis/sanitario');
+  const main = page.getByRole('main');
+  await expect(main.getByRole('heading', { level: 1, name: 'Riesgo sanitario' })).toBeVisible();
+  // None entered: the title stands alone.
+  await expect(main.getByText('Identificador de análisis')).toHaveCount(0);
+
+  const types = page.getByRole('region', { name: 'Tipo de análisis' });
+  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  await types.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
+
+  await expect(main.getByRole('term')).toHaveText('Identificador de análisis');
+  await expect(main.getByRole('definition')).toHaveText('123456ABC');
+});

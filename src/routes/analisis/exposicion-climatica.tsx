@@ -1,6 +1,7 @@
 import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 
+import { AnalysisTitle } from '@/components/analysis-title';
 import { DistrictPanel } from '@/components/district-panel';
 import { ExposureMapCard } from '@/components/settings/exposure-area-setting';
 import { selectedDistrictAtom } from '@/store/exposure';
@@ -14,20 +15,42 @@ export const Route = createFileRoute('/analisis/exposicion-climatica')({
   component: ExposicionPage,
 });
 
+const TITLE = 'Exposición climática';
+
 function ExposicionPage() {
   return (
-    <>
-      <h1 className="sr-only">Exposición climática</h1>
-      <ClientOnly fallback={<MapCardPlaceholder />}>
-        <ExposureContent />
-      </ClientOnly>
-    </>
+    <ClientOnly
+      fallback={
+        <>
+          <h1 className="sr-only">{TITLE}</h1>
+          <MapCardPlaceholder />
+        </>
+      }
+    >
+      <ExposureContent />
+    </ClientOnly>
   );
 }
 
+/** Before a pick, the map with a hidden heading; after it, the titled district report. */
 function ExposureContent() {
   const district = useAtomValue(selectedDistrictAtom);
-  return district ? <DistrictPanel /> : <ExposureMapCard />;
+
+  if (!district) {
+    return (
+      <>
+        <h1 className="sr-only">{TITLE}</h1>
+        <ExposureMapCard />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <AnalysisTitle title={TITLE} />
+      <DistrictPanel />
+    </>
+  );
 }
 
 /** The map card's footprint before hydration, inert. */
