@@ -11,6 +11,7 @@ import {
   orderHeroFilters,
   MIN_ANALYSIS_DATE,
   resolveFilterSelection,
+  heroYear,
   todayIso,
 } from '@/lib/analysis/filters';
 import type { Filters } from '@/lib/api/metadata/schemas';
@@ -209,7 +210,7 @@ describe('orderHeroFilters', () => {
     ]);
   });
 
-  it("puts productivo's year before the crop and resolves it to the current year", () => {
+  it("puts productivo's year before the crop and resolves it to the first year offered from now on", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 10, 12, 12));
     const year: Filters[number] = {
@@ -219,7 +220,7 @@ describe('orderHeroFilters', () => {
     };
 
     expect(orderHeroFilters([crop, year]).map((f) => f.id)).toEqual(['year', 'crop_type']);
-    expect(resolveFilterSelection({ year: '2027' }, [crop, year])).toEqual({ year: '2026' });
+    expect(resolveFilterSelection({ year: '2027' }, [crop, year])).toEqual({ year: '2027' });
     vi.useRealTimers();
   });
 
@@ -243,5 +244,26 @@ describe('filterSummary', () => {
     expect(filterSummary(FILTERS, { crop_type: 'soja', date: '2026-08-18' })).toBe(
       '18/08/2026 · Soja',
     );
+  });
+});
+
+describe('heroYear', () => {
+  const offered = ['2027', '2028', '2029'];
+
+  it('takes the current year when the API offers it', () => {
+    expect(heroYear(2028, offered)).toBe('2028');
+  });
+
+  it('else the next year offered, whatever the order', () => {
+    expect(heroYear(2026, offered)).toBe('2027');
+    expect(heroYear(2026, ['2029', '2027'])).toBe('2027');
+  });
+
+  it('else the last offered, once every year offered is past', () => {
+    expect(heroYear(2031, offered)).toBe('2029');
+  });
+
+  it('is the current year when nothing is offered', () => {
+    expect(heroYear(2026, [])).toBe('2026');
   });
 });

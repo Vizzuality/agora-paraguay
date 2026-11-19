@@ -155,7 +155,7 @@ export function projectionWidgets(
     if (horizons.length === 0) return [];
 
     const pro = `Pro_${crop}`;
-    // The base is named by the year it stands for, the current one.
+    // The base is named by the hero's year (`heroYear`).
     const base = point(year ?? 'Base histórica', { low: pro, mid: pro, high: pro });
     const points = base ? [base, ...horizons] : horizons;
     const central = indicators.find((indicator) => indicator.id.toLowerCase() === `mid_h5_${crop}`);
