@@ -83,6 +83,39 @@ test('a reload keeps the analysis', async ({ page }) => {
   );
 });
 
+test('after a reload the mini map shows a loader, not the drawn area, until the parcels arrive', async ({
+  page,
+}) => {
+  const section = area(page);
+
+  await section.getByRole('button', { name: 'Dibujar polígono' }).click();
+  await drawPolygon(page, POLYGON);
+  await section.getByRole('button', { name: 'Analizar' }).click();
+  await expect(section.getByRole('combobox', { name: 'Parcela' })).toBeVisible();
+  await expect.poll(() => savedAnalysedParcelCount(page)).toBeGreaterThan(0);
+
+  // Hold the parcels' answer: registered last, this route runs before the stub.
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === '/api/parcels/filter-parcels/',
+    async (route) => {
+      await held;
+      await route.fallback();
+    },
+  );
+
+  await page.reload();
+  const loader = area(page).getByRole('status').filter({ hasText: 'Cargando parcelas…' });
+  await expect(loader).toBeVisible();
+
+  release();
+  await expect(loader).toHaveCount(0);
+  await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toBeVisible();
+});
+
 test('the logo goes back to the first screen with the parcels kept, as Nuevo análisis', async ({
   page,
 }) => {
