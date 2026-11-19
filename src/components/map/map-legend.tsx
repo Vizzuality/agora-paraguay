@@ -22,6 +22,8 @@ type MapLegendProps = {
   label: string;
   /** In the order the rows read. */
   items: MapLegendItem[];
+  /** A footnote under the rows, for an asterisk in their labels. */
+  note?: string;
   className?: string;
   /** The rows' controls unless a row names its own; a key only when left out. */
   legendConfig?: LegendConfig;
@@ -48,6 +50,7 @@ const CONTROL_CLASS =
 export function MapLegend({
   label,
   items,
+  note,
   className,
   legendConfig = LEGEND_KEY_ONLY,
   hidden,
@@ -87,94 +90,96 @@ export function MapLegend({
         {open ? 'Ocultar leyenda' : 'Mostrar leyenda'}
       </Button>
       {/* Folded, the rows still print: the report always carries its key. */}
-      <ul
+      <div
         id={id}
-        aria-label={label}
         className={cn(
           'flex w-full flex-col gap-1 rounded-2xl bg-background py-2 pr-2 pl-4 backdrop-blur-xs print:gap-0 print:rounded-lg print:py-1 print:pl-2',
           !open && 'hidden print:flex',
         )}
       >
-        {items.map((item, index) => {
-          const off = hidden?.has(item.id) ?? false;
-          const { toggle, reorder, fade } = rowControls(item.legendConfig ?? legendConfig, {
-            onToggle,
-            onReorder,
-            onOpacity,
-          });
+        <ul aria-label={label} className="flex flex-col gap-1 print:gap-0">
+          {items.map((item, index) => {
+            const off = hidden?.has(item.id) ?? false;
+            const { toggle, reorder, fade } = rowControls(item.legendConfig ?? legendConfig, {
+              onToggle,
+              onReorder,
+              onOpacity,
+            });
 
-          return (
-            <li
-              key={item.id}
-              className={cn(
-                'flex h-7.5 items-center gap-1 text-xs whitespace-nowrap text-foreground print:h-5',
-                dragged === index && 'opacity-50',
-              )}
-            >
-              <span
-                aria-hidden
+            return (
+              <li
+                key={item.id}
                 className={cn(
-                  'size-4 shrink-0 rounded-full transition-opacity',
-                  item.className,
-                  off && 'opacity-30',
+                  'flex h-7.5 items-center gap-1 text-xs whitespace-nowrap text-foreground print:h-5',
+                  dragged === index && 'opacity-50',
                 )}
-                style={item.style}
-              />
-              <span className={cn('flex-1 transition-opacity', off && 'opacity-50')}>
-                {item.label}
-              </span>
-              {(toggle || reorder || fade) && (
-                <span aria-hidden className="w-1 shrink-0 print:hidden" />
-              )}
-              {fade && (
-                <OpacityControl
-                  label={item.label}
-                  value={opacity?.[item.id] ?? 1}
-                  onChange={(value) => fade(item.id, value)}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    'size-4 shrink-0 rounded-full transition-opacity',
+                    item.className,
+                    off && 'opacity-30',
+                  )}
+                  style={item.style}
                 />
-              )}
-              {toggle && (
-                <button
-                  type="button"
-                  aria-label={`${off ? 'Mostrar' : 'Ocultar'} ${item.label}`}
-                  aria-pressed={!off}
-                  onClick={() => toggle(item.id)}
-                  className={cn(CONTROL_CLASS, 'size-7.5')}
-                >
-                  {off ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-                </button>
-              )}
-              {reorder && (
-                <button
-                  type="button"
-                  aria-label={`Reordenar ${item.label}`}
-                  title="Arrastrar, o flechas arriba y abajo"
-                  onKeyDown={onHandleKey(index)}
-                  draggable
-                  onDragStart={(event) => {
-                    const row = event.currentTarget.closest('li');
-                    if (row) event.dataTransfer.setDragImage(row, 0, row.offsetHeight / 2);
-                    event.dataTransfer.effectAllowed = 'move';
-                    setDragged(index);
-                  }}
-                  onDragOver={(event) => {
-                    if (dragged === null) return;
-                    event.preventDefault();
-                    if (dragged !== index) {
-                      move(dragged, index);
+                <span className={cn('flex-1 transition-opacity', off && 'opacity-50')}>
+                  {item.label}
+                </span>
+                {(toggle || reorder || fade) && (
+                  <span aria-hidden className="w-1 shrink-0 print:hidden" />
+                )}
+                {fade && (
+                  <OpacityControl
+                    label={item.label}
+                    value={opacity?.[item.id] ?? 1}
+                    onChange={(value) => fade(item.id, value)}
+                  />
+                )}
+                {toggle && (
+                  <button
+                    type="button"
+                    aria-label={`${off ? 'Mostrar' : 'Ocultar'} ${item.label}`}
+                    aria-pressed={!off}
+                    onClick={() => toggle(item.id)}
+                    className={cn(CONTROL_CLASS, 'size-7.5')}
+                  >
+                    {off ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                  </button>
+                )}
+                {reorder && (
+                  <button
+                    type="button"
+                    aria-label={`Reordenar ${item.label}`}
+                    title="Arrastrar, o flechas arriba y abajo"
+                    onKeyDown={onHandleKey(index)}
+                    draggable
+                    onDragStart={(event) => {
+                      const row = event.currentTarget.closest('li');
+                      if (row) event.dataTransfer.setDragImage(row, 0, row.offsetHeight / 2);
+                      event.dataTransfer.effectAllowed = 'move';
                       setDragged(index);
-                    }
-                  }}
-                  onDragEnd={() => setDragged(null)}
-                  className={cn(CONTROL_CLASS, 'size-6 cursor-grab active:cursor-grabbing')}
-                >
-                  <GripVertical className="size-5" />
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+                    }}
+                    onDragOver={(event) => {
+                      if (dragged === null) return;
+                      event.preventDefault();
+                      if (dragged !== index) {
+                        move(dragged, index);
+                        setDragged(index);
+                      }
+                    }}
+                    onDragEnd={() => setDragged(null)}
+                    className={cn(CONTROL_CLASS, 'size-6 cursor-grab active:cursor-grabbing')}
+                  >
+                    <GripVertical className="size-5" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {note && <p className="text-xs text-muted-foreground">{note}</p>}
+      </div>
     </div>
   );
 }
