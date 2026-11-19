@@ -325,6 +325,8 @@ test('the report is titled, with its Identificador de análisis once one is ente
   const main = page.getByRole('main');
   // The paragraph, not the hidden <h1> that shares its text.
   const title = main.locator('p', { hasText: /^Riesgo sanitario$/ });
+  // Its row: the widgets' cards hold terms of their own.
+  const row = title.locator('..');
 
   // On screen the heading stays hidden: the title row is the report's.
   await expect(title).toBeHidden();
@@ -332,7 +334,7 @@ test('the report is titled, with its Identificador de análisis once one is ente
   // None entered: on paper the title stands alone.
   await page.emulateMedia({ media: 'print' });
   await expect(title).toBeVisible();
-  await expect(main.getByRole('term')).toHaveCount(0);
+  await expect(row.getByRole('term')).toHaveCount(0);
 
   await page.emulateMedia({ media: 'screen' });
   const types = page.getByRole('region', { name: 'Tipo de análisis' });
@@ -340,6 +342,6 @@ test('the report is titled, with its Identificador de análisis once one is ente
   await types.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
 
   await page.emulateMedia({ media: 'print' });
-  await expect(main.getByRole('term')).toHaveText('Identificador de análisis');
-  await expect(main.getByRole('definition')).toHaveText('123456ABC');
+  await expect(row.getByRole('term')).toHaveText('Identificador de análisis');
+  await expect(row.getByRole('definition')).toHaveText('123456ABC');
 });
