@@ -3,6 +3,7 @@ import { AnalysisPanel } from '@/components/analysis-panel';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
+import { ReportFooter } from '@/components/report-footer';
 import { WidgetGrid } from '@/components/widget-grid';
 import { generalInfo } from '@/lib/analysis/indicator-cards';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
@@ -36,7 +37,8 @@ export function SanitarioWidgets() {
           </WidgetGrid>
         </AnalysisPanel>
       )}
-      {/* The actions again at the foot, once there is something to act on. */}
+      {/* The report's footer, then the actions again, once there is something to act on. */}
+      {analysis.data && <ReportFooter />}
       {analysis.data && <AnalysisActions riesgo="sanitario" />}
     </div>
   );

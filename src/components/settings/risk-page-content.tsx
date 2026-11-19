@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { AnalysisTitle } from '@/components/analysis-title';
 import { MapView } from '@/components/map';
 import { ParcelsLookup } from '@/components/map/parcels-lookup';
-import { ReportAttribution } from '@/components/report-attribution';
 import { analysedViewAtom } from '@/store/mode';
 
 /**
@@ -29,8 +28,6 @@ export function RiskPageContent({
         </div>
       )}
       {analysed && analysis}
-      {/* The report's last line: who generated it, for which analysis, when. */}
-      {analysed && <ReportAttribution />}
     </>
   );
 }

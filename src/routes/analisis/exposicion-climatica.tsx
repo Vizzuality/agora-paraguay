@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 
 import { AnalysisTitle } from '@/components/analysis-title';
 import { DistrictPanel } from '@/components/district-panel';
+import { ReportFooter } from '@/components/report-footer';
 import { ExposureMapCard } from '@/components/settings/exposure-area-setting';
 import { selectedDistrictAtom } from '@/store/exposure';
 
@@ -34,6 +35,7 @@ function ExposureContent() {
     <>
       <AnalysisTitle title="Exposición climática" />
       <DistrictPanel />
+      <ReportFooter />
     </>
   );
 }
