@@ -1,3 +1,4 @@
+import { AnalysisActions } from '@/components/analysis-actions';
 import { AnalysisPanel } from '@/components/analysis-panel';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
@@ -35,6 +36,8 @@ export function SanitarioWidgets() {
           </WidgetGrid>
         </AnalysisPanel>
       )}
+      {/* The actions again at the foot, once there is something to act on. */}
+      {analysis.data && <AnalysisActions riesgo="sanitario" />}
     </div>
   );
 }
