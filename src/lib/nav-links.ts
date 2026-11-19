@@ -9,8 +9,14 @@ export type NavLink = {
   replace?: boolean;
 };
 
-/** Way back to the selection screen, shared by the top nav and the footer. */
-export const SELECTION_LINK: NavLink = { label: 'Personalización del análisis', to: '/' };
+/**
+ * Way back to the parcel selection, shared by the top nav and the footer. Not `/`: home is
+ * Exposición climática, which selects districts, not parcels.
+ */
+export const SELECTION_LINK: NavLink = {
+  label: 'Personalización del análisis',
+  to: '/analisis/sanitario',
+};
 
 /** The two risk views, in display order, each its own route under `/analisis`. */
 export const RISK_TABS: {
