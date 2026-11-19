@@ -1,18 +1,22 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useId } from 'react';
 
-import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
+import { InfoTip } from '@/components/info-tip';
+import { FLOATING_CHIP_CLASS, FLOATING_FIELD_CLASS } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { analysisIdentifierAtom } from '@/store/analysis-identifier';
 
-/** The closed heading's line: the identifier once there is one. */
-export function useAnalysisIdentifierLabel(): string | undefined {
-  return useAtomValue(analysisIdentifierAtom) || undefined;
-}
+const LABEL = 'Identificador de análisis';
+const DESCRIPTION =
+  'Una referencia propia para este análisis. Se mantiene durante la sesión y se borra al reiniciar la selección de parcelas.';
 
 /**
- * Identificador de análisis: one field for the user's reference, kept for the session
- * (`analysisIdentifierAtom`). Reads atoms: render inside `<ClientOnly>`.
+ * Identificador de análisis, under the analysis types: the user's reference, kept for the
+ * session (`analysisIdentifierAtom`). Its caption always sits on the border, with the info
+ * tip beside it — outside the `<label>`, which cannot hold a button. Reads atoms: render
+ * inside `<ClientOnly>`.
  */
 export function AnalysisIdentifierSetting() {
   const identifier = useAtomValue(analysisIdentifierAtom);
@@ -20,17 +24,20 @@ export function AnalysisIdentifierSetting() {
   const id = useId();
 
   return (
-    // Floating label: the label is the placeholder, hence `placeholder`.
     <div className="relative pt-2">
       <Input
         id={id}
         value={identifier}
         onChange={(event) => setIdentifier(event.target.value)}
-        placeholder="Identificador"
         autoComplete="off"
-        className={FLOATING_FIELD_CLASS}
+        className={cn(FLOATING_FIELD_CLASS, 'border-border')}
       />
-      <FloatingLabel htmlFor={id}>Identificador</FloatingLabel>
+      <div className={cn(FLOATING_CHIP_CLASS, 'top-2 flex items-center gap-2')}>
+        <Label htmlFor={id} className="text-xs leading-3 font-normal">
+          {LABEL}
+        </Label>
+        <InfoTip description={DESCRIPTION} subject={LABEL} />
+      </div>
     </div>
   );
 }

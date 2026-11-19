@@ -174,32 +174,34 @@ test('once analysed, Cultivo y fechas holds the filters and names them closed', 
 test('Identificador de análisis holds for the session, and a cleared selection empties it', async ({
   page,
 }) => {
-  const section = page.getByRole('region', { name: 'Identificador de análisis' });
-  const heading = section.getByRole('button', { name: /Identificador de análisis/ });
-  await heading.click();
-  await section.getByLabel('Identificador').fill('123456ABC');
-
-  // Closed, the heading carries it, as Tipo de análisis carries the type.
-  await heading.click();
-  await expect(heading).toContainText('123456ABC');
-
-  // Away and back, then a reload: still there.
   const types = page.getByRole('region', { name: 'Tipo de análisis' });
-  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  const typesHeading = types.getByRole('button', { name: /Tipo de análisis/ });
+  const identifier = types.getByLabel('Identificador de análisis');
+  /** Opens Tipo de análisis (one section open at a time) and reads the field. */
+  const openIdentifier = async () => {
+    if ((await typesHeading.getAttribute('aria-expanded')) !== 'true') await typesHeading.click();
+    return identifier;
+  };
+
+  // Under the analysis types, its caption on the border with an info tip.
+  await (await openIdentifier()).fill('123456ABC');
+  await expect(
+    types.getByRole('button', { name: 'Más información sobre Identificador de análisis' }),
+  ).toBeVisible();
+
+  // Away and back, then a reload: still there, on every type.
   await types.getByRole('link', { name: 'Exposición climática' }).click();
   await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
-  await expect(section).toHaveCount(0);
-  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  await expect(await openIdentifier()).toHaveValue('123456ABC');
   await types.getByRole('link', { name: 'Riesgo sanitario' }).click();
-  await expect(heading).toContainText('123456ABC');
   await page.reload();
-  await expect(heading).toContainText('123456ABC');
+  await expect(await openIdentifier()).toHaveValue('123456ABC');
 
-  // Drawing keeps it; clearing the selection takes it along.
+  // Clearing the selection takes it along (a new drawing alone keeps it: unit-tested).
   const areaSection = area(page);
+  await areaSection.getByRole('button', { name: /^Área de interés/ }).click();
   await areaSection.getByRole('button', { name: 'Dibujar polígono' }).click();
   await drawPolygon(page, POLYGON);
-  await expect(heading).toContainText('123456ABC');
   await areaSection.getByRole('button', { name: 'Reiniciar' }).click();
-  await expect(heading).not.toContainText('123456ABC');
+  await expect(await openIdentifier()).toHaveValue('');
 });
