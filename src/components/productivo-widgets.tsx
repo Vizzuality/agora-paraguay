@@ -5,6 +5,7 @@ import { AnalysisPanel } from '@/components/analysis-panel';
 import { AnalysisStatus } from '@/components/analysis-status';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoCard } from '@/components/general-info-card';
+import { ReportFooter } from '@/components/report-footer';
 import { WidgetGrid } from '@/components/widget-grid';
 import {
   CATEGORY_TITLES,
@@ -61,6 +62,7 @@ export function ProductivoWidgets() {
           ))}
         </AnalysisPanel>
       )}
+      {analysis.data && <ReportFooter />}
       {analysis.data && <AnalysisActions riesgo="productivo" />}
     </div>
   );

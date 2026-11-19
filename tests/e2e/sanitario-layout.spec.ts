@@ -93,6 +93,26 @@ test('Riesgo sanitario shows its widgets in the content column once analysed', a
   await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
 
+test('the report footer closes the dashboard, above the actions, naming the identifier', async ({
+  page,
+}) => {
+  await analyseOnRedesign(page, '/analisis/sanitario');
+  const types = page.getByRole('region', { name: 'Tipo de análisis' });
+  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  await types.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
+
+  const main = page.getByRole('main');
+  const footer = main.getByText(/^Resultados generados mediante la plataforma AGORA/);
+  await expect(footer).toBeVisible();
+  // The identifier and the date are the filled-in values, in italics.
+  await expect(footer.locator('em').first()).toHaveText('123456ABC');
+  await expect(footer.locator('em').last()).toHaveText(/^\d+ de \w+ de \d{4}$/);
+
+  // Right before the actions at the foot.
+  const lastExport = main.getByRole('button', { name: 'Exportar informe' }).last();
+  expect((await footer.boundingBox())!.y).toBeLessThan((await lastExport.boundingBox())!.y);
+});
+
 test('the analysis runs with the default filters, and each change re-runs it', async ({ page }) => {
   const bodies = recordAnalyses(page);
   await analyseOnRedesign(page, '/analisis/sanitario');
@@ -310,10 +330,10 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
   await expect(main.getByRole('button', { name: 'Exportar informe' }).first()).toBeHidden();
   await expect(main.getByRole('button', { name: 'Personalizar indicadores' }).first()).toBeHidden();
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
-  // The last line says where, for which analysis and when; no identifier was given.
+  // The footer says where, for which analysis and when; no identifier was given.
   await expect(
     main.getByText(
-      /^Estos resultados se han generado mediante la plataforma AGORA para este análisis, el \d+ de \w+ de \d{4}\.$/,
+      /^Resultados generados mediante la plataforma AGORA para este análisis, el \d+ de \w+ de \d{4}\.$/,
     ),
   ).toBeVisible();
 });

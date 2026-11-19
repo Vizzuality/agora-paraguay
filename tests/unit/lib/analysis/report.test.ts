@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { reportAttribution, reportDate, reportFileName } from '@/lib/analysis/report';
+import {
+  type AttributionPart,
+  reportAttribution,
+  reportDate,
+  reportFileName,
+} from '@/lib/analysis/report';
 
 describe('reportFileName', () => {
   it('names the file after the riesgo and the local date, zero-padded', () => {
@@ -18,16 +23,24 @@ describe('reportDate', () => {
 
 describe('reportAttribution', () => {
   const day = new Date(2026, 10, 19);
+  const text = (parts: AttributionPart[]) => parts.map((part) => part.text).join('');
+  const values = (parts: AttributionPart[]) =>
+    parts.filter((part) => part.value).map((part) => part.text);
 
   it('names the platform, the analysis identifier and the day, in Spanish', () => {
-    expect(reportAttribution('123456ABC', day)).toBe(
-      'Estos resultados se han generado mediante la plataforma AGORA para el análisis con identificación 123456ABC, el 19 de noviembre de 2026.',
+    const parts = reportAttribution('123456ABC', day);
+    expect(text(parts)).toBe(
+      'Resultados generados mediante la plataforma AGORA para el análisis con identificación 123456ABC, el 19 de noviembre de 2026.',
     );
+    // The filled-in values, which the footer sets in italics.
+    expect(values(parts)).toEqual(['123456ABC', '19 de noviembre de 2026']);
   });
 
   it('leaves the identifier clause out when there is none', () => {
-    expect(reportAttribution('  ', day)).toBe(
-      'Estos resultados se han generado mediante la plataforma AGORA para este análisis, el 19 de noviembre de 2026.',
+    const parts = reportAttribution('  ', day);
+    expect(text(parts)).toBe(
+      'Resultados generados mediante la plataforma AGORA para este análisis, el 19 de noviembre de 2026.',
     );
+    expect(values(parts)).toEqual(['19 de noviembre de 2026']);
   });
 });
