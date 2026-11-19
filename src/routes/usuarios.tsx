@@ -2,20 +2,18 @@ import { ClientOnly, createFileRoute, Navigate } from '@tanstack/react-router';
 
 import { UsersPanel } from '@/components/admin/users-table';
 import { LoginRequired } from '@/components/auth/login-dialog';
-import { Footer } from '@/components/footer';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { useSession } from '@/lib/auth/use-session';
 
-/** Administrar usuarios, staff only: the account list between header and footer. */
+/** Administrar usuarios, staff only: the account list under the header. */
 export const Route = createFileRoute('/usuarios')({
   component: UsersPage,
 });
 
 function UsersPage() {
   return (
-    // Nav and footer outside <main>, like `/analisis`: that is what gives them their
-    // banner/contentinfo landmark roles.
+    // Nav outside <main>, like `/analisis`: that is what gives it its banner landmark role.
     <div className="flex min-h-screen w-full flex-col">
       <NavBar>
         <HeaderNav />
@@ -26,8 +24,6 @@ function UsersPage() {
           <StaffGate />
         </ClientOnly>
       </main>
-
-      <Footer />
     </div>
   );
 }

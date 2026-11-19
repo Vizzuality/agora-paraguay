@@ -28,7 +28,8 @@ test('at 1440 the settings and the content split in halves, settings on the left
   await expect(banner.getByRole('link', { name: 'Inicio' })).toBeVisible();
   await expect(banner.getByRole('button', { name: 'Cambiar tema' })).toBeEnabled();
   await expect(banner.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible();
-  await expect(page.getByRole('contentinfo')).toBeVisible();
+  // No footer on the platform.
+  await expect(page.getByRole('contentinfo')).toHaveCount(0);
 
   const settingsBox = await settings.boundingBox();
   const mainBox = await main.boundingBox();

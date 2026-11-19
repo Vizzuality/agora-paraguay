@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "tags": ["-lintignore"],
-  "entry": ["tests/e2e/fixtures/uploads/generate.mjs", "scripts/data/*.mjs"]
+  "entry": ["tests/e2e/fixtures/uploads/generate.mjs", "scripts/data/*.mjs"],
+  "ignore": ["src/components/footer.tsx", "src/components/selection-link.tsx"]
 }
