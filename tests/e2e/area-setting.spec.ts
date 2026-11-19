@@ -116,7 +116,7 @@ test('after a reload the mini map shows a loader, not the drawn area, until the 
   await expect(area(page).getByRole('combobox', { name: 'Parcela' })).toBeVisible();
 });
 
-test('the logo goes back to the first screen with the parcels kept, as Nuevo análisis', async ({
+test('the logo goes home, and Riesgo sanitario still has the parcels, as Nuevo análisis', async ({
   page,
 }) => {
   const section = area(page);
@@ -128,8 +128,18 @@ test('the logo goes back to the first screen with the parcels kept, as Nuevo an�
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
 
-  // Riesgo sanitario, the map back with the parcels still selected, ready to analyse again;
-  // the camera stays on them, so it rides along in the URL.
+  // Home is Exposición climática, the analysis types open. Going back to the selection
+  // writes the map's camera one last time, so it may ride along in the URL.
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica(\?|$)/);
+  const types = page.getByRole('region', { name: 'Tipo de análisis' });
+  await expect(types.getByRole('button', { name: /Tipo de análisis/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+
+  // Back on Riesgo sanitario, the map returns with the parcels still selected, ready to
+  // analyse again.
+  await types.getByRole('link', { name: 'Riesgo sanitario' }).click();
   await expect(page).toHaveURL(/\/analisis\/sanitario(\?|$)/);
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
   await expect(section.getByRole('button', { name: 'Analizar' })).toBeEnabled();
