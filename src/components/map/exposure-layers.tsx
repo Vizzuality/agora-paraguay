@@ -14,6 +14,7 @@ import {
   EXPOSURE_LINE_WIDTH,
   exposureClasses,
   exposureLabel,
+  exposureLegendLabel,
   exposureColor,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
@@ -152,9 +153,10 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           legendConfig={EXPOSURE_LAYER.legendConfig}
           items={classes.map(({ label, tone }) => ({
             id: label,
-            label: exposureLabel(label),
+            label: exposureLegendLabel(label),
             className: cn('border-2', TONE_SWATCH[tone]),
           }))}
+          note="Porcentaje de soja expuesta a una o ambas amenazas; las áreas coincidentes se cuentan una sola vez."
         />
       ) : (
         <MapLegend

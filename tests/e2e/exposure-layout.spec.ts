@@ -38,6 +38,9 @@ test('Exposición climática fills the content column with its map and prompts f
   // The legend folds like every map's: open to start, Ocultar leyenda folds it away.
   const legend = map.getByRole('list', { name: 'Leyenda de exposición' });
   await expect(legend.getByRole('listitem').first()).toBeVisible();
+  // Each class with its range, and the footnote on how the share is counted.
+  await expect(legend.getByText('Baja (>0-10%)')).toBeVisible();
+  await expect(map.getByText(/las áreas coincidentes se cuentan una sola vez/)).toBeVisible();
   await map.getByRole('button', { name: 'Ocultar leyenda' }).click();
   await expect(legend).toHaveCount(0);
   await map.getByRole('button', { name: 'Mostrar leyenda' }).click();
