@@ -18,3 +18,24 @@ export function reportDate(date: Date): string {
 export function reportFileName(riesgo: Riesgo, date: Date): string {
   return `agora-${riesgo}-${reportDate(date)}`;
 }
+
+/** The date as the attribution writes it, in Spanish: `19 de noviembre de 2026`. */
+export function reportLongDate(date: Date): string {
+  return new Intl.DateTimeFormat('es-PY', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
+/**
+ * The line closing the report: the platform, the analysis's identifier
+ * (Identificador de análisis) and the day it was generated. Without an identifier the
+ * clause naming it is left out rather than printed empty.
+ */
+export function reportAttribution(identifier: string, date: Date): string {
+  const code = identifier.trim();
+  const analysis = code ? `para el análisis con identificación ${code}` : 'para este análisis';
+
+  return `Estos resultados se han generado mediante la plataforma AGORA ${analysis}, el ${reportLongDate(date)}.`;
+}

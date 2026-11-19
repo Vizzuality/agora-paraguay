@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { CircleArrowRight, SquarePen, Undo2, Upload } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -18,7 +18,7 @@ import { UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { useUploadFile } from '@/lib/upload/use-upload-file';
 import { useConfirmedParcels } from '@/lib/use-confirmed-parcels';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
-import { drawAtom, restartSelectionAtom, startDrawAtom } from '@/store/draw';
+import { clearSelectionAtom, drawAtom, startDrawAtom } from '@/store/draw';
 import { analysedViewAtom, backToSelectionAtom, startAnalysisAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
 import { uploadResultAtom } from '@/store/upload';
@@ -73,10 +73,9 @@ function SelectingArea() {
 function AreaCards() {
   const draw = useAtomValue(drawAtom);
   const uploadResult = useAtomValue(uploadResultAtom);
-  const rejection = useAtomValue(areaRejectionAtom);
-  const setRejection = useSetAtom(areaRejectionAtom);
+  const [rejection, setRejection] = useAtom(areaRejectionAtom);
   const startDraw = useSetAtom(startDrawAtom);
-  const restart = useSetAtom(restartSelectionAtom);
+  const restart = useSetAtom(clearSelectionAtom);
   const handleChange = useUploadFile();
   const inputRef = useRef<HTMLInputElement>(null);
   const drawing = draw.tool === 'draw';
@@ -136,7 +135,7 @@ function AreaCards() {
 /** Reiniciar or Analizar the parcels the areas selected; Analizar stays an explicit step. */
 function ConfirmCards() {
   const { parcelIds, isError, noIntersection } = useConfirmedParcels();
-  const restart = useSetAtom(restartSelectionAtom);
+  const restart = useSetAtom(clearSelectionAtom);
   const startAnalysis = useSetAtom(startAnalysisAtom);
 
   return (

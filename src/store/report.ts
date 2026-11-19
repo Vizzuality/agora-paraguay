@@ -11,3 +11,6 @@ export const paperLayoutAtom = atom(false);
 
 /** The mini map as a PNG data URL for the report; `null` until taken for this print. */
 export const reportMapAtom = atom<string | null>(null);
+
+/** When Exportar informe was pressed: the report's generation date. `null` before any. */
+export const reportGeneratedAtAtom = atom<Date | null>(null);

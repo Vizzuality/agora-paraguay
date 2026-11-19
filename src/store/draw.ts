@@ -4,6 +4,7 @@ import type { GeoJSONStoreFeatures, TerraDraw } from 'terra-draw';
 import { drawnPolygons } from '@/lib/map/draw-features';
 import { terraDrawMode } from '@/lib/map/draw-state';
 import { restoreFeatures } from '@/lib/map/import-features';
+import { analysisIdentifierAtom } from '@/store/analysis-identifier';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { areaRejectionAtom } from '@/store/selection';
 import { resetSelectionSessionAtom } from '@/store/upload';
@@ -55,6 +56,15 @@ export const restartSelectionAtom = atom(null, (get, set) => {
   }
 
   set(resetSelectionSessionAtom);
+});
+
+/**
+ * Reiniciar and Borrar mapa: the user clears the selection on purpose, so the identifier
+ * naming it goes too. A new drawing or upload restarts without it (`restartSelectionAtom`).
+ */
+export const clearSelectionAtom = atom(null, (_get, set) => {
+  set(restartSelectionAtom);
+  set(analysisIdentifierAtom, '');
 });
 
 /** Activates the draw tool. A drawing session always starts from scratch. */

@@ -176,3 +176,39 @@ test('once analysed, Cultivo y fechas holds the filters and names them closed', 
   // One section open at a time: the área closes.
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveCount(0);
 });
+
+test('Identificador de análisis holds for the session, and a cleared selection empties it', async ({
+  page,
+}) => {
+  const types = page.getByRole('region', { name: 'Tipo de análisis' });
+  const typesHeading = types.getByRole('button', { name: /Tipo de análisis/ });
+  // By role: the info tip's label also contains the field's name.
+  const identifier = types.getByRole('textbox', { name: 'Identificador de análisis' });
+  /** Opens Tipo de análisis (one section open at a time) and reads the field. */
+  const openIdentifier = async () => {
+    if ((await typesHeading.getAttribute('aria-expanded')) !== 'true') await typesHeading.click();
+    return identifier;
+  };
+
+  // Under the analysis types, its caption on the border with an info tip.
+  await (await openIdentifier()).fill('123456ABC');
+  await expect(
+    types.getByRole('button', { name: 'Más información sobre Identificador de análisis' }),
+  ).toBeVisible();
+
+  // Away and back, then a reload: still there, on every type.
+  await types.getByRole('link', { name: 'Exposición climática' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
+  await expect(await openIdentifier()).toHaveValue('123456ABC');
+  await types.getByRole('link', { name: 'Riesgo sanitario' }).click();
+  await page.reload();
+  await expect(await openIdentifier()).toHaveValue('123456ABC');
+
+  // Clearing the selection takes it along (a new drawing alone keeps it: unit-tested).
+  const areaSection = area(page);
+  await areaSection.getByRole('button', { name: /^Área de interés/ }).click();
+  await areaSection.getByRole('button', { name: 'Dibujar polígono' }).click();
+  await drawPolygon(page, POLYGON);
+  await areaSection.getByRole('button', { name: 'Reiniciar' }).click();
+  await expect(await openIdentifier()).toHaveValue('');
+});

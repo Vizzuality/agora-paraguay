@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
 import { DistrictPrompt } from '@/components/district-panel';
+import { AnalysisIdentifierSetting } from '@/components/settings/analysis-identifier-setting';
 import {
   AnalysisTypeSetting,
   useCurrentAnalysisType,
@@ -50,7 +51,10 @@ function Sections() {
         open={open === 'analysisType'}
         onToggle={() => toggle('analysisType')}
       >
-        <AnalysisTypeSetting onChoose={() => setOpen(null)} />
+        <div className="flex flex-col gap-6">
+          <AnalysisTypeSetting onChoose={() => setOpen(null)} />
+          <AnalysisIdentifierSetting />
+        </div>
       </SettingsSection>
 
       {current?.riesgo && (
