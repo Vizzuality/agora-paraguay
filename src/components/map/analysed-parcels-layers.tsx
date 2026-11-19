@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { Layer, Source, useMap } from 'react-map-gl/maplibre';
 
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
+import { MapLoading } from '@/components/map/map-loading';
 import { ParcelLegend } from '@/components/map/parcel-legend';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { featuresBounds, FIT_PADDING } from '@/lib/map/area-bounds';
@@ -21,7 +22,8 @@ const AREA_COLOR = '#F1FF28';
  * analysed parcels only (the main map's layer, restricted — the neighbours the user left
  * out stay behind), with the open tab's parcel in yellow — every one under Todas — and
  * the rest outlined; clicking one opens its tab. The parcels stand in for the drawn
- * areas as on the main map; the areas themselves only paint while no parcels exist.
+ * areas as on the main map; the areas themselves only paint once the answer has no parcels:
+ * while it loads, a loader covers the map instead of the drawn areas.
  * Framed by the analysed parcels' combined bounds on mount, re-framed on the open tab's
  * parcel(s) when it changes, the user's in between. The camera is not written to the
  * URL — that is the main map's, and this one is gone with the page.
@@ -30,7 +32,8 @@ export function AnalysedParcelsLayers() {
   const areas = useAtomValue(drawPolygonsAtom);
   const analysedIds = useAtomValue(analysedParcelIdsAtom);
   const activeParcelId = useAtomValue(activeParcelIdAtom);
-  const { data: parcels } = useQuery(parcelQueries.filtered(areas));
+  const { data: parcels, isLoading, isPlaceholderData } = useQuery(parcelQueries.filtered(areas));
+  const loading = isLoading || isPlaceholderData;
   const zoom = useZoom();
 
   const bounds = featuresBounds([
@@ -63,7 +66,8 @@ export function AnalysedParcelsLayers() {
       <AnalysedParcelsBehaviour />
       <ReportSnapshot frame={reportBounds} />
       <ReportMapImage />
-      {(parcels?.results.length ?? 0) === 0 && (
+      {loading && <MapLoading>Cargando parcelas…</MapLoading>}
+      {!loading && (parcels?.results.length ?? 0) === 0 && (
         <Source type="geojson" data={{ type: 'FeatureCollection', features: areas }}>
           <Layer type="fill" paint={{ 'fill-color': AREA_COLOR, 'fill-opacity': 0.5 }} />
           <Layer type="line" paint={{ 'line-color': AREA_COLOR, 'line-width': 2 }} />
