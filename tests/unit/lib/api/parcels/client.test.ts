@@ -39,6 +39,7 @@ const response = {
       geometry: { type: 'FeatureCollection', features: [] },
       selected: true,
       last_crop_type: 'soja',
+      crop_types: ['soja'],
     },
   ],
 };
@@ -75,6 +76,23 @@ describe('filterParcels', () => {
     fetchMock.mockResolvedValueOnce(new Response('forbidden', { status: 403 }));
 
     await expect(filterParcels(request())).rejects.toMatchObject({ name: 'ApiError', status: 403 });
+  });
+
+  it('reads crop_types as known crops, each once, and none when absent', async () => {
+    const [grown] = response.results;
+    fetchMock.mockResolvedValueOnce(
+      Response.json({
+        ...response,
+        results: [
+          { ...grown, crop_types: ['Soja', 'Arroz', 'maíz', 'soja'] },
+          { ...grown, parcel_id: 'D07D23P00000008', crop_types: undefined },
+        ],
+      }),
+    );
+
+    const { results } = await filterParcels(request());
+
+    expect(results.map(({ crop_types }) => crop_types)).toEqual([['soja', 'rice'], []]);
   });
 
   it('rejects a response that does not match the contract', async () => {

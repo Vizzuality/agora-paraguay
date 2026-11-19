@@ -122,6 +122,14 @@ describe('toAnalysisRequest', () => {
     });
   });
 
+  it('sends no crop under Todos', () => {
+    expect(toAnalysisRequest(['P1'], { crop_type: 'todos', date: '2026-09-17' }, ['iep'])).toEqual({
+      parcels: ['P1'],
+      indicators: ['iep'],
+      date: '2026-09-17',
+    });
+  });
+
   it('sends the two lists alone when nothing was picked yet', () => {
     expect(toAnalysisRequest(['P1'], {}, ['rendimiento'])).toEqual({
       parcels: ['P1'],
@@ -154,6 +162,13 @@ describe('toSummaryRequest', () => {
       year: '2025',
       crop_type: 'soja',
     });
+  });
+
+  it('under Todos summarises the crop the parcels last grew, else soy', () => {
+    const todos = { crop_type: 'todos', year: '2026' };
+
+    expect(toSummaryRequest(['P1'], null, todos, 'rice')?.crop_type).toBe('rice');
+    expect(toSummaryRequest(['P1'], null, todos)?.crop_type).toBe('soja');
   });
 
   it('is null with no parcels, filters not resolved yet, no year, or a crop the analysis does not cover', () => {

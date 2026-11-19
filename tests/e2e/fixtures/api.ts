@@ -200,6 +200,7 @@ export async function stubFilterParcels(page: Page, lastCrops: Record<string, st
         },
         selected: true,
         last_crop_type: lastCrops[parcelId] ?? null,
+        crop_types: lastCrops[parcelId] ? [lastCrops[parcelId]] : [],
       });
 
       return route.fulfill({

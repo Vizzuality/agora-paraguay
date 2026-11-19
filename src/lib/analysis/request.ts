@@ -6,12 +6,19 @@ import {
 } from '@/lib/analysis/filters';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
 import { selectableIndicators, visibleIndicatorIds } from '@/lib/analysis/indicator-picker';
+import { ALL_CROPS } from '@/lib/analysis/parcel-crops';
 import type {
   AnalysisRequest,
   AnalysisVisibility,
   SummaryRequest,
 } from '@/lib/api/analysis/schemas';
-import { isCrop, type Indicators, type Riesgo } from '@/lib/api/metadata/schemas';
+import {
+  type Crop,
+  DEFAULT_CROP,
+  isCrop,
+  type Indicators,
+  type Riesgo,
+} from '@/lib/api/metadata/schemas';
 
 /*
  * Builds the `POST /api/parcels/analysis/{diseases|production}/` body out of app state —
@@ -44,18 +51,25 @@ export function requestedIndicatorIds(
     .map((indicator) => indicator.id);
 }
 
-/** The selection as picked in the hero (filter id → value), the parcels and the indicators, flat. */
+/**
+ * The selection as picked in the hero (filter id → value), the parcels and the
+ * indicators, flat. Todos sends no crop: the analysis answers every crop's columns.
+ */
 export function toAnalysisRequest(
   parcelIds: string[],
   selection: AnalysisFilterSelection,
   indicators: string[],
 ): AnalysisRequest {
-  return { ...selection, parcels: parcelIds, indicators };
+  const { [CROP_FILTER_ID]: crop, ...rest } = selection;
+  const filters = crop === undefined || crop === ALL_CROPS ? rest : selection;
+
+  return { ...filters, parcels: parcelIds, indicators };
 }
 
 /**
  * The AI summary's body: the hero's year and crop, and the parcels in view —
  * the open tab's parcel alone, or under Todas (`activeId` null) every analysed one.
+ * Under Todos the summary still needs one crop: what the parcels last grew, else soy.
  * `null` until there is something to summarise — no parcels, or the filters not
  * resolved to a year and a known crop yet.
  */
@@ -63,8 +77,10 @@ export function toSummaryRequest(
   parcelIds: string[],
   activeId: string | null,
   selection: AnalysisFilterSelection | null,
+  lastCrop?: Crop,
 ): SummaryRequest | null {
-  const crop = selection?.[CROP_FILTER_ID];
+  const picked = selection?.[CROP_FILTER_ID];
+  const crop = picked === ALL_CROPS ? (lastCrop ?? DEFAULT_CROP) : picked;
   const year = selection?.[YEAR_FILTER_ID];
   const parcels = activeId === null ? parcelIds : [activeId];
 
