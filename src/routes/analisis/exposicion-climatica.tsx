@@ -15,39 +15,24 @@ export const Route = createFileRoute('/analisis/exposicion-climatica')({
   component: ExposicionPage,
 });
 
-const TITLE = 'Exposición climática';
-
 function ExposicionPage() {
   return (
-    <ClientOnly
-      fallback={
-        <>
-          <h1 className="sr-only">{TITLE}</h1>
-          <MapCardPlaceholder />
-        </>
-      }
-    >
-      <ExposureContent />
-    </ClientOnly>
+    <>
+      <h1 className="sr-only">Exposición climática</h1>
+      <ClientOnly fallback={<MapCardPlaceholder />}>
+        <ExposureContent />
+      </ClientOnly>
+    </>
   );
 }
 
-/** Before a pick, the map with a hidden heading; after it, the titled district report. */
 function ExposureContent() {
   const district = useAtomValue(selectedDistrictAtom);
-
-  if (!district) {
-    return (
-      <>
-        <h1 className="sr-only">{TITLE}</h1>
-        <ExposureMapCard />
-      </>
-    );
-  }
+  if (!district) return <ExposureMapCard />;
 
   return (
     <>
-      <AnalysisTitle title={TITLE} />
+      <AnalysisTitle title="Exposición climática" />
       <DistrictPanel />
     </>
   );

@@ -318,19 +318,28 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
   ).toBeVisible();
 });
 
-test('the analysis is titled, with its Identificador de análisis once one is entered', async ({
+test('the report is titled, with its Identificador de análisis once one is entered', async ({
   page,
 }) => {
   await analyseOnRedesign(page, '/analisis/sanitario');
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1, name: 'Riesgo sanitario' })).toBeVisible();
-  // None entered: the title stands alone.
-  await expect(main.getByText('Identificador de análisis')).toHaveCount(0);
+  // The paragraph, not the hidden <h1> that shares its text.
+  const title = main.locator('p', { hasText: /^Riesgo sanitario$/ });
 
+  // On screen the heading stays hidden: the title row is the report's.
+  await expect(title).toBeHidden();
+
+  // None entered: on paper the title stands alone.
+  await page.emulateMedia({ media: 'print' });
+  await expect(title).toBeVisible();
+  await expect(main.getByRole('term')).toHaveCount(0);
+
+  await page.emulateMedia({ media: 'screen' });
   const types = page.getByRole('region', { name: 'Tipo de análisis' });
   await types.getByRole('button', { name: /Tipo de análisis/ }).click();
   await types.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
 
+  await page.emulateMedia({ media: 'print' });
   await expect(main.getByRole('term')).toHaveText('Identificador de análisis');
   await expect(main.getByRole('definition')).toHaveText('123456ABC');
 });

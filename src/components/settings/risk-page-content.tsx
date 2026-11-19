@@ -19,7 +19,8 @@ export function RiskPageContent({
 
   return (
     <>
-      {analysed ? <AnalysisTitle title={title} /> : <h1 className="sr-only">{title}</h1>}
+      <h1 className="sr-only">{title}</h1>
+      {analysed && <AnalysisTitle title={title} />}
       {!analysed && (
         // The window's height less the column's padding, so the whole map is in view.
         <div className="relative h-[calc(100dvh-5rem)] min-h-96 overflow-hidden rounded-3xl bg-muted">
