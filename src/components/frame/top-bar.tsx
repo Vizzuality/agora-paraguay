@@ -14,7 +14,7 @@ export function TopBar() {
 
   return (
     <header className="flex w-full items-center justify-between print:hidden">
-      {/* Home is the first screen: Exposición climática, Tipo de análisis open. */}
+      {/* Home is the landing: one card per analysis type. */}
       <Link to="/" aria-label="Inicio" onClick={() => goHome()}>
         <Logo className="h-[30px] w-auto text-primary" />
       </Link>
