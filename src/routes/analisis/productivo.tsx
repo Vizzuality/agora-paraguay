@@ -38,7 +38,7 @@ function ProductivoAnalysis() {
   if (!session) return <LoginRequired />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center gap-4 print:hidden">
         <IndicatorPicker riesgo="productivo" className={cn(ACTION_CLASS, 'text-primary')} />
         <ExportReportButton riesgo="productivo" className={ACTION_CLASS} />

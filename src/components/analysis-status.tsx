@@ -23,8 +23,9 @@ export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisS
         </p>
       )}
       {analysis.isFetching && !analysis.data && (
-        // A bordered frame as tall as the selection map it replaces, so nothing jumps.
-        <output className="flex h-[calc(100dvh-5rem)] min-h-96 items-center justify-center gap-2 rounded-3xl border-3 border-border p-6 text-sm text-muted-foreground">
+        // A bordered frame filling what the content column has left of the window (the
+        // map it replaces filled it all), so nothing jumps and it never runs past the fold.
+        <output className="flex min-h-96 flex-1 items-center justify-center gap-2 rounded-3xl border-3 border-border p-6 text-sm text-muted-foreground">
           <Spinner />
           Analizando…
         </output>
