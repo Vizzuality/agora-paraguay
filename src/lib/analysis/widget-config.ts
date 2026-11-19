@@ -62,7 +62,7 @@ export function widgetFor(
 
   if (key === AREA_ID) return 'fact';
   if (riesgo === 'sanitario' && key !== undefined && SANITARIO_FACT_IDS.has(key)) return 'fact';
-  if (riesgo === 'productivo' && scope === 'individual' && key === 'resiliencia') return 'fact';
+  if (scope === 'individual' && isContextIndicator(key, riesgo)) return 'fact';
 
   switch (type.type) {
     case 'range':
@@ -81,6 +81,16 @@ export function widgetFor(
 
 /** The selection's area: a fact everywhere, summed under Todas (`combinedParcel`). */
 const AREA_ID = 'area';
+
+/** Productivo's context widgets: a fact on one parcel, under Información de contexto on Todas. */
+const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set(['resiliencia']);
+
+/** Whether an indicator belongs to productivo's Información de contexto, whatever the scope. */
+export function isContextIndicator(id: string | undefined, riesgo: IndicatorsRiesgo): boolean {
+  return (
+    riesgo === 'productivo' && id !== undefined && PRODUCTIVO_CONTEXT_IDS.has(id.toLowerCase())
+  );
+}
 
 /** Sanitario indicators that describe the reading rather than a risk: summary facts, not widgets. */
 const SANITARIO_FACT_IDS: ReadonlySet<string> = new Set(['data_quality']);

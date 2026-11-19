@@ -18,9 +18,17 @@ const ARROZ_SWATCH: CSSProperties = {
 
 const ITEMS: MapLegendItem[] = [
   { id: 'selection', label: 'Selección activa', className: 'border-2 border-black/50 bg-parcel' },
-  { id: 'soja', label: 'Soja', className: 'bg-black', style: SOJA_SWATCH },
-  { id: 'arroz', label: 'Arroz', className: 'border-2 border-white bg-black', style: ARROZ_SWATCH },
+  { id: 'soja', label: 'Soja*', className: 'bg-black', style: SOJA_SWATCH },
+  {
+    id: 'arroz',
+    label: 'Arroz*',
+    className: 'border-2 border-white bg-black',
+    style: ARROZ_SWATCH,
+  },
 ];
+
+/** The crop textures read each parcel's last crop: the 2025 season's. */
+const CROPS_NOTE = '*Cultivos de 2025';
 
 /** What the parcels' colours and textures mean. Shown once parcels are on the map. */
 export function ParcelLegend({ className }: Readonly<{ className?: string }>) {
@@ -29,5 +37,7 @@ export function ParcelLegend({ className }: Readonly<{ className?: string }>) {
 
   if ((data?.results.length ?? 0) === 0) return null;
 
-  return <MapLegend label="Leyenda de parcelas" items={ITEMS} className={className} />;
+  return (
+    <MapLegend label="Leyenda de parcelas" items={ITEMS} note={CROPS_NOTE} className={className} />
+  );
 }
