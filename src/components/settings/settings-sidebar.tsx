@@ -1,5 +1,5 @@
-import { useAtomValue } from 'jotai';
-import { useState } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useEffect, useState } from 'react';
 
 import { DistrictPrompt } from '@/components/district-panel';
 import {
@@ -15,6 +15,7 @@ import {
 import { SettingsSection } from '@/components/settings/settings-section';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { selectedDistrictAtom } from '@/store/exposure';
+import { arrivingHomeAtom } from '@/store/home';
 import { analysedViewAtom } from '@/store/mode';
 import { paperLayoutAtom } from '@/store/report';
 
@@ -35,7 +36,20 @@ export function SettingsSidebar() {
 
 function Sections() {
   const current = useCurrentAnalysisType();
-  const [open, setOpen] = useState<SectionKey | null>(current ? 'area' : null);
+  // The first screen (Exposición climática, reached on arrival) opens on the analysis types.
+  const arrivingHome = useAtomValue(arrivingHomeAtom);
+  const settleArrival = useSetAtom(arrivingHomeAtom);
+  const onFirstScreen = arrivingHome && current !== undefined && !current.riesgo;
+  const [open, setOpen] = useState<SectionKey | null>(
+    onFirstScreen ? 'analysisType' : current ? 'area' : null,
+  );
+  // The logo can bring the user home while already there, with no remount: open here too.
+  if (onFirstScreen && open !== 'analysisType') setOpen('analysisType');
+  useEffect(() => {
+    // Settled only on the first screen, never by the page being left: the logo sets it
+    // before navigating away from a riesgo.
+    if (onFirstScreen) settleArrival(false);
+  }, [onFirstScreen, settleArrival]);
   const areaLabel = useAreaSelectionLabel();
   const analysed = useAtomValue(analysedViewAtom);
   // The report prints the área open, so its map is in the PDF whatever the reader left open.
@@ -50,7 +64,13 @@ function Sections() {
         open={open === 'analysisType'}
         onToggle={() => toggle('analysisType')}
       >
-        <AnalysisTypeSetting onChoose={() => setOpen(null)} />
+        <AnalysisTypeSetting
+          onChoose={() => {
+            // A type chosen from the menu is not an arrival, even when it is the first screen.
+            settleArrival(false);
+            setOpen(null);
+          }}
+        />
       </SettingsSection>
 
       {current?.riesgo && (
