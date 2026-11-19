@@ -21,16 +21,20 @@ export function SanitarioWidgets() {
   }));
 
   return (
-    <div className="flex flex-col gap-4">
+    // Fills the content column, so the first-run frame can take the height left.
+    <div className="flex flex-1 flex-col gap-4">
       <AnalysisStatus analysis={analysis} indicatorsError={indicatorsError} />
-      <AnalysisPanel busy={analysis.isPlaceholderData}>
-        {info.length > 0 && <GeneralInfoCard items={info} />}
-        <WidgetGrid>
-          {widgets.map((widget) => (
-            <AnalysisWidgetCard key={widget.id} widget={widget} />
-          ))}
-        </WidgetGrid>
-      </AnalysisPanel>
+      {/* Nothing to show before the first answer: no empty panel (and gap) under the frame. */}
+      {analysis.data && (
+        <AnalysisPanel busy={analysis.isPlaceholderData}>
+          {info.length > 0 && <GeneralInfoCard items={info} />}
+          <WidgetGrid>
+            {widgets.map((widget) => (
+              <AnalysisWidgetCard key={widget.id} widget={widget} />
+            ))}
+          </WidgetGrid>
+        </AnalysisPanel>
+      )}
     </div>
   );
 }

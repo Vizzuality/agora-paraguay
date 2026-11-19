@@ -376,3 +376,31 @@ test('Exportar informe lays the report out in one column, every chart inside its
   // No summary generated: the AI card stays out of the report.
   await expect(main.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
 });
+
+test('the first analysis waits in a frame that ends inside the window, under the actions', async ({
+  page,
+}) => {
+  let release: () => void = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await analyseOnRedesign(page, '/analisis/productivo', (target) =>
+    target.route(
+      (url) => url.pathname === '/api/parcels/analysis/production/',
+      async (route) => {
+        await held;
+        await route.fallback();
+      },
+    ),
+  );
+  await loginAtGate(page);
+
+  // The actions and the AI summary sit above it: the frame takes only what is left,
+  // its bottom on the content column's 40px padding, never past the fold.
+  const status = page.getByRole('status').filter({ hasText: 'Analizando…' });
+  await expect(status).toBeVisible();
+  const viewport = page.viewportSize()!;
+  const box = (await status.boundingBox())!;
+  expect(Math.abs(box.y + box.height - (viewport.height - 40))).toBeLessThan(2);
+
+  release();
+  await expect(status).toHaveCount(0);
+});

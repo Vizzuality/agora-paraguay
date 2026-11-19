@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
 
-import { Footer } from '@/components/footer';
 import { TopBar } from '@/components/frame/top-bar';
 
 /**
  * The redesign's page frame: the top bar and the settings on the left, the content on
- * the right, the footer below. From `lg` the two columns split the width in halves; they
+ * the right. From `lg` the two columns split the width in halves; they
  * stop growing at 1440px and centre beyond it. The left column stays in view while the
  * content scrolls; one taller than the window scrolls on its own. The column stretches
  * to the row, up to the window, so a setting can fill it to the bottom.
@@ -34,8 +33,6 @@ export function PageFrame({
           {children}
         </main>
       </div>
-
-      <Footer />
     </div>
   );
 }
