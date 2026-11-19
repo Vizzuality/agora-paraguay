@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { analysisWidgets } from '@/lib/analysis/analysis-widgets';
+import { analysisWidgets, widgetGroups } from '@/lib/analysis/analysis-widgets';
 import { combinedParcel } from '@/lib/analysis/indicator-cards';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
@@ -217,5 +217,44 @@ describe('analysisWidgets', () => {
         parcel: parcels[0],
       }),
     ).toEqual([]);
+  });
+});
+
+describe('widgetGroups', () => {
+  const historicProduction: Indicator = { ...production, category: 'historic' };
+  const futureResilience: Indicator = { ...resilience, category: 'future' };
+  const indicators = [coverage, historicProduction, futureResilience];
+  const widgets = analysisWidgets({
+    parcels,
+    parcelIds: ['A', 'B'],
+    indicators,
+    riesgo: 'productivo',
+    scope: 'multiple',
+    parcel: combinedParcel(parcels, indicators),
+  });
+
+  it('cuts the sorted widgets into one run per category, titled, agnostic untitled', () => {
+    expect(
+      widgetGroups(widgets, indicators).map(({ title, widgets: run }) => [
+        title,
+        run.map(({ id }) => id),
+      ]),
+    ).toEqual([
+      [null, ['coverage_index']],
+      ['Análisis histórico de productividad', ['Pro_soja']],
+      ['Análisis de productividad proyectada', ['Resiliencia']],
+    ]);
+  });
+
+  it('is one untitled run when no indicator has a category, as on sanitario', () => {
+    const plain = [coverage, production];
+
+    expect(widgetGroups(widgets.slice(0, 2), plain)).toEqual([
+      { key: 'agnostic', title: null, widgets: widgets.slice(0, 2) },
+    ]);
+  });
+
+  it('is empty without widgets', () => {
+    expect(widgetGroups([], indicators)).toEqual([]);
   });
 });
