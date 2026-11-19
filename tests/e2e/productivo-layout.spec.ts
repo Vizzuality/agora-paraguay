@@ -118,6 +118,14 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   expect(projectionBox!.y).toBeGreaterThan(todasBoxes[1]!.y);
   expect(todasBoxes[0]!.x).toBe(todasBoxes[1]!.x);
   expect(todasBoxes[0]!.width).toBe(todasBoxes[1]!.width);
+  // Each category's run sits under its title: historic, then projected.
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText([
+    'Análisis histórico de productividad',
+    'Análisis de productividad proyectada',
+  ]);
+  await expect(
+    page.getByRole('region', { name: 'Análisis de productividad proyectada' }),
+  ).toContainText('Producción proyectada a escenario pesimista, neutro y optimista');
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
   // Información de contexto sums the area and counts the parcels per soy season, one a

@@ -261,12 +261,12 @@
    widget that does not fit moves whole to the next page. Chrome's result is the same.
    Spacing moves from the containers' gaps to margins. */
 @media print {
-  body :is(div, main):has([data-slot='widget-grid']),
+  body :is(div, main, section):has([data-slot='widget-grid']),
   [data-slot='widget-grid'] {
     display: block;
   }
 
-  body :is(div, main):has([data-slot='widget-grid']) > * + * {
+  body :is(div, main, section):has([data-slot='widget-grid']) > * + * {
     margin-top: 1rem;
   }
 
