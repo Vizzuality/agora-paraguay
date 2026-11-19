@@ -12,7 +12,7 @@ import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-export function PanelMap({ children }: Readonly<{ children: ReactNode }>) {
+export function PanelMap({ children }: Readonly<{ children?: ReactNode }>) {
   return (
     <Map
       initialViewState={PARAGUAY_VIEW_STATE}

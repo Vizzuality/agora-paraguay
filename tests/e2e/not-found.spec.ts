@@ -17,12 +17,9 @@ test('an unknown URL gets the 404 page, bare, with a way back', async ({ page })
   await expect(page.getByRole('contentinfo')).toHaveCount(0);
 
   await page.getByRole('link', { name: 'Volver al inicio' }).click();
-  // `/` opens the first screen: Exposición climática, the analysis types open.
-  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
+  // `/` is the landing: one card per analysis type.
+  await expect(page).toHaveURL(/\/$/);
   await expect(
-    page.getByRole('region', { name: 'Tipo de análisis' }).getByRole('button', {
-      name: /Tipo de análisis/,
-    }),
-  ).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByText('Seleccione un distrito en el mapa')).toBeVisible();
+    page.getByRole('navigation', { name: 'Tipos de análisis' }).getByRole('link'),
+  ).toHaveCount(3);
 });

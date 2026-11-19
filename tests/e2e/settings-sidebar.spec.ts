@@ -38,21 +38,18 @@ test('Tipo de análisis names the open type and switches between them', async ({
   await expect(heading).toContainText('Exposición climática');
 });
 
-test('the logo goes back to the first screen with the types open', async ({ page }) => {
+test('the logo goes to the landing, whose cards lead to each analysis', async ({ page }) => {
   const section = page.getByRole('region', { name: 'Tipo de análisis' });
-  const heading = section.getByRole('button', { name: /Tipo de análisis/ });
   await section.getByRole('link', { name: 'Riesgo sanitario' }).click();
-  await expect(heading).toHaveAttribute('aria-expanded', 'false');
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
-  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
-  await expect(heading).toHaveAttribute('aria-expanded', 'true');
+  await expect(page).toHaveURL(/\/$/);
+  const cards = page.getByRole('navigation', { name: 'Tipos de análisis' }).getByRole('link');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.first()).toContainText('Saber más');
 
-  // Already home, closed, the logo opens the types again.
-  await heading.click();
-  await expect(heading).toHaveAttribute('aria-expanded', 'false');
-  await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
-  await expect(heading).toHaveAttribute('aria-expanded', 'true');
+  await cards.filter({ hasText: 'Riesgo sanitario' }).click();
+  await expect(page).toHaveURL(/\/analisis\/sanitario/);
 });
 
 test('the heading closes an open section again', async ({ page }) => {
