@@ -115,6 +115,11 @@ const filteredParcelSchema = z.object({
   selected: z.boolean(),
   /** The crop last grown on the parcel; `null` when the backend does not know it. */
   last_crop_type: z.string().nullish().transform(toCrop),
+  /** Every crop grown on the parcel, known ones only, each once; empty when none is known. */
+  crop_types: z
+    .array(z.string())
+    .nullish()
+    .transform((names) => [...new Set((names ?? []).flatMap((name) => toCrop(name) ?? []))]),
 });
 
 export type FilteredParcel = z.infer<typeof filteredParcelSchema>;

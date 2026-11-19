@@ -1,6 +1,12 @@
 import { hasColumn, readingOf } from '@/lib/analysis/readings';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
-import type { Crop, Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import {
+  type Crop,
+  type Indicator,
+  type Indicators,
+  isCrop,
+  type Riesgo,
+} from '@/lib/api/metadata/schemas';
 
 /*
  * TODO(api-filters): remove this file, its hook (`use-applicable-indicators.ts`) and its
@@ -31,8 +37,9 @@ export function cropOfIndicator(indicator: Indicator): Crop | null {
  * the other crop are out: rice lists none with `_soja`/`_soy`, soy none with
  * `_arroz`/`_rice`. On productivo, so is one the answer carries for some submitted parcel
  * but no parcel has a reading for (every value "NA", blank or null); one the answer does
- * not carry at all stays: nothing is known about it yet. Without a crop yet (filters
- * loading) the crop rule waits.
+ * not carry at all stays: nothing is known about it yet. Under Todos, or without a crop
+ * yet (filters loading), the crop rule waits: every crop's indicators apply, the
+ * crop-agnostic ones always do.
  */
 export function applicableIndicators(
   indicators: Indicators | undefined,
@@ -43,14 +50,13 @@ export function applicableIndicators(
 ): Indicators | undefined {
   if (!indicators) return indicators;
 
-  const forCrop =
-    crop === undefined
-      ? indicators
-      : indicators.filter((indicator) => {
-          const bound = cropOfIndicator(indicator);
+  const forCrop = !isCrop(crop)
+    ? indicators
+    : indicators.filter((indicator) => {
+        const bound = cropOfIndicator(indicator);
 
-          return bound === null || bound === crop;
-        });
+        return bound === null || bound === crop;
+      });
 
   if (riesgo !== 'productivo') return forCrop;
 

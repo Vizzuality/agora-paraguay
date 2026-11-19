@@ -71,6 +71,14 @@ describe('applicableIndicators', () => {
     ).toEqual(['Pro_arroz', 'Vol_arroz', 'IEP']);
   });
 
+  it("keeps every crop's indicators under Todos, still dropping the all-NA ones", () => {
+    expect(
+      applicableIndicators(indicators, parcels, ['A', 'B'], 'productivo', 'todos')?.map(
+        (i) => i.id,
+      ),
+    ).toEqual(['Pro_soja', 'Vol_arroz', 'IEP']);
+  });
+
   it('waits for the crop: without one, only the NA rule applies', () => {
     expect(applicableIndicators(indicators, [], ['A'], 'productivo', undefined)).toEqual(
       indicators,
