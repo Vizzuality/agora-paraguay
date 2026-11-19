@@ -8,9 +8,11 @@ import { cn } from '@/lib/utils';
 export function Logo({ className }: Readonly<{ className?: string }>) {
   return (
     <span
-      className={cn('block aspect-[153.335/30] bg-current', className)}
+      className={cn(
+        'block aspect-[153.335/30] bg-current forced-color-adjust-none forced-colors:bg-[CanvasText]',
+        className,
+      )}
       style={{
-        // Quoted: Vite inlines a small SVG as a data URL with spaces and single quotes.
         maskImage: `url("${logoUrl}")`,
         maskSize: 'contain',
         maskRepeat: 'no-repeat',

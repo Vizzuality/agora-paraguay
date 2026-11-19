@@ -17,7 +17,7 @@ export function Footer() {
     // The band spans the window; its content stops at the page frame's 1440px.
     <footer className="w-full bg-primary print:hidden">
       <div className="mx-auto flex w-full max-w-360 flex-col items-center gap-10 p-10 md:flex-row md:justify-between">
-        <Link to="/" aria-label="Inicio">
+        <Link to="/" aria-label="AGORA, inicio">
           <Logo className="h-[30px] w-auto text-primary-foreground" />
         </Link>
 

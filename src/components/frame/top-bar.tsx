@@ -15,7 +15,7 @@ export function TopBar() {
   return (
     <header className="flex w-full items-center justify-between print:hidden">
       {/* Home is the landing: one card per analysis type. */}
-      <Link to="/" aria-label="Inicio" onClick={() => goHome()}>
+      <Link to="/" aria-label="AGORA, inicio" onClick={() => goHome()}>
         <Logo className="h-6 w-auto text-primary" />
       </Link>
 
