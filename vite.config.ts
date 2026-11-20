@@ -6,6 +6,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
+import { proxyTarget } from './src/lib/proxy-target.ts';
 import { SECURITY_HEADERS } from './src/lib/security-headers.ts';
 
 export default defineConfig(({ mode }) => {
@@ -17,8 +18,7 @@ export default defineConfig(({ mode }) => {
    * `API_PROXY_TARGET` (shell, `.env`, or the Vercel project's build env) to reach a
    * shared backend. Read at build time: the rule is baked into the output.
    */
-  const API_PROXY_TARGET =
-    loadEnv(mode, process.cwd(), '').API_PROXY_TARGET ?? 'http://localhost:8000';
+  const API_PROXY_TARGET = proxyTarget(loadEnv(mode, process.cwd(), '').API_PROXY_TARGET);
 
   /**
    * The backend's CSRF check compares Origin/Referer against the host it serves; make the
