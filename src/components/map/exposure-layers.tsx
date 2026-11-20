@@ -34,7 +34,7 @@ export type ExposureMapView = 'exposicion' | 'capas';
  * The districts layer: Nivel de exposición fills and traces each district in its class
  * colour; Capas keeps faint edges and traces the pick over them.
  */
-const EXPOSURE_LAYER = { id: 9, legendConfig: LEGEND_KEY_ONLY };
+const EXPOSURE_LAYER = { id: 4, legendConfig: LEGEND_KEY_ONLY };
 
 /** On Nivel de exposición, the share of their opacity the districts around a pick keep. */
 const UNPICKED_OPACITY = 0.3;
