@@ -3,9 +3,13 @@ import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { AnalysisEntryCard } from '@/components/analysis-entry-card';
 import { PageFrame } from '@/components/frame/page-frame';
 import { PanelMap } from '@/components/map/panel-map';
+import { AnalysisIdentifierSetting } from '@/components/settings/analysis-identifier-setting';
 import { LANDING_ENTRIES } from '@/lib/nav-links';
 
-/** The landing: one card per analysis type on the left, Paraguay on the map on the right. */
+/**
+ * The landing: one card per analysis type and the Identificador de análisis on the left,
+ * Paraguay on the map on the right.
+ */
 export const Route = createFileRoute('/')({
   component: Landing,
 });
@@ -16,11 +20,14 @@ function Landing() {
       settingsLabel="Tipos de análisis"
       settings={
         <ClientOnly>
-          <nav aria-label="Tipos de análisis" className="flex flex-col gap-1.5">
-            {LANDING_ENTRIES.map((entry) => (
-              <AnalysisEntryCard key={entry.label} {...entry} />
-            ))}
-          </nav>
+          <div className="flex flex-col gap-6">
+            <nav aria-label="Tipos de análisis" className="flex flex-col gap-1.5">
+              {LANDING_ENTRIES.map((entry) => (
+                <AnalysisEntryCard key={entry.label} {...entry} />
+              ))}
+            </nav>
+            <AnalysisIdentifierSetting />
+          </div>
         </ClientOnly>
       }
     >

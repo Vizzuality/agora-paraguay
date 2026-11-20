@@ -31,14 +31,12 @@ export function AnalysisEntryCard({
         event.preventDefault();
         requestLogin(to);
       }}
-      className="flex items-start gap-6 rounded-2xl border bg-secondary py-8 pr-4 pl-8 text-primary transition-colors outline-none hover:bg-secondary-hover focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex items-start gap-6 rounded-2xl bg-secondary py-8 pr-4 pl-6 text-primary transition-colors outline-none hover:bg-secondary-hover focus-visible:ring-2 focus-visible:ring-ring"
     >
       <SettingCardIcon icon={icon} />
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         <h2 className="text-base leading-[20.3px] tracking-[0.28px] text-foreground">{label}</h2>
         <p className="text-sm text-muted-foreground">{description}</p>
-        {/* The card is the link; this reads as its call to action. */}
-        <span className="text-sm underline">Saber más</span>
       </div>
       <span aria-hidden className="flex size-8 shrink-0 items-center justify-center">
         <ChevronRight className="size-4" />
