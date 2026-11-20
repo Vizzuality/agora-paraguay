@@ -4,7 +4,7 @@ import { DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styl
 
 describe('REFERENCE_LAYERS', () => {
   it('paints drought, flood, then soy', () => {
-    expect(REFERENCE_LAYERS.map(({ id }) => id)).toEqual([6, 7, 8]);
+    expect(REFERENCE_LAYERS.map(({ id }) => id)).toEqual([1, 2, 3]);
   });
 
   it.each([
