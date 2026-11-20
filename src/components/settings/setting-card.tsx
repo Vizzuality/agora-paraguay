@@ -1,6 +1,6 @@
-import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
+import type { IconComponent } from '@/components/icons/analysis-icons';
 import { cn } from '@/lib/utils';
 
 /**
@@ -21,12 +21,12 @@ export function settingCardClass({
   );
 }
 
-export function SettingCardIcon({ icon: Icon }: Readonly<{ icon: LucideIcon }>) {
+export function SettingCardIcon({ icon: Icon }: Readonly<{ icon: IconComponent }>) {
   return <Icon aria-hidden className="size-10 shrink-0 max-md:size-6" strokeWidth={1.5} />;
 }
 
 type SettingCardButtonProps = ComponentProps<'button'> & {
-  icon: LucideIcon;
+  icon: IconComponent;
   active?: boolean;
   primary?: boolean;
 };
