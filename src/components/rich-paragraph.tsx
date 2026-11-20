@@ -4,8 +4,8 @@ import { splitStrong } from '@/lib/analysis-texts';
 export function RichParagraph({ text }: Readonly<{ text: string }>) {
   return (
     <p>
-      {splitStrong(text).map((segment, index) =>
-        segment.strong ? <strong key={index}>{segment.text}</strong> : segment.text,
+      {splitStrong(text).map(({ text: run, strong, offset }) =>
+        strong ? <strong key={offset}>{run}</strong> : run,
       )}
     </p>
   );
