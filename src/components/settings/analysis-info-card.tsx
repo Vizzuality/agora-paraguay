@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { useCurrentAnalysisType } from '@/components/settings/analysis-type-setting';
 import { SettingCardIcon } from '@/components/settings/setting-card';
 import { Button } from '@/components/ui/button';
-import { infoCardText } from '@/lib/analysis-texts';
+import { analysisDescription } from '@/lib/analysis-texts';
 import { dismissAnalysisInfoAtom, dismissedAnalysisInfoAtom } from '@/store/analysis-info';
 
 /**
@@ -16,7 +16,7 @@ export function AnalysisInfoCard() {
   const dismissed = useAtomValue(dismissedAnalysisInfoAtom);
   const dismiss = useSetAtom(dismissAnalysisInfoAtom);
 
-  const text = current && infoCardText(String(current.to));
+  const text = current && analysisDescription(String(current.to));
   if (!current || !text || dismissed.includes(current.label)) return null;
 
   return (
