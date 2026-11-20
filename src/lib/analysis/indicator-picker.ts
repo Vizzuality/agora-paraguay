@@ -1,7 +1,7 @@
 import { isAreaIndicator } from '@/lib/analysis/area';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
 import { projectionCrop } from '@/lib/analysis/projection';
-import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
+import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * Personalizar indicadores: which indicators the analysis page shows. Pure, node-tested.
@@ -16,7 +16,7 @@ import type { Indicator, Indicators, Riesgo } from '@/lib/api/metadata/schemas';
  */
 export function selectableIndicators(
   indicators: Indicators,
-  riesgo: Riesgo = 'sanitario',
+  riesgo: IndicatorsRiesgo = 'sanitario',
 ): Indicators {
   return indicators.filter(
     (indicator) => !isGeneralInfo(indicator, riesgo, 'multiple') && !isAreaIndicator(indicator),

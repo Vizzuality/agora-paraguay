@@ -1,4 +1,4 @@
-import type { Riesgo } from '@/lib/api/metadata/schemas';
+import type { IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The report is the analysis page printed: a print stylesheet hides the chrome and the
@@ -15,7 +15,7 @@ export function reportDate(date: Date): string {
 }
 
 /** What the browser proposes as the file name: `agora-productivo-2026-10-09`. */
-export function reportFileName(riesgo: Riesgo, date: Date): string {
+export function reportFileName(riesgo: IndicatorsRiesgo, date: Date): string {
   return `agora-${riesgo}-${reportDate(date)}`;
 }
 

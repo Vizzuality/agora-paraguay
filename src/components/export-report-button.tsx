@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { printReport } from '@/lib/analysis/print-report';
 import { reportFileName } from '@/lib/analysis/report';
 import { analysisMutations } from '@/lib/api/analysis/queries';
-import type { Riesgo } from '@/lib/api/metadata/schemas';
+import type { IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /**
  * Exportar informe: prints the page as the report, once the indicators have loaded and
@@ -15,7 +15,7 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
 export function ExportReportButton({
   riesgo,
   className,
-}: Readonly<{ riesgo: Riesgo; className?: string }>) {
+}: Readonly<{ riesgo: IndicatorsRiesgo; className?: string }>) {
   const store = useStore();
   // A report printed mid-load would go out with stale or missing widgets: the indicator
   // list, or the analysis that fills them (`['analysis', …]`, re-run on every change).

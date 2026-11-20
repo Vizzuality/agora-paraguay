@@ -39,7 +39,8 @@ function Sections() {
   const [open, setOpen] = useState<SectionKey | null>(current ? 'area' : null);
   const areaLabel = useAreaSelectionLabel();
   const analysed = useAtomValue(analysedViewAtom);
-  // The report prints the área open, so its map is in the PDF whatever the reader left open.
+  // The report prints the área open (risk or exposure), so its map is in the PDF whatever
+  // the reader left open.
   const paperLayout = useAtomValue(paperLayoutAtom);
   const toggle = (key: SectionKey) => setOpen((value) => (value === key ? null : key));
 
@@ -71,7 +72,7 @@ function Sections() {
       {/* Exposición climática works by district: its área is the exposure map, which
           fills the content column until a district is picked, the prompt holding its place. */}
       {current && !current.riesgo && (
-        <ExposureArea open={open === 'area'} onToggle={() => toggle('area')} />
+        <ExposureArea open={open === 'area' || paperLayout} onToggle={() => toggle('area')} />
       )}
 
       {/* The filters apply to an analysis: none to set before Analizar. */}

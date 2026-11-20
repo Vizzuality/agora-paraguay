@@ -1,5 +1,6 @@
 import { useSetAtom } from 'jotai';
 
+import { AnalysisActions } from '@/components/analysis-actions';
 import { AnalysisWidgetCard } from '@/components/analysis-widget-card';
 import { GeneralInfoList } from '@/components/general-info-card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,8 @@ export function DistrictPanel() {
       aria-labelledby="distrito-seleccionado"
       className="flex min-h-108 flex-1 flex-col gap-4"
     >
+      <AnalysisActions riesgo="exposicion_climatica" />
+
       <div className="flex flex-col gap-6 rounded-3xl bg-card p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">

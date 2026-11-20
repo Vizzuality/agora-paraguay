@@ -35,6 +35,24 @@ describe('selectableIndicators', () => {
     expect(selectableIndicators(withTypes).map((i) => i.id)).toEqual(['asian_rust', 'ITR']);
   });
 
+  it("offers exposición climática's percentages and class, its hectares and codes being facts", () => {
+    const exposure: Indicators = [
+      { id: 'DPTO_DESC', name: 'Departamento', indicator_type: text },
+      { id: 'Drought_pc', name: 'Sequía', unit: '%', indicator_type: { type: 'numeric' } },
+      { id: 'Drought_ha', name: 'Sequía', unit: 'ha', indicator_type: { type: 'numeric' } },
+      {
+        id: 'Ex_class',
+        name: 'Nivel de exposición',
+        indicator_type: { type: 'category', categories: ['Bajo', 'Medio', 'Alto'] },
+      },
+    ];
+
+    expect(selectableIndicators(exposure, 'exposicion_climatica').map((i) => i.id)).toEqual([
+      'Drought_pc',
+      'Ex_class',
+    ]);
+  });
+
   it('offers the open numbers on productivo, where they are widgets, the area still left out', () => {
     const productivo: Indicators = [
       { id: 'Pro_soja', name: 'Producción', indicator_type: { type: 'numeric' } },
