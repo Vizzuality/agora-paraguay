@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { CircleArrowRight, SquarePen, Undo2, Upload } from 'lucide-react';
+import { CircleArrowRight, LayoutGrid, SquarePen, Undo2, Upload } from 'lucide-react';
 import { useRef } from 'react';
 
 import {
@@ -17,7 +17,8 @@ import { selectionStep } from '@/lib/selection-steps';
 import { UPLOAD_ACCEPT } from '@/lib/upload/parse-file';
 import { useUploadFile } from '@/lib/upload/use-upload-file';
 import { useConfirmedParcels } from '@/lib/use-confirmed-parcels';
-import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
+import { cn } from '@/lib/utils';
+import { activeParcelIdAtom, activeParcelTabAtom, analysedParcelIdsAtom } from '@/store/analysis';
 import { clearSelectionAtom, drawAtom, startDrawAtom } from '@/store/draw';
 import { analysedViewAtom, backToSelectionAtom, startAnalysisAtom } from '@/store/mode';
 import { areaRejectionAtom } from '@/store/selection';
@@ -169,21 +170,36 @@ const AREA_ACTION_CLASS =
 /** Once analysed: which parcel the page reads (Todas among them), Nuevo análisis, the mini map. */
 function AnalysedArea() {
   const backToSelection = useSetAtom(backToSelectionAtom);
+  const parcels = useAtomValue(analysedParcelIdsAtom);
+  const activeId = useAtomValue(activeParcelIdAtom);
+  const setActiveTab = useSetAtom(activeParcelTabAtom);
 
   return (
     <>
       {/* The report names the parcel in the heading instead (`SettingsSection`). */}
       <div className="flex items-end gap-3 pt-2 print:hidden">
-        {/* Todas is one of its options: the picker takes the row's free width. */}
+        {/* Todas is also one of its options: the picker takes the row's free width. */}
         <ParcelPicker />
+        {/* The way back from one parcel (picked here or on the map); gone once on Todas. */}
+        {activeId !== null && parcels.length > 1 && (
+          <Button
+            variant="secondary"
+            className={cn(AREA_ACTION_CLASS, 'border border-border text-primary')}
+            onClick={() => setActiveTab(null)}
+          >
+            <LayoutGrid aria-hidden strokeWidth={1.5} />
+            Todas
+          </Button>
+        )}
         <Button className={AREA_ACTION_CLASS} onClick={() => backToSelection()}>
           <SquarePen aria-hidden strokeWidth={1.5} />
           Nuevo análisis
         </Button>
       </div>
 
-      {/* Edge to edge under the controls, as the design bleeds it to the card's corners. */}
-      <div className="relative -mx-6 -mb-6 h-70 overflow-hidden rounded-3xl bg-muted print:h-120 paper:h-120">
+      {/* Edge to edge under the controls, as the design bleeds it to the card's corners. On
+          paper, the size of the image slot in Parámetros del análisis, so the snapshot fits it. */}
+      <div className="relative -mx-6 -mb-6 h-70 overflow-hidden rounded-3xl bg-muted paper:mx-0 paper:h-69 paper:w-82">
         <PanelMap>
           <AnalysedParcelsLayers />
         </PanelMap>

@@ -14,6 +14,7 @@ import {
 } from '@/lib/analysis/analysis-widgets';
 import { generalInfo } from '@/lib/analysis/indicator-cards';
 import { useRiesgoWidgets } from '@/lib/analysis/use-riesgo-widgets';
+import { cn } from '@/lib/utils';
 
 /**
  * Riesgo productivo's analysis: the open tab's text facts in Información de contexto, then
@@ -56,7 +57,12 @@ export function ProductivoWidgets() {
           )}
           {/* One titled run per category: historic, then projected. */}
           {rest.map((group) => (
-            <CategorySection key={group.key} title={group.title}>
+            <CategorySection
+              key={group.key}
+              title={group.title}
+              // On paper the historic analysis opens a page of its own.
+              newPage={group.key === 'historic'}
+            >
               <Widgets widgets={group.widgets} stacked={stacked} />
             </CategorySection>
           ))}
@@ -71,13 +77,14 @@ export function ProductivoWidgets() {
 /** A run of widgets under its uppercase title; untitled for the agnostic run. */
 function CategorySection({
   title,
+  newPage = false,
   children,
-}: Readonly<{ title: string | null; children: ReactNode }>) {
+}: Readonly<{ title: string | null; newPage?: boolean; children: ReactNode }>) {
   return (
     <section
       aria-label={title ?? undefined}
       // 32px between categories: the panel's 16px gap plus this margin.
-      className="flex flex-col gap-4 not-first:mt-4"
+      className={cn('flex flex-col gap-4 not-first:mt-4', newPage && 'print:break-before-page')}
     >
       {title && (
         <h2 className="text-base leading-4 font-normal tracking-[0.28px] text-foreground uppercase">

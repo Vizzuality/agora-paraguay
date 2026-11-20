@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { authMutations, authQueries } from '@/lib/api/auth/queries';
 import type { CreatedUser } from '@/lib/api/auth/schemas';
 import { ApiError } from '@/lib/api/http';
-import { setupLinkMailto } from '@/lib/auth/setup-link-mail';
+import { setupLink, setupLinkMailto } from '@/lib/auth/setup-link-mail';
 import { cn } from '@/lib/utils';
 
 export function AddUserButton({ className, ...props }: React.ComponentProps<typeof Button>) {
@@ -155,11 +155,8 @@ function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
     dateStyle: 'long',
     timeStyle: 'short',
   }).format(new Date(created.expires_at));
-  const mailto = setupLinkMailto({
-    email: created.user.email,
-    link: created.reset_link,
-    expires,
-  });
+  const link = setupLink(window.location.origin, created.token);
+  const mailto = setupLinkMailto({ email: created.user.email, link, expires });
 
   return (
     <div className="flex flex-col gap-6 py-10">
@@ -174,8 +171,8 @@ function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
       </div>
 
       <p className="px-10 text-sm break-all">
-        <a href={created.reset_link} className="text-primary underline underline-offset-4">
-          {created.reset_link}
+        <a href={link} className="text-primary underline underline-offset-4">
+          {link}
         </a>
       </p>
 
@@ -184,7 +181,7 @@ function CreatedView({ created }: Readonly<{ created: CreatedUser }>) {
           type="button"
           className="h-11 w-full rounded-2xl font-normal"
           onClick={() => {
-            void navigator.clipboard.writeText(created.reset_link).then(() => setCopied(true));
+            void navigator.clipboard.writeText(link).then(() => setCopied(true));
           }}
         >
           {copied ? 'Enlace copiado' : 'Copiar enlace'}

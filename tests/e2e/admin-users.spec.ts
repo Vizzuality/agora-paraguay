@@ -40,7 +40,12 @@ test('an administrator adds a user and gets the link to pass on; the list shows 
   const done = page.getByRole('dialog', { name: 'Usuario creado' });
 
   await expect(done).toBeVisible();
-  await expect(done.getByRole('link', { name: new RegExp(RESET_TOKEN) })).toBeVisible();
+  const link = done.getByRole('link', { name: new RegExp(RESET_TOKEN) });
+  await expect(link).toBeVisible();
+  // On the app's own address, not the backend host the API built it on.
+  const origin = new URL(page.url()).origin;
+  await expect(link).toHaveAttribute('href', `${origin}/restablecer-contrasena/${RESET_TOKEN}`);
+  await expect(link).toHaveText(`${origin}/restablecer-contrasena/${RESET_TOKEN}`);
 
   // Enviar por email opens a mail to the new user with the link in the body.
   const mailto = done.getByRole('link', { name: 'Enviar por email' });

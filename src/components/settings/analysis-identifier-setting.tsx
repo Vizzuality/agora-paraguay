@@ -32,7 +32,7 @@ export function AnalysisIdentifierSetting() {
         autoComplete="off"
         className={cn(FLOATING_FIELD_CLASS, 'border-border')}
       />
-      <div className={cn(FLOATING_CHIP_CLASS, 'top-2 flex items-center gap-2')}>
+      <div className={cn(FLOATING_CHIP_CLASS, 'top-2 flex items-center gap-2 bg-background')}>
         <Label htmlFor={id} className="text-xs leading-3 font-normal">
           {LABEL}
         </Label>

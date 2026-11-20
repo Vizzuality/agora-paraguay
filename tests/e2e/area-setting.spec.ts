@@ -55,7 +55,7 @@ test('draws an area, analyses it, and edits the parcels back', async ({ page }) 
   await analyze.click();
   await expect(page.getByRole('main').locator('canvas')).toHaveCount(0);
   await expect(section.locator('canvas.maplibregl-canvas')).toBeVisible();
-  // Todas is the picker's value; no button of its own.
+  // Todas is the picker's value; its button shows only once one parcel is open.
   await expect(section.getByRole('combobox', { name: 'Parcela' })).toHaveText('Todas');
   await expect(section.getByRole('button', { name: 'Todas' })).toHaveCount(0);
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
