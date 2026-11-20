@@ -82,7 +82,8 @@ function ExposureMap({ className }: Readonly<{ className?: string }>) {
   return (
     <div className={cn('relative overflow-hidden rounded-3xl bg-muted', className)}>
       <ClientOnly>
-        <PanelMap>
+        {/* Nivel de exposición colours whole districts, so it drops the dimming around them. */}
+        <PanelMap mask={view !== 'exposicion'}>
           <CapasBasemap showOverlay={view === 'capas'} />
           <ExposureLayers view={view} />
           {/* Without bounds the camera stays where the pick flew it: on the district. */}
