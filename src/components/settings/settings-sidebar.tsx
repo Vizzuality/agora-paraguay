@@ -15,7 +15,9 @@ import {
   useExposureAreaLabel,
 } from '@/components/settings/exposure-area-setting';
 import { SettingsSection } from '@/components/settings/settings-section';
+import { analysisTypeSummary } from '@/lib/analysis-type-summary';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
+import { analysisIdentifierAtom } from '@/store/analysis-identifier';
 import { selectedDistrictAtom } from '@/store/exposure';
 import { analysedViewAtom } from '@/store/mode';
 import { paperLayoutAtom } from '@/store/report';
@@ -39,6 +41,7 @@ function Sections() {
   const current = useCurrentAnalysisType();
   const [open, setOpen] = useState<SectionKey | null>(current ? 'area' : null);
   const areaLabel = useAreaSelectionLabel();
+  const identifier = useAtomValue(analysisIdentifierAtom);
   const analysed = useAtomValue(analysedViewAtom);
   // The report prints the área open (risk or exposure), so its map is in the PDF whatever
   // the reader left open.
@@ -48,8 +51,8 @@ function Sections() {
   return (
     <>
       <SettingsSection
-        name="Tipo de análisis"
-        selection={current?.label}
+        name="ID y tipo de análisis"
+        selection={analysisTypeSummary(identifier, current?.label)}
         open={open === 'analysisType'}
         onToggle={() => toggle('analysisType')}
       >
