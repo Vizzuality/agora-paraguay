@@ -15,10 +15,13 @@ const DESCRIPTION =
 /**
  * Identificador de análisis, under the analysis types: the user's reference, kept for the
  * session (`analysisIdentifierAtom`). Its caption always sits on the border, with the info
- * tip beside it — outside the `<label>`, which cannot hold a button. Reads atoms: render
- * inside `<ClientOnly>`.
+ * tip beside it — outside the `<label>`, which cannot hold a button. The caption masks the
+ * border with the surface the field sits on: `card` in the settings section, `background`
+ * on the landing. Reads atoms: render inside `<ClientOnly>`.
  */
-export function AnalysisIdentifierSetting() {
+export function AnalysisIdentifierSetting({
+  surface = 'card',
+}: Readonly<{ surface?: 'card' | 'background' }>) {
   const [identifier, setIdentifier] = useAtom(analysisIdentifierAtom);
   const id = useId();
 
@@ -32,7 +35,13 @@ export function AnalysisIdentifierSetting() {
         autoComplete="off"
         className={cn(FLOATING_FIELD_CLASS, 'border-border')}
       />
-      <div className={cn(FLOATING_CHIP_CLASS, 'top-2 flex items-center gap-2 bg-background')}>
+      <div
+        className={cn(
+          FLOATING_CHIP_CLASS,
+          'top-2 flex items-center gap-2',
+          surface === 'background' && 'bg-background',
+        )}
+      >
         <Label htmlFor={id} className="text-xs leading-3 font-normal">
           {LABEL}
         </Label>

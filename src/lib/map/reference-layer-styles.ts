@@ -48,6 +48,8 @@ export type ReferenceLayer = {
   swatch: { fill: string; edge: string };
   /** The controls its legend row gets. */
   legendConfig: LegendConfig;
+  /** Whether a district pick keeps only that district's features, or leaves the layer whole. */
+  clipsToDistrict: boolean;
 };
 
 /** Capas's layers in paint order: the country-wide hazards first, soy on top. */
@@ -62,6 +64,7 @@ export const REFERENCE_LAYERS: ReferenceLayer[] = [
     },
     swatch: { fill: DROUGHT, edge: DROUGHT },
     legendConfig: LEGEND_ALL_CONTROLS,
+    clipsToDistrict: true,
   },
   {
     id: 2,
@@ -69,6 +72,8 @@ export const REFERENCE_LAYERS: ReferenceLayer[] = [
     fill: { color: hectareRamp('Flood_ha', FLOOD, FLOOD), opacity: 0.8, outlineColor: FLOOD_EDGE },
     swatch: { fill: FLOOD, edge: FLOOD_EDGE },
     legendConfig: LEGEND_ALL_CONTROLS,
+    // Floodplains run across district lines: cut at the pick's border they read as cropped.
+    clipsToDistrict: false,
   },
   {
     id: 3,
@@ -76,5 +81,6 @@ export const REFERENCE_LAYERS: ReferenceLayer[] = [
     fill: { color: SOJA, opacity: 0.9, outlineColor: 'rgba(92, 107, 84, 0)' },
     swatch: { fill: SOJA, edge: SOJA },
     legendConfig: LEGEND_ALL_CONTROLS,
+    clipsToDistrict: true,
   },
 ];

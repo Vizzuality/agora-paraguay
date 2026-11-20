@@ -49,11 +49,11 @@ test('Exposición climática fills the content column with its map and prompts f
   // Nivel de exposición's legend is a key only: no eye, slider or handle on its rows.
   await expect(legend.getByRole('button')).toHaveCount(0);
 
-  await expect(intro.getByText(/Las capas muestran soja coincidente/)).toBeVisible();
+  await expect(intro.getByText(/El color indica qué proporción/)).toBeVisible();
   await surface.click();
   await expect(surface).toHaveAttribute('aria-selected', 'true');
   // The intro's reading follows the map's view.
-  await expect(intro.getByText(/El color indica qué proporción/)).toBeVisible();
+  await expect(intro.getByText(/Las capas muestran soja coincidente/)).toBeVisible();
   const layers = map.getByRole('list', { name: 'Leyenda de capas' });
   await expect(layers).toBeVisible();
 
