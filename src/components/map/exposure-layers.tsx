@@ -7,7 +7,6 @@ import { GlobalLayer } from '@/components/map/global-layer';
 import { MapLegend } from '@/components/map/map-legend';
 import { MapLoading } from '@/components/map/map-loading';
 import { useIndicators } from '@/lib/analysis/use-indicators';
-import type { RiskTone } from '@/lib/analysis/widget-config';
 import {
   districtFromProperties,
   EXPOSURE_FILL_OPACITY,
@@ -16,6 +15,7 @@ import {
   exposureLabel,
   exposureLegendLabel,
   exposureColor,
+  exposureSwatch,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
@@ -24,7 +24,6 @@ import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legen
 import { DISTRICT_PICK, DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
-import { cn } from '@/lib/utils';
 import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
@@ -40,18 +39,6 @@ const EXPOSURE_LAYER = { id: 4, legendConfig: LEGEND_KEY_ONLY };
 const UNPICKED_OPACITY = 0.3;
 
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
-
-/**
- * A class's legend swatch, in the token its ruler band paints (`TONE_COLOR`): the fill at
- * half, the 2px border solid, as the map draws a district's fill and outline.
- */
-const TONE_SWATCH: Record<RiskTone, string> = {
-  none: 'border-2 border-risk-none bg-risk-none/50',
-  low: 'border-2 border-risk-low bg-risk-low/50',
-  medium: 'border-2 border-risk-neutral bg-risk-neutral/50',
-  elevated: 'border-2 border-risk-medium bg-risk-medium/50',
-  high: 'border-2 border-risk-high bg-risk-high/50',
-};
 
 /**
  * Exposición climática's layers for the panel map. Nivel de exposición colours each
@@ -154,7 +141,11 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           items={classes.map(({ label, tone }) => ({
             id: label,
             label: exposureLegendLabel(label),
-            className: cn('border-2', TONE_SWATCH[tone]),
+            className: 'border-2',
+            style: {
+              backgroundColor: exposureSwatch(tone).fill,
+              borderColor: exposureSwatch(tone).edge,
+            },
           }))}
           note="Porcentaje de soja expuesta a una o ambas amenazas; las áreas coincidentes se cuentan una sola vez."
         />
