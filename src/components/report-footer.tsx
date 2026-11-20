@@ -6,9 +6,9 @@ import { analysisIdentifierAtom } from '@/store/analysis-identifier';
 import { reportGeneratedAtAtom } from '@/store/report';
 
 /**
- * The report's closing card (`reportAttribution`), on screen and on paper, the identifier
- * and date in italics. Dated when Exportar informe was pressed (`printReport`), otherwise
- * when the page opened. Reads atoms: render inside `<ClientOnly>`.
+ * The report's closing card (`reportAttribution`), on paper only, the identifier and date
+ * in italics. Dated when Exportar informe was pressed (`printReport`), otherwise when the
+ * page opened. Reads atoms: render inside `<ClientOnly>`.
  */
 export function ReportFooter() {
   const identifier = useAtomValue(analysisIdentifierAtom);
@@ -16,7 +16,7 @@ export function ReportFooter() {
   const [openedAt] = useState(() => new Date());
 
   return (
-    <footer className="rounded-3xl border-2 border-border bg-background p-6 backdrop-blur-xs">
+    <footer className="hidden rounded-3xl border-2 border-border bg-background p-6 backdrop-blur-xs print:block">
       <p className="text-center text-sm text-muted-foreground">
         {reportAttribution(identifier, generatedAt ?? openedAt).map(({ text, value }) =>
           value ? <em key={text}>{text}</em> : text,
