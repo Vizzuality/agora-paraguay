@@ -6,5 +6,7 @@
  * POST with 403.
  */
 export function proxyTarget(raw: string | undefined): string {
-  return (raw?.trim() || 'http://localhost:8000').replace(/\/+$/, '');
+  let target = raw?.trim() || 'http://localhost:8000';
+  while (target.endsWith('/')) target = target.slice(0, -1);
+  return target;
 }
