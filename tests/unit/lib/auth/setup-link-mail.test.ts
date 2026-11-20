@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { SETUP_LINK_SUBJECT, setupLinkBody, setupLinkMailto } from '@/lib/auth/setup-link-mail';
+import {
+  SETUP_LINK_SUBJECT,
+  setupLinkBody,
+  setupLinkMailto,
+  setupLink,
+} from '@/lib/auth/setup-link-mail';
 
 const mail = {
   email: 'paule@example.org',
@@ -27,5 +32,19 @@ describe('setupLinkMailto', () => {
     expect(href).not.toContain('+');
     expect(href).not.toContain(' ');
     expect(href).toContain('%0A');
+  });
+});
+
+describe('setupLink', () => {
+  it("puts the token on this app's own address, whatever host the backend used", () => {
+    expect(setupLink('https://agora.example.org', 'abc-123')).toBe(
+      'https://agora.example.org/restablecer-contrasena/abc-123',
+    );
+  });
+
+  it('escapes a token that is not URL-safe', () => {
+    expect(setupLink('http://localhost:3000', 'a/b c')).toBe(
+      'http://localhost:3000/restablecer-contrasena/a%2Fb%20c',
+    );
   });
 });
