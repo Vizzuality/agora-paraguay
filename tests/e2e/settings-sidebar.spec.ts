@@ -61,7 +61,7 @@ test('closed, ID y tipo de análisis carries the identifier before the type', as
   const heading = section.getByRole('button', { name: /ID y tipo de análisis/ });
 
   await heading.click();
-  await section.getByLabel('Identificador de análisis').fill('123456ABC');
+  await section.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
   await heading.click();
 
   await expect(heading).toHaveAttribute('aria-expanded', 'false');
