@@ -26,6 +26,6 @@ test('a closed info card stays closed across reloads, the other types keeping th
   await expect(
     settings
       .getByRole('region', { name: 'Acerca de Riesgo sanitario' })
-      .getByText(/Evalúe el riesgo/),
+      .getByText(/Consulte condiciones meteorológicas/),
   ).toBeVisible();
 });
