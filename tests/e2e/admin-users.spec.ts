@@ -169,3 +169,18 @@ test('Restablecer contraseña is listed but disabled until the endpoint exists',
     'true',
   );
 });
+
+test('the footer leads to each analysis type', async ({ page }) => {
+  await stubAdminUsers(page);
+  await page.goto('/usuarios');
+  await loginAtGate(page);
+
+  const links = page
+    .getByRole('contentinfo')
+    .getByRole('navigation', { name: 'Tipos de análisis' })
+    .getByRole('link');
+  await expect(links).toHaveText(['Exposición climática', 'Riesgo sanitario', 'Riesgo productivo']);
+
+  await links.filter({ hasText: 'Exposición climática' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
+});

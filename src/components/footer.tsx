@@ -1,16 +1,14 @@
 import { Link } from '@tanstack/react-router';
 
 import { Logo } from '@/components/logo';
-import { SelectionLink } from '@/components/selection-link';
-import { RISK_LINKS, SELECTION_LINK } from '@/lib/nav-links';
+import { ANALYSIS_TYPES } from '@/lib/nav-links';
 
 const LINK_CLASS =
   'flex h-11 items-center justify-center rounded-2xl px-8 text-sm text-primary-foreground';
 
 /**
- * Bottom bar of the analysis screen: brand logo on the
- * left, the three navigation links on the right. Same destinations as the top
- * `AnalysisNav`, restyled for the navy band. Stacked and centred on a mobile device.
+ * Bottom bar: brand logo on the left, a link to each analysis type on the right, restyled
+ * for the navy band. Stacked and centred on a mobile device.
  */
 export function Footer() {
   return (
@@ -21,10 +19,12 @@ export function Footer() {
           <Logo className="h-[30px] w-auto text-primary-foreground" />
         </Link>
 
-        <nav className="flex flex-col items-center gap-2 md:flex-row">
-          <SelectionLink className={LINK_CLASS}>{SELECTION_LINK.label}</SelectionLink>
-          {RISK_LINKS.map(({ label, to, replace }) => (
-            <Link key={label} to={to} replace={replace} className={LINK_CLASS}>
+        <nav
+          aria-label="Tipos de análisis"
+          className="flex flex-col items-center gap-2 md:flex-row"
+        >
+          {ANALYSIS_TYPES.map(({ label, to }) => (
+            <Link key={label} to={to} className={LINK_CLASS}>
               {label}
             </Link>
           ))}

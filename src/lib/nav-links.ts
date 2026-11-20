@@ -9,21 +9,6 @@ import {
 import { analysisDescription } from '@/lib/analysis-texts';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 
-export type NavLink = {
-  label: string;
-  to: LinkProps['to'];
-  replace?: boolean;
-};
-
-/**
- * Way back to the parcel selection, shared by the top nav and the footer. Not `/`: home is
- * Exposición climática, which selects districts, not parcels.
- */
-export const SELECTION_LINK: NavLink = {
-  label: 'Personalización del análisis',
-  to: '/analisis/sanitario',
-};
-
 /** The two risk views, in display order, each its own route under `/analisis`. */
 export const RISK_TABS: {
   label: string;
@@ -55,19 +40,8 @@ export const EXPOSURE_TAB = {
   icon: ExposureIcon,
 } satisfies { label: string; to: LinkProps['to']; icon: IconComponent };
 
-/** The top nav's tabs: Exposición climática, then the risk views. The footer keeps `RISK_LINKS`. */
+/** The top nav's tabs: Exposición climática, then the risk views. */
 export const HEADER_TABS: { label: string; to: LinkProps['to'] }[] = [EXPOSURE_TAB, ...RISK_TABS];
-
-/**
- * `RISK_TABS` as plain router links (for the footer). Switching risk views must
- * not stack history entries, or the browser's Back stops leaving the page —
- * same rule as the top nav's tabs.
- */
-export const RISK_LINKS: NavLink[] = RISK_TABS.map(({ label, to }) => ({
-  label,
-  to,
-  replace: true,
-}));
 
 /** The analysis types, in display order, each its own route under `/analisis`. */
 export const ANALYSIS_TYPES: {
