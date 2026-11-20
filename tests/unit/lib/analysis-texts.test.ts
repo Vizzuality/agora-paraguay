@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { ANALYSIS_TEXTS, infoCardText, splitStrong } from '@/lib/analysis-texts';
+import { ANALYSIS_TEXTS, analysisDescription, splitStrong } from '@/lib/analysis-texts';
 import { ANALYSIS_TYPES } from '@/lib/nav-links';
 
 describe('analysis texts', () => {
-  it('gives every analysis type an info card', () => {
-    for (const { to } of ANALYSIS_TYPES) expect(infoCardText(String(to))).toBeTruthy();
+  it('gives every analysis type a description', () => {
+    for (const { to } of ANALYSIS_TYPES) expect(analysisDescription(String(to))).toBeTruthy();
   });
 
   it('explains both views of the exposure map', () => {
@@ -14,8 +14,8 @@ describe('analysis texts', () => {
     expect(body.capas.length).toBeGreaterThan(0);
   });
 
-  it('has no card off the analysis pages', () => {
-    expect(infoCardText('/')).toBeUndefined();
+  it('has no description off the analysis pages', () => {
+    expect(analysisDescription('/')).toBeUndefined();
   });
 });
 

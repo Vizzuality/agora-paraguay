@@ -1,8 +1,8 @@
 {
-  "infoCards": {
+  "descriptions": {
     "/analisis/exposicion-climatica": "Consulte por distrito qué proporción de la superficie de soja coincide con zonas de sequía severa o extrema y de inundación fluvial. Ambas capas corresponden a un período de retorno de 100 años.",
-    "/analisis/sanitario": "Evalúe el riesgo de enfermedades en las parcelas que seleccione, según las condiciones climáticas recientes.",
-    "/analisis/productivo": "Analice la producción histórica y proyectada de sus parcelas, su tendencia y su resiliencia."
+    "/analisis/sanitario": "Consulte condiciones meteorológicas recientes que pueden favorecer enfermedades en cultivos de soja y arroz.",
+    "/analisis/productivo": "Consulte, a nivel de parcela, indicadores históricos y proyecciones de producción de soja y arroz, estimados mediante datos satelitales, información climática histórica y proyecciones de un modelo climático digital. Incluye también indicadores de vulnerabilidad e incertidumbre."
   },
   "exposureIntro": {
     "pickDistrict": {
