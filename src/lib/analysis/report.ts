@@ -1,4 +1,6 @@
-import type { IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
+import { formatIsoDate } from '@/lib/analysis/describe';
+import { filterValueLabel, orderHeroFilters } from '@/lib/analysis/filters';
+import type { Filters, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 
 /*
  * The report is the analysis page printed: a print stylesheet hides the chrome and the
@@ -48,4 +50,39 @@ export function reportAttribution(identifier: string, date: Date): AttributionPa
     { text: reportLongDate(date), value: true },
     { text: '.' },
   ];
+}
+
+/** One row of the report's Parámetros del análisis. */
+export type ReportParameter = { label: string; value: string };
+
+const HECTARES = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 });
+
+/**
+ * The analysis's parameters as the report lists them: each filter in force, in the hero's
+ * order, then the hectares analysed. Unset filters and unknown hectares are left out.
+ */
+export function reportParameters(
+  filters: Filters,
+  resolved: Record<string, string>,
+  hectares: number | null,
+): ReportParameter[] {
+  const rows = orderHeroFilters(filters).flatMap((filter) => {
+    const value = resolved[filter.id];
+
+    if (!value) return [];
+
+    return [
+      {
+        label: filter.name,
+        value:
+          filter.field_type.type === 'date'
+            ? formatIsoDate(value)
+            : filterValueLabel(filter, value),
+      },
+    ];
+  });
+
+  return hectares === null
+    ? rows
+    : [...rows, { label: 'Hectáreas', value: `${HECTARES.format(hectares)} ha` }];
 }

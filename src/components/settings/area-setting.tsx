@@ -182,8 +182,9 @@ function AnalysedArea() {
         </Button>
       </div>
 
-      {/* Edge to edge under the controls, as the design bleeds it to the card's corners. */}
-      <div className="relative -mx-6 -mb-6 h-70 overflow-hidden rounded-3xl bg-muted print:h-120 paper:h-120">
+      {/* Edge to edge under the controls, as the design bleeds it to the card's corners. On
+          paper, the size of the image slot in Parámetros del análisis, so the snapshot fits it. */}
+      <div className="relative -mx-6 -mb-6 h-70 overflow-hidden rounded-3xl bg-muted paper:mx-0 paper:h-69 paper:w-82">
         <PanelMap>
           <AnalysedParcelsLayers />
         </PanelMap>

@@ -378,33 +378,20 @@ test('Exportar informe lays the report out in one column, every chart inside its
     expect(chartBox.y + chartBox.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);
   }
 
-  // The área prints open: its map with the legend's rows and the credits written out,
-  // the parcel named in the heading in place of the picker, Todas and Nuevo análisis.
+  // On paper the settings give way to Parámetros del análisis: the área's map as an image
+  // beside the filters in force and the hectares analysed.
   const area = settings.getByRole('region', { name: 'Área de interés' });
-  await expect(area.getByRole('button', { name: /^Área de interés/ })).toHaveAttribute(
-    'aria-expanded',
-    'true',
-  );
   await page.emulateMedia({ media: 'print' });
-  await expect(area.getByRole('button', { name: /^Área de interés/ })).toContainText(
-    'Área de interés - Todas',
-  );
-  await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
-  await expect(area.getByRole('button', { name: 'Nuevo análisis' })).toBeHidden();
-  const legend = area.getByRole('list', { name: 'Leyenda de parcelas' });
-  await expect(legend).toBeVisible();
-  // The crops are the 2025 season's: the asterisked rows say so in a footnote.
-  await expect(legend.getByRole('listitem')).toHaveText(['Selección activa', 'Soja*', 'Arroz*']);
-  await expect(area.getByText('*Cultivos de 2025')).toBeVisible();
-  await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
-  await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
-  await expect(area.locator('.maplibregl-ctrl-attrib-button')).toBeHidden();
+  await expect(area).toBeHidden();
+  const parameters = main.getByRole('region', { name: 'Parámetros del análisis' });
+  await expect(parameters.getByRole('heading', { name: 'Parámetros del análisis' })).toBeVisible();
+  await expect(parameters.getByRole('term').last()).toHaveText('Hectáreas');
+  await expect(parameters.getByRole('definition').last()).toHaveText(/^[\d.,]+ ha$/);
 
-  // The map prints 480px tall from an image at twice its printed density, so it stays sharp.
-  const snapshot = area.locator('img[src^="data:image/png"]');
+  // The snapshot is taken at twice its printed density, so it stays sharp.
+  const snapshot = parameters.locator('img[src^="data:image/png"]');
   await expect(snapshot).toBeVisible();
   const printed = (await snapshot.boundingBox())!;
-  expect(printed.height).toBeGreaterThanOrEqual(480);
   const pixels = await snapshot.evaluate((img: HTMLImageElement) => img.naturalWidth);
   expect(pixels).toBeGreaterThanOrEqual(2 * Math.floor(printed.width));
 
