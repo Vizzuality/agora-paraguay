@@ -151,7 +151,8 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // Información de contexto sums the area and counts the parcels per soy season, one a
   // line, under the indicator's name with its description.
   // The facts list itself: under Todas the section titles it, on a parcel the card does.
-  const info = page.getByRole('main').locator('dl');
+  // On screen only: the report's Parámetros del análisis holds a print-only list too.
+  const info = page.getByRole('main').locator('dl:visible');
   await expect(info).toContainText('17,5 ha');
   await expect(
     info.getByRole('term').filter({ hasText: 'Listado de Zafras de soja' }),
