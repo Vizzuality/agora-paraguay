@@ -5,7 +5,9 @@ import {
   reportAttribution,
   reportDate,
   reportFileName,
+  reportParameters,
 } from '@/lib/analysis/report';
+import type { Filters } from '@/lib/api/metadata/schemas';
 
 describe('reportFileName', () => {
   it('names the file after the riesgo and the local date, zero-padded', () => {
@@ -45,5 +47,32 @@ describe('reportAttribution', () => {
       'Resultados generados mediante la plataforma AGORA para este análisis, el 19 de noviembre de 2026.',
     );
     expect(values(parts)).toEqual(['19 de noviembre de 2026']);
+  });
+});
+
+describe('reportParameters', () => {
+  const filters: Filters = [
+    {
+      id: 'crop_type',
+      name: 'Tipo de cultivo',
+      field_type: { type: 'category', options: [{ value: 'rice', label: 'Arroz' }] },
+    },
+    { id: 'sowing_date', name: 'Fecha de siembra', field_type: { type: 'date' } },
+    { id: 'date', name: 'Fecha', field_type: { type: 'date' } },
+  ];
+
+  it('lists each filter in force by its name, dates as printed, categories by label', () => {
+    const rows = reportParameters(filters, { crop_type: 'rice', date: '2026-07-01' }, null);
+
+    expect(Object.fromEntries(rows.map(({ label, value }) => [label, value]))).toEqual({
+      'Tipo de cultivo': 'Arroz',
+      Fecha: '01/07/2026',
+    });
+  });
+
+  it('closes with the hectares analysed, in Spanish notation', () => {
+    const rows = reportParameters(filters, { crop_type: 'rice' }, 41.53);
+
+    expect(rows.at(-1)).toEqual({ label: 'Hectáreas', value: '41,5 ha' });
   });
 });

@@ -322,11 +322,15 @@ test('Exportar informe prints sanitario as its report, the map as an image', asy
   await expect.poll(async () => (await main.boundingBox())!.width).toBeGreaterThan(700);
   expect((await settings.boundingBox())!.y).toBeLessThan((await main.boundingBox())!.y);
 
-  // On paper the mini map prints from an image (print-only, so checked in print media);
-  // the actions stay off the paper.
-  const area = settings.getByRole('region', { name: 'Área de interés' });
+  // On paper the área's map prints from an image in Parámetros del análisis (print-only,
+  // so checked in print media), in place of the settings; the actions stay off the paper.
   await page.emulateMedia({ media: 'print' });
-  await expect(area.locator('img[src^="data:image/png"]')).toBeVisible();
+  await expect(settings.getByRole('region', { name: 'Área de interés' })).toBeHidden();
+  await expect(
+    main
+      .getByRole('region', { name: 'Parámetros del análisis' })
+      .locator('img[src^="data:image/png"]'),
+  ).toBeVisible();
   await expect(main.getByRole('button', { name: 'Exportar informe' }).first()).toBeHidden();
   await expect(main.getByRole('button', { name: 'Personalizar indicadores' }).first()).toBeHidden();
   await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();

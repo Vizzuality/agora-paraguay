@@ -18,6 +18,7 @@ import {
 import { SettingsSection } from '@/components/settings/settings-section';
 import { analysisTypeSummary } from '@/lib/analysis-type-summary';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
+import { cn } from '@/lib/utils';
 import { analysisIdentifierAtom } from '@/store/analysis-identifier';
 import { selectedDistrictAtom } from '@/store/exposure';
 import { analysedViewAtom } from '@/store/mode';
@@ -60,8 +61,9 @@ function Sections() {
   const paperLayout = useAtomValue(paperLayoutAtom);
   const toggle = (key: SectionKey) => setOpen((value) => (value === key ? null : key));
 
+  // On a riesgo the report sums the settings up in Parámetros del análisis instead.
   return (
-    <>
+    <div className={cn('contents', current?.riesgo && 'print:hidden')}>
       <SettingsSection
         name="ID y tipo de análisis"
         selection={analysisTypeSummary(identifier, current?.label)}
@@ -101,7 +103,7 @@ function Sections() {
           onToggle={() => toggle('cropDates')}
         />
       )}
-    </>
+    </div>
   );
 }
 
