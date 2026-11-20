@@ -20,16 +20,16 @@ test('Exposición climática fills the content column with its map and prompts f
   await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
   await expect(map.getByRole('button', { name: /^Área de interés/ })).toHaveCount(0);
 
-  // The prompt holds the settings column under the analysis type, down to the map's bottom.
-  const prompt = settings.getByText('Seleccione un distrito en el mapa');
-  await expect(prompt).toBeVisible();
+  // The type's info card sits under Tipo de análisis until closed.
+  const info = settings.getByRole('region', { name: 'Acerca de Exposición climática' });
+  await expect(info.getByText(/Consulte por distrito/)).toBeVisible();
+
+  // The intro holds the settings column under the analysis type: what to pick, how to read.
+  const intro = settings.getByRole('region', { name: 'Cómo empezar' });
+  await expect(intro.getByRole('heading', { name: 'Seleccione un distrito' })).toBeVisible();
+  await expect(intro.getByRole('heading', { name: 'Cómo leer el mapa' })).toBeVisible();
   await expect(settings.getByRole('region', { name: 'Área de interés' })).toHaveCount(0);
   await expect(settings.locator('canvas')).toHaveCount(0);
-  // The prompt's paragraph sits straight in its card.
-  const promptCard = prompt.locator('..');
-  const promptBox = await promptCard.boundingBox();
-  const mapBox = await map.boundingBox();
-  expect(Math.abs(promptBox!.y + promptBox!.height - (mapBox!.y + mapBox!.height))).toBeLessThan(2);
 
   const exposure = map.getByRole('tab', { name: 'Nivel de exposición' });
   const surface = map.getByRole('tab', { name: 'Superficie expuesta' });
@@ -49,8 +49,11 @@ test('Exposición climática fills the content column with its map and prompts f
   // Nivel de exposición's legend is a key only: no eye, slider or handle on its rows.
   await expect(legend.getByRole('button')).toHaveCount(0);
 
+  await expect(intro.getByText(/Las capas muestran soja coincidente/)).toBeVisible();
   await surface.click();
   await expect(surface).toHaveAttribute('aria-selected', 'true');
+  // The intro's reading follows the map's view.
+  await expect(intro.getByText(/El color indica qué proporción/)).toBeVisible();
   const layers = map.getByRole('list', { name: 'Leyenda de capas' });
   await expect(layers).toBeVisible();
 

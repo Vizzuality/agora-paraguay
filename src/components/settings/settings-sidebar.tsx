@@ -1,8 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
-import { DistrictPrompt } from '@/components/district-panel';
+import { ExposureIntro } from '@/components/exposure-intro';
 import { AnalysisIdentifierSetting } from '@/components/settings/analysis-identifier-setting';
+import { AnalysisInfoCard } from '@/components/settings/analysis-info-card';
 import {
   AnalysisTypeSetting,
   useCurrentAnalysisType,
@@ -14,7 +15,9 @@ import {
   useExposureAreaLabel,
 } from '@/components/settings/exposure-area-setting';
 import { SettingsSection } from '@/components/settings/settings-section';
+import { analysisTypeSummary } from '@/lib/analysis-type-summary';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
+import { analysisIdentifierAtom } from '@/store/analysis-identifier';
 import { selectedDistrictAtom } from '@/store/exposure';
 import { analysedViewAtom } from '@/store/mode';
 import { paperLayoutAtom } from '@/store/report';
@@ -38,6 +41,7 @@ function Sections() {
   const current = useCurrentAnalysisType();
   const [open, setOpen] = useState<SectionKey | null>(current ? 'area' : null);
   const areaLabel = useAreaSelectionLabel();
+  const identifier = useAtomValue(analysisIdentifierAtom);
   const analysed = useAtomValue(analysedViewAtom);
   // The report prints the área open (risk or exposure), so its map is in the PDF whatever
   // the reader left open.
@@ -47,8 +51,8 @@ function Sections() {
   return (
     <>
       <SettingsSection
-        name="Tipo de análisis"
-        selection={current?.label}
+        name="ID y tipo de análisis"
+        selection={analysisTypeSummary(identifier, current?.label)}
         open={open === 'analysisType'}
         onToggle={() => toggle('analysisType')}
       >
@@ -57,6 +61,8 @@ function Sections() {
           <AnalysisIdentifierSetting />
         </div>
       </SettingsSection>
+
+      <AnalysisInfoCard />
 
       {current?.riesgo && (
         <SettingsSection
@@ -70,7 +76,7 @@ function Sections() {
       )}
 
       {/* Exposición climática works by district: its área is the exposure map, which
-          fills the content column until a district is picked, the prompt holding its place. */}
+          fills the content column until a district is picked, the intro holding its place. */}
       {current && !current.riesgo && (
         <ExposureArea open={open === 'area' || paperLayout} onToggle={() => toggle('area')} />
       )}
@@ -91,7 +97,7 @@ function ExposureArea({ open, onToggle }: Readonly<{ open: boolean; onToggle: ()
   const district = useAtomValue(selectedDistrictAtom);
   const label = useExposureAreaLabel();
 
-  if (!district) return <DistrictPrompt />;
+  if (!district) return <ExposureIntro />;
 
   return (
     <SettingsSection name="Área de interés" selection={label} open={open} onToggle={onToggle}>
