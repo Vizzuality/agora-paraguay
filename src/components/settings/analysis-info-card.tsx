@@ -26,9 +26,10 @@ export function AnalysisInfoCard() {
     >
       <SettingCardIcon icon={current.icon} />
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <h2 className="text-base leading-[20.3px] tracking-[0.28px] text-foreground">
+        {/* Not a heading: the region already names the card, and the page's h2s are its sections. */}
+        <p className="text-base leading-[20.3px] tracking-[0.28px] text-foreground">
           {current.label}
-        </h2>
+        </p>
         <p className="text-sm text-muted-foreground">{text}</p>
       </div>
       <Button
