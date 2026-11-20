@@ -53,7 +53,7 @@ export type ReferenceLayer = {
 /** Capas's layers in paint order: the country-wide hazards first, soy on top. */
 export const REFERENCE_LAYERS: ReferenceLayer[] = [
   {
-    id: 6,
+    id: 1,
     label: 'Expuesto a sequía',
     fill: {
       color: hectareRamp('Drought_ha', DROUGHT, DROUGHT),
@@ -64,14 +64,14 @@ export const REFERENCE_LAYERS: ReferenceLayer[] = [
     legendConfig: LEGEND_ALL_CONTROLS,
   },
   {
-    id: 7,
+    id: 2,
     label: 'Expuesto a inundación',
     fill: { color: hectareRamp('Flood_ha', FLOOD, FLOOD), opacity: 0.8, outlineColor: FLOOD_EDGE },
     swatch: { fill: FLOOD, edge: FLOOD_EDGE },
     legendConfig: LEGEND_ALL_CONTROLS,
   },
   {
-    id: 8,
+    id: 3,
     label: 'Soja',
     fill: { color: SOJA, opacity: 0.9, outlineColor: 'rgba(92, 107, 84, 0)' },
     swatch: { fill: SOJA, edge: SOJA },
