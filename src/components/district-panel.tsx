@@ -57,19 +57,3 @@ export function DistrictPanel() {
     </section>
   );
 }
-
-/**
- * What to do until a district is picked: holds the settings column under the analysis type.
- * Stacked, as tall as the map card; beside the map, whatever the column leaves, so it ends
- * with the map however tall Tipo de análisis is open.
- */
-export function DistrictPrompt() {
-  return (
-    <div className="flex min-h-108 flex-1 items-center justify-center rounded-3xl border-3 border-border p-6 backdrop-blur-xs lg:min-h-32">
-      <p className="max-w-md text-center text-sm text-muted-foreground">
-        Seleccione un distrito en el mapa para ver sus indicadores sobre exposición a sequía e
-        inundación.
-      </p>
-    </div>
-  );
-}
