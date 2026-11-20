@@ -88,7 +88,8 @@ export async function stubAdminUsers(
       contentType: 'application/json',
       body: JSON.stringify({
         user,
-        reset_link: `http://localhost:3000/restablecer-contrasena/${RESET_TOKEN}`,
+        // Built on the backend's own host, as behind the relay: the app must not show it.
+        reset_link: `http://backend.example.org:8082/restablecer-contrasena/${RESET_TOKEN}`,
         token: RESET_TOKEN,
         expires_at: '2026-10-07T10:30:00Z',
       }),

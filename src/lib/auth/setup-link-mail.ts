@@ -9,6 +9,14 @@ import { mailtoHref } from '@/lib/auth/reset-request';
 
 export const SETUP_LINK_SUBJECT = 'Acceso a Ágora Paraguay';
 
+/**
+ * The one-time link on this app's own address. The backend builds `reset_link` on the
+ * host it was reached at, which behind the `/api` relay is the backend's, not ours.
+ */
+export function setupLink(origin: string, token: string): string {
+  return `${origin}/restablecer-contrasena/${encodeURIComponent(token)}`;
+}
+
 export type SetupLinkMail = {
   email: string;
   /** The one-time link as the API answered it. */
