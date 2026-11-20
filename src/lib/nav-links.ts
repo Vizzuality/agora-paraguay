@@ -1,6 +1,11 @@
 import type { LinkProps } from '@tanstack/react-router';
-import { Bug, ChartPie, ThermometerSun, type LucideIcon } from 'lucide-react';
 
+import {
+  ExposureIcon,
+  ProductiveRiskIcon,
+  SanitaryRiskIcon,
+  type IconComponent,
+} from '@/components/icons/analysis-icons';
 import { analysisDescription } from '@/lib/analysis-texts';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 
@@ -24,16 +29,21 @@ export const RISK_TABS: {
   label: string;
   riesgo: Riesgo;
   to: LinkProps['to'];
-  icon: LucideIcon;
+  icon: IconComponent;
   /** Private: choosing it signed out asks for the login first. */
   requiresLogin?: boolean;
 }[] = [
-  { label: 'Riesgo sanitario', riesgo: 'sanitario', to: '/analisis/sanitario', icon: Bug },
+  {
+    label: 'Riesgo sanitario',
+    riesgo: 'sanitario',
+    to: '/analisis/sanitario',
+    icon: SanitaryRiskIcon,
+  },
   {
     label: 'Riesgo productivo',
     riesgo: 'productivo',
     to: '/analisis/productivo',
-    icon: ChartPie,
+    icon: ProductiveRiskIcon,
     requiresLogin: true,
   },
 ];
@@ -42,8 +52,8 @@ export const RISK_TABS: {
 export const EXPOSURE_TAB = {
   label: 'Exposición climática',
   to: '/analisis/exposicion-climatica',
-  icon: ThermometerSun,
-} satisfies { label: string; to: LinkProps['to']; icon: LucideIcon };
+  icon: ExposureIcon,
+} satisfies { label: string; to: LinkProps['to']; icon: IconComponent };
 
 /** The top nav's tabs: Exposición climática, then the risk views. The footer keeps `RISK_LINKS`. */
 export const HEADER_TABS: { label: string; to: LinkProps['to'] }[] = [EXPOSURE_TAB, ...RISK_TABS];
@@ -63,7 +73,7 @@ export const RISK_LINKS: NavLink[] = RISK_TABS.map(({ label, to }) => ({
 export const ANALYSIS_TYPES: {
   label: string;
   to: LinkProps['to'];
-  icon: LucideIcon;
+  icon: IconComponent;
   /** The riesgo a parcel analysis runs; Exposición climática works by district instead. */
   riesgo?: Riesgo;
   /** Private: choosing it signed out asks for the login first. */
