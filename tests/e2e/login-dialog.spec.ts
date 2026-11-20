@@ -9,7 +9,8 @@ test('the login dialog explains what an account is for and closes from its ×', 
 
   await page.getByRole('banner').getByRole('button', { name: 'Iniciar sesión' }).click();
   const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
-  await expect(dialog.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+  // The card's heading; the dialog's own title, before it, is the screen-reader name.
+  await expect(dialog.getByRole('heading', { name: 'Iniciar sesión' }).last()).toBeVisible();
   await expect(dialog).toContainText('no crea un historial');
   await expect(dialog.getByRole('button', { name: 'Restablecer contraseña' })).toBeVisible();
 
