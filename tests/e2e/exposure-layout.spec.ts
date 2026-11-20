@@ -20,7 +20,7 @@ test('Exposición climática fills the content column with its map and prompts f
   await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
   await expect(map.getByRole('button', { name: /^Área de interés/ })).toHaveCount(0);
 
-  // The type's info card sits under Tipo de análisis until closed.
+  // The type's info card sits under Tipo de análisis, open on every visit.
   const info = settings.getByRole('region', { name: 'Acerca de Exposición climática' });
   await expect(info.getByText(/Consulte por distrito/)).toBeVisible();
 
