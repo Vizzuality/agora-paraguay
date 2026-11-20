@@ -50,7 +50,8 @@ test('the logo goes to the landing, whose cards lead to each analysis', async ({
   await expect(page).toHaveURL(/\/$/);
   const cards = page.getByRole('navigation', { name: 'Tipos de análisis' }).getByRole('link');
   await expect(cards).toHaveCount(3);
-  await expect(cards.first()).toContainText('Saber más');
+  await expect(cards.first()).toContainText('Consulte por distrito');
+  await expect(page.getByRole('textbox', { name: 'Identificador de análisis' })).toBeVisible();
 
   await cards.filter({ hasText: 'Riesgo sanitario' }).click();
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
