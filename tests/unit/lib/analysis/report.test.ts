@@ -11,6 +11,9 @@ describe('reportFileName', () => {
   it('names the file after the riesgo and the local date, zero-padded', () => {
     expect(reportFileName('productivo', new Date(2026, 9, 9))).toBe('agora-productivo-2026-10-09');
     expect(reportFileName('sanitario', new Date(2026, 0, 1))).toBe('agora-sanitario-2026-01-01');
+    expect(reportFileName('exposicion_climatica', new Date(2026, 10, 19))).toBe(
+      'agora-exposicion_climatica-2026-11-19',
+    );
   });
 });
 

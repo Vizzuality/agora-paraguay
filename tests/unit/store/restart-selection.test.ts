@@ -79,7 +79,11 @@ describe('restartSelectionAtom', () => {
     expect(store.get(analysedParcelIdsAtom)).toEqual([]);
     expect(store.get(activeParcelIdAtom)).toBeNull();
     expect(store.get(analysisFiltersAtom)).toEqual({});
-    expect(store.get(selectedIndicatorIdsAtom)).toEqual({ sanitario: null, productivo: null });
+    expect(store.get(selectedIndicatorIdsAtom)).toEqual({
+      sanitario: null,
+      productivo: null,
+      exposicion_climatica: null,
+    });
   });
 
   it('leaves nothing for the next map to restore', () => {
