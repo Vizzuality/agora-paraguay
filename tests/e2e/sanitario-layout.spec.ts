@@ -346,11 +346,9 @@ test('the report is titled, with its Identificador de análisis once one is ente
   page,
 }) => {
   await analyseOnRedesign(page, '/analisis/sanitario');
-  const main = page.getByRole('main');
-  // The paragraph, not the hidden <h1> that shares its text.
-  const title = main.locator('p', { hasText: /^Riesgo sanitario$/ });
-  // Its row: the widgets' cards hold terms of their own.
-  const row = title.locator('..');
+  // The title row: not the hidden <h1>, nor the info card that shares its text.
+  const row = page.locator('[data-slot="report-title"]');
+  const title = row.locator('p', { hasText: /^Riesgo sanitario$/ });
 
   // On screen the heading stays hidden: the title row is the report's.
   await expect(title).toBeHidden();
@@ -359,6 +357,11 @@ test('the report is titled, with its Identificador de análisis once one is ente
   await page.emulateMedia({ media: 'print' });
   await expect(title).toBeVisible();
   await expect(row.getByRole('term')).toHaveCount(0);
+  // The report opens on it: first of the settings column, which prints before the content,
+  // and on a page of its own.
+  const settings = page.getByRole('complementary', { name: 'Configuración' });
+  await expect(settings.locator(':scope > *').first()).toHaveAttribute('data-slot', 'report-title');
+  await expect(row).toHaveCSS('break-before', 'page');
 
   await page.emulateMedia({ media: 'screen' });
   const types = page.getByRole('region', { name: 'ID y tipo de análisis' });

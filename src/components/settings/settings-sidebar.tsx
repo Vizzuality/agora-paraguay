@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
+import { AnalysisTitle } from '@/components/analysis-title';
 import { ExposureIntro } from '@/components/exposure-intro';
 import { AnalysisIdentifierSetting } from '@/components/settings/analysis-identifier-setting';
 import { AnalysisInfoCard } from '@/components/settings/analysis-info-card';
@@ -34,8 +35,19 @@ type SectionKey = 'analysisType' | 'area' | 'cropDates';
 export function SettingsSidebar() {
   const current = useCurrentAnalysisType();
 
-  // Keyed by the type, so moving onto a riesgo opens its área de interés afresh.
-  return <Sections key={String(current?.to)} />;
+  const analysed = useAtomValue(analysedViewAtom);
+  const district = useAtomValue(selectedDistrictAtom);
+  // The report's subject: a riesgo once analysed, the exposure map once a district is picked.
+  const reported = current?.riesgo ? analysed : district !== null;
+
+  return (
+    <>
+      {/* First in the column, which prints before the content: the report opens on its title. */}
+      {current && reported && <AnalysisTitle title={current.label} />}
+      {/* Keyed by the type, so moving onto a riesgo opens its área de interés afresh. */}
+      <Sections key={String(current?.to)} />
+    </>
+  );
 }
 
 function Sections() {

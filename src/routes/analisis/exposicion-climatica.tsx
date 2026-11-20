@@ -2,7 +2,6 @@ import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useAtomValue } from 'jotai';
 
 import { AnalysisActions } from '@/components/analysis-actions';
-import { AnalysisTitle } from '@/components/analysis-title';
 import { DistrictPanel } from '@/components/district-panel';
 import { ReportFooter } from '@/components/report-footer';
 import { ExposureMapCard } from '@/components/settings/exposure-area-setting';
@@ -34,7 +33,6 @@ function ExposureContent() {
 
   return (
     <>
-      <AnalysisTitle title="Exposición climática" />
       <DistrictPanel />
       <ReportFooter />
       <AnalysisActions riesgo="exposicion_climatica" />

@@ -179,8 +179,14 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // The search narrows the list by label (or cadastral id).
   await page.getByRole('searchbox', { name: 'Buscar parcela' }).fill('parcela 2');
   await expect(page.getByRole('option')).toHaveText(['Parcela 2']);
+  const todas = page.getByRole('region', { name: 'Área de interés' }).getByRole('button', {
+    name: 'Todas',
+  });
+  await expect(todas).toHaveCount(0);
   await page.getByRole('option', { name: 'Parcela 2' }).click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  // One parcel open: Todas comes back as a button, the way back to the whole selection.
+  await expect(todas).toBeVisible();
   // Reopened, the search starts empty and the picked parcel is marked.
   await parcel.click();
   await expect(page.getByRole('searchbox', { name: 'Buscar parcela' })).toHaveValue('');
@@ -214,13 +220,17 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // A parcel tab goes back to columns: the widgets narrow below the full width.
   const parcelBox = await production.boundingBox();
   expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
-  // Todas is the picker's first option.
-  await page
-    .getByRole('region', { name: 'Área de interés' })
-    .getByRole('combobox', { name: 'Parcela' })
-    .click();
-  await page.getByRole('option', { name: 'Todas' }).click();
+  // The Todas button goes back to the whole selection, and goes away.
+  await todas.click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
+  await expect(todas).toHaveCount(0);
+  // Todas is also the picker's first option.
+  await parcel.click();
+  await expect(page.getByRole('option', { name: 'Todas' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.keyboard.press('Escape');
 });
 
 test('Tipo de cultivo starts at the crop the parcels in view last grew', async ({ page }) => {
@@ -395,6 +405,12 @@ test('Exportar informe lays the report out in one column, every chart inside its
   const printed = (await snapshot.boundingBox())!;
   const pixels = await snapshot.evaluate((img: HTMLImageElement) => img.naturalWidth);
   expect(pixels).toBeGreaterThanOrEqual(2 * Math.floor(printed.width));
+
+  // The historic analysis opens a page of its own.
+  await expect(main.getByRole('region', { name: 'Análisis histórico de productividad' })).toHaveCSS(
+    'break-before',
+    'page',
+  );
 
   // No summary generated: the AI card stays out of the report.
   await expect(main.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
