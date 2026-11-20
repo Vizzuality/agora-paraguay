@@ -4,6 +4,7 @@ import type { DrawnPolygon } from '@/lib/map/draw-features';
 import {
   areasHectares,
   exceedsMaxArea,
+  geometryHectares,
   MAX_AREA_HECTARES,
   oversizedAreasMessage,
   polygonHectares,
@@ -106,6 +107,20 @@ describe('oversizedAreasMessage', () => {
   it('prints the hectares and the limit the platform way, no decimals', () => {
     expect(oversizedAreasMessage(4_512_345.6)).toBe(
       'El área seleccionada abarca 4.512.346 ha y supera el máximo de 200.000 ha. Seleccione un área menor.',
+    );
+  });
+});
+
+describe('geometryHectares', () => {
+  it('sums a MultiPolygon part by part, as one Polygon of each part would', () => {
+    const a = square(-57.6, -25.3, -57.59, -25.29);
+    const b = square(-57.5, -25.3, -57.49, -25.29);
+
+    expect(geometryHectares({ type: 'MultiPolygon', coordinates: [[a], [b]] })).toBeCloseTo(
+      polygonHectares([a]) + polygonHectares([b]),
+    );
+    expect(geometryHectares({ type: 'Polygon', coordinates: [a] })).toBeCloseTo(
+      polygonHectares([a]),
     );
   });
 });

@@ -68,3 +68,14 @@ export function oversizedAreasMessage(hectares: number): string {
 
   return `El área seleccionada abarca ${format.format(hectares)} ha y supera el máximo de ${format.format(MAX_AREA_HECTARES)} ha. Seleccione un área menor.`;
 }
+
+/** A Polygon's or MultiPolygon's hectares, as the API returns parcel geometries. */
+export function geometryHectares(
+  geometry:
+    | { type: 'Polygon'; coordinates: readonly (readonly Position[])[] }
+    | { type: 'MultiPolygon'; coordinates: readonly (readonly (readonly Position[])[])[] },
+): number {
+  return geometry.type === 'Polygon'
+    ? polygonHectares(geometry.coordinates)
+    : geometry.coordinates.reduce((total, polygon) => total + polygonHectares(polygon), 0);
+}
