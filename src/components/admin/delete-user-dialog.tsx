@@ -46,9 +46,10 @@ export function DeleteUserDialog({
         if (!next) mutation.reset();
       }}
     >
-      <AlertDialogContent className="w-[411px] max-w-none gap-6 rounded-3xl border-0 bg-card p-10 text-card-foreground shadow-none">
+      <AlertDialogContent className="w-[411px] gap-6 rounded-3xl border-0 bg-card p-10 text-card-foreground shadow-none">
         <div className="flex flex-col gap-1.5">
-          <AlertDialogTitle className="text-4xl font-light tracking-[-0.015em]">
+          {/* An email has no break points: let it wrap anywhere, or it widens the dialog. */}
+          <AlertDialogTitle className="text-4xl font-light tracking-[-0.015em] wrap-anywhere">
             ¿Borrar la cuenta de {user.email}?
           </AlertDialogTitle>
           <AlertDialogDescription>

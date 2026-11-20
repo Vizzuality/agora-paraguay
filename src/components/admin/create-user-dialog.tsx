@@ -58,7 +58,7 @@ export function CreateUserDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className="w-[411px] max-w-none gap-0 rounded-3xl border-0 bg-card p-0 text-card-foreground shadow-none"
+        className="w-[411px] gap-0 rounded-3xl border-0 bg-card p-0 text-card-foreground shadow-none"
       >
         {created ? <CreatedView created={created} /> : <CreateUserForm onCreated={setCreated} />}
       </DialogContent>

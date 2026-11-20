@@ -114,6 +114,16 @@ test('the row menu deletes an account after confirming; the list drops it', asyn
   });
 
   await expect(confirm).toBeVisible();
+  // The email wraps inside the dialog: neither it nor the buttons spill past its edge.
+  const edge = await confirm.boundingBox().then((box) => box!.x + box!.width);
+  for (const part of [
+    confirm.getByRole('heading'),
+    confirm.getByRole('button', { name: 'Cancelar' }),
+  ]) {
+    const box = (await part.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(edge);
+  }
+
   await confirm.getByRole('button', { name: 'Borrar' }).click();
   await expect(confirm).toBeHidden();
 
