@@ -1,7 +1,11 @@
 import { ClientOnly } from '@tanstack/react-router';
 import { useAtom, useAtomValue } from 'jotai';
-import { Bug, ThermometerSun, type LucideIcon } from 'lucide-react';
 
+import {
+  ExposureIcon,
+  SanitaryRiskIcon,
+  type IconComponent,
+} from '@/components/icons/analysis-icons';
 import { CapasBasemap } from '@/components/map/capas-basemap';
 import { ExposureLayers, type ExposureMapView } from '@/components/map/exposure-layers';
 import { PanelMap } from '@/components/map/panel-map';
@@ -10,9 +14,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { exposureMapViewAtom, selectedDistrictAtom } from '@/store/exposure';
 
-const VIEWS: { value: ExposureMapView; label: string; icon: LucideIcon }[] = [
-  { value: 'exposicion', label: 'Nivel de exposición', icon: ThermometerSun },
-  { value: 'capas', label: 'Superficie expuesta', icon: Bug },
+const VIEWS: { value: ExposureMapView; label: string; icon: IconComponent }[] = [
+  { value: 'exposicion', label: 'Nivel de exposición', icon: ExposureIcon },
+  { value: 'capas', label: 'Superficie expuesta', icon: SanitaryRiskIcon },
 ];
 
 /** A view button: icon left of its label on the secondary fill, the open one outlined in primary. */
@@ -65,7 +69,8 @@ function ExposureViewTabs() {
       <TabsList aria-label="Vista del mapa" className="h-auto w-full gap-1.5 bg-transparent p-0">
         {VIEWS.map(({ value, label, icon: Icon }) => (
           <TabsTrigger key={value} value={value} className={VIEW_CLASS}>
-            <Icon aria-hidden strokeWidth={1.5} />
+            {/* Drawn on 40 units and shown at 24px: 2.5 keeps the 1.5px line of the other icons. */}
+            <Icon aria-hidden strokeWidth={2.5} />
             {label}
           </TabsTrigger>
         ))}
