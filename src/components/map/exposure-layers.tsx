@@ -46,9 +46,9 @@ const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
  * under the reference layers.
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it, the districts around it fade, the camera flies to it, and Capas paints
- * only its features. Clicking
- * it again clears the pick. The pick holds across both tabs: Capas traces its outline
- * over the reference layers, and a click there picks the district under the pointer too.
+ * only its features, flood aside (`clipsToDistrict`). Clicking it again clears the pick.
+ * The pick holds across both tabs: Capas traces its outline over the reference layers,
+ * and a click there picks the district under the pointer too.
  */
 export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const selected = useAtomValue(selectedDistrictAtom);
@@ -193,7 +193,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
         highlightedId={selected?.id}
       />
       {capasOpened &&
-        layersTopFirst.map(({ id, fill }) => (
+        layersTopFirst.map(({ id, fill, clipsToDistrict }) => (
           // Under the exposure layer, so the pick's outline stays on top, each right
           // under the row above it (`stackBeforeIds`). Mounted top first, so every
           // `beforeId` names a layer already there: a missing one would drop the layer.
@@ -202,7 +202,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
             id={id}
             color={fill.color}
             fill={{ ...fill, opacity: scaledOpacity(fill.opacity, layerOpacity[String(id)]) }}
-            districtId={selected?.id}
+            districtId={clipsToDistrict ? selected?.id : null}
             hidden={exposure || hiddenLayers.has(String(id))}
             beforeId={beforeIds[globalLayerFillId(id)]}
           />
