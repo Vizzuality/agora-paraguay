@@ -1,13 +1,14 @@
 import { ClientOnly, Link } from '@tanstack/react-router';
 import { useSetAtom } from 'jotai';
 
+import { AboutDialog } from '@/components/about-dialog';
 import { UserButton } from '@/components/auth/login-dialog';
 import { AccountMenu } from '@/components/frame/account-menu';
 import { Logo } from '@/components/logo';
 import { ThemeToggle, ThemeTogglePlaceholder } from '@/components/theme-toggle';
 import { goHomeAtom } from '@/store/home';
 
-/** Logo on the left; theme switch and account on the right. Sits atop the settings column. */
+/** Logo on the left; Acerca de, theme switch and account on the right. Sits atop the settings column. */
 export function TopBar() {
   // Only written on a click, never read: safe outside `<ClientOnly>`.
   const goHome = useSetAtom(goHomeAtom);
@@ -20,6 +21,7 @@ export function TopBar() {
       </Link>
 
       <div className="flex items-center gap-2">
+        <AboutDialog />
         <ClientOnly fallback={<ThemeTogglePlaceholder />}>
           <ThemeToggle />
         </ClientOnly>
