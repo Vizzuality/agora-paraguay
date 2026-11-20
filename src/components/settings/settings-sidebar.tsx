@@ -1,8 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
-import { DistrictPrompt } from '@/components/district-panel';
+import { ExposureIntro } from '@/components/exposure-intro';
 import { AnalysisIdentifierSetting } from '@/components/settings/analysis-identifier-setting';
+import { AnalysisInfoCard } from '@/components/settings/analysis-info-card';
 import {
   AnalysisTypeSetting,
   useCurrentAnalysisType,
@@ -61,6 +62,8 @@ function Sections() {
         </div>
       </SettingsSection>
 
+      <AnalysisInfoCard />
+
       {current?.riesgo && (
         <SettingsSection
           name="Área de interés"
@@ -73,7 +76,7 @@ function Sections() {
       )}
 
       {/* Exposición climática works by district: its área is the exposure map, which
-          fills the content column until a district is picked, the prompt holding its place. */}
+          fills the content column until a district is picked, the intro holding its place. */}
       {current && !current.riesgo && (
         <ExposureArea open={open === 'area' || paperLayout} onToggle={() => toggle('area')} />
       )}
@@ -94,7 +97,7 @@ function ExposureArea({ open, onToggle }: Readonly<{ open: boolean; onToggle: ()
   const district = useAtomValue(selectedDistrictAtom);
   const label = useExposureAreaLabel();
 
-  if (!district) return <DistrictPrompt />;
+  if (!district) return <ExposureIntro />;
 
   return (
     <SettingsSection name="Área de interés" selection={label} open={open} onToggle={onToggle}>
