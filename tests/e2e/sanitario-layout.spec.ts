@@ -97,8 +97,8 @@ test('the report footer closes the printed dashboard only, naming the identifier
   page,
 }) => {
   await analyseOnRedesign(page, '/analisis/sanitario');
-  const types = page.getByRole('region', { name: 'Tipo de análisis' });
-  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  const types = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  await types.getByRole('button', { name: /ID y tipo de análisis/ }).click();
   await types.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
 
   const main = page.getByRole('main');
@@ -357,8 +357,8 @@ test('the report is titled, with its Identificador de análisis once one is ente
   await expect(row.getByRole('term')).toHaveCount(0);
 
   await page.emulateMedia({ media: 'screen' });
-  const types = page.getByRole('region', { name: 'Tipo de análisis' });
-  await types.getByRole('button', { name: /Tipo de análisis/ }).click();
+  const types = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  await types.getByRole('button', { name: /ID y tipo de análisis/ }).click();
   await types.getByRole('textbox', { name: 'Identificador de análisis' }).fill('123456ABC');
 
   await page.emulateMedia({ media: 'print' });

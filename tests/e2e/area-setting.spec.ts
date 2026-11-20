@@ -180,8 +180,8 @@ test('once analysed, Cultivo y fechas holds the filters and names them closed', 
 test('Identificador de análisis holds for the session, and a cleared selection empties it', async ({
   page,
 }) => {
-  const types = page.getByRole('region', { name: 'Tipo de análisis' });
-  const typesHeading = types.getByRole('button', { name: /Tipo de análisis/ });
+  const types = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  const typesHeading = types.getByRole('button', { name: /ID y tipo de análisis/ });
   // By role: the info tip's label also contains the field's name.
   const identifier = types.getByRole('textbox', { name: 'Identificador de análisis' });
   /** Opens Tipo de análisis (one section open at a time) and reads the field. */

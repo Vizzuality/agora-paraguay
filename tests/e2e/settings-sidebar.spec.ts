@@ -9,12 +9,12 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Cambiar tema' })).toBeEnabled();
 });
 
-test('Tipo de análisis names the open type and switches between them', async ({ page }) => {
+test('ID y tipo de análisis names the open type and switches between them', async ({ page }) => {
   // Bare /analisis lands on Exposición climática.
   await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
 
-  const section = page.getByRole('region', { name: 'Tipo de análisis' });
-  const heading = section.getByRole('button', { name: /Tipo de análisis/ });
+  const section = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  const heading = section.getByRole('button', { name: /ID y tipo de análisis/ });
 
   // Closed, the heading carries the current choice.
   await expect(heading).toHaveAttribute('aria-expanded', 'false');
@@ -42,8 +42,8 @@ test('Tipo de análisis names the open type and switches between them', async ({
 });
 
 test('the logo goes to the landing, whose cards lead to each analysis', async ({ page }) => {
-  const section = page.getByRole('region', { name: 'Tipo de análisis' });
-  await section.getByRole('button', { name: /Tipo de análisis/ }).click();
+  const section = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  await section.getByRole('button', { name: /ID y tipo de análisis/ }).click();
   await section.getByRole('link', { name: 'Riesgo sanitario' }).click();
 
   await page.getByRole('banner').getByRole('link', { name: 'Inicio' }).click();
@@ -56,10 +56,22 @@ test('the logo goes to the landing, whose cards lead to each analysis', async ({
   await expect(page).toHaveURL(/\/analisis\/sanitario/);
 });
 
+test('closed, ID y tipo de análisis carries the identifier before the type', async ({ page }) => {
+  const section = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  const heading = section.getByRole('button', { name: /ID y tipo de análisis/ });
+
+  await heading.click();
+  await section.getByLabel('Identificador de análisis').fill('123456ABC');
+  await heading.click();
+
+  await expect(heading).toHaveAttribute('aria-expanded', 'false');
+  await expect(heading).toContainText('123456ABC - Exposición climática');
+});
+
 test('the heading closes an open section again', async ({ page }) => {
   const heading = page
-    .getByRole('region', { name: 'Tipo de análisis' })
-    .getByRole('button', { name: /Tipo de análisis/ });
+    .getByRole('region', { name: 'ID y tipo de análisis' })
+    .getByRole('button', { name: /ID y tipo de análisis/ });
 
   await heading.click();
   await expect(heading).toHaveAttribute('aria-expanded', 'true');
@@ -71,8 +83,8 @@ test('the heading closes an open section again', async ({ page }) => {
 test('Riesgo productivo asks for the login first, and signing in goes on to it', async ({
   page,
 }) => {
-  const section = page.getByRole('region', { name: 'Tipo de análisis' });
-  const heading = section.getByRole('button', { name: /Tipo de análisis/ });
+  const section = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  const heading = section.getByRole('button', { name: /ID y tipo de análisis/ });
   const productivo = section.getByRole('link', { name: 'Riesgo productivo' });
   const login = page.getByRole('dialog', { name: 'Área privada' });
 
