@@ -86,7 +86,7 @@ test('Riesgo productivo asks for the login first, and signing in goes on to it',
   const section = page.getByRole('region', { name: 'ID y tipo de análisis' });
   const heading = section.getByRole('button', { name: /ID y tipo de análisis/ });
   const productivo = section.getByRole('link', { name: 'Riesgo productivo' });
-  const login = page.getByRole('dialog', { name: 'Área privada' });
+  const login = page.getByRole('dialog', { name: 'Iniciar sesión' });
 
   // Signed out: the card opens the login modal and the page stays where it was.
   await heading.click();

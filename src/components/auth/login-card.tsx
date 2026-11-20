@@ -71,14 +71,14 @@ export function LoginCard({
         <CardHeader className="gap-1.5 px-10">
           {/* Real heading: CardTitle renders a <div>, which screen readers skip. */}
           <CardTitle className="text-4xl leading-[normal] font-light tracking-[-0.015em] text-foreground">
-            <h2>Área privada</h2>
+            <h2>Iniciar sesión</h2>
           </CardTitle>
           <CardDescription>
             Para visualizar este tipo de contenido necesita una cuenta de acceso.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-4 px-10">
+        <CardContent className="flex flex-col gap-8 px-10">
           {/* Floating labels: the label is the placeholder, hence `placeholder=" "`. */}
           <div className="relative">
             {/* The account is its email; `identifier` is the login body's name for it. */}
@@ -128,17 +128,18 @@ export function LoginCard({
             </p>
           )}
 
-          <p className="text-sm text-muted-foreground">
-            El acceso identificado sirve únicamente para mostrar los indicadores privados, no crea
-            un historial. Ni las geometrías subidas ni los resultados del análisis se guardan en el
-            sistema. Recargar la página, abrir una pestaña nueva o cerrar sesión obliga a repetir el
-            análisis.
-          </p>
-
-          <p className="w-full text-sm text-muted-foreground">
-            ¿Olvidó su contraseña?{' '}
-            <AuthLinkButton onClick={onReset}>Restablecer contraseña</AuthLinkButton>
-          </p>
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <p>
+              El acceso identificado sirve únicamente para mostrar los indicadores privados, no crea
+              un historial. Ni las geometrías subidas ni los resultados del análisis se guardan en
+              el sistema. Recargar la página, abrir una pestaña nueva o cerrar sesión obliga a
+              repetir el análisis.
+            </p>
+            <p>
+              ¿Olvidó su contraseña?{' '}
+              <AuthLinkButton onClick={onReset}>Restablecer contraseña</AuthLinkButton>
+            </p>
+          </div>
         </CardFooter>
       </form>
     </AuthCard>
