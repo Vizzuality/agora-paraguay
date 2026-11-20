@@ -7,7 +7,7 @@ async function login(page: Page) {
   // placeholder is disabled, so an enabled one means the real buttons are mounted.
   await expect(page.getByRole('button', { name: 'Cambiar tema' })).toBeEnabled();
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Área privada' });
+  const dialog = page.getByRole('dialog', { name: 'Iniciar sesión' });
   await dialog.getByLabel('Email').fill('analista@example.com');
   await dialog.getByLabel('Contraseña').fill('cualquiera');
   await dialog.getByRole('button', { name: 'Acceder' }).click();

@@ -280,7 +280,7 @@ test('the login backdrop dims the widgets as well as the sidebar', async ({ page
   await expect(rust).toBeVisible();
 
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  const login = page.getByRole('dialog', { name: 'Área privada' });
+  const login = page.getByRole('dialog', { name: 'Iniciar sesión' });
   await expect(login).toBeVisible();
 
   // Probe a corner of the widget the centred card does not cover: the backdrop paints there.

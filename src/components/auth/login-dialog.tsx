@@ -1,12 +1,13 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAtom, useSetAtom } from 'jotai';
-import { User } from 'lucide-react';
+import { User, X } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { LoginCard } from '@/components/auth/login-card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogPortal,
   DialogTitle,
@@ -79,7 +80,7 @@ export function LoginModal() {
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
-        className="w-[411px] max-w-[calc(100%-1rem)] gap-0 rounded-3xl border-0 bg-transparent p-0 shadow-lg sm:max-w-[411px]"
+        className="w-110 max-w-[calc(100%-1rem)] gap-0 rounded-3xl border-0 bg-transparent p-0 shadow-lg sm:max-w-110"
         onInteractOutside={(event) => {
           const target = event.target instanceof Element ? event.target : null;
 
@@ -87,9 +88,10 @@ export function LoginModal() {
         }}
       >
         {/* The card's own heading is visual; this names the dialog. */}
-        <DialogTitle className="sr-only">Área privada</DialogTitle>
+        <DialogTitle className="sr-only">Iniciar sesión</DialogTitle>
         <LoginCard
-          className="w-full"
+          // The dialog sets the width; the card's own 411px is for the reset pages.
+          className="w-full md:w-full"
           onSuccess={() => {
             onOpenChange(false);
             if (redirect) void navigate({ to: redirect, replace: true });
@@ -99,6 +101,16 @@ export function LoginModal() {
             void navigate({ to: '/restablecer-contrasena' });
           }}
         />
+        <DialogClose asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Cerrar"
+            className="absolute top-0 right-0 size-12 rounded-3xl"
+          >
+            <X />
+          </Button>
+        </DialogClose>
       </DialogContent>
     </Dialog>
   );
