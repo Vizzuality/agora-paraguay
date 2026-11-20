@@ -1,7 +1,6 @@
 import { useAtomValue } from 'jotai';
 import type { ReactNode } from 'react';
 
-import { AnalysisTitle } from '@/components/analysis-title';
 import { MapView } from '@/components/map';
 import { ParcelsLookup } from '@/components/map/parcels-lookup';
 import { analysedViewAtom } from '@/store/mode';
@@ -19,7 +18,6 @@ export function RiskPageContent({
   return (
     <>
       <h1 className="sr-only">{title}</h1>
-      {analysed && <AnalysisTitle title={title} />}
       {!analysed && (
         // The window's height less the column's padding, so the whole map is in view.
         <div className="relative h-[calc(100dvh-5rem)] min-h-96 overflow-hidden rounded-3xl bg-muted">
