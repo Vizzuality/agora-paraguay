@@ -1,0 +1,14 @@
+{
+  "button": "Acerca de",
+  "title": "Acerca de AGORA",
+  "intro": "AGORA es una plataforma geoespacial agrícola y agroclimática que integra información sobre parcelas, cultivos y clima para apoyar el análisis técnico y financiero.",
+  "sections": [
+    {
+      "title": "Acceso y cobertura",
+      "body": [
+        "La plataforma ofrece acceso público a los módulos de exposición climática y riesgo sanitario. El módulo de riesgo productivo es privado y está dirigido a analistas autorizados de instituciones financieras intermediarias (IFI).",
+        "El análisis sanitario y productivo de soja y arroz se centra en la Región Oriental de Paraguay. El módulo de exposición climática analiza la soja por distrito en todo Paraguay. Los resultados son indicadores y estimaciones que deben interpretarse considerando la cobertura, la resolución y las limitaciones de los datos de cada módulo."
+      ]
+    }
+  ]
+}
