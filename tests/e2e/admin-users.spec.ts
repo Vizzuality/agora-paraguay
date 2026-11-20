@@ -40,7 +40,12 @@ test('an administrator adds a user and gets the link to pass on; the list shows 
   const done = page.getByRole('dialog', { name: 'Usuario creado' });
 
   await expect(done).toBeVisible();
-  await expect(done.getByRole('link', { name: new RegExp(RESET_TOKEN) })).toBeVisible();
+  const link = done.getByRole('link', { name: new RegExp(RESET_TOKEN) });
+  await expect(link).toBeVisible();
+  // On the app's own address, not the backend host the API built it on.
+  const origin = new URL(page.url()).origin;
+  await expect(link).toHaveAttribute('href', `${origin}/restablecer-contrasena/${RESET_TOKEN}`);
+  await expect(link).toHaveText(`${origin}/restablecer-contrasena/${RESET_TOKEN}`);
 
   // Enviar por email opens a mail to the new user with the link in the body.
   const mailto = done.getByRole('link', { name: 'Enviar por email' });
@@ -114,6 +119,16 @@ test('the row menu deletes an account after confirming; the list drops it', asyn
   });
 
   await expect(confirm).toBeVisible();
+  // The email wraps inside the dialog: neither it nor the buttons spill past its edge.
+  const edge = await confirm.boundingBox().then((box) => box!.x + box!.width);
+  for (const part of [
+    confirm.getByRole('heading'),
+    confirm.getByRole('button', { name: 'Cancelar' }),
+  ]) {
+    const box = (await part.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(edge);
+  }
+
   await confirm.getByRole('button', { name: 'Borrar' }).click();
   await expect(confirm).toBeHidden();
 
@@ -168,4 +183,19 @@ test('Restablecer contraseña is listed but disabled until the endpoint exists',
     'aria-disabled',
     'true',
   );
+});
+
+test('the footer leads to each analysis type', async ({ page }) => {
+  await stubAdminUsers(page);
+  await page.goto('/usuarios');
+  await loginAtGate(page);
+
+  const links = page
+    .getByRole('contentinfo')
+    .getByRole('navigation', { name: 'Tipos de análisis' })
+    .getByRole('link');
+  await expect(links).toHaveText(['Exposición climática', 'Riesgo sanitario', 'Riesgo productivo']);
+
+  await links.filter({ hasText: 'Exposición climática' }).click();
+  await expect(page).toHaveURL(/\/analisis\/exposicion-climatica$/);
 });

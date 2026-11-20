@@ -151,7 +151,8 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // Información de contexto sums the area and counts the parcels per soy season, one a
   // line, under the indicator's name with its description.
   // The facts list itself: under Todas the section titles it, on a parcel the card does.
-  const info = page.getByRole('main').locator('dl');
+  // On screen only: the report's Parámetros del análisis holds a print-only list too.
+  const info = page.getByRole('main').locator('dl:visible');
   await expect(info).toContainText('17,5 ha');
   await expect(
     info.getByRole('term').filter({ hasText: 'Listado de Zafras de soja' }),
@@ -178,8 +179,14 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // The search narrows the list by label (or cadastral id).
   await page.getByRole('searchbox', { name: 'Buscar parcela' }).fill('parcela 2');
   await expect(page.getByRole('option')).toHaveText(['Parcela 2']);
+  const todas = page.getByRole('region', { name: 'Área de interés' }).getByRole('button', {
+    name: 'Todas',
+  });
+  await expect(todas).toHaveCount(0);
   await page.getByRole('option', { name: 'Parcela 2' }).click();
   await expect(production.locator('[data-slot="figure"]')).toHaveText('3,81 t/ha');
+  // One parcel open: Todas comes back as a button, the way back to the whole selection.
+  await expect(todas).toBeVisible();
   // Reopened, the search starts empty and the picked parcel is marked.
   await parcel.click();
   await expect(page.getByRole('searchbox', { name: 'Buscar parcela' })).toHaveValue('');
@@ -213,13 +220,17 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   // A parcel tab goes back to columns: the widgets narrow below the full width.
   const parcelBox = await production.boundingBox();
   expect(parcelBox!.width).toBeLessThan(todasBoxes[0]!.width);
-  // Todas is the picker's first option.
-  await page
-    .getByRole('region', { name: 'Área de interés' })
-    .getByRole('combobox', { name: 'Parcela' })
-    .click();
-  await page.getByRole('option', { name: 'Todas' }).click();
+  // The Todas button goes back to the whole selection, and goes away.
+  await todas.click();
   await expect(production.getByRole('listitem')).toHaveText(['3,4 – 3,6: 1', '3,8 – 4: 1']);
+  await expect(todas).toHaveCount(0);
+  // Todas is also the picker's first option.
+  await parcel.click();
+  await expect(page.getByRole('option', { name: 'Todas' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.keyboard.press('Escape');
 });
 
 test('Tipo de cultivo starts at the crop the parcels in view last grew', async ({ page }) => {
@@ -378,35 +389,28 @@ test('Exportar informe lays the report out in one column, every chart inside its
     expect(chartBox.y + chartBox.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);
   }
 
-  // The área prints open: its map with the legend's rows and the credits written out,
-  // the parcel named in the heading in place of the picker, Todas and Nuevo análisis.
+  // On paper the settings give way to Parámetros del análisis: the área's map as an image
+  // beside the filters in force and the hectares analysed.
   const area = settings.getByRole('region', { name: 'Área de interés' });
-  await expect(area.getByRole('button', { name: /^Área de interés/ })).toHaveAttribute(
-    'aria-expanded',
-    'true',
-  );
   await page.emulateMedia({ media: 'print' });
-  await expect(area.getByRole('button', { name: /^Área de interés/ })).toContainText(
-    'Área de interés - Todas',
-  );
-  await expect(area.getByRole('combobox', { name: 'Parcela' })).toBeHidden();
-  await expect(area.getByRole('button', { name: 'Nuevo análisis' })).toBeHidden();
-  const legend = area.getByRole('list', { name: 'Leyenda de parcelas' });
-  await expect(legend).toBeVisible();
-  // The crops are the 2025 season's: the asterisked rows say so in a footnote.
-  await expect(legend.getByRole('listitem')).toHaveText(['Selección activa', 'Soja*', 'Arroz*']);
-  await expect(area.getByText('*Cultivos de 2025')).toBeVisible();
-  await expect(area.getByRole('button', { name: /leyenda/ })).toBeHidden();
-  await expect(area.locator('.maplibregl-ctrl-attrib-inner')).toBeVisible();
-  await expect(area.locator('.maplibregl-ctrl-attrib-button')).toBeHidden();
+  await expect(area).toBeHidden();
+  const parameters = main.getByRole('region', { name: 'Parámetros del análisis' });
+  await expect(parameters.getByRole('heading', { name: 'Parámetros del análisis' })).toBeVisible();
+  await expect(parameters.getByRole('term').last()).toHaveText('Hectáreas');
+  await expect(parameters.getByRole('definition').last()).toHaveText(/^[\d.,]+ ha$/);
 
-  // The map prints 480px tall from an image at twice its printed density, so it stays sharp.
-  const snapshot = area.locator('img[src^="data:image/png"]');
+  // The snapshot is taken at twice its printed density, so it stays sharp.
+  const snapshot = parameters.locator('img[src^="data:image/png"]');
   await expect(snapshot).toBeVisible();
   const printed = (await snapshot.boundingBox())!;
-  expect(printed.height).toBeGreaterThanOrEqual(480);
   const pixels = await snapshot.evaluate((img: HTMLImageElement) => img.naturalWidth);
   expect(pixels).toBeGreaterThanOrEqual(2 * Math.floor(printed.width));
+
+  // The historic analysis opens a page of its own.
+  await expect(main.getByRole('region', { name: 'Análisis histórico de productividad' })).toHaveCSS(
+    'break-before',
+    'page',
+  );
 
   // No summary generated: the AI card stays out of the report.
   await expect(main.getByRole('heading', { name: 'Resumen del análisis' })).toBeHidden();
