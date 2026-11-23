@@ -104,7 +104,13 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
 
   const hover = (event: MapLayerMouseEvent) => {
     const district = districtAt(event);
-    setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
+    // A new state only when the pointer crosses into another district: moving within one
+    // re-renders the tooltip alone (`DistrictTooltip`), not every layer below.
+    setHovered((previous) =>
+      previous?.district.id === district?.id
+        ? previous
+        : district && { district, x: event.point.x, y: event.point.y },
+    );
   };
 
   // Both tabs: a click picks the district under the pointer, a click on the pick clears it.
@@ -155,7 +161,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           onOpacity={(id, value) => setLayerOpacity((values) => ({ ...values, [id]: value }))}
         />
       )}
-      {exposure && hovered && <DistrictTooltip {...hovered} />}
+      {exposure && hovered && <DistrictTooltip {...hovered} layerId={EXPOSURE_FILL_ID} />}
       {loading && <MapLoading>{exposure ? 'Cargando exposición…' : 'Cargando capas…'}</MapLoading>}
       {/* Mounted on both tabs, so a switch restyles it instead of reloading it. */}
       <GlobalLayer
@@ -236,8 +242,19 @@ function useViewLoading(view: ExposureMapView, sourceIds: string[]): boolean {
 
 type Hovered = { district: ExposureDistrict; x: number; y: number };
 
-/** The hovered district's name over the pointer, in the legend's dark glass. */
-function DistrictTooltip({ district, x, y }: Readonly<Hovered>) {
+/**
+ * The hovered district's name over the pointer, in the legend's dark glass. Follows the
+ * pointer itself from where it entered the district.
+ */
+function DistrictTooltip({
+  district,
+  x: enteredX,
+  y: enteredY,
+  layerId,
+}: Readonly<Hovered & { layerId: string }>) {
+  const [{ x, y }, setPoint] = useState({ x: enteredX, y: enteredY });
+  useLayerPointer(layerId, { onMove: (event) => setPoint(event.point) });
+
   return (
     <div
       role="tooltip"

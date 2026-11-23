@@ -28,21 +28,57 @@ export function selectedParcelIds(parcels: FilteredParcel[]): string[] {
   return parcels.filter((parcel) => parcel.selected).map((parcel) => parcel.parcel_id);
 }
 
-/** The outer rings of a parcel's geometry, whatever its polygon type. */
-function outerRingsOf(parcel: FilteredParcel): number[][][] {
-  return parcel.geometry.features.flatMap((feature) =>
-    feature.geometry.type === 'Polygon'
-      ? [feature.geometry.coordinates[0]]
-      : feature.geometry.coordinates.map((polygon) => polygon[0]),
-  );
+/** An outer ring and its bounding box: the box rules most parcels out before the ring is walked. */
+type BoxedRing = { ring: number[][]; west: number; south: number; east: number; north: number };
+
+// Per parcel object, built on the first hit-test: the pointer tests every parcel on each
+// move, and the answer's parcels do not change until the next answer replaces them.
+const boxedRings = new WeakMap<FilteredParcel, BoxedRing[]>();
+
+/** The outer rings of a parcel's geometry, whatever its polygon type, each with its box. */
+function outerRingsOf(parcel: FilteredParcel): BoxedRing[] {
+  let rings = boxedRings.get(parcel);
+
+  if (rings === undefined) {
+    rings = parcel.geometry.features
+      .flatMap((feature) =>
+        feature.geometry.type === 'Polygon'
+          ? [feature.geometry.coordinates[0]]
+          : feature.geometry.coordinates.map((polygon) => polygon[0]),
+      )
+      .map(boxed);
+    boxedRings.set(parcel, rings);
+  }
+
+  return rings;
+}
+
+function boxed(ring: number[][]): BoxedRing {
+  const lngs = ring.map(([lng]) => lng);
+  const lats = ring.map(([, lat]) => lat);
+
+  return {
+    ring,
+    west: Math.min(...lngs),
+    south: Math.min(...lats),
+    east: Math.max(...lngs),
+    north: Math.max(...lats),
+  };
 }
 
 /** The returned parcel under `point`, or `null`. Later parcels win, like `polygonAtPoint`. */
 export function parcelAtPoint(parcels: FilteredParcel[], point: MapPoint): FilteredParcel | null {
   for (let index = parcels.length - 1; index >= 0; index--) {
-    if (outerRingsOf(parcels[index]).some((ring) => ringContains(ring, point))) {
-      return parcels[index];
-    }
+    const hit = outerRingsOf(parcels[index]).some(
+      ({ ring, west, south, east, north }) =>
+        point.lng >= west &&
+        point.lng <= east &&
+        point.lat >= south &&
+        point.lat <= north &&
+        ringContains(ring, point),
+    );
+
+    if (hit) return parcels[index];
   }
 
   return null;

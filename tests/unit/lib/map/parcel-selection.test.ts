@@ -116,4 +116,22 @@ describe('parcelAtPoint', () => {
     expect(parcelAtPoint([split], { lng: 20.5, lat: 20.5 })?.parcel_id).toBe('P7');
     expect(parcelAtPoint([split], { lng: 15, lat: 15 })).toBeNull();
   });
+
+  it("misses a point inside a parcel's box but outside its ring", () => {
+    const lShaped = parcel('L', 0, 0, false);
+    lShaped.geometry.features[0].geometry.coordinates = [
+      [
+        [0, 0],
+        [2, 0],
+        [2, 1],
+        [1, 1],
+        [1, 2],
+        [0, 2],
+        [0, 0],
+      ],
+    ];
+
+    expect(parcelAtPoint([lShaped], { lng: 0.5, lat: 1.5 })?.parcel_id).toBe('L');
+    expect(parcelAtPoint([lShaped], { lng: 1.5, lat: 1.5 })).toBeNull();
+  });
 });
