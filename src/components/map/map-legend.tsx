@@ -8,15 +8,43 @@ import { LEGEND_KEY_ONLY, type LegendConfig } from '@/lib/map/legend-config';
 import { moveItem } from '@/lib/map/legend-order';
 import { cn } from '@/lib/utils';
 
+/** What a row's 16px disc shows, as data: the map's paint for that row. The legend styles it. */
+export type LegendSwatch = {
+  /** The disc's CSS colour. */
+  fill: string;
+  /** A 2px ring's CSS colour; no ring when left out. */
+  edge?: string;
+  /** The map's crop texture over the fill. */
+  pattern?: 'stripes' | 'dots';
+};
+
 export type MapLegendItem = {
   id: string;
   label: string;
-  /** The swatch's classes over its 16px disc. */
-  className?: string;
-  style?: CSSProperties;
+  swatch: LegendSwatch;
   /** This row's controls, from its layer; the legend's `legendConfig` when left out. */
   legendConfig?: LegendConfig;
 };
+
+/** The map's crop textures at swatch size: white stripes and dots over the fill. */
+const PATTERN_STYLES: Record<NonNullable<LegendSwatch['pattern']>, CSSProperties> = {
+  stripes: {
+    backgroundImage:
+      'repeating-linear-gradient(-60deg, rgb(255 255 255 / 0.7) 0 1.5px, transparent 1.5px 4px)',
+  },
+  dots: {
+    backgroundImage: 'radial-gradient(rgb(255 255 255 / 0.5) 1px, transparent 1.25px)',
+    backgroundSize: '4px 4px',
+  },
+};
+
+function swatchStyle({ fill, edge, pattern }: LegendSwatch): CSSProperties {
+  return {
+    backgroundColor: fill,
+    borderColor: edge,
+    ...(pattern && PATTERN_STYLES[pattern]),
+  };
+}
 
 type MapLegendProps = {
   label: string;
@@ -118,10 +146,10 @@ export function MapLegend({
                   aria-hidden
                   className={cn(
                     'size-4 shrink-0 rounded-full transition-opacity',
-                    item.className,
+                    item.swatch.edge && 'border-2',
                     off && 'opacity-30',
                   )}
-                  style={item.style}
+                  style={swatchStyle(item.swatch)}
                 />
                 <span className={cn('flex-1 transition-opacity', off && 'opacity-50')}>
                   {item.label}

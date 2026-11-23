@@ -141,11 +141,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           items={classes.map(({ label, tone }) => ({
             id: label,
             label: exposureLegendLabel(label),
-            className: 'border-2',
-            style: {
-              backgroundColor: exposureSwatch(tone).fill,
-              borderColor: exposureSwatch(tone).edge,
-            },
+            swatch: exposureSwatch(tone),
           }))}
           note={EXPOSURE_LAYER.legendNote ?? undefined}
         />
@@ -156,8 +152,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           items={layersTopFirst.map(({ id, label, swatch, legendConfig }) => ({
             id: String(id),
             label,
-            className: 'border-2',
-            style: { backgroundColor: swatch.fill, borderColor: swatch.edge },
+            swatch,
             legendConfig,
           }))}
           hidden={hiddenLayers}

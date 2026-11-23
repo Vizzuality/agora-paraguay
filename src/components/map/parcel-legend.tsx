@@ -1,34 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import type { CSSProperties } from 'react';
 
 import { MapLegend, type MapLegendItem } from '@/components/map/map-legend';
 import { parcelQueries } from '@/lib/api/parcels/queries';
 import { PARCEL_LEGEND_LABELS, PARCEL_LEGEND_NOTE } from '@/lib/platform-metadata';
 import { drawPolygonsAtom } from '@/store/draw';
 
-/** The map's crop textures at swatch size: white stripes and dots over black. */
-const SOJA_SWATCH: CSSProperties = {
-  backgroundImage:
-    'repeating-linear-gradient(-60deg, rgb(255 255 255 / 0.7) 0 1.5px, transparent 1.5px 4px)',
-};
-const ARROZ_SWATCH: CSSProperties = {
-  backgroundImage: 'radial-gradient(rgb(255 255 255 / 0.5) 1px, transparent 1.25px)',
-  backgroundSize: '4px 4px',
-};
-
 const ITEMS: MapLegendItem[] = [
   {
     id: 'selection',
     label: PARCEL_LEGEND_LABELS.selection,
-    className: 'border-2 border-black/50 bg-parcel',
+    swatch: { fill: 'var(--color-parcel)', edge: 'rgb(0 0 0 / 0.5)' },
   },
-  { id: 'soja', label: PARCEL_LEGEND_LABELS.soja, className: 'bg-black', style: SOJA_SWATCH },
+  { id: 'soja', label: PARCEL_LEGEND_LABELS.soja, swatch: { fill: 'black', pattern: 'stripes' } },
   {
     id: 'arroz',
     label: PARCEL_LEGEND_LABELS.arroz,
-    className: 'border-2 border-white bg-black',
-    style: ARROZ_SWATCH,
+    swatch: { fill: 'black', edge: 'white', pattern: 'dots' },
   },
 ];
 
