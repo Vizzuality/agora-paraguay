@@ -45,6 +45,16 @@ describe('selectAnalysedParcelAtom', () => {
     expect(store.get(activeParcelIdAtom)).toBe('D07D23P00000008');
   });
 
+  it('deselects the open parcel on a second click, back to Todas', () => {
+    const store = createStore();
+    store.set(analysedParcelIdsAtom, PARCELS);
+
+    store.set(selectAnalysedParcelAtom, 'D07D23P00000008');
+    store.set(selectAnalysedParcelAtom, 'D07D23P00000008');
+
+    expect(store.get(activeParcelIdAtom)).toBeNull();
+  });
+
   it('ignores a parcel that was not analysed', () => {
     const store = createStore();
     store.set(analysedParcelIdsAtom, PARCELS);

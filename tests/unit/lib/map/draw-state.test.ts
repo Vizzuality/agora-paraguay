@@ -46,6 +46,38 @@ describe('drawReducer', () => {
 
     expect(next.polygons.map((item) => item.id)).toEqual([first.id, second.id]);
   });
+
+  it('keeps the same state when a change reports the polygons it already holds', () => {
+    // A pointer move mid-ring: Terra Draw reports, the finished polygons are copies of the same.
+    const copies = drawn.polygons.map((item) => structuredClone(item));
+
+    expect(drawReducer(drawn, { type: 'geometry', polygons: copies })).toBe(drawn);
+    expect(drawReducer(bound, { type: 'geometry', polygons: [] })).toBe(bound);
+  });
+
+  it('takes a moved vertex or a changed property as new geometry', () => {
+    const square = {
+      ...first,
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 0],
+          ],
+        ],
+      },
+    } as DrawnPolygon;
+    const held: DrawState = { ...bound, polygons: [square] };
+    const moved = structuredClone(square);
+    moved.geometry.coordinates[0][1] = [2, 0];
+    const hidden = { ...square, properties: { ...square.properties, hidden: true } };
+
+    expect(drawReducer(held, { type: 'geometry', polygons: [moved] })).not.toBe(held);
+    expect(drawReducer(held, { type: 'geometry', polygons: [hidden] })).not.toBe(held);
+  });
 });
 
 describe('analysis selection', () => {
