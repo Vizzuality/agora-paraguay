@@ -123,6 +123,17 @@ describe('savedSelectionAtom', () => {
     });
   });
 
+  it('keeps the same record through a tool or map change, so nothing is written', () => {
+    const store = createStore();
+    store.set(hydrateSavedSelectionAtom, saved());
+    const before = store.get(savedSelectionAtom);
+
+    store.set(drawStateAtom, { type: 'tool', tool: 'draw' });
+    store.set(drawStateAtom, { type: 'bound' });
+
+    expect(store.get(savedSelectionAtom)).toBe(before);
+  });
+
   it('empties with Reiniciar, which is what removes the record', () => {
     const store = createStore();
     store.set(hydrateSavedSelectionAtom, saved());
