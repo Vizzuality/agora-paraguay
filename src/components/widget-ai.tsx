@@ -1,7 +1,7 @@
 import { type MutationStatus, useMutation } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { ListPlus, Loader, RefreshCw } from 'lucide-react';
-import Markdown from 'react-markdown';
+import { lazy, Suspense } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -12,6 +12,9 @@ import { analysisMutations } from '@/lib/api/analysis/queries';
 import { errorReason } from '@/lib/api/http';
 import { cn } from '@/lib/utils';
 import { activeParcelIdAtom } from '@/store/analysis';
+
+// Loaded with the first summary, not with the page: most visits never ask for one.
+const Markdown = lazy(() => import('react-markdown'));
 
 type WidgetAIProps = Readonly<{
   parcels: string[];
@@ -28,7 +31,9 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
         aria-live="polite"
         className="flex flex-col gap-2 text-sm text-muted-foreground [&_:is(h1,h2,h3,h4)]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_strong]:font-semibold [&_ul]:list-disc"
       >
-        <Markdown>{text}</Markdown>
+        <Suspense fallback={<p>{text}</p>}>
+          <Markdown>{text}</Markdown>
+        </Suspense>
       </div>
     );
   }

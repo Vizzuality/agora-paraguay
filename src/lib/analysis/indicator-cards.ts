@@ -507,10 +507,11 @@ function scalePosition(value: number, range: Range | undefined): number {
 /** Units whose readings print as whole numbers: a temperature's decimals say nothing to a grower. */
 const INTEGER_UNITS = new Set(['°C']);
 
+const WHOLE = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 });
+const DECIMAL = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 });
+
 function formatValue(value: number, unit: string | null | undefined): string {
-  const number = new Intl.NumberFormat('es-PY', {
-    maximumFractionDigits: unit && INTEGER_UNITS.has(unit) ? 0 : 2,
-  }).format(value);
+  const number = (unit && INTEGER_UNITS.has(unit) ? WHOLE : DECIMAL).format(value);
 
   return unit ? `${number} ${unit}` : number;
 }

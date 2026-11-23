@@ -49,10 +49,12 @@ export function parcelArea(
 
 /** The figure in the platform's locale, one decimal at most, the unit when there is one. */
 export function formatArea({ value, unit }: ParcelArea): string {
-  const number = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 }).format(value);
+  const number = AREA.format(value);
 
   return unit ? `${number} ${unit}` : number;
 }
+
+const AREA = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 });
 
 export type ParcelAreaRow = { parcelId: string; area: ParcelArea | null };
 

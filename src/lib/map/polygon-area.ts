@@ -64,10 +64,10 @@ export function exceedsMaxArea(polygons: readonly Areal[]): boolean {
 
 /** What the panel says when the areas are over the limit. */
 export function oversizedAreasMessage(hectares: number): string {
-  const format = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 });
-
-  return `El área seleccionada abarca ${format.format(hectares)} ha y supera el máximo de ${format.format(MAX_AREA_HECTARES)} ha. Seleccione un área menor.`;
+  return `El área seleccionada abarca ${WHOLE_HECTARES.format(hectares)} ha y supera el máximo de ${WHOLE_HECTARES.format(MAX_AREA_HECTARES)} ha. Seleccione un área menor.`;
 }
+
+const WHOLE_HECTARES = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 });
 
 /** A Polygon's or MultiPolygon's hectares, as the API returns parcel geometries. */
 export function geometryHectares(
