@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "Expuesto a sequía",
+    "description": "Mapa de amenaza de sequía.",
+    "legend_config": { "opacity": true, "visibility": true, "order": true },
+    "legend_note": null,
+    "clips_to_district": true
+  },
+  {
+    "id": 2,
+    "name": "Expuesto a inundación",
+    "description": "Mapa de amenaza de inundación.",
+    "legend_config": { "opacity": true, "visibility": true, "order": true },
+    "legend_note": null,
+    "clips_to_district": false
+  },
+  {
+    "id": 3,
+    "name": "Soja",
+    "description": "Mapa de cultivos de soja.",
+    "legend_config": { "opacity": true, "visibility": true, "order": true },
+    "legend_note": null,
+    "clips_to_district": true
+  },
+  {
+    "id": 4,
+    "name": "Nivel de exposición",
+    "description": "Mapa de exposición de la soja a las amenazas.",
+    "legend_config": { "opacity": false, "visibility": false, "order": false },
+    "legend_note": "Porcentaje de soja expuesta a una o ambas amenazas; las áreas coincidentes se cuentan una sola vez.",
+    "clips_to_district": false
+  }
+]

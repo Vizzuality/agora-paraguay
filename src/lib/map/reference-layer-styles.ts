@@ -1,5 +1,5 @@
 import type { FillPaint } from '@/lib/map/global-layer-styles';
-import { LEGEND_ALL_CONTROLS, type LegendConfig } from '@/lib/map/legend-config';
+import { layerMetadata, type LayerMetadata } from '@/lib/map/layer-metadata';
 
 /*
  * How the exposición climática map paints its global layers: the districts layer on both
@@ -39,48 +39,42 @@ function hectareRamp(property: string, from: string, to: string): FillPaint['col
   ];
 }
 
-export type ReferenceLayer = {
-  id: number;
-  label: string;
+/** A reference layer: its metadata (`layerMetadata`) and how the map paints it. */
+export type ReferenceLayer = Pick<
+  LayerMetadata,
+  'id' | 'label' | 'legendConfig' | 'clipsToDistrict'
+> & {
   /** One opacity for the whole layer, which the legend fades. */
   fill: FillPaint & { opacity: number };
   /** The legend swatch's fill and edge, matching the layer. */
   swatch: { fill: string; edge: string };
-  /** The controls its legend row gets. */
-  legendConfig: LegendConfig;
-  /** Whether a district pick keeps only that district's features, or leaves the layer whole. */
-  clipsToDistrict: boolean;
 };
+
+function referenceLayer(
+  id: number,
+  paint: Pick<ReferenceLayer, 'fill' | 'swatch'>,
+): ReferenceLayer {
+  const { label, legendConfig, clipsToDistrict } = layerMetadata(id);
+
+  return { id, label, legendConfig, clipsToDistrict, ...paint };
+}
 
 /** Capas's layers in paint order: the country-wide hazards first, soy on top. */
 export const REFERENCE_LAYERS: ReferenceLayer[] = [
-  {
-    id: 1,
-    label: 'Expuesto a sequía',
+  referenceLayer(1, {
     fill: {
       color: hectareRamp('Drought_ha', DROUGHT, DROUGHT),
       opacity: 0.85,
       outlineColor: DROUGHT,
     },
     swatch: { fill: DROUGHT, edge: DROUGHT },
-    legendConfig: LEGEND_ALL_CONTROLS,
-    clipsToDistrict: true,
-  },
-  {
-    id: 2,
-    label: 'Expuesto a inundación',
+  }),
+  referenceLayer(2, {
     fill: { color: hectareRamp('Flood_ha', FLOOD, FLOOD), opacity: 0.8, outlineColor: FLOOD_EDGE },
     swatch: { fill: FLOOD, edge: FLOOD_EDGE },
-    legendConfig: LEGEND_ALL_CONTROLS,
-    // Floodplains run across district lines: cut at the pick's border they read as cropped.
-    clipsToDistrict: false,
-  },
-  {
-    id: 3,
-    label: 'Soja',
+  }),
+  referenceLayer(3, {
     fill: { color: SOJA, opacity: 0.9, outlineColor: 'rgba(92, 107, 84, 0)' },
     swatch: { fill: SOJA, edge: SOJA },
-    legendConfig: LEGEND_ALL_CONTROLS,
-    clipsToDistrict: true,
-  },
+  }),
 ];
