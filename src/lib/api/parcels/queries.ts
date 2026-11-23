@@ -28,7 +28,7 @@ export const parcelQueries = {
 
     return queryOptions({
       queryKey: ['parcels', 'filter', key, options] as const,
-      queryFn: () => filterParcels(toFilterParcelsRequest(polygons, options)),
+      queryFn: ({ signal }) => filterParcels(toFilterParcelsRequest(polygons, options), signal),
       enabled: polygons.length > 0 && !oversized,
       staleTime: Infinity,
       // A geometry change (a vertex drag, a restore after /analisis) re-keys the query;

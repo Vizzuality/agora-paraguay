@@ -140,6 +140,32 @@ describe('getJson / postJson', () => {
     await expect(postJson('/api/x', {})).resolves.toBeNull();
   });
 
+  it("hands the query's signal to fetch, GET and POST alike", async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(Response.json([])));
+    const { signal } = new AbortController();
+
+    await getJson('/api/x', {}, { signal });
+    await postJson('/api/x', {}, { signal });
+
+    expect(fetchMock.mock.calls.map(([, init]) => init?.signal)).toEqual([signal, signal]);
+  });
+
+  it('lets a cancelled request reject as the abort, not as an outage to retry', async () => {
+    const controller = new AbortController();
+    const abort = new DOMException('Aborted', 'AbortError');
+    fetchMock.mockImplementationOnce(() => {
+      controller.abort(abort);
+      return Promise.reject(abort);
+    });
+
+    const error = await getJson('/api/x', {}, { signal: controller.signal }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBe(abort);
+    expect(error).not.toBeInstanceOf(ApiError);
+  });
+
   it('throws an ApiError carrying the status on a non-2xx response', async () => {
     fetchMock.mockResolvedValueOnce(new Response('forbidden', { status: 403 }));
 

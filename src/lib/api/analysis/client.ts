@@ -22,9 +22,10 @@ import {
 export async function runAnalysis(
   visibility: AnalysisVisibility,
   request: AnalysisRequest,
+  signal?: AbortSignal,
 ): Promise<AnalysisResponse> {
   const parsed = analysisRequestSchema.parse(request);
-  const raw = await postJson(analysisPath(visibility), parsed);
+  const raw = await postJson(analysisPath(visibility), parsed, { signal });
 
   return analysisResponseSchema.parse(withRequestedParcelIds(raw, request.parcels));
 }
