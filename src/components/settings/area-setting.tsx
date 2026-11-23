@@ -165,7 +165,7 @@ function ConfirmCards() {
 
 /** An área action: icon left of its label, 48px tall, as the setting cards' row form. */
 const AREA_ACTION_CLASS =
-  'h-12 gap-2.5 rounded-2xl px-8 font-normal max-md:px-4 [&_svg:not([class*=size-])]:size-6';
+  'h-12 gap-2.5 rounded-2xl px-8 font-normal max-md:flex-1 max-md:px-4 [&_svg:not([class*=size-])]:size-6';
 
 /** Once analysed: which parcel the page reads (Todas among them), Nuevo análisis, the mini map. */
 function AnalysedArea() {
@@ -177,7 +177,9 @@ function AnalysedArea() {
   return (
     <>
       {/* The report names the parcel in the heading instead (`SettingsSection`). */}
-      <div className="flex items-end gap-3 pt-2 print:hidden">
+      {/* On a phone the row has no room for all three: the picker takes its own line and the
+          buttons share the next one. */}
+      <div className="flex items-end gap-3 pt-2 max-md:flex-wrap print:hidden">
         {/* Todas is also one of its options: the picker takes the row's free width. */}
         <ParcelPicker />
         {/* The way back from one parcel (picked here or on the map); gone once on Todas. */}
