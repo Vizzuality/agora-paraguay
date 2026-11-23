@@ -90,3 +90,18 @@ export function toSummaryRequest(
 
   return { parcels, year, crop_type: crop };
 }
+
+/** Whether a summary asked with `asked` still describes `current`: same parcels, year and crop. */
+export function isSameSummaryRequest(
+  asked: SummaryRequest | undefined,
+  current: SummaryRequest | null,
+): boolean {
+  if (!asked || !current) return false;
+
+  return (
+    asked.crop_type === current.crop_type &&
+    asked.year === current.year &&
+    asked.parcels.length === current.parcels.length &&
+    asked.parcels.every((id, index) => id === current.parcels[index])
+  );
+}

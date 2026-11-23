@@ -6,7 +6,7 @@ import Markdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SkeletonParagraph } from '@/components/ui/skeleton-paragraph';
-import { toSummaryRequest } from '@/lib/analysis/request';
+import { isSameSummaryRequest, toSummaryRequest } from '@/lib/analysis/request';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { analysisMutations } from '@/lib/api/analysis/queries';
 import { errorReason } from '@/lib/api/http';
@@ -50,6 +50,13 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
   const { resolvedFilters, lastCrop } = useHeroFilters('productivo');
   const request = toSummaryRequest(parcels, activeId, resolvedFilters, lastCrop);
   const generate = () => request && mutation.mutate(request);
+  // A summary (or its error) asked for another crop, year or parcel set no longer applies:
+  // the card starts over rather than show, or print, it under the new filters.
+  const stale =
+    !mutation.isPending &&
+    mutation.variables !== undefined &&
+    !isSameSummaryRequest(mutation.variables, request);
+  const status = stale ? 'idle' : mutation.status;
 
   return (
     <Card
@@ -57,7 +64,7 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
         'min-w-50 flex-col gap-6 rounded-3xl border-0 bg-card p-6 text-card-foreground shadow-none backdrop-blur-xs',
         // Printed, no fill and no frame: the summary reads as text; no summary, no card.
         'print:bg-transparent',
-        !mutation.isSuccess && 'print:hidden',
+        status !== 'success' && 'print:hidden',
         className,
       )}
     >
@@ -66,16 +73,16 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
         <div className="flex flex-col gap-2 sm:w-3/4 print:w-full" aria-busy={mutation.isPending}>
           <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
 
-          <SummaryBody status={mutation.status} text={mutation.data} />
+          <SummaryBody status={status} text={mutation.data} />
 
-          {mutation.isError && (
+          {status === 'error' && (
             <p role="alert" className="text-sm text-destructive">
               No se pudo generar el resumen: {errorReason(mutation.error)}
             </p>
           )}
         </div>
 
-        {mutation.isSuccess ? (
+        {status === 'success' ? (
           <Button
             type="button"
             variant="outline"

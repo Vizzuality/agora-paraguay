@@ -294,20 +294,23 @@ async function openSection(page: Page, name: string) {
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
 }
 
-test('Generar resumen asks for the open selection, then for one parcel', async ({ page }) => {
+test('Generar resumen asks for the open selection, starts over on a new crop, then asks for one parcel', async ({
+  page,
+}) => {
   let releaseSummary!: () => void;
   const summaryHeld = new Promise<void>((resolve) => {
     releaseSummary = resolve;
   });
-  await analyseOnRedesign(page, '/analisis/productivo', (target) =>
-    target.route(
+  await analyseOnRedesign(page, '/analisis/productivo', async (target) => {
+    await stubFilterParcels(target, { [WEST_PARCEL_ID]: 'Soja', [EAST_PARCEL_ID]: 'Arroz' });
+    await target.route(
       (url) => url.pathname === '/api/parcels/analysis/summary/',
       async (route) => {
         await summaryHeld;
         await route.fallback();
       },
-    ),
-  );
+    );
+  });
   await loginAtGate(page);
 
   const description = page.getByText('Puede añadir al informe un resumen');
@@ -319,7 +322,18 @@ test('Generar resumen asks for the open selection, then for one parcel', async (
   await expect(page.getByRole('heading', { name: 'Resumen de 2 parcelas' })).toBeVisible();
   await expect(page.getByText('Cultivo: soja')).toBeVisible();
 
+  // Another crop: the soy summary no longer describes the analysis, so it goes.
+  await openSection(page, 'Cultivo y fechas');
+  await page
+    .getByRole('region', { name: 'Cultivo y fechas' })
+    .getByRole('combobox', { name: 'Tipo de cultivo' })
+    .click();
+  await page.getByRole('option', { name: 'Arroz' }).click();
+  await expect(description).toBeVisible();
+  await expect(page.getByText('Cultivo: soja')).toHaveCount(0);
+
   // On one parcel the summary starts over and is asked about that parcel alone.
+  await openSection(page, 'Área de interés');
   const parcel = page
     .getByRole('region', { name: 'Área de interés' })
     .getByRole('combobox', { name: 'Parcela' });
