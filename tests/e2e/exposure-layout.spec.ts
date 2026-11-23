@@ -4,6 +4,18 @@ import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { stubBasemap } from './fixtures/map';
 
+test('Exposición climática keeps its map on a phone, where the columns stack', async ({ page }) => {
+  await stubBasemap(page);
+  await stubAnalysisApi(page);
+  await stubAuth(page);
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto('/analisis/exposicion-climatica');
+
+  // A zero-height canvas is not visible: this fails when the map collapses.
+  const map = page.getByRole('main').getByRole('region', { name: 'Área de interés' });
+  await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
+});
+
 test('Exposición climática fills the content column with its map and prompts for a district in the settings', async ({
   page,
 }) => {
