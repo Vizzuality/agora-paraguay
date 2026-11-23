@@ -33,7 +33,9 @@ function hash53(text: string): string {
   let h2 = 0x41c6ce57;
 
   for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
+    // Within bounds, so never undefined; an astral character mixes in once whole, once by
+    // its low half, which keeps the hash deterministic.
+    const code = text.codePointAt(i) ?? 0;
     h1 = Math.imul(h1 ^ code, 2654435761);
     h2 = Math.imul(h2 ^ code, 1597334677);
   }
