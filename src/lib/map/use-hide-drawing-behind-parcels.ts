@@ -3,7 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { drawAtom, drawPolygonsAtom, setPolygonsHiddenAtom } from '@/store/draw';
+import { drawBoundAtom, drawPolygonsAtom, setPolygonsHiddenAtom } from '@/store/draw';
 
 /**
  * Once `filter-parcels` has answered for the drawn or uploaded areas, the parcels stand in
@@ -20,7 +20,7 @@ import { drawAtom, drawPolygonsAtom, setPolygonsHiddenAtom } from '@/store/draw'
  */
 export function useHideDrawingBehindParcels() {
   const polygons = useAtomValue(drawPolygonsAtom);
-  const { bound } = useAtomValue(drawAtom);
+  const bound = useAtomValue(drawBoundAtom);
   const setPolygonsHidden = useSetAtom(setPolygonsHiddenAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
 

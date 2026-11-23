@@ -14,7 +14,8 @@ export const analysisQueries = {
   result: (visibility: AnalysisVisibility, request: AnalysisRequest | null) =>
     queryOptions({
       queryKey: ['analysis', visibility, request] as const,
-      queryFn: request === null ? skipToken : () => runAnalysis(visibility, request),
+      queryFn:
+        request === null ? skipToken : ({ signal }) => runAnalysis(visibility, request, signal),
       staleTime: Infinity,
       placeholderData: keepPreviousData,
     }),

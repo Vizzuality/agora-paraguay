@@ -28,21 +28,24 @@ const DEFAULT_FILTERS_RIESGO = 'sanitario';
  * wire; sanitario (public) unless asked otherwise. `crop_type` narrows the other filters
  * to the crop picked in the hero; soy unless asked otherwise.
  */
-export async function fetchFilters({
-  riesgo = DEFAULT_FILTERS_RIESGO,
-  crop_type = DEFAULT_CROP,
-}: FiltersParams = {}): Promise<Filters> {
+export async function fetchFilters(
+  { riesgo = DEFAULT_FILTERS_RIESGO, crop_type = DEFAULT_CROP }: FiltersParams = {},
+  signal?: AbortSignal,
+): Promise<Filters> {
   const filters = filtersSchema.parse(
-    await getJson('/api/parcels/filters/', { riesgo, crop_type }),
+    await getJson('/api/parcels/filters/', { riesgo, crop_type }, { signal }),
   );
 
   return filters.map(correctFilterText);
 }
 
 /** `GET /api/parcels/indicators?riesgo={sanitario|productivo|exposicion_climatica}` — the indicators of a riesgo and their metadata. */
-export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
+export async function fetchIndicators(
+  params: IndicatorsParams,
+  signal?: AbortSignal,
+): Promise<Indicators> {
   const indicators = indicatorsListResponseSchema.parse(
-    await getJson('/api/parcels/indicators', params),
+    await getJson('/api/parcels/indicators', params, { signal }),
   );
 
   return indicators.map(correctIndicatorText);

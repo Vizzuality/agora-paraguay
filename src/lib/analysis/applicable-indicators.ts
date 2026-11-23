@@ -1,3 +1,4 @@
+import { ALL_CROPS } from '@/lib/analysis/parcel-crops';
 import { hasColumn, readingOf } from '@/lib/analysis/readings';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import {
@@ -20,16 +21,26 @@ import {
  * it follow the crop. Pure, node-tested.
  */
 
-/**
- * The crop an indicator id is bound to, as the crop filter's value: `soja` for a `_soja` or
- * `_soy` part (`Pro_soja`, `LOW_H5_soja`), `rice` for `_arroz` or `_rice`; `null` for one
- * that applies to every crop.
- */
-export function cropOfIndicator(indicator: Indicator): Crop | null {
-  if (/_(soja|soy)(?=_|$)/i.test(indicator.id)) return 'soja';
-  if (/_(arroz|rice)(?=_|$)/i.test(indicator.id)) return 'rice';
+/** The crop a word names, as the crop filter's value. */
+function cropOfWord(word: string): Crop | null {
+  if (/^(soja|soy)$/i.test(word)) return 'soja';
+  if (/^(arroz|rice)$/i.test(word)) return 'rice';
 
   return null;
+}
+
+/**
+ * The crop an indicator is bound to, as the crop filter's value (`soja`, `rice`), or `null`
+ * for one every crop shares. Its `crop_type` when the API sends one (sanitario's diseases);
+ * else a `_soja`/`_soy` or `_arroz`/`_rice` part of its id (`Pro_soja`, `LOW_H5_soja`),
+ * which is all productivo's list carries so far.
+ */
+export function cropOfIndicator(indicator: Indicator): Crop | null {
+  if (indicator.crop_type) return cropOfWord(indicator.crop_type);
+
+  const part = /_(soja|soy|arroz|rice)(?=_|$)/i.exec(indicator.id);
+
+  return part ? cropOfWord(part[1]) : null;
 }
 
 /**
@@ -37,9 +48,10 @@ export function cropOfIndicator(indicator: Indicator): Crop | null {
  * the other crop are out: rice lists none with `_soja`/`_soy`, soy none with
  * `_arroz`/`_rice`. On productivo, so is one the answer carries for some submitted parcel
  * but no parcel has a reading for (every value "NA", blank or null); one the answer does
- * not carry at all stays: nothing is known about it yet. Under Todos, or without a crop
- * yet (filters loading), the crop rule waits: every crop's indicators apply, the
- * crop-agnostic ones always do.
+ * not carry at all stays: nothing is known about it yet. Under Todos, the crops the
+ * parcels in view grew (`cropsInView`: the open tab's parcel, or every analysed one)
+ * apply. Without a crop yet (filters loading), or none known for the parcels, the crop
+ * rule waits: every crop's indicators apply. The crop-agnostic ones always do.
  */
 export function applicableIndicators(
   indicators: Indicators | undefined,
@@ -47,16 +59,19 @@ export function applicableIndicators(
   parcelIds: string[],
   riesgo: Riesgo,
   crop: string | undefined,
+  cropsInView: readonly Crop[] = [],
 ): Indicators | undefined {
   if (!indicators) return indicators;
 
-  const forCrop = !isCrop(crop)
-    ? indicators
-    : indicators.filter((indicator) => {
-        const bound = cropOfIndicator(indicator);
+  const crops = cropsToKeep(crop, cropsInView);
+  const forCrop =
+    crops.length === 0
+      ? indicators
+      : indicators.filter((indicator) => {
+          const bound = cropOfIndicator(indicator);
 
-        return bound === null || bound === crop;
-      });
+          return bound === null || crops.includes(bound);
+        });
 
   if (riesgo !== 'productivo') return forCrop;
 
@@ -73,4 +88,11 @@ export function applicableIndicators(
 
     return answered.some((parcel) => readingOf(parcel, indicator.id) !== undefined);
   });
+}
+
+/** The crops whose indicators stay: the picked one, those in view under Todas, or none to filter by. */
+function cropsToKeep(crop: string | undefined, cropsInView: readonly Crop[]): readonly Crop[] {
+  if (isCrop(crop)) return [crop];
+  if (crop === ALL_CROPS) return cropsInView;
+  return [];
 }
