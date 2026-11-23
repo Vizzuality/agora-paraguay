@@ -44,8 +44,18 @@ export function useParcelHitClick({
       if (parcel !== null) onParcel(parcel.parcel_id);
     };
 
+    // The cursor follows the last move of each frame: the browser can fire several per
+    // frame, and only the last one is ever painted.
+    let frame: number | null = null;
+    let lastMove: MapMouseEvent | null = null;
     const onMouseMove = (event: MapMouseEvent) => {
-      map.getCanvas().style.cursor = parcelAtPoint(parcels, event.lngLat) === null ? '' : 'pointer';
+      lastMove = event;
+      frame ??= requestAnimationFrame(() => {
+        frame = null;
+        if (lastMove === null) return;
+        map.getCanvas().style.cursor =
+          parcelAtPoint(parcels, lastMove.lngLat) === null ? '' : 'pointer';
+      });
     };
 
     map.on('click', onClick);
@@ -54,6 +64,7 @@ export function useParcelHitClick({
     return () => {
       map.off('click', onClick);
       map.off('mousemove', onMouseMove);
+      if (frame !== null) cancelAnimationFrame(frame);
       map.getCanvas().style.cursor = '';
     };
   }, [mapRef, enabled, parcels, onParcel]);
