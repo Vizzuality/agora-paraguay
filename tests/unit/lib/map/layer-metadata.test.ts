@@ -1,27 +1,42 @@
 import { describe, expect, it } from 'vitest';
 
+import layers from '@/content/global-layers.json';
 import { layerMetadata } from '@/lib/map/layer-metadata';
+import { colorTone, riskColorSchema } from '@/lib/platform-metadata';
 
 describe('layerMetadata', () => {
-  it("reads a layer's front-end metadata in app vocabulary", () => {
-    expect(layerMetadata(4)).toEqual({
-      id: 4,
-      label: 'Nivel de exposición',
-      description: 'Mapa de exposición de la soja a las amenazas.',
-      legendConfig: { opacity: false, visibility: false, order: false },
-      legendNote:
-        'Porcentaje de soja expuesta a una o ambas amenazas; las áreas coincidentes se cuentan una sola vez.',
-      clipsToDistrict: false,
-    });
+  it("reads each layer's wire fields in app vocabulary", () => {
+    for (const layer of layers) {
+      expect(layerMetadata(layer.id)).toMatchObject({
+        id: layer.id,
+        label: layer.name,
+        description: layer.description,
+        legendConfig: layer.legend_config,
+        legendNote: layer.legend_note,
+        clipsToDistrict: layer.clips_to_district,
+      });
+    }
   });
 
-  it('names every layer the API lists in Spanish', () => {
-    expect([1, 2, 3, 4].map((id) => layerMetadata(id).label)).toEqual([
-      'Expuesto a sequía',
-      'Expuesto a inundación',
-      'Soja',
-      'Nivel de exposición',
-    ]);
+  it("maps a classed layer's colours to tones and keeps its words", () => {
+    const classed = layers.filter((layer) => layer.legend_items !== null);
+
+    expect(classed.length).toBeGreaterThan(0);
+
+    for (const layer of classed) {
+      expect(layerMetadata(layer.id).legendItems).toEqual(
+        (layer.legend_items ?? []).map(({ color, ...item }) => ({
+          ...item,
+          tone: colorTone(riskColorSchema.parse(color)),
+        })),
+      );
+    }
+  });
+
+  it('gives an unclassed layer no legend items', () => {
+    for (const layer of layers.filter((entry) => entry.legend_items === null)) {
+      expect(layerMetadata(layer.id).legendItems).toEqual([]);
+    }
   });
 
   it('throws for a layer the file does not list', () => {

@@ -10,6 +10,7 @@ import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis
 import { isContextIndicator, type ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
+import { INDICATOR_CATEGORY_TITLES } from '@/lib/platform-metadata';
 
 export type AnalysisWidget =
   | ({ kind: 'ruler' } & IndicatorCard)
@@ -138,12 +139,8 @@ function widgetCategory(indicators: Indicators | undefined, riesgo: IndicatorsRi
   };
 }
 
-/** The title over each category's widgets; agnostic ones go untitled. */
-export const CATEGORY_TITLES: Record<WidgetCategory, string> = {
-  context: 'Información de contexto',
-  historic: 'Análisis histórico de productividad',
-  future: 'Análisis de productividad proyectada',
-};
+/** The title over each category's widgets (`platform-metadata.json`); agnostic ones go untitled. */
+export const CATEGORY_TITLES: Record<WidgetCategory, string> = INDICATOR_CATEGORY_TITLES;
 
 export type WidgetGroup = { key: string; title: string | null; widgets: AnalysisWidget[] };
 

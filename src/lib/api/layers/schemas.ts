@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { riskColorSchema } from '@/lib/platform-metadata';
+
 /*
  * Global layers contract: `GET /api/parcels/global_layers/`, a bare list. `type` is a
  * numeric code whose meaning the API has not documented yet; `source` comes back empty
@@ -30,6 +32,17 @@ export const globalLayerExtrasSchema = z.object({
   description: z.string().nullable(),
   legend_config: z.object({ opacity: z.boolean(), visibility: z.boolean(), order: z.boolean() }),
   legend_note: z.string().nullable(),
+  /** The legend's rows for a classed layer: each class `value` as the tiles spell it. */
+  legend_items: z
+    .array(
+      z.object({
+        value: z.string().min(1),
+        label: z.string().min(1),
+        tooltip: z.string().min(1),
+        color: riskColorSchema,
+      }),
+    )
+    .nullable(),
   clips_to_district: z.boolean(),
 });
 

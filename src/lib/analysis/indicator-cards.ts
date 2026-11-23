@@ -4,6 +4,7 @@ import {
   type ParcelValue,
 } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
+import { INDICATOR_PLURAL_NAMES } from '@/lib/platform-metadata';
 
 import { AREA_INDICATOR_ID, isAreaIndicator } from './area';
 import { asReading, isNoReading, isUnreadable, readingOf, type Reading } from './readings';
@@ -156,11 +157,7 @@ function distinctList(readings: (string | number)[]): string {
  * Todas lists more than one value. Keyed by indicator id, lower case. Any other fact with
  * several values keeps its name and adds the count.
  */
-const PLURAL_LABELS: Record<string, string> = {
-  dpto_code: 'Códigos de departamento',
-  dist_code: 'Códigos de distrito',
-  weather_station: 'Estaciones meteorológicas más cercanas',
-};
+const PLURAL_LABELS = INDICATOR_PLURAL_NAMES;
 
 /** A fact's heading: plural when the combined parcel lists several values for it. */
 function factLabel(parcel: AnalysisParcel, id: string, name: string, value: string): string {

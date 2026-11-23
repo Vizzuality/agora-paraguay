@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 
 import { MapLegend, type MapLegendItem } from '@/components/map/map-legend';
 import { parcelQueries } from '@/lib/api/parcels/queries';
-import { PARCEL_LEGEND_NOTE } from '@/lib/platform-metadata';
+import { PARCEL_LEGEND_LABELS, PARCEL_LEGEND_NOTE } from '@/lib/platform-metadata';
 import { drawPolygonsAtom } from '@/store/draw';
 
 /** The map's crop textures at swatch size: white stripes and dots over black. */
@@ -18,11 +18,15 @@ const ARROZ_SWATCH: CSSProperties = {
 };
 
 const ITEMS: MapLegendItem[] = [
-  { id: 'selection', label: 'Selección activa', className: 'border-2 border-black/50 bg-parcel' },
-  { id: 'soja', label: 'Soja*', className: 'bg-black', style: SOJA_SWATCH },
+  {
+    id: 'selection',
+    label: PARCEL_LEGEND_LABELS.selection,
+    className: 'border-2 border-black/50 bg-parcel',
+  },
+  { id: 'soja', label: PARCEL_LEGEND_LABELS.soja, className: 'bg-black', style: SOJA_SWATCH },
   {
     id: 'arroz',
-    label: 'Arroz*',
+    label: PARCEL_LEGEND_LABELS.arroz,
     className: 'border-2 border-white bg-black',
     style: ARROZ_SWATCH,
   },

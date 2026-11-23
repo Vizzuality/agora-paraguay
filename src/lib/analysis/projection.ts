@@ -3,6 +3,7 @@ import { numberOf } from '@/lib/analysis/readings';
 import type { ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
+import { PROJECTION_TEXT } from '@/lib/platform-metadata';
 
 /*
  * Projected production on Riesgo productivo: `LOW` / `MID` / `HIGH` × `H5` / `H10`,
@@ -16,12 +17,9 @@ import type { Indicator, Indicators } from '@/lib/api/metadata/schemas';
 
 const SCENARIO_ID = /^(LOW|MID|HIGH)_(H5|H10)_(soja|arroz)$/i;
 
-const HORIZONS = [
-  { key: 'H5', label: 'Horizonte 5 años' },
-  { key: 'H10', label: 'Horizonte 10 años' },
-] as const;
+const HORIZONS = PROJECTION_TEXT.horizons;
 
-export const PROJECTION_TITLE = 'Producción proyectada a escenario pesimista, neutro y optimista';
+export const PROJECTION_TITLE = PROJECTION_TEXT.title;
 
 /**
  * One point of the chart: the band from `low` to `high`, the neutral line through `mid`.
@@ -156,7 +154,7 @@ export function projectionWidgets(
 
     const pro = `Pro_${crop}`;
     // The base is named by the hero's year (`heroYear`).
-    const base = point(year ?? 'Base histórica', { low: pro, mid: pro, high: pro });
+    const base = point(year ?? PROJECTION_TEXT.baselineLabel, { low: pro, mid: pro, high: pro });
     const points = base ? [base, ...horizons] : horizons;
     const central = indicators.find((indicator) => indicator.id.toLowerCase() === `mid_h5_${crop}`);
     const scenario = indicators.find((indicator) => projectionCrop(indicator.id) === crop);

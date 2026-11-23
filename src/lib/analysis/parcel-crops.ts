@@ -1,11 +1,12 @@
 import { CROP_FILTER_ID } from '@/lib/analysis/filters';
 import { CROPS, type Crop, type Filters } from '@/lib/api/metadata/schemas';
 import type { FilteredParcel } from '@/lib/api/parcels/schemas';
+import { ALL_CROPS_LABEL, CROP_NAMES } from '@/lib/platform-metadata';
 
 /** The crop filter's "every crop" value: no crop sent, every crop's indicators shown. */
 export const ALL_CROPS = 'todos';
 
-const CROP_LABELS: Record<Crop, string> = { rice: 'Arroz', soja: 'Soja' };
+const CROP_LABELS: Readonly<Record<Crop, string>> = CROP_NAMES;
 
 /** The crops the parcels `ids` have grown (`crop_types`), each once, in `CROPS` order. */
 export function parcelCrops(parcels: readonly FilteredParcel[], ids: readonly string[]): Crop[] {
@@ -39,7 +40,8 @@ export function withParcelCropOptions(filters: Filters, crops: readonly Crop[]):
       ...filter,
       field_type: {
         ...field,
-        options: crops.length > 1 ? [{ value: ALL_CROPS, label: 'Todos' }, ...options] : options,
+        options:
+          crops.length > 1 ? [{ value: ALL_CROPS, label: ALL_CROPS_LABEL }, ...options] : options,
       },
     };
   });

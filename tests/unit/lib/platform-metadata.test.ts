@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { ANALYSIS_TYPES } from '@/lib/nav-links';
-import { analysisTypeMetadata, EXPOSURE_INTRO, PARCEL_LEGEND_NOTE } from '@/lib/platform-metadata';
+import {
+  analysisTypeMetadata,
+  colorTone,
+  CROP_NAMES,
+  EXPOSURE_INTRO,
+  PARCEL_LEGEND_LABELS,
+  riskColorSchema,
+} from '@/lib/platform-metadata';
 
 describe('platform metadata', () => {
   it('names, describes and gates every analysis type', () => {
@@ -30,7 +37,23 @@ describe('platform metadata', () => {
     expect(EXPOSURE_INTRO.readMap.body.capas.length).toBeGreaterThan(0);
   });
 
-  it("notes which season the parcel legend's crop textures read", () => {
-    expect(PARCEL_LEGEND_NOTE).toBe('*Cultivos de 2025');
+  it('names every parcel legend row and crop the app renders', () => {
+    for (const text of [...Object.values(PARCEL_LEGEND_LABELS), ...Object.values(CROP_NAMES)]) {
+      expect(text).toBeTruthy();
+    }
+    expect(Object.keys(PARCEL_LEGEND_LABELS)).toEqual(['selection', 'soja', 'arroz']);
+    expect(Object.keys(CROP_NAMES)).toEqual(['soja', 'rice']);
+  });
+});
+
+describe('colorTone', () => {
+  it('paints each metadata colour name with its ruler tone', () => {
+    expect(riskColorSchema.options.map(colorTone)).toEqual([
+      'none',
+      'low',
+      'medium',
+      'elevated',
+      'high',
+    ]);
   });
 });
