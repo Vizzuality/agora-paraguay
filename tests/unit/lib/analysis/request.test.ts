@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { AnalysisFilterSelection } from '@/lib/analysis/filters';
 import {
+  isSameSummaryRequest,
   requestedIndicatorIds,
   toAnalysisRequest,
   toSummaryRequest,
   visibilityOf,
 } from '@/lib/analysis/request';
+import type { SummaryRequest } from '@/lib/api/analysis/schemas';
 import type { Indicator } from '@/lib/api/metadata/schemas';
 
 /** A hero selection as the API keys it: filter id → picked value. */
@@ -177,5 +179,24 @@ describe('toSummaryRequest', () => {
     expect(toSummaryRequest(['P1'], null, null)).toBeNull();
     expect(toSummaryRequest(['P1'], null, {})).toBeNull();
     expect(toSummaryRequest(['P1'], null, { crop_type: 'maiz', year: '2025' })).toBeNull();
+  });
+});
+
+describe('isSameSummaryRequest', () => {
+  const asked: SummaryRequest = { parcels: ['P1', 'P2'], year: '2025', crop_type: 'soja' };
+
+  it('holds for the same parcels, year and crop, even as a new object', () => {
+    expect(isSameSummaryRequest(asked, { ...asked, parcels: ['P1', 'P2'] })).toBe(true);
+  });
+
+  it('breaks on another crop, year or parcel set', () => {
+    expect(isSameSummaryRequest(asked, { ...asked, crop_type: 'rice' })).toBe(false);
+    expect(isSameSummaryRequest(asked, { ...asked, year: '2026' })).toBe(false);
+    expect(isSameSummaryRequest(asked, { ...asked, parcels: ['P2'] })).toBe(false);
+  });
+
+  it('breaks when nothing was asked or nothing can be asked now', () => {
+    expect(isSameSummaryRequest(undefined, asked)).toBe(false);
+    expect(isSameSummaryRequest(asked, null)).toBe(false);
   });
 });
