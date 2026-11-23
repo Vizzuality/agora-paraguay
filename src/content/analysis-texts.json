@@ -15,11 +15,11 @@
       "title": "Cómo leer el mapa",
       "body": {
         "exposicion": [
-          "Las capas muestran soja coincidente con zonas de sequía severa o extrema (SPEI-6 ≤ -1,5) y de inundación fluvial.",
-          "Ambas corresponden a un período de retorno de 100 años (~1% de probabilidad anual de excedencia)."
+          "El color indica qué proporción de la superficie de soja del distrito coincide con zonas de sequía severa o extrema (SPEI-6 ≤ -1,5) o inundación fluvial.",
+          "Ambas capas corresponden a un **período de retorno de 100 años (=1 % de probabilidad anual de excedencia).**"
         ],
         "capas": [
-          "El color indica qué proporción de la superficie de soja del distrito coincide con zonas de sequía severa o extrema (SPEI-6 ≤ -1,5) o inundación fluvial.",
+          "Las capas muestran soja coincidente con zonas de sequía severa o extrema (SPEI-6 ≤ -1,5) y de inundación fluvial.",
           "Ambas capas corresponden a un **período de retorno de 100 años (=1 % de probabilidad anual de excedencia).**"
         ]
       }

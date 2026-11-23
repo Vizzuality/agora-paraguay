@@ -7,7 +7,6 @@ import { GlobalLayer } from '@/components/map/global-layer';
 import { MapLegend } from '@/components/map/map-legend';
 import { MapLoading } from '@/components/map/map-loading';
 import { useIndicators } from '@/lib/analysis/use-indicators';
-import type { RiskTone } from '@/lib/analysis/widget-config';
 import {
   districtFromProperties,
   EXPOSURE_FILL_OPACITY,
@@ -16,6 +15,7 @@ import {
   exposureLabel,
   exposureLegendLabel,
   exposureColor,
+  exposureSwatch,
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
@@ -24,7 +24,6 @@ import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legen
 import { DISTRICT_PICK, DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district';
 import { useLayerPointer } from '@/lib/map/use-layer-pointer';
-import { cn } from '@/lib/utils';
 import { pickDistrictAtom, selectedDistrictAtom } from '@/store/exposure';
 
 /** What the map widget's tabs show: the exposure base, or the reference layers. */
@@ -42,26 +41,14 @@ const UNPICKED_OPACITY = 0.3;
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
 
 /**
- * A class's legend swatch, in the token its ruler band paints (`TONE_COLOR`): the fill at
- * half, the 2px border solid, as the map draws a district's fill and outline.
- */
-const TONE_SWATCH: Record<RiskTone, string> = {
-  none: 'border-2 border-risk-none bg-risk-none/50',
-  low: 'border-2 border-risk-low bg-risk-low/50',
-  medium: 'border-2 border-risk-neutral bg-risk-neutral/50',
-  elevated: 'border-2 border-risk-medium bg-risk-medium/50',
-  high: 'border-2 border-risk-high bg-risk-high/50',
-};
-
-/**
  * Exposición climática's layers for the panel map. Nivel de exposición colours each
  * district by its exposure class, with the legend; Capas traces the districts faintly
  * under the reference layers.
  * A district on the exposure layer names itself on hover and is picked on click: the
  * panel shows it, the districts around it fade, the camera flies to it, and Capas paints
- * only its features. Clicking
- * it again clears the pick. The pick holds across both tabs: Capas traces its outline
- * over the reference layers, and a click there picks the district under the pointer too.
+ * only its features, flood aside (`clipsToDistrict`). Clicking it again clears the pick.
+ * The pick holds across both tabs: Capas traces its outline over the reference layers,
+ * and a click there picks the district under the pointer too.
  */
 export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const selected = useAtomValue(selectedDistrictAtom);
@@ -154,7 +141,11 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           items={classes.map(({ label, tone }) => ({
             id: label,
             label: exposureLegendLabel(label),
-            className: cn('border-2', TONE_SWATCH[tone]),
+            className: 'border-2',
+            style: {
+              backgroundColor: exposureSwatch(tone).fill,
+              borderColor: exposureSwatch(tone).edge,
+            },
           }))}
           note="Porcentaje de soja expuesta a una o ambas amenazas; las áreas coincidentes se cuentan una sola vez."
         />
@@ -202,7 +193,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
         highlightedId={selected?.id}
       />
       {capasOpened &&
-        layersTopFirst.map(({ id, fill }) => (
+        layersTopFirst.map(({ id, fill, clipsToDistrict }) => (
           // Under the exposure layer, so the pick's outline stays on top, each right
           // under the row above it (`stackBeforeIds`). Mounted top first, so every
           // `beforeId` names a layer already there: a missing one would drop the layer.
@@ -211,7 +202,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
             id={id}
             color={fill.color}
             fill={{ ...fill, opacity: scaledOpacity(fill.opacity, layerOpacity[String(id)]) }}
-            districtId={selected?.id}
+            districtId={clipsToDistrict ? selected?.id : null}
             hidden={exposure || hiddenLayers.has(String(id))}
             beforeId={beforeIds[globalLayerFillId(id)]}
           />

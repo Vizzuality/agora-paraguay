@@ -7,6 +7,7 @@ import {
   exposureColor,
   exposureLabel,
   exposureLegendLabel,
+  exposureSwatch,
 } from '@/lib/map/exposure-districts';
 
 describe('districtFromProperties', () => {
@@ -136,6 +137,12 @@ describe('exposureColor', () => {
 
   it('paints everything grey with no classes, since match needs a label', () => {
     expect(exposureColor([])).toBe('#657690');
+  });
+});
+
+describe('exposureSwatch', () => {
+  it("fills the swatch with its tone's colour at half and edges it solid", () => {
+    expect(exposureSwatch('low')).toEqual({ fill: '#2A7BF180', edge: '#2A7BF1' });
   });
 });
 
