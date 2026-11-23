@@ -161,6 +161,8 @@ export const indicatorSchema = z.preprocess(
     default: z.boolean().optional(),
     /** Whether the indicator reads the past or projects ahead; agnostic when missing. */
     category: z.enum(['historic', 'future']).nullable().catch(null).optional(),
+    /** The crop the indicator reads (`soja`, `arroz`); missing on one every crop shares. */
+    crop_type: z.string().nullable().optional(),
     indicator_type: indicatorTypeSchema,
   }),
 );

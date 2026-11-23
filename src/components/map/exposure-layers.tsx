@@ -38,6 +38,9 @@ const EXPOSURE_LAYER = layerMetadata(EXPOSURE_LAYER_ID);
 /** On Nivel de exposición, the share of their opacity the districts around a pick keep. */
 const UNPICKED_OPACITY = 0.3;
 
+/** On Nivel de exposición, the picked district fills solid; before a pick all sit at half. */
+const PICKED_OPACITY = 1;
+
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
 
 /**
@@ -48,7 +51,7 @@ const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
  * panel shows it, the districts around it fade, the camera flies to it, and Capas paints
  * only its features, flood aside (`clipsToDistrict`). Clicking it again clears the pick.
  * The pick holds across both tabs: Capas traces its outline over the reference layers,
- * and a click there picks the district under the pointer too.
+ * and a click there picks or clears alike.
  */
 export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
   const selected = useAtomValue(selectedDistrictAtom);
@@ -104,23 +107,13 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
     setHovered(district ? { district, x: event.point.x, y: event.point.y } : null);
   };
 
-  useLayerPointer(exposure ? EXPOSURE_FILL_ID : null, {
+  // Both tabs: a click picks the district under the pointer, a click on the pick clears it.
+  useLayerPointer(EXPOSURE_FILL_ID, {
     onMove: hover,
     onLeave: () => setHovered(null),
     onClick: (event) => {
       const district = pickAt(event);
       if (district) pickDistrict(district.id === selected?.id ? null : district);
-    },
-  });
-
-  // On Capas the district under the pointer darkens, and a click picks it; no toggle, so
-  // a click inside the pick keeps it.
-  useLayerPointer(exposure ? null : EXPOSURE_FILL_ID, {
-    onMove: hover,
-    onLeave: () => setHovered(null),
-    onClick: (event) => {
-      const district = pickAt(event);
-      if (district && district.id !== selected?.id) pickDistrict(district);
     },
   });
 
@@ -177,6 +170,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
               },
               lineWidth: EXPOSURE_LINE_WIDTH,
               othersOpacity: UNPICKED_OPACITY,
+              highlightedOpacity: PICKED_OPACITY,
             }
           : {
               color: DISTRICT_PICK.stroke,

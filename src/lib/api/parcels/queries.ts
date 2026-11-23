@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 
+import { areasSignature } from '@/lib/map/areas-signature';
 import type { DrawnPolygon } from '@/lib/map/draw-features';
-import { exceedsMaxArea } from '@/lib/map/polygon-area';
 
 import { filterParcels } from './client';
 import {
@@ -23,16 +23,13 @@ export const parcelQueries = {
   filtered: (
     polygons: DrawnPolygon[],
     options: FilterParcelsOptions = DEFAULT_FILTER_PARCELS_OPTIONS,
-  ) =>
-    queryOptions({
-      queryKey: [
-        'parcels',
-        'filter',
-        polygons.map((polygon) => ({ id: polygon.id, geometry: polygon.geometry })),
-        options,
-      ] as const,
+  ) => {
+    const { key, oversized } = areasSignature(polygons);
+
+    return queryOptions({
+      queryKey: ['parcels', 'filter', key, options] as const,
       queryFn: ({ signal }) => filterParcels(toFilterParcelsRequest(polygons, options), signal),
-      enabled: polygons.length > 0 && !exceedsMaxArea(polygons),
+      enabled: polygons.length > 0 && !oversized,
       staleTime: Infinity,
       // A geometry change (a vertex drag, a restore after /analisis) re-keys the query;
       // the parcels already on the map stay painted until the new answer lands instead
@@ -40,5 +37,6 @@ export const parcelQueries = {
       // disabled query would otherwise keep handing the old parcels to a layer that is
       // still mounted, and they would stay on the map.
       placeholderData: (previous) => (polygons.length > 0 ? previous : undefined),
-    }),
+    });
+  },
 };

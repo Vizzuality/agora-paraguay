@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import type { ExpressionSpecification } from 'maplibre-gl';
+import { useMemo } from 'react';
 import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { ParcelNumbers } from '@/components/map/parcel-numbers';
@@ -65,35 +66,39 @@ export function FilteredParcelsLayer({
   const toggled = useAtomValue(toggledParcelIdsAtom);
   const { data } = useQuery(parcelQueries.filtered(polygons));
 
-  if (!data) return null;
+  // Rebuilt only when its inputs change: the source's data is deep-compared by react-map-gl
+  // on every render, which is cheap only when it is the same object.
+  const { parcels, collection } = useMemo(() => {
+    const shown =
+      parcelIds === undefined
+        ? (data?.results ?? [])
+        : (data?.results ?? []).filter((parcel) => parcelIds.includes(parcel.parcel_id));
+    const marked =
+      highlightedIds === undefined
+        ? applyToggles(shown, toggled)
+        : shown.map((parcel) => ({
+            ...parcel,
+            selected: highlightedIds.includes(parcel.parcel_id),
+          }));
 
-  const shown =
-    parcelIds === undefined
-      ? data.results
-      : data.results.filter((parcel) => parcelIds.includes(parcel.parcel_id));
-  const parcels =
-    highlightedIds === undefined
-      ? applyToggles(shown, toggled)
-      : shown.map((parcel) => ({
-          ...parcel,
-          selected: highlightedIds.includes(parcel.parcel_id),
-        }));
+    // Every parcel's FeatureCollection flattened into one source, the flag and id set as
+    // the feature properties so the paint expressions can read them.
+    const features = marked.flatMap((parcel) =>
+      parcel.geometry.features.map((feature) => ({
+        type: 'Feature' as const,
+        geometry: feature.geometry,
+        properties: {
+          parcel_id: parcel.parcel_id,
+          selected: parcel.selected,
+          ...(parcel.last_crop_type && { crop: parcel.last_crop_type }),
+        },
+      })),
+    );
 
-  // Every parcel's FeatureCollection flattened into one source, the flag and id set as
-  // the feature properties so the paint expressions can read them.
-  const features = parcels.flatMap((parcel) =>
-    parcel.geometry.features.map((feature) => ({
-      type: 'Feature' as const,
-      geometry: feature.geometry,
-      properties: {
-        parcel_id: parcel.parcel_id,
-        selected: parcel.selected,
-        ...(parcel.last_crop_type && { crop: parcel.last_crop_type }),
-      },
-    })),
-  );
+    return { parcels: marked, collection: { type: 'FeatureCollection' as const, features } };
+  }, [data, parcelIds, highlightedIds, toggled]);
 
-  if (features.length === 0) return null;
+  if (collection.features.length === 0) return null;
 
   // The order that gives the numbers: the analysed list on the mini map, else the
   // selection as Analizar will submit it (`ConfirmActions`), so N matches the hero tab.
@@ -101,7 +106,7 @@ export function FilteredParcelsLayer({
 
   return (
     <>
-      <Source id="filtered-parcels" type="geojson" data={{ type: 'FeatureCollection', features }}>
+      <Source id="filtered-parcels" type="geojson" data={collection}>
         <Layer
           id="filtered-parcels-pattern"
           type="fill"

@@ -172,6 +172,13 @@ describe('globalLayerStyles', () => {
     const [plainFill, plainLine] = globalLayerStyles(options);
     expect(plainFill.paint).toMatchObject({ 'fill-opacity': 0.6 });
     expect(plainLine.paint).not.toHaveProperty('line-opacity');
+
+    // `highlightedOpacity` fills the pick at its own opacity; before a pick it changes nothing.
+    const solid = { ...options, highlightedOpacity: 1 };
+    expect(globalLayerStyles({ ...solid, highlightedId: '0101' })[0].paint).toMatchObject({
+      'fill-opacity': ['case', isHighlighted, 1, ['*', 0.6, 0.3]],
+    });
+    expect(globalLayerStyles(solid)[0].paint).toMatchObject({ 'fill-opacity': 0.6 });
   });
 
   it('hides every layer when hidden, so the source stays loaded', () => {
