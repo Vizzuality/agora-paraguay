@@ -63,7 +63,7 @@ export function applicableIndicators(
 ): Indicators | undefined {
   if (!indicators) return indicators;
 
-  const crops: readonly Crop[] = isCrop(crop) ? [crop] : crop === ALL_CROPS ? cropsInView : [];
+  const crops = cropsToKeep(crop, cropsInView);
   const forCrop =
     crops.length === 0
       ? indicators
@@ -88,4 +88,11 @@ export function applicableIndicators(
 
     return answered.some((parcel) => readingOf(parcel, indicator.id) !== undefined);
   });
+}
+
+/** The crops whose indicators stay: the picked one, those in view under Todas, or none to filter by. */
+function cropsToKeep(crop: string | undefined, cropsInView: readonly Crop[]): readonly Crop[] {
+  if (isCrop(crop)) return [crop];
+  if (crop === ALL_CROPS) return cropsInView;
+  return [];
 }
