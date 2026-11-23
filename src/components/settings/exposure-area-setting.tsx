@@ -19,9 +19,12 @@ const VIEWS: { value: ExposureMapView; label: string; icon: IconComponent }[] = 
   { value: 'capas', label: 'Superficie expuesta', icon: SanitaryRiskIcon },
 ];
 
-/** A view button: icon left of its label on the secondary fill, the open one outlined in primary. */
+/**
+ * A view button: icon left of its label on the secondary fill, the open one outlined in
+ * primary. On a phone both labels do not fit one line side by side, so they wrap.
+ */
 const VIEW_CLASS =
-  'h-12 flex-1 gap-2.5 rounded-2xl border border-border bg-secondary px-8 text-sm font-normal text-primary shadow-none after:hidden hover:bg-secondary-hover data-[state=active]:border-3 data-[state=active]:border-primary data-[state=active]:bg-secondary data-[state=active]:text-primary data-[state=active]:shadow-none dark:data-[state=active]:border-primary dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-primary max-md:px-4 [&_svg:not([class*=size-])]:size-6';
+  'h-12 flex-1 gap-2.5 rounded-2xl border border-border bg-secondary px-8 text-sm font-normal text-primary shadow-none after:hidden hover:bg-secondary-hover data-[state=active]:border-3 data-[state=active]:border-primary data-[state=active]:bg-secondary data-[state=active]:text-primary data-[state=active]:shadow-none dark:data-[state=active]:border-primary dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-primary max-md:h-auto max-md:min-h-12 max-md:min-w-0 max-md:px-3 max-md:py-2 max-md:leading-tight max-md:data-[state=active]:py-1.5 max-md:whitespace-normal [&_svg:not([class*=size-])]:size-6';
 
 /** The closed section's summary: the picked district, or what to do. */
 export function useExposureAreaLabel(): string {

@@ -4,7 +4,9 @@ import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { stubBasemap } from './fixtures/map';
 
-test('Exposición climática keeps its map on a phone, where the columns stack', async ({ page }) => {
+test('Exposición climática fits a phone: the map shows, the views stay in the card, the legend starts folded', async ({
+  page,
+}) => {
   await stubBasemap(page);
   await stubAnalysisApi(page);
   await stubAuth(page);
@@ -14,6 +16,21 @@ test('Exposición climática keeps its map on a phone, where the columns stack',
   // A zero-height canvas is not visible: this fails when the map collapses.
   const map = page.getByRole('main').getByRole('region', { name: 'Área de interés' });
   await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
+
+  const card = await map.boundingBox();
+  expect(card).not.toBeNull();
+  for (const name of ['Nivel de exposición', 'Superficie expuesta']) {
+    const tab = await map.getByRole('tab', { name }).boundingBox();
+    expect(tab).not.toBeNull();
+    expect(tab!.x).toBeGreaterThanOrEqual(card!.x);
+    expect(tab!.x + tab!.width).toBeLessThanOrEqual(card!.x + card!.width);
+  }
+
+  // Open, the legend would cover most of the map: it starts folded, and opens on demand.
+  const toggle = map.getByRole('button', { name: 'Mostrar leyenda' });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(map.getByRole('list', { name: 'Leyenda de exposición' })).toBeVisible();
 });
 
 test('Exposición climática fills the content column with its map and prompts for a district in the settings', async ({

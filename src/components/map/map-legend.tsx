@@ -68,9 +68,14 @@ type MapLegendProps = {
 const CONTROL_CLASS =
   'flex shrink-0 print:hidden cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none';
 
+/** Folded below `md`: open, the legend covers most of a phone-sized map. */
+function startsOpen(): boolean {
+  return typeof window === 'undefined' || !window.matchMedia('(width < 48rem)').matches;
+}
+
 /**
  * A map's key, bottom left: Mostrar/Ocultar leyenda over the swatches on a light panel,
- * open until folded. Every map's legend uses it, so they read and fold alike. Each row's
+ * open until folded (folded to start on a phone). Every map's legend uses it, so they read and fold alike. Each row's
  * `legendConfig` (its layer's) says which controls it gets, given the map passes the
  * handler: an opacity slider, an eye and a drag handle (drag it along the handles, or move
  * the row with the arrow keys).
@@ -87,7 +92,7 @@ export function MapLegend({
   opacity,
   onOpacity,
 }: Readonly<MapLegendProps>) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(startsOpen);
   const [dragged, setDragged] = useState<number | null>(null);
   const id = useId();
   const ids = items.map((item) => item.id);
