@@ -387,7 +387,7 @@ test('Exportar informe lays the report out in one column, every chart inside its
   await main.getByRole('button', { name: 'Exportar informe' }).first().click();
   await expect(page.locator('html.paper-layout')).toHaveCount(1);
 
-  // The settings stack above the content, which takes the paper's width (194mm).
+  // The settings stack above the content, which takes the paper's width (200mm).
   const settings = page.getByRole('complementary', { name: 'Configuración' });
   await expect.poll(async () => (await main.boundingBox())!.width).toBeGreaterThan(700);
   expect((await settings.boundingBox())!.y).toBeLessThan((await main.boundingBox())!.y);
