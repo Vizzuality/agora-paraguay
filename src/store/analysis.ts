@@ -82,7 +82,9 @@ export const activeParcelIdAtom = atom((get) => {
  * filters and indicators, so no re-run follows.
  */
 export const selectAnalysedParcelAtom = atom(null, (get, set, parcelId: string) => {
-  if (get(analysedParcelIdsBaseAtom).includes(parcelId)) set(activeParcelTabAtom, parcelId);
+  if (!get(analysedParcelIdsBaseAtom).includes(parcelId)) return;
+  // A click on the open parcel deselects it, back to Todas.
+  set(activeParcelTabAtom, get(activeParcelIdAtom) === parcelId ? null : parcelId);
 });
 
 /**
