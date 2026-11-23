@@ -46,12 +46,7 @@ export function numberOf(parcel: AnalysisParcel, id: string): number | undefined
 
 /** Whether the answer carries the column for this parcel at all, whatever it holds (NA and unreadable included). */
 export function hasColumn(parcel: AnalysisParcel, id: string): boolean {
-  const wanted = id.toLowerCase();
-
-  return (
-    Object.keys(parcel.properties).some((column) => column.toLowerCase() === wanted) ||
-    isUnreadable(parcel, id)
-  );
+  return columnKey(parcel, id) !== undefined || isUnreadable(parcel, id);
 }
 
 /** Whether the backend answered the column with a value no reading can come from (an array). */
@@ -62,8 +57,27 @@ export function isUnreadable(parcel: AnalysisParcel, id: string): boolean {
 }
 
 function columnIgnoringCase(parcel: AnalysisParcel, id: string): ParcelValue | undefined {
-  const wanted = id.toLowerCase();
-  const key = Object.keys(parcel.properties).find((column) => column.toLowerCase() === wanted);
+  const key = columnKey(parcel, id);
 
   return key === undefined ? undefined : parcel.properties[key];
+}
+
+// Each parcel's columns by lower-cased name, built on the first lookup: the widgets read
+// every indicator of every parcel on each render, and scanning the keys each time added up.
+const columnIndexes = new WeakMap<AnalysisParcel['properties'], Map<string, string>>();
+
+/** The parcel's own spelling of a column, matched ignoring case; the first one when two collide. */
+function columnKey(parcel: AnalysisParcel, id: string): string | undefined {
+  let index = columnIndexes.get(parcel.properties);
+
+  if (index === undefined) {
+    index = new Map();
+    for (const column of Object.keys(parcel.properties)) {
+      const lower = column.toLowerCase();
+      if (!index.has(lower)) index.set(lower, column);
+    }
+    columnIndexes.set(parcel.properties, index);
+  }
+
+  return index.get(id.toLowerCase());
 }
