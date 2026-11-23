@@ -2,6 +2,7 @@ import { isAreaIndicator } from '@/lib/analysis/area';
 import { isGeneralInfo } from '@/lib/analysis/indicator-cards';
 import { projectionCrop } from '@/lib/analysis/projection';
 import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
+import { INDICATOR_CATEGORY_TITLES, PROJECTION_TEXT } from '@/lib/platform-metadata';
 
 /*
  * Personalizar indicadores: which indicators the analysis page shows. Pure, node-tested.
@@ -60,12 +61,18 @@ export function visibleIndicatorIds(indicators: Indicators, selected: string[] |
 }
 
 /** The checklist row standing for a crop's six projection scenarios: 3 scenarios × 2 horizons. */
-export const PROJECTION_PICKER_NAME = 'Producción proyectada a 5 y 10 años';
+export const PROJECTION_PICKER_NAME = PROJECTION_TEXT.pickerName;
 
 const cropLabel = (crop: string) => crop.charAt(0).toUpperCase() + crop.slice(1);
 
 /** One checklist row: an indicator, or a crop's projection standing for its six scenarios. */
-export type PickerEntry = { id: string; name: string; ids: string[] };
+export type PickerEntry = {
+  id: string;
+  name: string;
+  ids: string[];
+  /** Whether it reads the past or projects ahead; `null` when the API does not say. */
+  category: NonNullable<Indicator['category']> | null;
+};
 
 /**
  * The checklist's rows, in metadata order: one per indicator, except each crop's projection
@@ -79,7 +86,11 @@ export function pickerEntries(indicators: Indicators): PickerEntry[] {
   return indicators.flatMap((indicator): PickerEntry[] => {
     const group = projectionGroup(indicator.id);
 
-    if (group === null) return [{ id: indicator.id, name: indicator.name, ids: [indicator.id] }];
+    const category = indicator.category ?? null;
+
+    if (group === null) {
+      return [{ id: indicator.id, name: indicator.name, ids: [indicator.id], category }];
+    }
     if (placed.has(group)) return [];
     placed.add(group);
 
@@ -96,9 +107,36 @@ export function pickerEntries(indicators: Indicators): PickerEntry[] {
             ? `${PROJECTION_PICKER_NAME} (${cropLabel(crop)})`
             : PROJECTION_PICKER_NAME,
         ids,
+        category,
       },
     ];
   });
+}
+
+/** A run of checklist rows under its category's title; the uncategorised run goes untitled. */
+export type PickerSection = { key: string; title: string | null; entries: PickerEntry[] };
+
+/**
+ * The rows grouped as the widgets page groups its cards: uncategorised first, then the
+ * historic, then the projected, each in metadata order. Empty runs are dropped, so a list
+ * with no categories (sanitario) is one untitled run.
+ */
+export function pickerSections(entries: PickerEntry[]): PickerSection[] {
+  const runs: PickerSection[] = [
+    { key: 'none', title: null, entries: entries.filter(({ category }) => category === null) },
+    {
+      key: 'historic',
+      title: INDICATOR_CATEGORY_TITLES.historic,
+      entries: entries.filter(({ category }) => category === 'historic'),
+    },
+    {
+      key: 'future',
+      title: INDICATOR_CATEGORY_TITLES.future,
+      entries: entries.filter(({ category }) => category === 'future'),
+    },
+  ];
+
+  return runs.filter((run) => run.entries.length > 0);
 }
 
 /** The indicators to render, in metadata order, restricted to the visible ids. */

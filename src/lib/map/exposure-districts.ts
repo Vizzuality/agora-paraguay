@@ -9,6 +9,7 @@ import {
 import type { AnalysisParcel, ParcelValue } from '@/lib/api/analysis/schemas';
 import type { IndicatorType } from '@/lib/api/metadata/schemas';
 import type { Bounds } from '@/lib/map/area-bounds';
+import { EXPOSURE_LAYER_ID, layerMetadata } from '@/lib/map/layer-metadata';
 
 /** A district on the exposure layer, read from its feature's properties. */
 export type ExposureDistrict = {
@@ -36,28 +37,23 @@ export const DISTRICT_KEY_EXPRESSION: ExpressionSpecification = [
   ['coalesce', ['get', 'CLAVE'], ['get', 'clave'], ''],
 ];
 
-/** How the tooltip words a class: the legend's labels, the layer's other classes as given. */
-export function exposureLabel(exposure: string): string {
-  const labels: Record<string, string> = {
-    Bajo: 'Baja exposición',
-    Medio: 'Media exposición',
-    Alto: 'Alta exposición',
-  };
+/** An exposure class's legend item (`global-layers.json`), matched without regard to case. */
+function exposureItem(exposure: string) {
+  const value = exposure.toLowerCase();
 
-  return labels[exposure] ?? exposure;
+  return layerMetadata(EXPOSURE_LAYER_ID).legendItems.find(
+    (item) => item.value.toLowerCase() === value,
+  );
 }
 
-/** How the legend words a class, with its range; one it does not know passes through. */
-export function exposureLegendLabel(exposure: string): string {
-  const labels: Record<string, string> = {
-    'sin soja': 'Sin soja (sin superficie identificada)',
-    'sin exposición identificada': 'Sin exposición (0%)',
-    bajo: 'Baja (>0-10%)',
-    medio: 'Media (>10-50%)',
-    alto: 'Alta (>50%)',
-  };
+/** How the tooltip words a class; one the metadata does not list passes through. */
+export function exposureLabel(exposure: string): string {
+  return exposureItem(exposure)?.tooltip ?? exposure;
+}
 
-  return labels[exposure.toLowerCase()] ?? exposure;
+/** How the legend words a class, with its range; one the metadata does not list passes through. */
+export function exposureLegendLabel(exposure: string): string {
+  return exposureItem(exposure)?.label ?? exposure;
 }
 
 /** Until the metadata answers: the three classes the legend has always shown. */

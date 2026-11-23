@@ -19,7 +19,7 @@ import {
   type ExposureDistrict,
 } from '@/lib/map/exposure-districts';
 import { globalLayerFillId, globalLayerSourceId } from '@/lib/map/global-layer-styles';
-import { layerMetadata } from '@/lib/map/layer-metadata';
+import { EXPOSURE_LAYER_ID, layerMetadata } from '@/lib/map/layer-metadata';
 import { ordered, scaledOpacity, stackBeforeIds, toggled } from '@/lib/map/legend-order';
 import { DISTRICT_PICK, DISTRICTS_FILL, REFERENCE_LAYERS } from '@/lib/map/reference-layer-styles';
 import { districtBounds, useFlyToDistrict } from '@/lib/map/use-fly-to-district';
@@ -33,7 +33,7 @@ export type ExposureMapView = 'exposicion' | 'capas';
  * The districts layer: Nivel de exposición fills and traces each district in its class
  * colour; Capas keeps faint edges and traces the pick over them.
  */
-const EXPOSURE_LAYER = layerMetadata(4);
+const EXPOSURE_LAYER = layerMetadata(EXPOSURE_LAYER_ID);
 
 /** On Nivel de exposición, the share of their opacity the districts around a pick keep. */
 const UNPICKED_OPACITY = 0.3;
@@ -141,11 +141,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           items={classes.map(({ label, tone }) => ({
             id: label,
             label: exposureLegendLabel(label),
-            className: 'border-2',
-            style: {
-              backgroundColor: exposureSwatch(tone).fill,
-              borderColor: exposureSwatch(tone).edge,
-            },
+            swatch: exposureSwatch(tone),
           }))}
           note={EXPOSURE_LAYER.legendNote ?? undefined}
         />
@@ -156,8 +152,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
           items={layersTopFirst.map(({ id, label, swatch, legendConfig }) => ({
             id: String(id),
             label,
-            className: 'border-2',
-            style: { backgroundColor: swatch.fill, borderColor: swatch.edge },
+            swatch,
             legendConfig,
           }))}
           hidden={hiddenLayers}

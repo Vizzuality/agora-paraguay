@@ -1,4 +1,6 @@
 import type { IndicatorType, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
+import { EXPOSURE_LAYER_ID, layerMetadata } from '@/lib/map/layer-metadata';
+import { RISK_CLASS_METADATA } from '@/lib/platform-metadata';
 
 /*
  * What each indicator type renders as, and how a classed one is read. The analysis
@@ -124,11 +126,7 @@ function numberWidget(
  * classes over its scale. The metadata only gives min and max; the words and bands are
  * the product's.
  */
-export const RANGE_CLASSES: readonly RiskClass[] = [
-  { label: 'Sin riesgo', tone: 'low' },
-  { label: 'Moderado', tone: 'medium' },
-  { label: 'Severo', tone: 'high' },
-];
+export const RANGE_CLASSES: readonly RiskClass[] = RISK_CLASS_METADATA;
 
 /**
  * The backend's "not applicable" class, listed as a category on some indicators (ITR,
@@ -191,16 +189,16 @@ export function categoryClasses(categories: readonly string[]): RiskClass[] {
 export const EXPOSURE_CLASS_INDICATOR = 'ex_class';
 
 /**
- * Exposure's own scale, by class name (lower case): "Sin soja" grey and "Sin exposición
- * identificada" blue stand apart from the exposure levels, which run green, orange, red.
+ * Exposure's own scale, by class name (lower case), from the exposure layer's legend items
+ * (`global-layers.json`): "Sin soja" grey and "Sin exposición identificada" blue stand apart
+ * from the exposure levels, which run green, orange, red.
  */
-const EXPOSURE_TONES: Readonly<Record<string, RiskTone>> = {
-  'sin soja': 'medium',
-  'sin exposición identificada': 'low',
-  bajo: 'none',
-  medio: 'elevated',
-  alto: 'high',
-};
+const EXPOSURE_TONES: Readonly<Record<string, RiskTone>> = Object.fromEntries(
+  layerMetadata(EXPOSURE_LAYER_ID).legendItems.map(({ value, tone }) => [
+    value.toLowerCase(),
+    tone,
+  ]),
+);
 
 /**
  * An indicator's classes: `categoryClasses`, except the exposure classification, whose

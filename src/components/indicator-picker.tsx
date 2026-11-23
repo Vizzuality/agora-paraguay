@@ -7,6 +7,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   matchesIndicator,
   pickerEntries,
+  pickerSections,
+  type PickerEntry,
   selectableIndicators,
   visibleIndicatorIds,
 } from '@/lib/analysis/indicator-picker';
@@ -141,26 +143,38 @@ function IndicatorChecklist({
           aria-label="Indicadores"
           className="scroll-fade-y max-h-80 overflow-y-auto px-1 py-1.5"
         >
-          {matching.map((entry) => {
-            const checked = entry.ids.every((id) => visibleIds.includes(id));
-
-            return (
-              <li key={entry.id}>
-                {/* A real checkbox, visually hidden: the check glyph is the only state cue
-                  in the design, and the label row is the click target. */}
-                <label className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground has-focus-visible:bg-accent">
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={checked}
-                    onChange={() => toggle({ riesgo, indicators, ids: entry.ids })}
-                  />
-                  <Check aria-hidden className={cn('size-4 shrink-0', !checked && 'invisible')} />
-                  <span className="min-w-0 flex-1 wrap-break-word">{entry.name}</span>
-                </label>
+          {pickerSections(matching).map((section) =>
+            section.title === null ? (
+              section.entries.map((entry) => (
+                <IndicatorRow
+                  key={entry.id}
+                  entry={entry}
+                  checked={entry.ids.every((id) => visibleIds.includes(id))}
+                  onToggle={() => toggle({ riesgo, indicators, ids: entry.ids })}
+                />
+              ))
+            ) : (
+              // A titled run: its own list, named by the title it shows.
+              <li key={section.key}>
+                <p
+                  aria-hidden
+                  className="px-2 pt-3 pb-1 text-xs tracking-[0.28px] text-muted-foreground uppercase"
+                >
+                  {section.title}
+                </p>
+                <ul aria-label={section.title}>
+                  {section.entries.map((entry) => (
+                    <IndicatorRow
+                      key={entry.id}
+                      entry={entry}
+                      checked={entry.ids.every((id) => visibleIds.includes(id))}
+                      onToggle={() => toggle({ riesgo, indicators, ids: entry.ids })}
+                    />
+                  ))}
+                </ul>
               </li>
-            );
-          })}
+            ),
+          )}
 
           {matching.length === 0 && (
             <li className="px-2 py-1.5 text-sm text-muted-foreground">Sin resultados</li>
@@ -168,5 +182,24 @@ function IndicatorChecklist({
         </ul>
       </div>
     </>
+  );
+}
+
+/** One checklist row: a hidden checkbox behind the check glyph and the indicator's name. */
+function IndicatorRow({
+  entry,
+  checked,
+  onToggle,
+}: Readonly<{ entry: PickerEntry; checked: boolean; onToggle: () => void }>) {
+  return (
+    <li>
+      {/* A real checkbox, visually hidden: the check glyph is the only state cue
+        in the design, and the label row is the click target. */}
+      <label className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground has-focus-visible:bg-accent">
+        <input type="checkbox" className="sr-only" checked={checked} onChange={onToggle} />
+        <Check aria-hidden className={cn('size-4 shrink-0', !checked && 'invisible')} />
+        <span className="min-w-0 flex-1 wrap-break-word">{entry.name}</span>
+      </label>
+    </li>
   );
 }

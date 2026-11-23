@@ -42,7 +42,86 @@
       "intro": null
     }
   ],
+  "indicator_categories": [
+    {
+      "id": "context",
+      "name": "Información de contexto"
+    },
+    {
+      "id": "historic",
+      "name": "Análisis histórico de productividad"
+    },
+    {
+      "id": "future",
+      "name": "Análisis de productividad proyectada"
+    }
+  ],
+  "risk_classes": [
+    {
+      "label": "Sin riesgo",
+      "color": "blue"
+    },
+    {
+      "label": "Moderado",
+      "color": "grey"
+    },
+    {
+      "label": "Severo",
+      "color": "red"
+    }
+  ],
+  "indicator_plural_names": {
+    "dpto_code": "Códigos de departamento",
+    "dist_code": "Códigos de distrito",
+    "weather_station": "Estaciones meteorológicas más cercanas"
+  },
+  "crops": {
+    "options": [
+      {
+        "id": "soja",
+        "name": "Soja"
+      },
+      {
+        "id": "rice",
+        "name": "Arroz"
+      }
+    ],
+    "all_label": "Todos"
+  },
+  "projection": {
+    "title": "Producción proyectada a escenario pesimista, neutro y optimista",
+    "picker_name": "Producción proyectada a 5 y 10 años",
+    "baseline_label": "Base histórica",
+    "horizons": [
+      {
+        "id": "H5",
+        "name": "Horizonte 5 años"
+      },
+      {
+        "id": "H10",
+        "name": "Horizonte 10 años"
+      }
+    ]
+  },
   "parcels": {
+    "legend_items": [
+      {
+        "id": "selection",
+        "label": "Selección activa"
+      },
+      {
+        "id": "soja",
+        "label": "Soja*"
+      },
+      {
+        "id": "arroz",
+        "label": "Arroz*"
+      }
+    ],
     "legend_note": "*Cultivos de 2025"
+  },
+  "report": {
+    "attribution_lead": "Resultados generados mediante la plataforma AGORA para",
+    "hectares_label": "Hectáreas"
   }
 }

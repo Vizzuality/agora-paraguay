@@ -3,32 +3,83 @@
     "id": 1,
     "name": "Expuesto a sequía",
     "description": "Mapa de amenaza de sequía.",
-    "legend_config": { "opacity": true, "visibility": true, "order": true },
+    "legend_config": {
+      "opacity": true,
+      "visibility": true,
+      "order": true
+    },
     "legend_note": null,
-    "clips_to_district": true
+    "clips_to_district": true,
+    "legend_items": null
   },
   {
     "id": 2,
     "name": "Expuesto a inundación",
     "description": "Mapa de amenaza de inundación.",
-    "legend_config": { "opacity": true, "visibility": true, "order": true },
+    "legend_config": {
+      "opacity": true,
+      "visibility": true,
+      "order": true
+    },
     "legend_note": null,
-    "clips_to_district": false
+    "clips_to_district": false,
+    "legend_items": null
   },
   {
     "id": 3,
     "name": "Soja",
     "description": "Mapa de cultivos de soja.",
-    "legend_config": { "opacity": true, "visibility": true, "order": true },
+    "legend_config": {
+      "opacity": true,
+      "visibility": true,
+      "order": true
+    },
     "legend_note": null,
-    "clips_to_district": true
+    "clips_to_district": true,
+    "legend_items": null
   },
   {
     "id": 4,
     "name": "Nivel de exposición",
     "description": "Mapa de exposición de la soja a las amenazas.",
-    "legend_config": { "opacity": false, "visibility": false, "order": false },
+    "legend_config": {
+      "opacity": false,
+      "visibility": false,
+      "order": false
+    },
     "legend_note": "Porcentaje de soja expuesta a una o ambas amenazas; las áreas coincidentes se cuentan una sola vez.",
-    "clips_to_district": false
+    "clips_to_district": false,
+    "legend_items": [
+      {
+        "value": "Sin soja",
+        "label": "Sin soja (sin superficie identificada)",
+        "tooltip": "Sin soja",
+        "color": "grey"
+      },
+      {
+        "value": "Sin exposición identificada",
+        "label": "Sin exposición (0%)",
+        "tooltip": "Sin exposición identificada",
+        "color": "blue"
+      },
+      {
+        "value": "Bajo",
+        "label": "Baja (>0-10%)",
+        "tooltip": "Baja exposición",
+        "color": "green"
+      },
+      {
+        "value": "Medio",
+        "label": "Media (>10-50%)",
+        "tooltip": "Media exposición",
+        "color": "orange"
+      },
+      {
+        "value": "Alto",
+        "label": "Alta (>50%)",
+        "tooltip": "Alta exposición",
+        "color": "red"
+      }
+    ]
   }
 ]

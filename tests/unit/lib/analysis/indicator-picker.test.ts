@@ -4,6 +4,8 @@ import {
   matchesIndicator,
   selectableIndicators,
   pickerEntries,
+  pickerSections,
+  type PickerEntry,
   toggleIndicatorId,
   toggleIndicatorIds,
   visibleIndicatorIds,
@@ -148,24 +150,30 @@ describe('matchesIndicator', () => {
 });
 
 describe('projection scenarios', () => {
-  const scenario = (id: string, isDefault = true): Indicator => ({
+  const scenario = (
+    id: string,
+    isDefault = true,
+    category: Indicator['category'] = 'future',
+  ): Indicator => ({
     id,
     name: id,
     unit: 't/ha',
     default: isDefault,
+    category,
     indicator_type: { type: 'numeric' },
   });
   const soy = ['LOW_H5_soja', 'MID_H5_soja', 'HIGH_H5_soja'].map((id) => scenario(id));
   const rice = ['LOW_H5_arroz', 'MID_H5_arroz', 'HIGH_H5_arroz'].map((id) => scenario(id));
-  const production = scenario('Pro_soja');
+  const production = scenario('Pro_soja', true, 'historic');
 
   it('lists one row per crop for its projection, where its first scenario sits', () => {
     expect(pickerEntries([production, ...soy])).toEqual([
-      { id: 'Pro_soja', name: 'Pro_soja', ids: ['Pro_soja'] },
+      { id: 'Pro_soja', name: 'Pro_soja', ids: ['Pro_soja'], category: 'historic' },
       {
         id: 'projection_soja',
         name: 'Producción proyectada a 5 y 10 años',
         ids: ['LOW_H5_soja', 'MID_H5_soja', 'HIGH_H5_soja'],
+        category: 'future',
       },
     ]);
   });
@@ -197,5 +205,39 @@ describe('projection scenarios', () => {
 
     expect(toggleIndicatorIds(list, null, ids)).toEqual(['Pro_soja']);
     expect(toggleIndicatorIds(list, ['Pro_soja'], ids)).toEqual(['Pro_soja', ...ids]);
+  });
+});
+
+describe('pickerSections', () => {
+  const entry = (id: string, category: PickerEntry['category']): PickerEntry => ({
+    id,
+    name: id,
+    ids: [id],
+    category,
+  });
+
+  it('runs uncategorised rows untitled, then historic, then future, each titled', () => {
+    const sections = pickerSections([
+      entry('future_a', 'future'),
+      entry('plain', null),
+      entry('past_a', 'historic'),
+      entry('past_b', 'historic'),
+    ]);
+
+    expect(sections.map(({ title, entries }) => [title, entries.map(({ id }) => id)])).toEqual([
+      [null, ['plain']],
+      ['Análisis histórico de productividad', ['past_a', 'past_b']],
+      ['Análisis de productividad proyectada', ['future_a']],
+    ]);
+  });
+
+  it('leaves a list with no categories as one untitled run, as sanitario has', () => {
+    expect(pickerSections([entry('a', null), entry('b', null)])).toEqual([
+      { key: 'none', title: null, entries: [entry('a', null), entry('b', null)] },
+    ]);
+  });
+
+  it('drops a run the search emptied', () => {
+    expect(pickerSections([entry('past', 'historic')]).map(({ key }) => key)).toEqual(['historic']);
   });
 });

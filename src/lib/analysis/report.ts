@@ -1,6 +1,7 @@
 import { formatIsoDate } from '@/lib/analysis/describe';
 import { filterValueLabel, orderHeroFilters } from '@/lib/analysis/filters';
 import type { Filters, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
+import { REPORT_TEXT } from '@/lib/platform-metadata';
 
 /*
  * The report is the analysis page printed: a print stylesheet hides the chrome and the
@@ -40,7 +41,7 @@ export type AttributionPart = { text: string; value?: boolean };
  */
 export function reportAttribution(identifier: string, date: Date): AttributionPart[] {
   const code = identifier.trim();
-  const lead = 'Resultados generados mediante la plataforma AGORA para';
+  const lead = REPORT_TEXT.attributionLead;
 
   return [
     ...(code
@@ -84,5 +85,5 @@ export function reportParameters(
 
   return hectares === null
     ? rows
-    : [...rows, { label: 'Hectáreas', value: `${HECTARES.format(hectares)} ha` }];
+    : [...rows, { label: REPORT_TEXT.hectaresLabel, value: `${HECTARES.format(hectares)} ha` }];
 }
