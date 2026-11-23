@@ -3,6 +3,7 @@ import { atom } from 'jotai';
 import { restoreFeatures } from '@/lib/map/import-features';
 import type { SavedSelection } from '@/lib/saved-selection';
 import { analysedParcelIdsAtom, selectAnalysisPolygonAtom } from '@/store/analysis';
+import { drawPolygonsAtom } from '@/store/draw';
 import { drawInstanceAtom, drawStateAtom } from '@/store/draw-core';
 import { restoreParcelTogglesAtom, toggledParcelIdsAtom } from '@/store/parcels';
 
@@ -21,13 +22,17 @@ const hydratedBaseAtom = atom(false);
  */
 export const savedSelectionHydratedAtom = atom((get) => get(hydratedBaseAtom));
 
-/** What survives a reload: the areas, the analysis pick, the parcel flips, the analysed parcels. */
-export const savedSelectionAtom = atom<SavedSelection>((get) => {
-  const { polygons, analysisId } = get(drawStateAtom);
+const analysisIdAtom = atom((get) => get(drawStateAtom).analysisId);
 
+/**
+ * What survives a reload: the areas, the analysis pick, the parcel flips, the analysed
+ * parcels. Reads the draw state through its parts, so a tool or map change, which saves
+ * nothing new, keeps the same record and writes nothing.
+ */
+export const savedSelectionAtom = atom<SavedSelection>((get) => {
   return {
-    polygons,
-    analysisId,
+    polygons: get(drawPolygonsAtom),
+    analysisId: get(analysisIdAtom),
     toggledParcelIds: get(toggledParcelIdsAtom),
     analysedParcelIds: get(analysedParcelIdsAtom),
   };

@@ -1,7 +1,8 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import { areasHectares, exceedsMaxArea, oversizedAreasMessage } from '@/lib/map/polygon-area';
+import { areasSignature } from '@/lib/map/areas-signature';
+import { areasHectares, oversizedAreasMessage } from '@/lib/map/polygon-area';
 import { drawPolygonsAtom } from '@/store/draw';
 import { rejectAreasAtom } from '@/store/selection';
 
@@ -16,8 +17,8 @@ import { rejectAreasAtom } from '@/store/selection';
 export function useRejectOversizedAreas() {
   const polygons = useAtomValue(drawPolygonsAtom);
   const reject = useSetAtom(rejectAreasAtom);
-  const oversized = exceedsMaxArea(polygons);
-  const hectares = areasHectares(polygons);
+  const { oversized } = areasSignature(polygons);
+  const hectares = oversized ? areasHectares(polygons) : 0;
 
   useEffect(() => {
     if (oversized) reject(oversizedAreasMessage(hectares));
