@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { parseAsFloat, useQueryStates } from 'nuqs';
-import { useCallback, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import Map, { ScaleControl, type ViewStateChangeEvent } from 'react-map-gl/maplibre';
 
 import { CompactAttribution } from '@/components/map/compact-attribution';
@@ -14,7 +14,7 @@ import { ZoomControl } from '@/components/map/zoom-control';
 import { BASEMAP_STYLE, dimBasemap, MAX_BOUNDS } from '@/lib/map/basemap';
 import { resolveCropPatterns } from '@/lib/map/crop-patterns';
 import { INITIAL_VIEW_STATE, normalizeViewState } from '@/lib/map/view-state';
-import { drawAtom, redrawAfterRejectionAtom } from '@/store/draw';
+import { drawBoundAtom, redrawAfterRejectionAtom } from '@/store/draw';
 // Worker setup (see worker.ts) — without it the style never loads and the map is blank.
 import '@/components/map/worker';
 
@@ -35,10 +35,30 @@ function useMapViewState() {
   return viewState;
 }
 
+type InitialViewState = { longitude: number; latitude: number; zoom: number };
+
+/**
+ * The main map. react-map-gl reads the camera only at mount, so the first one the URL
+ * holds is frozen here, and the map tree below (`MapCanvas`) is memoised: the URL
+ * changing on every pan re-renders this wrapper alone, not every layer under it.
+ */
 export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
   const viewState = useMapViewState();
+  const [initialViewState] = useState<InitialViewState>(() => ({
+    longitude: viewState.lng,
+    latitude: viewState.lat,
+    zoom: viewState.zoom,
+  }));
+
+  return <MapCanvas initialViewState={initialViewState}>{children}</MapCanvas>;
+}
+
+const MapCanvas = memo(function MapCanvas({
+  initialViewState,
+  children,
+}: Readonly<{ initialViewState: InitialViewState; children?: ReactNode }>) {
   const navigate = useNavigate();
-  const { bound } = useAtomValue(drawAtom);
+  const bound = useAtomValue(drawBoundAtom);
 
   // Leaving the page while the camera animates (a fit to new areas) makes MapLibre's
   // teardown stop the animation, which fires one last `moveend`. Writing it to the URL
@@ -87,11 +107,7 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
 
   return (
     <Map
-      initialViewState={{
-        longitude: viewState.lng,
-        latitude: viewState.lat,
-        zoom: viewState.zoom,
-      }}
+      initialViewState={initialViewState}
       mapStyle={BASEMAP_STYLE}
       maxBounds={MAX_BOUNDS}
       // The ref lands before any layer mounts: crop textures resolve on first use.
@@ -127,4 +143,4 @@ export function MapView({ children }: Readonly<{ children?: ReactNode }>) {
       {children}
     </Map>
   );
-}
+});
