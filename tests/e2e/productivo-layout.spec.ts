@@ -95,6 +95,26 @@ test('Riesgo productivo gates its analysis, then shows the actions and widgets i
   await expect(filters.getByRole('button', { name: 'Personalizar indicadores' })).toHaveCount(0);
 });
 
+test('Personalizar stays inside a phone screen, its long names wrapping', async ({ page }) => {
+  await analyseOnRedesign(page, '/analisis/productivo');
+  await loginAtGate(page);
+  await page.setViewportSize({ width: 390, height: 800 });
+
+  await page
+    .getByRole('main')
+    .getByRole('button', { name: 'Personalizar indicadores' })
+    .filter({ visible: true })
+    .first()
+    .click();
+  const indicators = page.getByRole('list', { name: 'Indicadores' });
+  await expect(indicators).toBeVisible();
+
+  const box = await page.getByRole('dialog').filter({ has: indicators }).boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+});
+
 /** Signs in through the login modal the page opens (stubbed: any credentials). */
 async function loginAtGate(page: Page) {
   const login = page.getByRole('dialog', { name: 'Iniciar sesión' });

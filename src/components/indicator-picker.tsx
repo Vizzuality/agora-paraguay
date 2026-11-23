@@ -85,7 +85,9 @@ function IndicatorPicker({ riesgo, indicators, error, className }: Readonly<Indi
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-auto min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
+        // Sized by its longest name, but never past the screen: on a phone the names wrap.
+        collisionPadding={16}
+        className="w-auto max-w-(--radix-popover-content-available-width) min-w-[200px] overflow-clip rounded-lg p-0 shadow-[0px_12px_22px_0px_rgba(0,0,0,0.1)]"
       >
         {indicators ? (
           <IndicatorChecklist riesgo={riesgo} indicators={indicators} />
