@@ -38,6 +38,9 @@ const EXPOSURE_LAYER = layerMetadata(EXPOSURE_LAYER_ID);
 /** On Nivel de exposición, the share of their opacity the districts around a pick keep. */
 const UNPICKED_OPACITY = 0.3;
 
+/** On Nivel de exposición, the picked district fills solid; before a pick all sit at half. */
+const PICKED_OPACITY = 1;
+
 const EXPOSURE_FILL_ID = globalLayerFillId(EXPOSURE_LAYER.id);
 
 /**
@@ -173,6 +176,7 @@ export function ExposureLayers({ view }: Readonly<{ view: ExposureMapView }>) {
               },
               lineWidth: EXPOSURE_LINE_WIDTH,
               othersOpacity: UNPICKED_OPACITY,
+              highlightedOpacity: PICKED_OPACITY,
             }
           : {
               color: DISTRICT_PICK.stroke,

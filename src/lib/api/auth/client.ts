@@ -177,7 +177,7 @@ export async function fetchMe(): Promise<Session | null> {
     body = await getJson(
       '/api/auth/me/',
       {},
-      token === null ? undefined : { 'X-CSRFToken': token },
+      token === null ? {} : { headers: { 'X-CSRFToken': token } },
     );
   } catch (error) {
     if (

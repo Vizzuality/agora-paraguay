@@ -141,6 +141,9 @@ function detailOf(text: string): string | null {
   return null;
 }
 
+/** `signal` is the query's: a superseded request stops downloading instead of being parsed for nothing. */
+export type RequestOptions = { headers?: HeadersInit; signal?: AbortSignal };
+
 /** Sends the request with the session cookie and returns the raw body; non-2xx is an `ApiError`. */
 async function sendText(path: string, init: RequestInit): Promise<string> {
   let response: Response;
@@ -149,8 +152,10 @@ async function sendText(path: string, init: RequestInit): Promise<string> {
     // `credentials: 'include'` keeps the session cookie flowing when `API_URL` is
     // another origin.
     response = await fetch(`${API_URL}${path}`, { credentials: 'include', ...init });
-  } catch {
-    // `fetch` rejects only when no response arrived at all (offline, DNS, CORS).
+  } catch (error) {
+    // A cancelled request is not an outage: the abort travels as it came.
+    if (init.signal?.aborted) throw error;
+    // Otherwise `fetch` rejects only when no response arrived at all (offline, DNS, CORS).
     throw new ApiError(path, null);
   }
 
@@ -175,13 +180,13 @@ async function send(path: string, init: RequestInit): Promise<unknown> {
 export function getJson(
   path: string,
   params: Record<string, string | undefined> = {},
-  headers?: HeadersInit,
+  { headers, signal }: RequestOptions = {},
 ): Promise<unknown> {
   const query = new URLSearchParams(
     Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined),
   ).toString();
 
-  return send(query ? `${path}?${query}` : path, { method: 'GET', headers });
+  return send(query ? `${path}?${query}` : path, { method: 'GET', headers, signal });
 }
 
 /** The CSRF header the backend demands of every mutating request, anonymous ones included. */
@@ -206,8 +211,12 @@ export async function deleteJson(path: string): Promise<unknown> {
 }
 
 /** POST a JSON body and read a JSON answer. */
-export async function postJson(path: string, body: unknown): Promise<unknown> {
-  return send(path, await postInit(body));
+export async function postJson(
+  path: string,
+  body: unknown,
+  { signal }: Pick<RequestOptions, 'signal'> = {},
+): Promise<unknown> {
+  return send(path, { ...(await postInit(body)), signal });
 }
 
 /** POST a JSON body and read the answer as text — for endpoints that write prose, not JSON. */

@@ -43,6 +43,8 @@ export type GlobalLayerStyleOptions = {
    * feature keeps, fill and trace, so the pick stands out in its own colours.
    */
   othersOpacity?: number;
+  /** With `fill` and a `highlightedId`: the highlighted feature's fill opacity. Default: the fill's. */
+  highlightedOpacity?: number;
   /** Paint only this district's features, plus any that belong to no district. */
   districtId?: string | null;
   /** Fill this district a step stronger and trace it thicker, on top of its neighbours. */
@@ -81,6 +83,7 @@ export function globalLayerStyles({
   fill,
   lineWidth,
   othersOpacity,
+  highlightedOpacity,
   districtId,
   highlightedId,
   outline = false,
@@ -123,7 +126,15 @@ export function globalLayerStyles({
       paint: fillPaint(
         share === undefined
           ? fill
-          : { ...fill, opacity: ['case', isHighlighted, fill.opacity, ['*', fill.opacity, share]] },
+          : {
+              ...fill,
+              opacity: [
+                'case',
+                isHighlighted,
+                highlightedOpacity ?? fill.opacity,
+                ['*', fill.opacity, share],
+              ],
+            },
       ),
     };
 

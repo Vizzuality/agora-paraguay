@@ -44,6 +44,20 @@ describe('cropOfIndicator', () => {
     expect(crop('Resiliencia')).toBeNull();
     expect(crop('Pro_soybean')).toBeNull();
   });
+
+  it("reads the API's `crop_type` first, whatever the id says", () => {
+    const disease = (crop_type: string | null) =>
+      cropOfIndicator({
+        id: 'roya_asiatica',
+        name: '',
+        crop_type,
+        indicator_type: { type: 'text' },
+      });
+
+    expect(disease('soja')).toBe('soja');
+    expect(disease('arroz')).toBe('rice');
+    expect(disease(null)).toBeNull();
+  });
 });
 
 describe('applicableIndicators', () => {
@@ -77,6 +91,16 @@ describe('applicableIndicators', () => {
         (i) => i.id,
       ),
     ).toEqual(['Pro_soja', 'Vol_arroz', 'IEP']);
+  });
+
+  it('under Todos keeps only the crops the parcels in view grew', () => {
+    const ids = (cropsInView: ('soja' | 'rice')[]) =>
+      applicableIndicators(indicators, [], [], 'productivo', 'todos', cropsInView)?.map(
+        (i) => i.id,
+      );
+
+    expect(ids(['soja'])).toEqual(['Pro_soja', 'IEP']);
+    expect(ids(['rice', 'soja'])).toEqual(['Pro_soja', 'Pro_arroz', 'Vol_arroz', 'IEP']);
   });
 
   it('waits for the crop: without one, only the NA rule applies', () => {

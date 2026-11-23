@@ -110,5 +110,7 @@ export function openNumberScale(values: number[], unit: string | null | undefine
 
 /** A figure as printed: platform locale, two decimals at most. */
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(value);
+  return NUMBER.format(value);
 }
+
+const NUMBER = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 });
