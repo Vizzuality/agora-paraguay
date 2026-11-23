@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { authMutations, authQueries } from '@/lib/api/auth/queries';
@@ -18,25 +18,31 @@ export function useSession(): Session | null {
 }
 
 /**
+ * Ends the client session: no one is signed in, and every answer only a signed-in user
+ * could fetch (private analyses, the admin's user list) leaves the cache with them.
+ */
+export function clearSession(queryClient: QueryClient): void {
+  queryClient.setQueryData(authQueries.me().queryKey, null);
+  queryClient.removeQueries({ queryKey: ['analysis', 'private'] });
+  queryClient.removeQueries({ queryKey: ['auth', 'admin'] });
+}
+
+/**
  * How login and logout write the session: login asks `/me` again (the login answer
  * names the user, `/me` says whether they are staff) and resolves once it landed, so the
- * caller closes its dialog on a settled state; logout clears it and drops the private
- * analysis answers, which must not outlive the identity that fetched them.
+ * caller closes its dialog on a settled state; logout clears it (`clearSession`).
  */
 export function useSessionActions() {
   const queryClient = useQueryClient();
 
-  return useMemo(() => {
-    const { queryKey } = authQueries.me();
-
-    return {
-      refresh: () => queryClient.invalidateQueries({ queryKey, refetchType: 'all' }),
-      clear: () => {
-        queryClient.setQueryData(queryKey, null);
-        queryClient.removeQueries({ queryKey: ['analysis', 'private'] });
-      },
-    };
-  }, [queryClient]);
+  return useMemo(
+    () => ({
+      refresh: () =>
+        queryClient.invalidateQueries({ queryKey: authQueries.me().queryKey, refetchType: 'all' }),
+      clear: () => clearSession(queryClient),
+    }),
+    [queryClient],
+  );
 }
 
 /**
