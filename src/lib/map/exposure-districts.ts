@@ -68,8 +68,8 @@ const FALLBACK_CLASSES: readonly RiskClass[] = [
 ];
 
 /**
- * The hex each ruler tone paints a district with, fill and outline alike: the light-theme
- * chart values. MapLibre cannot read the CSS tokens the widgets paint with.
+ * The hex each ruler tone paints a district and its legend swatch with: the light-theme
+ * chart values, in both themes. MapLibre cannot read the CSS tokens the widgets paint with.
  */
 const TONE_HEX: Record<RiskTone, string> = {
   none: '#109704',
@@ -98,6 +98,15 @@ export function exposureColor(classes: readonly RiskClass[]): ExpressionSpecific
     ...classes.flatMap(({ label, tone }) => [label, TONE_HEX[tone]]),
     TONE_HEX.medium,
   ] as unknown as ExpressionSpecification;
+}
+
+/** A class's legend swatch: its fill colour at the map's fill opacity, edged solid. */
+export function exposureSwatch(tone: RiskTone): { fill: string; edge: string } {
+  const alpha = Math.round(EXPOSURE_FILL_OPACITY * 255)
+    .toString(16)
+    .padStart(2, '0');
+
+  return { fill: `${TONE_HEX[tone]}${alpha.toUpperCase()}`, edge: TONE_HEX[tone] };
 }
 
 /**

@@ -23,6 +23,14 @@ describe('REFERENCE_LAYERS', () => {
     },
   );
 
+  it('leaves flood whole on a district pick, and clips drought and soy to it', () => {
+    expect(REFERENCE_LAYERS.map(({ label, clipsToDistrict }) => [label, clipsToDistrict])).toEqual([
+      ['Expuesto a sequía', true],
+      ['Expuesto a inundación', false],
+      ['Soja', true],
+    ]);
+  });
+
   it('fills soy with one colour', () => {
     expect(typeof REFERENCE_LAYERS[2].fill.color).toBe('string');
   });

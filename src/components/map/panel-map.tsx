@@ -12,7 +12,10 @@ import '@/components/map/worker';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-export function PanelMap({ children }: Readonly<{ children?: ReactNode }>) {
+export function PanelMap({
+  children,
+  mask = true,
+}: Readonly<{ children?: ReactNode; mask?: boolean }>) {
   return (
     <Map
       initialViewState={PARAGUAY_VIEW_STATE}
@@ -32,7 +35,7 @@ export function PanelMap({ children }: Readonly<{ children?: ReactNode }>) {
       <ScaleControl position="top-left" />
       <ZoomControl variant="panel" />
       {/* First of the layers: the panel's own paint over it. */}
-      <CountryMask />
+      <CountryMask hidden={!mask} />
       {children}
     </Map>
   );

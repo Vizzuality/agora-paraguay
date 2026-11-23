@@ -26,7 +26,7 @@ function Landing() {
                 <AnalysisEntryCard key={entry.label} {...entry} />
               ))}
             </nav>
-            <AnalysisIdentifierSetting />
+            <AnalysisIdentifierSetting surface="background" />
           </div>
         </ClientOnly>
       }

@@ -69,6 +69,24 @@ test('closed, ID y tipo de análisis carries the identifier before the type', as
   await expect(heading).toContainText('123456ABC - Exposición climática');
 });
 
+test('the identifier caption masks the border in the section colour, light and dark', async ({
+  page,
+}) => {
+  const section = page.getByRole('region', { name: 'ID y tipo de análisis' });
+  await section.getByRole('button', { name: /ID y tipo de análisis/ }).click();
+  const caption = section.getByText('Identificador de análisis', { exact: true }).locator('..');
+  const background = (locator: typeof section) =>
+    locator.evaluate((element) => getComputedStyle(element).backgroundColor);
+
+  const sectionColour = () => background(section);
+
+  // The section fades its colour in on a theme change, so poll until both settle.
+  await expect.poll(async () => background(caption)).toBe(await sectionColour());
+  await page.getByRole('button', { name: 'Cambiar tema' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect.poll(async () => (await background(caption)) === (await sectionColour())).toBe(true);
+});
+
 test('the heading closes an open section again', async ({ page }) => {
   const heading = page
     .getByRole('region', { name: 'ID y tipo de análisis' })
