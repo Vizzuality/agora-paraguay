@@ -4,6 +4,26 @@ import { stubAnalysisApi } from './fixtures/api';
 import { stubAuth } from './fixtures/auth';
 import { stubBasemap } from './fixtures/map';
 
+test('Exposición climática on a phone: the map shows, the legend starts folded', async ({
+  page,
+}) => {
+  await stubBasemap(page);
+  await stubAnalysisApi(page);
+  await stubAuth(page);
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto('/analisis/exposicion-climatica');
+
+  // A zero-height canvas is not visible: this fails when the map collapses.
+  const map = page.getByRole('main').getByRole('region', { name: 'Área de interés' });
+  await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
+
+  // Open, the legend would cover most of the map: it starts folded, and opens on demand.
+  const toggle = map.getByRole('button', { name: 'Mostrar leyenda' });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(map.getByRole('list', { name: 'Leyenda de exposición' })).toBeVisible();
+});
+
 test('Exposición climática fills the content column with its map and prompts for a district in the settings', async ({
   page,
 }) => {
