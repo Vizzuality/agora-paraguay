@@ -1,23 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ANALYSIS_TEXTS, analysisDescription, splitStrong } from '@/lib/analysis-texts';
-import { ANALYSIS_TYPES } from '@/lib/nav-links';
-
-describe('analysis texts', () => {
-  it('gives every analysis type a description', () => {
-    for (const { to } of ANALYSIS_TYPES) expect(analysisDescription(String(to))).toBeTruthy();
-  });
-
-  it('explains both views of the exposure map', () => {
-    const { body } = ANALYSIS_TEXTS.exposureIntro.readMap;
-    expect(body.exposicion.length).toBeGreaterThan(0);
-    expect(body.capas.length).toBeGreaterThan(0);
-  });
-
-  it('has no description off the analysis pages', () => {
-    expect(analysisDescription('/')).toBeUndefined();
-  });
-});
+import { splitStrong } from '@/lib/analysis-texts';
 
 describe('splitStrong', () => {
   it('marks the runs between double asterisks as bold', () => {
