@@ -196,7 +196,8 @@ describe('fetchIndicators', () => {
         default: true,
         indicator_type: { type: 'text' },
       },
-      { id: 'area', name: 'Area', unit: 'ha', default: true, indicator_type: { type: 'numeric' } },
+      // The backend spells it without the accent; the client corrects it.
+      { id: 'area', name: 'Área', unit: 'ha', default: true, indicator_type: { type: 'numeric' } },
       { ...cropFilter, indicator_type: { type: 'text' } },
     ]);
   });
@@ -245,5 +246,45 @@ describe('fetchIndicators', () => {
     );
 
     await expect(fetchIndicators({ riesgo: 'sanitario' })).rejects.toThrow(ZodError);
+  });
+});
+
+describe('the backend copy, corrected on the way in', () => {
+  it("fixes an indicator's name and description, and closes the description", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([
+        {
+          id: 'data_quality',
+          name: 'Calidad del datos',
+          description: 'Contador con rango desde 0 hasta 8 veces',
+          indicator_type: { type: 'text' },
+        },
+      ]),
+    );
+
+    await expect(fetchIndicators({ riesgo: 'sanitario' })).resolves.toMatchObject([
+      { name: 'Calidad de los datos', description: 'Contador con rango desde 0 hasta 8 veces.' },
+    ]);
+  });
+
+  it("fixes a filter's name, description and option labels", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json([
+        {
+          id: 'crop_type',
+          name: 'Area',
+          description: 'Desde la Zafra 2017-2018 hasta la Zafra 2024-2025',
+          field_type: { type: 'category', options: [{ value: 'x', label: 'Tizon de la hoja' }] },
+        },
+      ]),
+    );
+
+    await expect(fetchFilters()).resolves.toMatchObject([
+      {
+        name: 'Área',
+        description: 'Desde la Zafra 2017-2018 hasta la zafra 2024-2025.',
+        field_type: { options: [{ value: 'x', label: 'Tizón de la hoja' }] },
+      },
+    ]);
   });
 });
