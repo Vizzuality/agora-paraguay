@@ -1,0 +1,26 @@
+{
+  "exact": {
+    "Area": "Área",
+    "Calidad del datos": "Calidad de los datos",
+    "Tizon de la hoja": "Tizón de la hoja",
+    "Listado de Zafras de soja": "Listado de zafras de soja",
+    "Listado de Zafras de arroz": "Listado de zafras de arroz",
+    "Estación meteorológica usada para analizar los datos observados en las últimas 72 horas previas a {'id': 'date'} proporcionada en disease_filters": "Estación meteorológica usada para analizar los datos observados durante las 72 horas previas a la fecha indicada en los filtros."
+  },
+  "fragments": {
+    "P75_arrox": "P75_arroz",
+    "Tanto en LP como LP": "Tanto en LP como en CP",
+    "Los pesos del serán 0.6 LP / 0.4 CP": "Los pesos serán 0,6 LP / 0,4 CP",
+    "°C)y ": "°C) y ",
+    "Desviación estándar en producción de soja derivado": "Desviación estándar en producción de soja derivada",
+    "Desviación estándar en producción de arroz derivado": "Desviación estándar en producción de arroz derivada",
+    "Tercer cuartil. Valor por debajo del cual se encuentra el 50%": "Tercer cuartil. Valor por debajo del cual se encuentra el 75%",
+    "Qué años de Zafra soja": "Qué años de zafra de soja",
+    "Qué años de Zafra arroz": "Qué años de zafra de arroz",
+    "desde la Zafra ": "desde la zafra ",
+    "hasta la Zafra ": "hasta la zafra ",
+    "con pesos, seguramente se adopte 0.33.": "con pesos de 0,33.",
+    "min(Mad/Pro, 1) T:": "min(Mad/Pro, 1). T:",
+    "/ (hi - lo) Z:": "/ (hi - lo). Z:"
+  }
+}

@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 
 import { MapLegend, type MapLegendItem } from '@/components/map/map-legend';
 import { parcelQueries } from '@/lib/api/parcels/queries';
+import { PARCEL_LEGEND_NOTE } from '@/lib/platform-metadata';
 import { drawPolygonsAtom } from '@/store/draw';
 
 /** The map's crop textures at swatch size: white stripes and dots over black. */
@@ -27,9 +28,6 @@ const ITEMS: MapLegendItem[] = [
   },
 ];
 
-/** The crop textures read each parcel's last crop: the 2025 season's. */
-const CROPS_NOTE = '*Cultivos de 2025';
-
 /** What the parcels' colours and textures mean. Shown once parcels are on the map. */
 export function ParcelLegend({ className }: Readonly<{ className?: string }>) {
   const polygons = useAtomValue(drawPolygonsAtom);
@@ -38,6 +36,11 @@ export function ParcelLegend({ className }: Readonly<{ className?: string }>) {
   if ((data?.results.length ?? 0) === 0) return null;
 
   return (
-    <MapLegend label="Leyenda de parcelas" items={ITEMS} note={CROPS_NOTE} className={className} />
+    <MapLegend
+      label="Leyenda de parcelas"
+      items={ITEMS}
+      note={PARCEL_LEGEND_NOTE ?? undefined}
+      className={className}
+    />
   );
 }

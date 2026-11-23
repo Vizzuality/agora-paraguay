@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useCurrentAnalysisType } from '@/components/settings/analysis-type-setting';
 import { SettingCardIcon } from '@/components/settings/setting-card';
 import { Button } from '@/components/ui/button';
-import { analysisDescription } from '@/lib/analysis-texts';
 
 /**
  * The open analysis type's name and what it is for, under Tipo de análisis. Closing it lasts
@@ -12,10 +11,9 @@ import { analysisDescription } from '@/lib/analysis-texts';
  */
 export function AnalysisInfoCard() {
   const current = useCurrentAnalysisType();
-  const text = current && analysisDescription(String(current.to));
-  if (!current || !text) return null;
+  if (!current) return null;
 
-  return <InfoCard key={current.label} {...current} text={text} />;
+  return <InfoCard key={current.label} {...current} text={current.description} />;
 }
 
 function InfoCard({

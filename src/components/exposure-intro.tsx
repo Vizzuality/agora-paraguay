@@ -3,10 +3,10 @@ import { type LucideIcon, Map as MapIcon, MapPin } from 'lucide-react';
 
 import { RichParagraph } from '@/components/rich-paragraph';
 import { SettingCardIcon } from '@/components/settings/setting-card';
-import { ANALYSIS_TEXTS } from '@/lib/analysis-texts';
+import { EXPOSURE_INTRO } from '@/lib/platform-metadata';
 import { exposureMapViewAtom } from '@/store/exposure';
 
-const { pickDistrict, readMap } = ANALYSIS_TEXTS.exposureIntro;
+const { pickDistrict, readMap } = EXPOSURE_INTRO;
 
 /**
  * What Exposición climática asks for and how to read its map, holding the settings column

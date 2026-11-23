@@ -1,16 +1,3 @@
-import texts from '@/content/analysis-texts.json';
-
-/** The analysis pages' explanatory copy, edited in `src/content/analysis-texts.json`. */
-export const ANALYSIS_TEXTS = texts;
-
-/**
- * What the analysis type at `path` is for, as its landing card and its info card both say
- * it, or `undefined` off the analysis pages.
- */
-export function analysisDescription(path: string): string | undefined {
-  return (ANALYSIS_TEXTS.descriptions as Record<string, string>)[path];
-}
-
 /** A run of copy; `offset` is where it starts in the source paragraph, unique per run. */
 export type TextSegment = { text: string; strong: boolean; offset: number };
 

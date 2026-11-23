@@ -1,11 +1,14 @@
 import { getJson } from '@/lib/api/http';
+import { correctApiDescription, correctApiText } from '@/lib/api/text-corrections';
 
 import {
   DEFAULT_CROP,
   filtersSchema,
   indicatorsListResponseSchema,
+  type Filter,
   type Filters,
   type FiltersParams,
+  type Indicator,
   type Indicators,
   type IndicatorsParams,
 } from './schemas';
@@ -29,10 +32,52 @@ export async function fetchFilters({
   riesgo = DEFAULT_FILTERS_RIESGO,
   crop_type = DEFAULT_CROP,
 }: FiltersParams = {}): Promise<Filters> {
-  return filtersSchema.parse(await getJson('/api/parcels/filters/', { riesgo, crop_type }));
+  const filters = filtersSchema.parse(
+    await getJson('/api/parcels/filters/', { riesgo, crop_type }),
+  );
+
+  return filters.map(correctFilterText);
 }
 
 /** `GET /api/parcels/indicators?riesgo={sanitario|productivo|exposicion_climatica}` — the indicators of a riesgo and their metadata. */
 export async function fetchIndicators(params: IndicatorsParams): Promise<Indicators> {
-  return indicatorsListResponseSchema.parse(await getJson('/api/parcels/indicators', params));
+  const indicators = indicatorsListResponseSchema.parse(
+    await getJson('/api/parcels/indicators', params),
+  );
+
+  return indicators.map(correctIndicatorText);
+}
+
+/** A filter's name, description and option labels as the platform shows them. */
+function correctFilterText(filter: Filter): Filter {
+  const field = filter.field_type;
+
+  return {
+    ...filter,
+    name: correctApiText(filter.name),
+    ...(filter.description !== undefined && {
+      description: correctApiDescription(filter.description),
+    }),
+    field_type:
+      field.type === 'category'
+        ? {
+            ...field,
+            options: field.options.map((option) => ({
+              ...option,
+              label: correctApiText(option.label),
+            })),
+          }
+        : field,
+  };
+}
+
+/** An indicator's name and description as the platform shows them. */
+function correctIndicatorText(indicator: Indicator): Indicator {
+  return {
+    ...indicator,
+    name: correctApiText(indicator.name),
+    ...(indicator.description !== undefined && {
+      description: correctApiDescription(indicator.description),
+    }),
+  };
 }
