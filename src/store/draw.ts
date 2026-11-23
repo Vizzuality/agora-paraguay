@@ -22,6 +22,9 @@ import { resetSelectionSessionAtom } from '@/store/upload';
 /** The whole control state, for the cluster that renders every button at once. */
 export const drawAtom = atom((get) => get(drawStateAtom));
 
+/** Whether Terra Draw is bound: its own atom, so readers skip tool and geometry changes. */
+export const drawBoundAtom = atom((get) => get(drawStateAtom).bound);
+
 /** The drawn polygons, for anything that consumes the geometry. */
 export const drawPolygonsAtom = atom((get) => get(drawStateAtom).polygons);
 
