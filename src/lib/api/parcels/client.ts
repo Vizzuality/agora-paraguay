@@ -20,8 +20,11 @@ export const FILTER_PARCELS_PATH = '/api/parcels/filter-parcels/';
  * with the ones over the overlap threshold flagged. The request is parsed at the
  * boundary, so a body the backend would reject fails here.
  */
-export async function filterParcels(request: FilterParcelsRequest): Promise<FilterParcelsResponse> {
+export async function filterParcels(
+  request: FilterParcelsRequest,
+  signal?: AbortSignal,
+): Promise<FilterParcelsResponse> {
   const parsed = filterParcelsRequestSchema.parse(request);
 
-  return filterParcelsResponseSchema.parse(await postJson(FILTER_PARCELS_PATH, parsed));
+  return filterParcelsResponseSchema.parse(await postJson(FILTER_PARCELS_PATH, parsed, { signal }));
 }

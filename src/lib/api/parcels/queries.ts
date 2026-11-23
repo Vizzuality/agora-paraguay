@@ -31,7 +31,7 @@ export const parcelQueries = {
         polygons.map((polygon) => ({ id: polygon.id, geometry: polygon.geometry })),
         options,
       ] as const,
-      queryFn: () => filterParcels(toFilterParcelsRequest(polygons, options)),
+      queryFn: ({ signal }) => filterParcels(toFilterParcelsRequest(polygons, options), signal),
       enabled: polygons.length > 0 && !exceedsMaxArea(polygons),
       staleTime: Infinity,
       // A geometry change (a vertex drag, a restore after /analisis) re-keys the query;

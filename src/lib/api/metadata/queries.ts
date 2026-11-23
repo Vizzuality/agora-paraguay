@@ -16,7 +16,7 @@ export const metadataQueries = {
         'filters',
         { ...params, crop_type: params.crop_type ?? DEFAULT_CROP },
       ] as const,
-      queryFn: () => fetchFilters(params),
+      queryFn: ({ signal }) => fetchFilters(params, signal),
       staleTime: 5 * 60 * 1000,
       placeholderData: keepPreviousData,
     }),
@@ -25,6 +25,6 @@ export const metadataQueries = {
   indicators: (params: IndicatorsParams) =>
     queryOptions({
       queryKey: ['metadata', 'indicators', params] as const,
-      queryFn: () => fetchIndicators(params),
+      queryFn: ({ signal }) => fetchIndicators(params, signal),
     }),
 };
