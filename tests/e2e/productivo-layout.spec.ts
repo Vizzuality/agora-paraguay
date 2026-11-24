@@ -146,8 +146,12 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   await expect(
     page.getByRole('region', { name: 'Análisis de productividad proyectada' }),
   ).toContainText('Producción proyectada a escenario pesimista, neutro y optimista');
+  // The seasons counter is context too: under Todas, a widget in Información de contexto.
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
+  await expect(page.getByRole('region', { name: 'Información de contexto' })).toContainText(
+    'Contador de zafras de soja detectadas',
+  );
   // Información de contexto sums the area.
   // The facts list itself: under Todas the section titles it, on a parcel the card does.
   // On screen only: the report's Parámetros del análisis holds a print-only list too.
@@ -202,16 +206,15 @@ test('the productivo widgets read the selection under Todas and one parcel when 
     'true',
   );
   await page.keyboard.press('Escape');
-  // One parcel's resilience reads in the context panel instead; the seasons count stays a
-  // card, that parcel's figure.
+  // One parcel's resilience and seasons count read in the context panel instead.
   await expect(resilience).toHaveCount(0);
-  await expect(seasons.locator('[data-slot="figure"]')).toHaveText('3');
+  await expect(seasons).toHaveCount(0);
   await expect(
     info.getByRole('term').filter({ hasText: 'Proxy de resiliencia operativa' }),
   ).toBeVisible();
   await expect(
     info.getByRole('term').filter({ hasText: 'Contador de zafras de soja detectadas' }),
-  ).toHaveCount(0);
+  ).toBeVisible();
   await expect(info).toContainText('7,3 ha');
   await expect(info).toContainText('2022-2023, 2023-2024, 2024-2025');
   // On one parcel the projection reads its own scenarios; its base is one value.

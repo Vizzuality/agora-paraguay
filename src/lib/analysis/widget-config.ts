@@ -86,8 +86,11 @@ export function widgetFor(
 /** The selection's area: a fact everywhere, summed under Todas (`combinedParcel`). */
 const AREA_ID = 'area';
 
-/** Productivo's context widgets: a fact on one parcel, under Información de contexto on Todas. */
-const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set(['resiliencia']);
+/**
+ * Productivo's context widgets: a fact on one parcel, under Información de contexto on
+ * Todas. The seasons counters describe the parcel like the resilience does.
+ */
+const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set(['resiliencia', 'n_soja', 'n_arroz']);
 
 /** Whether an indicator belongs to productivo's Información de contexto, whatever the scope. */
 export function isContextIndicator(id: string | undefined, riesgo: IndicatorsRiesgo): boolean {

@@ -37,15 +37,15 @@ describe('widgetFor', () => {
     ).toBe('histogram');
   });
 
-  it('productivo, one parcel: Resiliencia is a fact, the seasons counters stay cards; under Todas, widgets', () => {
+  it('productivo, one parcel: Resiliencia and the seasons counters are facts; under Todas, widgets', () => {
     expect(
       widgetFor(category, { riesgo: 'productivo', scope: 'individual', id: 'Resiliencia' }),
     ).toBe('fact');
     expect(
       widgetFor(category, { riesgo: 'productivo', scope: 'multiple', id: 'Resiliencia' }),
     ).not.toBe('fact');
-    for (const id of ['N_soja', 'N_rice']) {
-      expect(widgetFor(index, { riesgo: 'productivo', scope: 'individual', id })).toBe('number');
+    for (const id of ['N_soja', 'N_arroz']) {
+      expect(widgetFor(index, { riesgo: 'productivo', scope: 'individual', id })).toBe('fact');
       expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple', id })).toBe('histogram');
     }
     expect(
