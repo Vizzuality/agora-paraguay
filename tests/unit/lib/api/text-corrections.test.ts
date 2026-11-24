@@ -32,13 +32,13 @@ describe('correctApiText', () => {
     for (const text of corrected) expect(correctApiText(text)).toBe(text.trim());
   });
 
-  it('fills the weather station description with words, not the raw placeholder', () => {
+  it('rewords the weather station description but keeps its date reference', () => {
     expect(
       correctApiText(
         "Estación meteorológica usada para analizar los datos observados en las últimas 72 horas previas a {'id': 'date'} proporcionada en disease_filters ",
       ),
     ).toBe(
-      'Estación meteorológica usada para analizar los datos observados durante las 72 horas previas a la fecha indicada en los filtros.',
+      "Estación meteorológica usada para analizar los datos observados durante las 72 horas previas al {'id': 'date'}, fecha indicada en los filtros.",
     );
   });
 });

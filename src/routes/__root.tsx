@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router';
 
+import { SITE_TITLE } from '@/lib/page-title';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import { QueryProvider } from '@/providers/react-query';
 
@@ -16,7 +17,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Plataforma' },
+      { title: SITE_TITLE },
     ],
     links: [
       { rel: 'icon', href: '/favicon.ico' },

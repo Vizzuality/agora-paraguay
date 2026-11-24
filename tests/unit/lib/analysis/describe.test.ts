@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { describeWithFilters } from '@/lib/analysis/describe';
 import type { Filters } from '@/lib/api/metadata/schemas';
+import { correctApiDescription } from '@/lib/api/text-corrections';
 
 const filters: Filters = [
   {
@@ -49,6 +50,22 @@ describe('describeWithFilters', () => {
         { date: '2026-09-17' },
       ),
     ).toBe('Previas a 17/09/2026 proporcionada en los filtros; los filtros idem.');
+  });
+
+  it('shows the picked date in the corrected weather station description', () => {
+    const station = correctApiDescription(
+      "Estación meteorológica usada para analizar los datos observados en las últimas 72 horas previas a {'id': 'date'} proporcionada en disease_filters",
+    );
+
+    expect(describeWithFilters(station, filters, { date: '2026-11-17' })).toBe(
+      'Estación meteorológica usada para analizar los datos observados durante las 72 horas previas al 17/11/2026, fecha indicada en los filtros.',
+    );
+  });
+
+  it('accepts typographic quotes', () => {
+    expect(describeWithFilters('Hasta {‘id’: ‘date’}.', filters, { date: '2026-01-02' })).toBe(
+      'Hasta 02/01/2026.',
+    );
   });
 
   it('accepts double quotes and spacing, and leaves plain text alone', () => {

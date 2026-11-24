@@ -3,12 +3,14 @@ import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { AnalysisActions } from '@/components/analysis-actions';
 import { SanitarioWidgets } from '@/components/sanitario-widgets';
 import { RiskPageContent } from '@/components/settings/risk-page-content';
+import { pageHead } from '@/lib/page-title';
 
 /**
  * Riesgo sanitario in the redesign, public: the selection map, then Personalizar indicadores
  * beside Exportar informe, and the widgets.
  */
 export const Route = createFileRoute('/analisis/sanitario')({
+  head: () => pageHead('Riesgo sanitario'),
   component: SanitarioPage,
 });
 
