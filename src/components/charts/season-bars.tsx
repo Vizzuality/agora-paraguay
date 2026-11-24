@@ -29,6 +29,14 @@ const BAR_GAP = 1;
 
 type SeasonBarsProps = Pick<SeasonBarsWidget, 'from' | 'to' | 'bars'>;
 
+/** The edge years hug their edge so no label spills out of the card; the rest centre on their tick. */
+function yearAnchor(year: number, from: number, to: number): 'start' | 'middle' | 'end' {
+  if (year === from) return 'start';
+  if (year === to) return 'end';
+
+  return 'middle';
+}
+
 export function SeasonBars(props: Readonly<SeasonBarsProps>) {
   return <Responsive>{(width) => <SeasonBarsSvg width={width} {...props} />}</Responsive>;
 }
@@ -83,7 +91,7 @@ function SeasonBarsSvg({ width, from, to, bars }: Readonly<SeasonBarsProps & { w
             key={year}
             x={xScale(year)}
             y={HISTOGRAM_HEIGHT + 1 + TICK_ROW}
-            textAnchor={year === from ? 'start' : year === to ? 'end' : 'middle'}
+            textAnchor={yearAnchor(year, from, to)}
             dominantBaseline="text-after-edge"
             className="fill-muted-foreground text-[12px] tabular-nums"
           >
