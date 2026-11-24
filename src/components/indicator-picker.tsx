@@ -92,7 +92,7 @@ function IndicatorPicker({ riesgo, indicators, error, className }: Readonly<Indi
         {indicators ? (
           <IndicatorChecklist riesgo={riesgo} indicators={indicators} />
         ) : error ? (
-          <p role="alert" className="px-3 py-2.5 text-sm text-destructive">
+          <p role="alert" className="px-3 py-2.5 text-sm text-destructive-text">
             No se pudieron cargar los indicadores: {errorReason(error)}
           </p>
         ) : (

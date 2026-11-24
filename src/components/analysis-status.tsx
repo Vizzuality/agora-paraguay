@@ -13,12 +13,12 @@ export function AnalysisStatus({ analysis, indicatorsError }: Readonly<AnalysisS
   return (
     <>
       {indicatorsError && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive-text">
           No se pudieron cargar los indicadores: {errorReason(indicatorsError)}
         </p>
       )}
       {analysis.isError && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive-text">
           El análisis falló: {errorReason(analysis.error)}
         </p>
       )}

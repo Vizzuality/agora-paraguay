@@ -60,9 +60,7 @@ export function WidgetHeader({
         />
       </div>
       {subtitle && (
-        <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground opacity-70">
-          {subtitle}
-        </p>
+        <p className="col-span-2 text-[12px] leading-[17.4px] text-muted-foreground">{subtitle}</p>
       )}
     </div>
   );
@@ -122,7 +120,7 @@ export function TrackTicks({
   slot,
 }: Readonly<{ labels: string[]; slot?: { index: number; name: string } }>) {
   return (
-    <ul className="flex w-full justify-between text-[12px] leading-[17.4px] whitespace-nowrap text-muted-foreground opacity-70">
+    <ul className="flex w-full justify-between text-[12px] leading-[17.4px] whitespace-nowrap text-muted-foreground">
       {labels.map((label, index) => (
         // A thinned label is blank but keeps its slot, so the printed ones stay on their ticks.
         <li key={`${index}-${label}`} data-slot={slot?.index === index ? slot.name : undefined}>

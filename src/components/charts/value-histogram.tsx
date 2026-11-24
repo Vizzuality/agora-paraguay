@@ -38,7 +38,7 @@ export function ValueHistogram({ min, max, ticks, bins, classes }: Readonly<Valu
       {classes && (
         <ul
           aria-hidden
-          className="flex text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70"
+          className="flex text-center text-[12px] leading-[17.4px] text-muted-foreground"
         >
           {classes.map((riskClass) => (
             <li key={riskClass.label} className="min-w-0 flex-1">

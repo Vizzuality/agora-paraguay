@@ -50,7 +50,7 @@ function UsersTable() {
 
   if (users.isError) {
     return (
-      <p role="alert" className="text-sm text-destructive">
+      <p role="alert" className="text-sm text-destructive-text">
         {users.error instanceof ApiError && users.error.status === 403
           ? 'La sesión ya no tiene permisos de administración. Vuelva a iniciar sesión.'
           : `No se pudo cargar la lista de usuarios: ${errorReason(users.error)}`}
