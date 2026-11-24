@@ -186,7 +186,7 @@ describe('indicatorCards', () => {
     ]);
   });
 
-  it('productivo: Resiliencia joins the facts on a parcel tab only; the seasons list always, the counter never', () => {
+  it('productivo: Resiliencia, the seasons counter and the seasons list join the facts on a parcel tab only', () => {
     const resilience: Indicator = {
       id: 'Resiliencia',
       name: 'Resiliencia',
@@ -209,16 +209,17 @@ describe('indicatorCards', () => {
       generalInfo(p, list, 'productivo', 'individual').map(({ id, value }) => [id, value]),
     ).toEqual([
       ['Resiliencia', 'Media'],
+      ['N_soja', '3'],
       ['Zafras_soja', '2019-2020, 2021-2022'],
     ]);
-    expect(generalInfo(p, list, 'productivo', 'multiple').map(({ id }) => id)).toEqual([
-      'Zafras_soja',
-    ]);
+    // Under Todas the list is charted per season (`seasonBarsWidgets`), not listed.
+    expect(generalInfo(p, list, 'productivo', 'multiple')).toEqual([]);
     // Only the list indicator is flagged, so its elements render unbroken.
     expect(
       generalInfo(p, list, 'productivo', 'individual').map(({ id, list: isList }) => [id, isList]),
     ).toEqual([
       ['Resiliencia', undefined],
+      ['N_soja', undefined],
       ['Zafras_soja', true],
     ]);
   });
