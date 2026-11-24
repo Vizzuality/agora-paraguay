@@ -1,4 +1,3 @@
-import { ALL_CROPS } from '@/lib/analysis/parcel-crops';
 import { hasColumn, readingOf } from '@/lib/analysis/readings';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import {
@@ -48,10 +47,9 @@ export function cropOfIndicator(indicator: Indicator): Crop | null {
  * the other crop are out: rice lists none with `_soja`/`_soy`, soy none with
  * `_arroz`/`_rice`. On productivo, so is one the answer carries for some submitted parcel
  * but no parcel has a reading for (every value "NA", blank or null); one the answer does
- * not carry at all stays: nothing is known about it yet. Under Todos, the crops the
- * parcels in view grew (`cropsInView`: the open tab's parcel, or every analysed one)
- * apply. Without a crop yet (filters loading), or none known for the parcels, the crop
- * rule waits: every crop's indicators apply. The crop-agnostic ones always do.
+ * not carry at all stays: nothing is known about it yet. Under Todos every crop's apply,
+ * whatever the parcels grew: one run per crop answers them. Without a crop yet (filters
+ * loading) the crop rule waits. The crop-agnostic ones always do.
  */
 export function applicableIndicators(
   indicators: Indicators | undefined,
@@ -59,19 +57,17 @@ export function applicableIndicators(
   parcelIds: string[],
   riesgo: Riesgo,
   crop: string | undefined,
-  cropsInView: readonly Crop[] = [],
 ): Indicators | undefined {
   if (!indicators) return indicators;
 
-  const crops = cropsToKeep(crop, cropsInView);
-  const forCrop =
-    crops.length === 0
-      ? indicators
-      : indicators.filter((indicator) => {
-          const bound = cropOfIndicator(indicator);
+  // One crop picked: the other's are out. Todos, or no crop yet: every crop's stay.
+  const forCrop = isCrop(crop)
+    ? indicators.filter((indicator) => {
+        const bound = cropOfIndicator(indicator);
 
-          return bound === null || crops.includes(bound);
-        });
+        return bound === null || bound === crop;
+      })
+    : indicators;
 
   if (riesgo !== 'productivo') return forCrop;
 
@@ -88,11 +84,4 @@ export function applicableIndicators(
 
     return answered.some((parcel) => readingOf(parcel, indicator.id) !== undefined);
   });
-}
-
-/** The crops whose indicators stay: the picked one, those in view under Todas, or none to filter by. */
-function cropsToKeep(crop: string | undefined, cropsInView: readonly Crop[]): readonly Crop[] {
-  if (isCrop(crop)) return [crop];
-  if (crop === ALL_CROPS) return cropsInView;
-  return [];
 }
