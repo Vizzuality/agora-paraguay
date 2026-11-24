@@ -226,6 +226,43 @@ describe('indicatorCards', () => {
     ]);
   });
 
+  it('productivo: the zafriñas sit right under the seasons counters, after the last one', () => {
+    const count = (id: string): Indicator => ({
+      id,
+      name: id,
+      indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
+    });
+    const list = (id: string): Indicator => ({ id, name: id, indicator_type: { type: 'list' } });
+    const p = parcel({
+      N_soja: 3,
+      Zafras_soja: '2019-2020',
+      N_zafrinas: 1,
+      N_arroz: 2,
+      Zafras_arroz: '2020-2021',
+    });
+    // Only the listed indicators: a column the metadata does not know would trail as a fact.
+    const ids = (indicators: Indicator[]) =>
+      generalInfo(p, indicators, 'productivo', 'individual')
+        .map(({ id }) => id)
+        .filter((id) => indicators.some((indicator) => indicator.id === id));
+
+    // Metadata order puts the zafriñas between the soy and the rice entries.
+    expect(ids([count('N_soja'), list('Zafras_soja'), count('N_zafrinas')])).toEqual([
+      'N_soja',
+      'N_zafrinas',
+      'Zafras_soja',
+    ]);
+    expect(
+      ids([
+        count('N_soja'),
+        list('Zafras_soja'),
+        count('N_zafrinas'),
+        count('N_arroz'),
+        list('Zafras_arroz'),
+      ]),
+    ).toEqual(['N_soja', 'Zafras_soja', 'N_arroz', 'N_zafrinas', 'Zafras_arroz']);
+  });
+
   it('keeps metadata order, not column order', () => {
     const cards = indicatorCards(parcel({ coverage_index: 90, asian_rust: 1 }), [
       asianRust,
