@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 
 import { InfoTip } from '@/components/info-tip';
 import { WidgetCard } from '@/components/widget-card';
+import { LIST_SEPARATOR } from '@/lib/analysis/indicator-cards';
 import { cn } from '@/lib/utils';
 
 export type GeneralInfoItem = {
@@ -60,12 +61,45 @@ export function GeneralInfoList({ items }: Readonly<{ items: GeneralInfoItem[] }
           </dt>
           {/* A list under Todas reads one element a line. */}
           <dd className="text-base whitespace-pre-line">
-            {item.list ? <ListValue value={item.value} /> : item.value}
+            {item.list ? <ListValue value={item.value} /> : <SeparatedValue value={item.value} />}
           </dd>
         </div>
       ))}
     </dl>
   );
+}
+
+/**
+ * A fact's values under Todas, joined by a middle dot (`LIST_SEPARATOR`). Screen readers
+ * would read the dot as "punto medio" or run the values together, so it is hidden from
+ * them and a semicolon, read as a pause, stands in: "Pindo; Santa Teresa".
+ */
+function SeparatedValue({ value }: Readonly<{ value: string }>) {
+  const values = value.split(LIST_SEPARATOR);
+
+  if (values.length === 1) return value;
+
+  // The same reading can repeat across stations ("23 °C · 23 °C"): each keys by its text and
+  // which occurrence of it it is.
+  const seen = new Map<string, number>();
+  const keyed = values.map((part) => {
+    const occurrence = (seen.get(part) ?? 0) + 1;
+    seen.set(part, occurrence);
+
+    return { part, key: `${part}#${occurrence}` };
+  });
+
+  return keyed.map(({ part, key }, index) => (
+    <Fragment key={key}>
+      {index > 0 && (
+        <>
+          <span aria-hidden="true">{LIST_SEPARATOR}</span>
+          <span className="sr-only">; </span>
+        </>
+      )}
+      {part}
+    </Fragment>
+  ));
 }
 
 /**
