@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+import { EAST_PARCEL_ID, stubFilterParcels, WEST_PARCEL_ID } from './fixtures/api';
 import { analyseOnRedesign } from './fixtures/redesign';
 
 /** A local calendar day as the date fields write it, `offset` days from today. */
@@ -38,11 +39,13 @@ async function openFilters(page: Page) {
 
 /** Records the bodies of the sanitario analysis POSTs. */
 function recordAnalyses(page: Page) {
-  const bodies: { indicators: string[]; crop_type?: string }[] = [];
+  const bodies: { indicators: string[]; parcels: string[]; crop_type?: string }[] = [];
   page.on('request', (request) => {
     const { pathname } = new URL(request.url());
     if (pathname === '/api/parcels/analysis/diseases/' && request.method() === 'POST') {
-      bodies.push(request.postDataJSON() as { indicators: string[]; crop_type?: string });
+      bodies.push(
+        request.postDataJSON() as { indicators: string[]; parcels: string[]; crop_type?: string },
+      );
     }
   });
 
@@ -158,7 +161,27 @@ test('the analysis runs with the default filters, and each change re-runs it', a
   await cultivo.click();
   await page.getByRole('option', { name: 'Arroz' }).click();
   await expect.poll(() => bodies.length).toBe(3);
-  expect(bodies[2]).toMatchObject({ crop_type: 'rice' });
+  expect(bodies[2]).toMatchObject({ crop_type: 'arroz', year: '2025' });
+});
+
+test('Todos asks the diseases analysis once per crop and shows both answers', async ({ page }) => {
+  const bodies = recordAnalyses(page);
+  await analyseOnRedesign(page, '/analisis/sanitario', (target) =>
+    stubFilterParcels(target, { [WEST_PARCEL_ID]: 'Soja', [EAST_PARCEL_ID]: 'Arroz' }),
+  );
+  await expect.poll(() => bodies.length).toBe(1);
+
+  const filters = await openFilters(page);
+  await filters.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
+  await page.getByRole('option', { name: 'Todos' }).click();
+
+  await expect.poll(() => bodies.length).toBe(3);
+  // Each run carries only the parcel that grew its crop.
+  expect(bodies.slice(1).map((body) => [body.crop_type, body.parcels])).toEqual([
+    ['arroz', [EAST_PARCEL_ID]],
+    ['soja', [WEST_PARCEL_ID]],
+  ]);
+  await expect(card(page, 'Phakopsora pachyrhizi')).toBeVisible();
 });
 
 test('Personalizar indicadores drops an indicator from the analysis and its card', async ({

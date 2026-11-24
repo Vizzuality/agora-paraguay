@@ -1,6 +1,6 @@
 import { keepPreviousData, mutationOptions, queryOptions, skipToken } from '@tanstack/react-query';
 
-import { generateSummary, runAnalysis } from './client';
+import { generateSummary, runAnalyses } from './client';
 import type { AnalysisRequest, AnalysisVisibility, SummaryRequest } from './schemas';
 
 export const analysisQueries = {
@@ -9,13 +9,14 @@ export const analysisQueries = {
    * a POST: the answer is a function of the request, so it is keyed by it — a change in
    * the hero dropdowns or in Personalizar indicadores changes the key and re-runs it, and
    * the cards keep the previous answer on screen until the new one lands. `null` while
-   * the inputs are still loading (`skipToken`, nothing is sent).
+   * the inputs are still loading (`skipToken`, nothing is sent). Several requests (one
+   * per crop) are one answer, merged per parcel.
    */
-  result: (visibility: AnalysisVisibility, request: AnalysisRequest | null) =>
+  result: (visibility: AnalysisVisibility, requests: AnalysisRequest[] | null) =>
     queryOptions({
-      queryKey: ['analysis', visibility, request] as const,
+      queryKey: ['analysis', visibility, requests] as const,
       queryFn:
-        request === null ? skipToken : ({ signal }) => runAnalysis(visibility, request, signal),
+        requests === null ? skipToken : ({ signal }) => runAnalyses(visibility, requests, signal),
       staleTime: Infinity,
       placeholderData: keepPreviousData,
     }),

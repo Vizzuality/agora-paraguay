@@ -73,6 +73,32 @@ describe('fetchFilters', () => {
     ]);
   });
 
+  it("reads the backend's arroz option as the app's rice crop", async () => {
+    const live = [
+      {
+        id: 'crop_type',
+        name: 'Tipo de cultivo',
+        field_type: {
+          type: 'category',
+          options: [
+            { value: 'arroz', label: 'Arroz' },
+            { value: 'soja', label: 'Soja' },
+          ],
+        },
+      },
+    ];
+    fetchMock.mockResolvedValueOnce(Response.json(live));
+
+    const [crop] = await fetchFilters({ riesgo: 'sanitario' });
+
+    expect(crop.field_type).toMatchObject({
+      options: [
+        { value: 'rice', label: 'Arroz' },
+        { value: 'soja', label: 'Soja' },
+      ],
+    });
+  });
+
   it('still rejects a number filter without options', async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json([{ id: 'year', name: 'Año', field_type: { type: 'number' } }]),
@@ -81,11 +107,11 @@ describe('fetchFilters', () => {
     await expect(fetchFilters({ riesgo: 'productivo' })).rejects.toThrow(ZodError);
   });
 
-  it('passes the crop as crop_type when given, and asks for soy otherwise', async () => {
+  it('passes the crop as crop_type under its wire name when given, and asks for soy otherwise', async () => {
     fetchMock.mockResolvedValueOnce(Response.json(filters));
     await fetchFilters({ riesgo: 'productivo', crop_type: 'rice' });
     expect(String(fetchMock.mock.calls[0][0])).toBe(
-      '/api/parcels/filters/?riesgo=productivo&crop_type=rice',
+      '/api/parcels/filters/?riesgo=productivo&crop_type=arroz',
     );
 
     fetchMock.mockResolvedValueOnce(Response.json(filters));

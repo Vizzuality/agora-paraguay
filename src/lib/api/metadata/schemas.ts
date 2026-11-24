@@ -82,6 +82,19 @@ export function isCrop(value: string | undefined): value is Crop {
   return CROPS.includes(value as Crop);
 }
 
+/** Each crop as the backend's `crop_type` options name it: `soja`, `arroz`. */
+export const CROP_WIRE_VALUES: Readonly<Record<Crop, string>> = { rice: 'arroz', soja: 'soja' };
+
+/** A crop filter value as sent: a known crop under its wire name, anything else as is. */
+export function toWireCrop(value: string): string {
+  return isCrop(value) ? CROP_WIRE_VALUES[value] : value;
+}
+
+/** A value as received: a crop's wire name as the app's crop, anything else as is. */
+export function fromWireCrop(value: string): string {
+  return CROPS.find((crop) => CROP_WIRE_VALUES[crop] === value) ?? value;
+}
+
 /**
  * Which riesgo the filters are asked for: sanitario is the public side, productivo the
  * private one. Left out, the client asks for sanitario.

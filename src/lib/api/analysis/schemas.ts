@@ -209,6 +209,38 @@ export function withRequestedParcelIds(raw: unknown, parcels: string[]): unknown
   };
 }
 
+/**
+ * Answers to one selection asked in several runs (sanitario under Todos: one per crop) as a
+ * single answer: one entry per parcel, in first-seen order, its columns joined. The
+ * envelope is the first answer's.
+ */
+export function mergeAnalysisResponses(responses: AnalysisResponse[]): AnalysisResponse {
+  if (responses.length === 1) return responses[0];
+
+  const byParcel = new Map<string, AnalysisParcel>();
+
+  for (const entry of responses.flatMap((response) => response.indicators)) {
+    const id = String(entry.parcel_id);
+    const seen = byParcel.get(id);
+
+    byParcel.set(id, seen ? joinEntries(seen, entry) : entry);
+  }
+
+  return { ...responses[0], indicators: [...byParcel.values()] };
+}
+
+function joinEntries(a: AnalysisParcel, b: AnalysisParcel): AnalysisParcel {
+  const unreadable = [...new Set([...(a.unreadable ?? []), ...(b.unreadable ?? [])])];
+  const lists = { ...a.lists, ...b.lists };
+
+  return {
+    parcel_id: a.parcel_id,
+    properties: { ...a.properties, ...b.properties },
+    ...(unreadable.length > 0 && { unreadable }),
+    ...(Object.keys(lists).length > 0 && { lists }),
+  };
+}
+
 /*
  * The AI summary: `POST /api/parcels/analysis/summary/` writes a text over the selected
  * parcels with an LLM and answers it as Markdown, not JSON. Same CSRF and session rules

@@ -1,3 +1,4 @@
+import { cropOfIndicator } from '@/lib/analysis/applicable-indicators';
 import { isAreaIndicator } from '@/lib/analysis/area';
 import {
   CROP_FILTER_ID,
@@ -14,10 +15,12 @@ import type {
 } from '@/lib/api/analysis/schemas';
 import {
   type Crop,
+  CROPS,
   DEFAULT_CROP,
   isCrop,
   type Indicators,
   type Riesgo,
+  toWireCrop,
 } from '@/lib/api/metadata/schemas';
 
 /*
@@ -53,19 +56,63 @@ export function requestedIndicatorIds(
     .map((indicator) => indicator.id);
 }
 
+/** The year the diseases analysis (sanitario) is always asked for; its hero has no year. */
+export const DISEASES_YEAR = '2025';
+
 /**
  * The selection as picked in the hero (filter id → value), the parcels and the
- * indicators, flat. Todos sends no crop: the analysis answers every crop's columns.
+ * indicators, flat. The crop goes under its wire name (`toWireCrop`); Todos sends none.
+ * Sanitario adds `DISEASES_YEAR`.
  */
 export function toAnalysisRequest(
   parcelIds: string[],
   selection: AnalysisFilterSelection,
   indicators: string[],
+  riesgo?: Riesgo,
 ): AnalysisRequest {
   const { [CROP_FILTER_ID]: crop, ...rest } = selection;
-  const filters = crop === undefined || crop === ALL_CROPS ? rest : selection;
+  const filters: Record<string, string> = { ...rest };
+
+  if (crop !== undefined && crop !== ALL_CROPS) filters[CROP_FILTER_ID] = toWireCrop(crop);
+  if (riesgo === 'sanitario') filters[YEAR_FILTER_ID] = DISEASES_YEAR;
 
   return { ...filters, parcels: parcelIds, indicators };
+}
+
+/**
+ * The analysis runs for the hero's selection. The diseases analysis takes one crop, so
+ * sanitario under Todos asks once per crop: the parcels that grew it (`parcelCrops`; one
+ * whose crop is unknown goes to every run), that crop's indicators and the ones every crop
+ * shares. A crop with no parcel is not asked. The answers are merged per parcel
+ * (`mergeAnalysisResponses`). Anything else is one run.
+ */
+export function toAnalysisRequests(
+  parcelIds: string[],
+  selection: AnalysisFilterSelection,
+  indicatorIds: string[],
+  indicators: Indicators,
+  riesgo: Riesgo,
+  parcelCrops: ReadonlyMap<string, readonly Crop[]> = new Map(),
+): AnalysisRequest[] {
+  if (riesgo !== 'sanitario' || selection[CROP_FILTER_ID] !== ALL_CROPS) {
+    return [toAnalysisRequest(parcelIds, selection, indicatorIds, riesgo)];
+  }
+
+  const cropOf = new Map(indicators.map((indicator) => [indicator.id, cropOfIndicator(indicator)]));
+  const grows = (id: string, crop: Crop) => {
+    const crops = parcelCrops.get(id) ?? [];
+
+    return crops.length === 0 || crops.includes(crop);
+  };
+
+  return CROPS.map((crop) =>
+    toAnalysisRequest(
+      parcelIds.filter((id) => grows(id, crop)),
+      { ...selection, [CROP_FILTER_ID]: crop },
+      indicatorIds.filter((id) => (cropOf.get(id) ?? crop) === crop),
+      riesgo,
+    ),
+  ).filter((request) => request.parcels.length > 0 && request.indicators.length > 0);
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   isSameSummaryRequest,
   requestedIndicatorIds,
   toAnalysisRequest,
+  toAnalysisRequests,
   toSummaryRequest,
   visibilityOf,
 } from '@/lib/analysis/request';
@@ -139,6 +140,29 @@ describe('toAnalysisRequest', () => {
     });
   });
 
+  it('asks the diseases analysis for 2025 whatever the hero holds, productivo for nothing extra', () => {
+    const selection = { crop_type: 'soja', date: '2026-09-17', year: '2031' };
+
+    expect(toAnalysisRequest(['P1'], selection, ['iep'], 'sanitario')).toEqual({
+      parcels: ['P1'],
+      indicators: ['iep'],
+      crop_type: 'soja',
+      date: '2026-09-17',
+      year: '2025',
+    });
+    expect(toAnalysisRequest(['P1'], selection, ['iep'], 'productivo')).toEqual({
+      parcels: ['P1'],
+      indicators: ['iep'],
+      ...selection,
+    });
+  });
+
+  it("sends rice under the backend's name, arroz", () => {
+    expect(toAnalysisRequest(['P1'], { crop_type: 'rice' }, ['iep'])).toMatchObject({
+      crop_type: 'arroz',
+    });
+  });
+
   it('never lets a selection key shadow the parcel or indicator lists', () => {
     const shadowing: AnalysisFilterSelection = { indicators: 'x', parcels: 'y' };
 
@@ -146,6 +170,74 @@ describe('toAnalysisRequest', () => {
       parcels: ['P1'],
       indicators: ['iep'],
     });
+  });
+});
+
+describe('toAnalysisRequests', () => {
+  const rust: Indicator = { ...indicator('roya_asiatica'), crop_type: 'soja' };
+  const blast: Indicator = { ...indicator('piricularia'), crop_type: 'arroz' };
+  const station = indicator('weather_station');
+  const metadata = [rust, blast, station];
+  const ids = ['roya_asiatica', 'piricularia', 'weather_station'];
+  const todos = { crop_type: 'todos', date: '2026-09-17' };
+
+  it('asks sanitario under Todos once per crop, each with its own indicators and the shared ones', () => {
+    expect(toAnalysisRequests(['P1'], todos, ids, metadata, 'sanitario')).toEqual([
+      {
+        parcels: ['P1'],
+        indicators: ['piricularia', 'weather_station'],
+        crop_type: 'arroz',
+        date: '2026-09-17',
+        year: '2025',
+      },
+      {
+        parcels: ['P1'],
+        indicators: ['roya_asiatica', 'weather_station'],
+        crop_type: 'soja',
+        date: '2026-09-17',
+        year: '2025',
+      },
+    ]);
+  });
+
+  it("sends each crop's run only the parcels that grew it; an unknown one goes to both", () => {
+    const crops = new Map([
+      ['SOY', ['soja' as const]],
+      ['RICE', ['rice' as const]],
+      ['UNKNOWN', []],
+    ]);
+    const runs = toAnalysisRequests(
+      ['SOY', 'RICE', 'UNKNOWN'],
+      todos,
+      ids,
+      metadata,
+      'sanitario',
+      crops,
+    );
+
+    expect(runs.map((run) => [run.crop_type, run.parcels])).toEqual([
+      ['arroz', ['RICE', 'UNKNOWN']],
+      ['soja', ['SOY', 'UNKNOWN']],
+    ]);
+  });
+
+  it('skips a crop no parcel grew', () => {
+    const crops = new Map([['SOY', ['soja' as const]]]);
+
+    expect(
+      toAnalysisRequests(['SOY'], todos, ids, metadata, 'sanitario', crops).map(
+        (run) => run.crop_type,
+      ),
+    ).toEqual(['soja']);
+  });
+
+  it('asks once for a single crop, and once with no crop for productivo under Todos', () => {
+    expect(
+      toAnalysisRequests(['P1'], { ...todos, crop_type: 'soja' }, ids, metadata, 'sanitario'),
+    ).toHaveLength(1);
+    expect(toAnalysisRequests(['P1'], todos, ids, metadata, 'productivo')).toEqual([
+      { parcels: ['P1'], indicators: ids, date: '2026-09-17' },
+    ]);
   });
 });
 
