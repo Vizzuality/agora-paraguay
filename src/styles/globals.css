@@ -354,6 +354,13 @@ html.paper-layout body {
   }
 }
 
+/* The credits panel takes the theme's background, so its text and links take the theme's
+   foreground: MapLibre's near-black would vanish on the dark theme's navy. */
+.dark .maplibregl-map .maplibregl-ctrl-attrib,
+.dark .maplibregl-map .maplibregl-ctrl-attrib a {
+  color: var(--foreground);
+}
+
 /* No tint when open: the ⓘ keeps the panel's colour. */
 .maplibregl-map .maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-button,
 .maplibregl-map .maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
