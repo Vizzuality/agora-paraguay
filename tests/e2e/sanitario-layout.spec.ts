@@ -365,10 +365,10 @@ test('the report is titled, with its Identificador de análisis once one is ente
   await expect(title).toBeVisible();
   await expect(row.getByRole('term')).toHaveCount(0);
   // The report opens on it: first of the settings column, which prints before the content,
-  // and on a page of its own.
+  // on the first page, with no break before it to leave that page blank.
   const settings = page.getByRole('complementary', { name: 'Configuración' });
   await expect(settings.locator(':scope > *').first()).toHaveAttribute('data-slot', 'report-title');
-  await expect(row).toHaveCSS('break-before', 'page');
+  await expect(row).toHaveCSS('break-before', 'auto');
 
   await page.emulateMedia({ media: 'screen' });
   const types = page.getByRole('region', { name: 'ID y tipo de análisis' });
