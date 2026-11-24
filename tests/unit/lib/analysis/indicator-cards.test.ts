@@ -147,14 +147,16 @@ describe('indicatorCards', () => {
 
     expect(indicatorCards(p, [area, asianRust]).map((card) => card.id)).toEqual(['asian_rust']);
     expect(generalInfo(p, [area, asianRust])).toEqual([
-      { id: 'area', label: 'Área', value: '10,2 ha' },
+      { id: 'area', label: 'Área', value: '10,2\u00a0ha' },
     ]);
   });
 
   it('sums the area under Todas, where other numbers average', () => {
     const todas = combinedParcel([parcel({ area: 10 }), parcel({ area: 5.5 })], [area]);
 
-    expect(generalInfo(todas, [area])).toEqual([{ id: 'area', label: 'Área', value: '15,5 ha' }]);
+    expect(generalInfo(todas, [area])).toEqual([
+      { id: 'area', label: 'Área', value: '15,5\u00a0ha' },
+    ]);
   });
 
   it('counts the parcels per element of a list column under Todas, sorted', () => {
@@ -452,11 +454,11 @@ describe('generalInfo', () => {
     );
 
     expect(generalInfo(todas, [district, station, crop])).toEqual([
-      { id: 'DIST_CODE', label: 'Códigos de distrito', value: '1001, 1002' },
+      { id: 'DIST_CODE', label: 'Códigos de distrito', value: '1001 · 1002' },
       {
         id: 'weather_station',
         label: 'Estaciones meteorológicas más cercanas',
-        value: 'Santa Teresa, Pirapó',
+        value: 'Santa Teresa · Pirapó',
       },
       // One value across the set: the name stays singular.
       { id: 'crop_type', label: 'Cultivo', value: 'Soja' },
@@ -470,7 +472,60 @@ describe('generalInfo', () => {
     );
 
     expect(generalInfo(todas, [crop])).toEqual([
-      { id: 'crop_type', label: 'Cultivo (2)', value: 'Soja, Maíz' },
+      { id: 'crop_type', label: 'Cultivo (2)', value: 'Soja · Maíz' },
+    ]);
+  });
+
+  it('under Todas lists each station’s readings, in the order the stations are listed', () => {
+    const reading = (id: string, unit: string): Indicator => ({
+      id,
+      name: id,
+      unit,
+      indicator_type: { type: 'numeric' },
+    });
+    const metadata = [
+      station,
+      reading('temperature_avg', '°C'),
+      reading('rain_accumulated', 'mm'),
+      crop,
+    ];
+    const todas = combinedParcel(
+      [
+        parcel({ weather_station: 'Pindo', temperature_avg: 23, rain_accumulated: 0 }),
+        parcel({ weather_station: 'Santa Teresa', temperature_avg: 25, rain_accumulated: 1.9 }),
+        parcel({ weather_station: 'Pindo', temperature_avg: 23, rain_accumulated: 0 }),
+        parcel({ weather_station: 'Raul Pena', temperature_avg: 23, crop_type: 'Soja' }),
+      ],
+      metadata,
+    );
+
+    expect(generalInfo(todas, metadata).map(({ id, value }) => [id, value])).toEqual([
+      ['weather_station', 'Pindo · Santa Teresa · Raul Pena'],
+      // One per station, even when two stations read the same; a missing one is "Sin datos".
+      ['temperature_avg', '23\u00a0°C · 25\u00a0°C · 23\u00a0°C'],
+      ['rain_accumulated', '0\u00a0mm · 1,9\u00a0mm · Sin datos'],
+      ['crop_type', 'Soja'],
+    ]);
+  });
+
+  it('keeps a station reading a single figure when the parcels share one station', () => {
+    const temperature: Indicator = {
+      id: 'temperature_avg',
+      name: 'Temperatura',
+      unit: '°C',
+      indicator_type: { type: 'numeric' },
+    };
+    const todas = combinedParcel(
+      [
+        parcel({ weather_station: 'Pindo', temperature_avg: 23 }),
+        parcel({ weather_station: 'Pindo', temperature_avg: 23 }),
+      ],
+      [station, temperature],
+    );
+
+    expect(generalInfo(todas, [station, temperature]).map(({ value }) => value)).toEqual([
+      'Pindo',
+      '23\u00a0°C',
     ]);
   });
 
@@ -514,7 +569,7 @@ describe('generalInfo', () => {
     const answered = parcel({ data_quality: 92, asian_rust: 2 });
 
     expect(generalInfo(answered, [asianRust, dataQuality])).toEqual([
-      { id: 'data_quality', label: 'Calidad del dato', value: '92 %' },
+      { id: 'data_quality', label: 'Calidad del dato', value: '92\u00a0%' },
     ]);
     expect(indicatorCards(answered, [asianRust, dataQuality]).map((card) => card.id)).toEqual([
       'asian_rust',
@@ -523,12 +578,14 @@ describe('generalInfo', () => {
 
   it('lists an open number as a fact, formatted with its unit', () => {
     expect(generalInfo(parcel({ Pro_soja: 2.774 }), [production])).toEqual([
-      { id: 'Pro_soja', label: 'Producción base', value: '2,77 t/ha' },
+      { id: 'Pro_soja', label: 'Producción base', value: '2,77\u00a0t/ha' },
     ]);
   });
 
   it('reads a numeric indicator that is not a number as "Sin datos", digits in a string being a number', () => {
-    expect(generalInfo(parcel({ Pro_soja: '2.774' }), [production])[0].value).toBe('2,77 t/ha');
+    expect(generalInfo(parcel({ Pro_soja: '2.774' }), [production])[0].value).toBe(
+      '2,77\u00a0t/ha',
+    );
   });
 
   it('prints a temperature as a whole number: the decimals of an average say nothing', () => {
@@ -539,8 +596,12 @@ describe('generalInfo', () => {
       indicator_type: { type: 'numeric' },
     };
 
-    expect(generalInfo(parcel({ temperature_avg: 23.456 }), [temperature])[0].value).toBe('23 °C');
-    expect(generalInfo(parcel({ temperature_avg: 23.5 }), [temperature])[0].value).toBe('24 °C');
+    expect(generalInfo(parcel({ temperature_avg: 23.456 }), [temperature])[0].value).toBe(
+      '23\u00a0°C',
+    );
+    expect(generalInfo(parcel({ temperature_avg: 23.5 }), [temperature])[0].value).toBe(
+      '24\u00a0°C',
+    );
     expect(generalInfo(parcel({ Pro_soja: 'alto' }), [production])[0].value).toBe('Sin datos');
   });
 
