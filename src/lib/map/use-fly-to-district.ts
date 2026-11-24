@@ -16,7 +16,8 @@ import {
 } from '@/lib/map/exposure-districts';
 import { PARAGUAY_VIEW_STATE } from '@/lib/map/view-state';
 
-const FLIGHT = { duration: 1200, essential: true } as const;
+// Not `essential`: with reduced motion asked for, MapLibre jumps to the district instead.
+const FLIGHT = { duration: 1200 } as const;
 
 /**
  * The district's box from every tile piece of it (`querySourceFeatures`), not the

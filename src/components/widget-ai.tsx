@@ -27,10 +27,7 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
 
   if (status === 'success') {
     return (
-      <div
-        aria-live="polite"
-        className="flex flex-col gap-2 text-sm text-muted-foreground [&_:is(h1,h2,h3,h4)]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_strong]:font-semibold [&_ul]:list-disc"
-      >
+      <div className="flex flex-col gap-2 text-sm text-muted-foreground [&_:is(h1,h2,h3,h4)]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_strong]:font-semibold [&_ul]:list-disc">
         <Suspense fallback={<p>{text}</p>}>
           <Markdown>{text}</Markdown>
         </Suspense>
@@ -78,7 +75,10 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
         <div className="flex flex-col gap-2 sm:w-3/4 print:w-full" aria-busy={mutation.isPending}>
           <h3 className="text-[16px] leading-[20.3px] tracking-[0.28px]">Resumen del análisis</h3>
 
-          <SummaryBody status={status} text={mutation.data} />
+          {/* Mounted before the summary: a live region announces only what lands in it later. */}
+          <div aria-live="polite">
+            <SummaryBody status={status} text={mutation.data} />
+          </div>
 
           {status === 'error' && (
             <p role="alert" className="text-sm text-destructive-text">

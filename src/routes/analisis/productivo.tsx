@@ -7,10 +7,12 @@ import { ProductivoWidgets } from '@/components/productivo-widgets';
 import { RiskPageContent } from '@/components/settings/risk-page-content';
 import { WidgetAI } from '@/components/widget-ai';
 import { useSession } from '@/lib/auth/use-session';
+import { pageHead } from '@/lib/page-title';
 import { activeParcelIdAtom, analysedParcelIdsAtom } from '@/store/analysis';
 
 /** Riesgo productivo in the redesign: the selection map, then, with an account, the analysis. */
 export const Route = createFileRoute('/analisis/productivo')({
+  head: () => pageHead('Riesgo productivo'),
   component: ProductivoPage,
 });
 
