@@ -2,6 +2,7 @@ import { CategoryCountCard } from '@/components/category-count-card';
 import { NumberCard } from '@/components/number-card';
 import { ProjectionCard } from '@/components/projection-card';
 import { RiskClassCard } from '@/components/risk-class-card';
+import { SeasonBarsCard } from '@/components/season-bars-card';
 import { ValueHistogramCard } from '@/components/value-histogram-card';
 import type { AnalysisWidget } from '@/lib/analysis/analysis-widgets';
 
@@ -19,5 +20,7 @@ export function AnalysisWidgetCard({ widget }: Readonly<{ widget: AnalysisWidget
     case 'projection':
       // Across the row: three points over time need the width a single widget lacks.
       return <ProjectionCard {...widget} className="col-span-full" />;
+    case 'seasons':
+      return <SeasonBarsCard {...widget} />;
   }
 }

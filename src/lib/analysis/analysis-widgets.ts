@@ -6,6 +6,7 @@ import {
   projectionWidgets,
   type ProjectionWidget,
 } from '@/lib/analysis/projection';
+import { seasonBarsWidgets, type SeasonBarsWidget } from '@/lib/analysis/season-bars';
 import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
 import { isContextIndicator, type ParcelScope } from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
@@ -17,7 +18,8 @@ export type AnalysisWidget =
   | ({ kind: 'bar-chart' } & CategoryCountWidget)
   | ({ kind: 'histogram' } & ValueHistogramWidget)
   | ({ kind: 'number' } & NumberWidget)
-  | ({ kind: 'projection' } & ProjectionWidget);
+  | ({ kind: 'projection' } & ProjectionWidget)
+  | ({ kind: 'seasons' } & SeasonBarsWidget);
 
 export type AnalysisWidgetsInput = {
   /** The answer's parcels, matched by id — the backend need not echo them in request order. */
@@ -87,6 +89,13 @@ export function analysisWidgets({
     ]),
   );
 
+  const seasons = new Map(
+    seasonBarsWidgets(parcels, parcelIds, indicators, riesgo, scope).map((widget) => [
+      widget.id,
+      widget,
+    ]),
+  );
+
   // Productivo's scenarios read together as one chart per crop.
   const projections = new Map(
     (riesgo === 'productivo'
@@ -118,6 +127,9 @@ export function analysisWidgets({
     const number = numbers.get(indicator.id);
     if (number) return [{ kind: 'number', ...number }];
 
+    const season = seasons.get(indicator.id);
+    if (season) return [{ kind: 'seasons', ...season }];
+
     return [];
   });
 
@@ -134,6 +146,8 @@ function widgetCategory(indicators: Indicators | undefined, riesgo: IndicatorsRi
   return (widget: AnalysisWidget): WidgetCategory | null | undefined => {
     if (widget.kind === 'projection') return widget.category;
     if (isContextIndicator(widget.id, riesgo)) return 'context';
+    // The seasons a parcel grew describe it, they do not read the past: context too.
+    if (widget.kind === 'seasons' && riesgo === 'productivo') return 'context';
 
     return rank.get(widget.id);
   };
