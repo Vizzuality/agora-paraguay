@@ -157,9 +157,8 @@ function HeroReadOnly({
         placeholder=" "
         className={cn(FLOATING_FIELD_CLASS, 'focus-visible:border-muted-foreground')}
       />
-      <FloatingLabel htmlFor={id}>
+      <FloatingLabel htmlFor={id} aside={<InfoTip description={description} subject={label} />}>
         {label}
-        <InfoTip description={description} subject={label} />
       </FloatingLabel>
     </div>
   );
@@ -197,12 +196,14 @@ function HeroDate({
             id={id}
             type="button"
             data-value={value}
+            // The label alone would name it: read the picked date after it.
+            aria-labelledby={`${id}-label ${id}-value`}
             className={cn(
               FLOATING_FIELD_CLASS,
               'flex items-center justify-between border text-left',
             )}
           >
-            {formatIsoDate(value)}
+            <span id={`${id}-value`}>{formatIsoDate(value)}</span>
             <CalendarIcon aria-hidden className="size-4 text-muted-foreground" />
           </button>
         </PopoverTrigger>
@@ -224,9 +225,12 @@ function HeroDate({
           />
         </PopoverContent>
       </Popover>
-      <FloatingLabel htmlFor={id}>
+      <FloatingLabel
+        htmlFor={id}
+        id={`${id}-label`}
+        aside={<InfoTip description={description} subject={label} />}
+      >
         {label}
-        <InfoTip description={description} subject={label} />
       </FloatingLabel>
     </div>
   );
@@ -264,9 +268,8 @@ function HeroSelect({
         <SelectTrigger id={id} className={cn(FLOATING_FIELD_CLASS, 'data-[size=default]:h-12')}>
           <SelectValue placeholder=" " />
         </SelectTrigger>
-        <FloatingLabel htmlFor={id}>
+        <FloatingLabel htmlFor={id} aside={<InfoTip description={description} subject={label} />}>
           {label}
-          <InfoTip description={description} subject={label} />
         </FloatingLabel>
         <SelectContent>
           {options.map((option) => (

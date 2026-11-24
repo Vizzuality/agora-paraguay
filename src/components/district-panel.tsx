@@ -43,12 +43,15 @@ export function DistrictPanel() {
         {info.length > 0 && <GeneralInfoList items={info} />}
       </div>
 
-      {indicators.isPending && (
-        <p className="text-sm text-muted-foreground">Cargando indicadores…</p>
-      )}
-      {indicators.isError && (
-        <p className="text-sm text-destructive">No se pudieron cargar los indicadores.</p>
-      )}
+      {/* Always mounted, so the load and its failure are announced as they change. */}
+      <div aria-live="polite" className="empty:hidden">
+        {indicators.isPending && (
+          <p className="text-sm text-muted-foreground">Cargando indicadores…</p>
+        )}
+        {indicators.isError && (
+          <p className="text-sm text-destructive">No se pudieron cargar los indicadores.</p>
+        )}
+      </div>
       <WidgetGrid>
         {widgets.map((widget) => (
           <AnalysisWidgetCard key={widget.id} widget={widget} />

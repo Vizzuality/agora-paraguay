@@ -113,8 +113,12 @@ import { histogramBins, steppedBins } from '@/lib/analysis/value-histogram';
 import { RANGE_CLASSES } from '@/lib/analysis/widget-config';
 import { analysisQueries } from '@/lib/api/analysis/queries';
 import { metadataQueries } from '@/lib/api/metadata/queries';
+import { pageHead } from '@/lib/page-title';
 
-export const Route = createFileRoute('/ui')({ component: UiKitPage });
+export const Route = createFileRoute('/ui')({
+  head: () => pageHead('Kit de interfaz'),
+  component: UiKitPage,
+});
 
 // One per year, enough to overflow the list's cap and show the scroll fades.
 const DEMO_DATES = Array.from({ length: 27 }, (_, i) => `01/01/${2000 + i}`);

@@ -6,9 +6,11 @@ import { Footer } from '@/components/footer';
 import { HeaderNav } from '@/components/sidebar/header-nav';
 import { NavBar } from '@/components/sidebar/nav-bar';
 import { useSession } from '@/lib/auth/use-session';
+import { pageHead } from '@/lib/page-title';
 
 /** Administrar usuarios, staff only: the account list between header and footer. */
 export const Route = createFileRoute('/usuarios')({
+  head: () => pageHead('Administrar usuarios'),
   component: UsersPage,
 });
 

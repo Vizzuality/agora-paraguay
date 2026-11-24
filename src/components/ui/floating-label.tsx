@@ -22,21 +22,40 @@ export const FLOATING_FIELD_CLASS =
 export const FLOATING_CHIP_CLASS =
   'pointer-events-none absolute top-0 left-3 -translate-y-1/2 bg-card px-1 py-0.5 text-xs leading-3 font-normal text-muted-foreground uppercase';
 
+const FLOATING_LABEL_CLASS = cn(
+  FLOATING_CHIP_CLASS,
+  'transition-all duration-150 motion-reduce:transition-none',
+  // Resting: empty, closed and unfocused → sits in the field like a placeholder.
+  'field-empty:top-1/2 field-empty:left-4 field-empty:bg-transparent field-empty:px-0 field-empty:text-base field-empty:leading-6 field-empty:normal-case',
+);
+
+/**
+ * `aside` (an info button) floats with the label but outside the `<label>`: a control
+ * inside a label joins the field's accessible name and fights it for the click.
+ */
 export function FloatingLabel({
   className,
+  aside,
+  children,
   ...props
-}: Readonly<React.ComponentProps<typeof Label>>) {
+}: Readonly<React.ComponentProps<typeof Label> & { aside?: React.ReactNode }>) {
+  if (!aside) {
+    return (
+      <Label data-slot="floating-label" className={cn(FLOATING_LABEL_CLASS, className)} {...props}>
+        {children}
+      </Label>
+    );
+  }
+
   return (
-    <Label
+    <div
       data-slot="floating-label"
-      className={cn(
-        FLOATING_CHIP_CLASS,
-        'transition-all duration-150 motion-reduce:transition-none',
-        // Resting: empty, closed and unfocused → sits in the field like a placeholder.
-        'field-empty:top-1/2 field-empty:left-4 field-empty:bg-transparent field-empty:px-0 field-empty:text-base field-empty:leading-6 field-empty:normal-case',
-        className,
-      )}
-      {...props}
-    />
+      className={cn(FLOATING_LABEL_CLASS, 'flex items-center gap-2', className)}
+    >
+      <Label className="font-[inherit] text-[length:inherit] leading-[inherit]" {...props}>
+        {children}
+      </Label>
+      {aside}
+    </div>
   );
 }
