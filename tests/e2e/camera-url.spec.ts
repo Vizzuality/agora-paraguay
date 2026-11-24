@@ -4,16 +4,13 @@ import { INITIAL_VIEW_STATE } from '@/lib/map/view-state';
 
 import { mapCanvas, panMap, stubBasemap } from './fixtures/map';
 
-// Temporary while the cadastre covers Alto Paraná only: the map opens there
-// (`INITIAL_VIEW_STATE`), says so, and the first camera write lands on that view.
-// Delete this test with `DevFocusBanner` when the view goes back to the whole country.
-test('opens on Alto Paraná with the development banner', async ({ page }) => {
+// The map opens on Paraguay (`INITIAL_VIEW_STATE`), with no development banner, and the
+// first camera write lands on that view.
+test('opens centred on Paraguay, without a development banner', async ({ page }) => {
   await stubBasemap(page);
   await page.goto('/analisis/sanitario');
   await expect(mapCanvas(page)).toBeVisible();
-  await expect(page.getByRole('note')).toHaveText(
-    'En desarrollo: el mapa se centra en Alto Paraná, la zona con datos. Con el catastro completo, se centrará en todo Paraguay.',
-  );
+  await expect(page.getByText(/En desarrollo/)).toHaveCount(0);
 
   // A vertical pan: the longitude and zoom stay the opening view's, only the latitude moves.
   await panMap(page, { dx: 0, dy: -40 });

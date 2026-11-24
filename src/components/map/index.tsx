@@ -6,7 +6,6 @@ import Map, { ScaleControl, type ViewStateChangeEvent } from 'react-map-gl/mapli
 
 import { CompactAttribution } from '@/components/map/compact-attribution';
 import { CountryMask } from '@/components/map/country-mask';
-import { DevFocusBanner } from '@/components/map/dev-focus-banner';
 import { DrawLayer } from '@/components/map/draw-layer';
 import { FilteredParcelsLayer } from '@/components/map/filtered-parcels-layer';
 import { ParcelLegend } from '@/components/map/parcel-legend';
@@ -130,7 +129,6 @@ const MapCanvas = memo(function MapCanvas({
       <ZoomControl />
       {/* First of the layers: everything after paints over it. */}
       <CountryMask />
-      <DevFocusBanner />
       {/*
        * The parcels filter-parcels answers for the drawn areas. Mounted only once Terra
        * Draw is bound: MapLibre paints layers in add order, and on a remount (back from
