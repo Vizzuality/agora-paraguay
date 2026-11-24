@@ -2,7 +2,6 @@ import { applicableIndicators } from '@/lib/analysis/applicable-indicators';
 import { CROP_FILTER_ID } from '@/lib/analysis/filters';
 import { useAnalysis } from '@/lib/analysis/use-analysis';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
-import { useParcelCrops } from '@/lib/analysis/use-parcel-crops';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 
 /**
@@ -14,14 +13,12 @@ import type { Riesgo } from '@/lib/api/metadata/schemas';
 export function useApplicableIndicators(riesgo: Riesgo) {
   const { analysis, indicators, indicatorsError, parcelIds } = useAnalysis(riesgo);
   const { resolvedFilters } = useHeroFilters(riesgo);
-  const { cropsInView } = useParcelCrops();
   const applicable = applicableIndicators(
     indicators,
     analysis.data?.indicators ?? [],
     parcelIds,
     riesgo,
     resolvedFilters?.[CROP_FILTER_ID],
-    cropsInView,
   );
 
   return { analysis, indicators: applicable, indicatorsError, parcelIds, filters: resolvedFilters };

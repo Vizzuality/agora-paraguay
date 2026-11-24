@@ -93,14 +93,10 @@ describe('applicableIndicators', () => {
     ).toEqual(['Pro_soja', 'Vol_arroz', 'IEP']);
   });
 
-  it('under Todos keeps only the crops the parcels in view grew', () => {
-    const ids = (cropsInView: ('soja' | 'rice')[]) =>
-      applicableIndicators(indicators, [], [], 'productivo', 'todos', cropsInView)?.map(
-        (i) => i.id,
-      );
-
-    expect(ids(['soja'])).toEqual(['Pro_soja', 'IEP']);
-    expect(ids(['rice', 'soja'])).toEqual(['Pro_soja', 'Pro_arroz', 'Vol_arroz', 'IEP']);
+  it('under Todos keeps both crops, whatever the parcels grew: one run answers each', () => {
+    expect(
+      applicableIndicators(indicators, [], [], 'productivo', 'todos')?.map((i) => i.id),
+    ).toEqual(['Pro_soja', 'Pro_arroz', 'Vol_arroz', 'IEP']);
   });
 
   it('waits for the crop: without one, only the NA rule applies', () => {

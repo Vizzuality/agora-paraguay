@@ -287,12 +287,13 @@ test('Tipo de cultivo starts at the crop the parcels in view last grew', async (
   await openSection(page, 'Cultivo y fechas');
   await expect(crop).toHaveText('Soja');
 
-  // The parcels grew both crops: the dropdown offers them and Todos, which asks for no crop.
+  // The dropdown offers Todos and every crop; Todos asks once per crop.
   await crop.click();
   await expect(page.getByRole('option')).toHaveText(['Todos', 'Arroz', 'Soja']);
+  const before = crops.length;
   await page.getByRole('option', { name: 'Todos' }).click();
   await expect(crop).toHaveText('Todos');
-  await expect.poll(() => crops.at(-1)).toBeUndefined();
+  await expect.poll(() => crops.slice(before).toSorted()).toEqual(['arroz', 'soja']);
 });
 
 /** Opens a settings section unless it already is (its trigger would close it). */

@@ -5,6 +5,7 @@ import {
   isSameSummaryRequest,
   requestedIndicatorIds,
   toAnalysisRequest,
+  toAnalysisRequests,
   toSummaryRequest,
   visibilityOf,
 } from '@/lib/analysis/request';
@@ -169,6 +170,39 @@ describe('toAnalysisRequest', () => {
       parcels: ['P1'],
       indicators: ['iep'],
     });
+  });
+});
+
+describe('toAnalysisRequests', () => {
+  const soyYield: Indicator = indicator('Pro_soja');
+  const riceYield: Indicator = indicator('Pro_arroz');
+  const area = indicator('area');
+  const metadata = [soyYield, riceYield, area];
+  const ids = ['Pro_soja', 'Pro_arroz', 'area'];
+  const todos = { crop_type: 'todos', year: '2027' };
+
+  it('asks productivo under Todos once per crop, every parcel, its crop’s indicators and the shared ones', () => {
+    expect(toAnalysisRequests(['P1', 'P2'], todos, ids, metadata, 'productivo')).toEqual([
+      {
+        parcels: ['P1', 'P2'],
+        indicators: ['Pro_arroz', 'area'],
+        crop_type: 'arroz',
+        year: '2027',
+      },
+      { parcels: ['P1', 'P2'], indicators: ['Pro_soja', 'area'], crop_type: 'soja', year: '2027' },
+    ]);
+  });
+
+  it('asks once for a single crop', () => {
+    expect(
+      toAnalysisRequests(['P1'], { ...todos, crop_type: 'rice' }, ids, metadata, 'productivo'),
+    ).toEqual([{ parcels: ['P1'], indicators: ids, crop_type: 'arroz', year: '2027' }]);
+  });
+
+  it('asks sanitario once, whatever the selection: its dropdown offers no Todos', () => {
+    expect(
+      toAnalysisRequests(['P1'], { crop_type: 'soja' }, ids, metadata, 'sanitario'),
+    ).toHaveLength(1);
   });
 });
 
