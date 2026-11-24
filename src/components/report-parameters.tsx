@@ -37,7 +37,9 @@ function Parameters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
       aria-label="Parámetros del análisis"
       className="hidden break-inside-avoid gap-6 rounded-3xl border-2 border-border p-6 print:flex"
     >
-      <div className="relative min-h-60 flex-1 overflow-hidden rounded-md bg-muted">
+      {/* The map's paper width (`paper:w-82` in `AreaSetting`): the snapshot prints at the size
+          it was taken, never stretched past its pixels by a short list beside it. */}
+      <div className="relative min-h-60 w-82 flex-none overflow-hidden rounded-md bg-muted">
         {snapshot && (
           <img src={snapshot} alt="" className="absolute inset-0 size-full object-cover" />
         )}
