@@ -79,9 +79,18 @@ function SeparatedValue({ value }: Readonly<{ value: string }>) {
 
   if (values.length === 1) return value;
 
-  // Index keys: the same reading can repeat across stations ("23 °C · 23 °C").
-  return values.map((part, index) => (
-    <Fragment key={index}>
+  // The same reading can repeat across stations ("23 °C · 23 °C"): each keys by its text and
+  // which occurrence of it it is.
+  const seen = new Map<string, number>();
+  const keyed = values.map((part) => {
+    const occurrence = (seen.get(part) ?? 0) + 1;
+    seen.set(part, occurrence);
+
+    return { part, key: `${part}#${occurrence}` };
+  });
+
+  return keyed.map(({ part, key }, index) => (
+    <Fragment key={key}>
       {index > 0 && (
         <>
           <span aria-hidden="true">{LIST_SEPARATOR}</span>
