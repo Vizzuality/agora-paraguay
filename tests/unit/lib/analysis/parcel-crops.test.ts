@@ -51,6 +51,13 @@ describe('withParcelCropOptions', () => {
     ]);
   });
 
+  it('never offers Todos on sanitario: the diseases analysis reads one crop', () => {
+    expect(cropOptions(withParcelCropOptions(FILTERS, ['rice', 'soja'], 'sanitario'))).toEqual([
+      { value: 'rice', label: 'Arroz (API)' },
+      { value: 'soja', label: 'Soja (API)' },
+    ]);
+  });
+
   it('offers the one crop alone, without Todos', () => {
     expect(cropOptions(withParcelCropOptions(FILTERS, ['soja']))).toEqual([
       { value: 'soja', label: 'Soja (API)' },

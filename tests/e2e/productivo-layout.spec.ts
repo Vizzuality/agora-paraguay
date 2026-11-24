@@ -275,7 +275,7 @@ test('Tipo de cultivo starts at the crop the parcels in view last grew', async (
 
   // The east parcel last grew rice: its tab starts there, and the analysis asks for rice.
   await pickParcel('Parcela 2');
-  await expect.poll(() => crops.at(-1)).toBe('rice');
+  await expect.poll(() => crops.at(-1)).toBe('arroz');
   await openSection(page, 'Cultivo y fechas');
   await expect(crop).toHaveText('Arroz');
 

@@ -11,7 +11,7 @@ export const HERO_FILTERS = [
     field_type: {
       type: 'category',
       options: [
-        { value: 'rice', label: 'Arroz' },
+        { value: 'arroz', label: 'Arroz' },
         { value: 'soja', label: 'Soja' },
       ],
     },

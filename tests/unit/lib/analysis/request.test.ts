@@ -139,6 +139,29 @@ describe('toAnalysisRequest', () => {
     });
   });
 
+  it('asks the diseases analysis for 2025 whatever the hero holds, productivo for nothing extra', () => {
+    const selection = { crop_type: 'soja', date: '2026-09-17', year: '2031' };
+
+    expect(toAnalysisRequest(['P1'], selection, ['iep'], 'sanitario')).toEqual({
+      parcels: ['P1'],
+      indicators: ['iep'],
+      crop_type: 'soja',
+      date: '2026-09-17',
+      year: '2025',
+    });
+    expect(toAnalysisRequest(['P1'], selection, ['iep'], 'productivo')).toEqual({
+      parcels: ['P1'],
+      indicators: ['iep'],
+      ...selection,
+    });
+  });
+
+  it("sends rice under the backend's name, arroz", () => {
+    expect(toAnalysisRequest(['P1'], { crop_type: 'rice' }, ['iep'])).toMatchObject({
+      crop_type: 'arroz',
+    });
+  });
+
   it('never lets a selection key shadow the parcel or indicator lists', () => {
     const shadowing: AnalysisFilterSelection = { indicators: 'x', parcels: 'y' };
 

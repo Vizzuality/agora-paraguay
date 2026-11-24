@@ -4,6 +4,7 @@ import { correctApiDescription, correctApiText } from '@/lib/api/text-correction
 import {
   DEFAULT_CROP,
   filtersSchema,
+  fromWireCrop,
   indicatorsListResponseSchema,
   type Filter,
   type Filters,
@@ -11,6 +12,7 @@ import {
   type Indicator,
   type Indicators,
   type IndicatorsParams,
+  toWireCrop,
 } from './schemas';
 
 /*
@@ -33,7 +35,11 @@ export async function fetchFilters(
   signal?: AbortSignal,
 ): Promise<Filters> {
   const filters = filtersSchema.parse(
-    await getJson('/api/parcels/filters/', { riesgo, crop_type }, { signal }),
+    await getJson(
+      '/api/parcels/filters/',
+      { riesgo, crop_type: toWireCrop(crop_type) },
+      { signal },
+    ),
   );
 
   return filters.map(correctFilterText);
@@ -51,7 +57,10 @@ export async function fetchIndicators(
   return indicators.map(correctIndicatorText);
 }
 
-/** A filter's name, description and option labels as the platform shows them. */
+/**
+ * A filter's name, description and option labels as the platform shows them; a crop
+ * option's value as the app names the crop (`fromWireCrop`).
+ */
 function correctFilterText(filter: Filter): Filter {
   const field = filter.field_type;
 
@@ -67,6 +76,7 @@ function correctFilterText(filter: Filter): Filter {
             ...field,
             options: field.options.map((option) => ({
               ...option,
+              value: fromWireCrop(option.value),
               label: correctApiText(option.label),
             })),
           }
