@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ALL_CROPS, parcelCrops, withParcelCropOptions } from '@/lib/analysis/parcel-crops';
+import { ALL_CROPS, parcelCrops, withCropOptions } from '@/lib/analysis/parcel-crops';
 import type { Crop, Filters } from '@/lib/api/metadata/schemas';
 import type { FilteredParcel } from '@/lib/api/parcels/schemas';
 
@@ -42,30 +42,23 @@ describe('parcelCrops', () => {
   });
 });
 
-describe('withParcelCropOptions', () => {
-  it('offers Todos first, then each crop with the API label, when the parcels grew two', () => {
-    expect(cropOptions(withParcelCropOptions(FILTERS, ['rice', 'soja']))).toEqual([
+describe('withCropOptions', () => {
+  it('offers productivo Todos first, then every crop with the API label, whatever the parcels grew', () => {
+    expect(cropOptions(withCropOptions(FILTERS, 'productivo'))).toEqual([
       { value: ALL_CROPS, label: 'Todos' },
       { value: 'rice', label: 'Arroz (API)' },
       { value: 'soja', label: 'Soja (API)' },
     ]);
   });
 
-  it('never offers Todos on sanitario: the diseases analysis reads one crop', () => {
-    expect(cropOptions(withParcelCropOptions(FILTERS, ['rice', 'soja'], 'sanitario'))).toEqual([
+  it('offers sanitario every crop and never Todos: the diseases analysis reads one crop', () => {
+    expect(cropOptions(withCropOptions(FILTERS, 'sanitario'))).toEqual([
       { value: 'rice', label: 'Arroz (API)' },
       { value: 'soja', label: 'Soja (API)' },
     ]);
   });
 
-  it('offers the one crop alone, without Todos', () => {
-    expect(cropOptions(withParcelCropOptions(FILTERS, ['soja']))).toEqual([
-      { value: 'soja', label: 'Soja (API)' },
-    ]);
-  });
-
-  it('keeps the API list while no parcel crop is known, and leaves other filters alone', () => {
-    expect(withParcelCropOptions(FILTERS, [])).toBe(FILTERS);
-    expect(withParcelCropOptions(FILTERS, ['soja'])[1]).toBe(FILTERS[1]);
+  it('leaves the other filters alone', () => {
+    expect(withCropOptions(FILTERS, 'productivo')[1]).toBe(FILTERS[1]);
   });
 });

@@ -20,17 +20,11 @@ export function parcelCrops(parcels: readonly FilteredParcel[], ids: readonly st
 }
 
 /**
- * The filters with the crop dropdown offering the parcels' crops — Todos first when they
- * grew more than one, productivo only: the diseases analysis reads one crop — labelled as
- * the API labels them. Left as the API lists it while no parcel's crops are known.
+ * The filters with the crop dropdown offering every crop, whatever the parcels grew, labelled
+ * as the API labels them; productivo adds Todos first (one run per crop, merged). Sanitario
+ * never does: the diseases analysis reads one crop.
  */
-export function withParcelCropOptions(
-  filters: Filters,
-  crops: readonly Crop[],
-  riesgo: Riesgo = 'productivo',
-): Filters {
-  if (crops.length === 0) return filters;
-
+export function withCropOptions(filters: Filters, riesgo: Riesgo): Filters {
   return filters.map((filter) => {
     const field = filter.field_type;
 
@@ -38,14 +32,14 @@ export function withParcelCropOptions(
 
     const label = (crop: Crop) =>
       field.options.find((option) => option.value === crop)?.label ?? CROP_LABELS[crop];
-    const options = crops.map((crop) => ({ value: crop, label: label(crop) }));
+    const options = CROPS.map((crop) => ({ value: crop, label: label(crop) }));
 
     return {
       ...filter,
       field_type: {
         ...field,
         options:
-          crops.length > 1 && riesgo === 'productivo'
+          riesgo === 'productivo'
             ? [{ value: ALL_CROPS, label: ALL_CROPS_LABEL }, ...options]
             : options,
       },

@@ -1,3 +1,4 @@
+import { cropOfIndicator } from '@/lib/analysis/applicable-indicators';
 import { isAreaIndicator } from '@/lib/analysis/area';
 import {
   CROP_FILTER_ID,
@@ -14,6 +15,7 @@ import type {
 } from '@/lib/api/analysis/schemas';
 import {
   type Crop,
+  CROPS,
   DEFAULT_CROP,
   isCrop,
   type Indicators,
@@ -75,6 +77,35 @@ export function toAnalysisRequest(
   if (riesgo === 'sanitario') filters[YEAR_FILTER_ID] = DISEASES_YEAR;
 
   return { ...filters, parcels: parcelIds, indicators };
+}
+
+/**
+ * The analysis runs for the hero's selection. Productivo under Todos asks once per crop
+ * (the production analysis reads one crop): every parcel, that crop's indicators and the
+ * ones every crop shares; the answers merge per parcel (`mergeAnalysisResponses`). Anything
+ * else is one run.
+ */
+export function toAnalysisRequests(
+  parcelIds: string[],
+  selection: AnalysisFilterSelection,
+  indicatorIds: string[],
+  indicators: Indicators,
+  riesgo: Riesgo,
+): AnalysisRequest[] {
+  if (riesgo !== 'productivo' || selection[CROP_FILTER_ID] !== ALL_CROPS) {
+    return [toAnalysisRequest(parcelIds, selection, indicatorIds, riesgo)];
+  }
+
+  const cropOf = new Map(indicators.map((indicator) => [indicator.id, cropOfIndicator(indicator)]));
+
+  return CROPS.map((crop) =>
+    toAnalysisRequest(
+      parcelIds,
+      { ...selection, [CROP_FILTER_ID]: crop },
+      indicatorIds.filter((id) => (cropOf.get(id) ?? crop) === crop),
+      riesgo,
+    ),
+  );
 }
 
 /**

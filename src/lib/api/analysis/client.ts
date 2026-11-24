@@ -4,6 +4,7 @@ import {
   analysisPath,
   analysisRequestSchema,
   analysisResponseSchema,
+  mergeAnalysisResponses,
   SUMMARY_PATH,
   summaryRequestSchema,
   summaryResponseSchema,
@@ -28,6 +29,19 @@ export async function runAnalysis(
   const raw = await postJson(analysisPath(visibility), parsed, { signal });
 
   return analysisResponseSchema.parse(withRequestedParcelIds(raw, request.parcels));
+}
+
+/** Runs every request of one selection side by side and merges the answers per parcel. */
+export async function runAnalyses(
+  visibility: AnalysisVisibility,
+  requests: AnalysisRequest[],
+  signal?: AbortSignal,
+): Promise<AnalysisResponse> {
+  const responses = await Promise.all(
+    requests.map((request) => runAnalysis(visibility, request, signal)),
+  );
+
+  return mergeAnalysisResponses(responses);
 }
 
 /** POSTs the selected parcels and gets back the LLM-written summary of their analysis, as Markdown. */
