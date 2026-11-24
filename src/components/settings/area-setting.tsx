@@ -155,9 +155,9 @@ function ConfirmCards() {
         </SettingCardButton>
       </div>
 
-      {isError && <p className="text-sm text-destructive">{PARCELS_REQUEST_FAILED_MESSAGE}</p>}
+      {isError && <p className="text-sm text-destructive-text">{PARCELS_REQUEST_FAILED_MESSAGE}</p>}
       {noIntersection && (
-        <p className="text-sm text-destructive">{NO_PARCEL_INTERSECTION_MESSAGE}</p>
+        <p className="text-sm text-destructive-text">{NO_PARCEL_INTERSECTION_MESSAGE}</p>
       )}
     </div>
   );

@@ -93,7 +93,7 @@ export function AxisTicks({ ticks, x, y, min, max }: Readonly<AxisTicksProps>) {
       y={y}
       textAnchor={tickAnchor(tick, min, max)}
       dominantBaseline="text-after-edge"
-      className="fill-muted-foreground text-[12px] opacity-70"
+      className="fill-muted-foreground text-[12px]"
     >
       {formatTick(tick)}
     </text>

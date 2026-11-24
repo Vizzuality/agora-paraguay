@@ -41,7 +41,7 @@ export function CategoryBars({ columns }: Readonly<CategoryBarsProps>) {
       <Responsive>{(width) => <BarsSvg width={width} columns={columns} />}</Responsive>
       <ul
         aria-hidden
-        className="flex gap-2 text-center text-[12px] leading-[17.4px] text-muted-foreground opacity-70"
+        className="flex gap-2 text-center text-[12px] leading-[17.4px] text-muted-foreground"
       >
         {columns.map((column) => (
           <li key={column.label} className="min-w-0 flex-1">

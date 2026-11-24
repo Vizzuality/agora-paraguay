@@ -39,6 +39,7 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-text: var(--destructive-text);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -89,6 +90,7 @@
   --destructive: #dc1313;
   --destructive-foreground: #f8fafc;
   --destructive-hover: #dc2626; /* red-600 */
+  --destructive-text: #dc1313; /* error text: 5.1:1 on white */
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
   --ring: #64748b; /* slate-500 */
@@ -154,6 +156,7 @@
   --destructive: #dc1313;
   --destructive-foreground: #f8fafc;
   --destructive-hover: #991b1b; /* red-800 */
+  --destructive-text: #fca5a5; /* red-300: the fill red reads 2.3:1 on navy, this 6:1 */
   --border: rgb(255 255 255 / 30%);
   --input: rgb(255 255 255 / 30%);
   --ring: #94a3b8; /* slate-400 */
@@ -230,7 +233,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
 
   body {

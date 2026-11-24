@@ -73,7 +73,7 @@ export function DeleteUserDialog({
           </AlertDialogCancel>
 
           {mutation.isError && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-sm text-destructive-text">
               {failureMessage(mutation.error)}
             </p>
           )}

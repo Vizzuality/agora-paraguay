@@ -121,7 +121,7 @@ export function LoginCard({
           </Button>
 
           {mutation.isError && (
-            <p id={errorId} role="alert" className="text-sm text-destructive">
+            <p id={errorId} role="alert" className="text-sm text-destructive-text">
               {mutation.error instanceof LoginError && mutation.error.reason === 'credentials'
                 ? 'No se pudo iniciar sesión. Revisa el usuario y la contraseña.'
                 : 'No se pudo conectar con el servidor. Inténtalo de nuevo en unos minutos.'}
