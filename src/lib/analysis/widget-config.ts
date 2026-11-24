@@ -19,10 +19,10 @@ export type RiskClass = { label: string; tone: RiskTone };
 
 /**
  * What an indicator's widget renders: the class ruler, a fact, the parcels counted per
- * class as bars, their values binned over a scale as a histogram, or one parcel's number
- * on that scale.
+ * class as bars, their values binned over a scale as a histogram, one parcel's number
+ * on that scale, or the parcels per season of a list of seasons.
  */
-export type WidgetKind = 'ruler' | 'fact' | 'bar-chart' | 'histogram' | 'number';
+export type WidgetKind = 'ruler' | 'fact' | 'bar-chart' | 'histogram' | 'number' | 'seasons';
 
 /** How many parcels a widget reads: one (a parcel tab) or the whole selection (Todas). */
 export type ParcelScope = 'individual' | 'multiple';
@@ -45,8 +45,9 @@ export function isShortRange(range: { min: number; max: number }): boolean {
  * number per scope — one parcel as a number card (the "Numerical individual" design),
  * several binned (the "Numerical multiple" design) — an open number on the set's scale,
  * a range on its own (`min`–`max`, one bin per step when short): a productivo range is a
- * count or a percentage, not a risk, so it never gets the ruler's classes. Text and lists
- * are facts on both. Exposición climática charts only what has a scale of its own: a percentage
+ * count or a percentage, not a risk, so it never gets the ruler's classes. Text is a
+ * fact on both; a list is one on a parcel, and under Todas its parcels per season are
+ * charted over the years (`seasonBarsWidgets`). Exposición climática charts only what has a scale of its own: a percentage
  * on 0–100 as a number card; its hectares are facts, since the only scale they could
  * take is the largest district's, which leaves almost every marker at zero. A few
  * sanitario indicators are facts whatever their type (`SANITARIO_FACT_IDS`).
@@ -72,8 +73,9 @@ export function widgetFor(
     case 'category':
       return scope === 'multiple' ? 'bar-chart' : 'ruler';
     case 'text':
-    case 'list':
       return 'fact';
+    case 'list':
+      return scope === 'multiple' ? 'seasons' : 'fact';
     case 'numeric':
       if (riesgo === 'exposicion_climatica' && unit !== '%') return 'fact';
 
@@ -84,8 +86,11 @@ export function widgetFor(
 /** The selection's area: a fact everywhere, summed under Todas (`combinedParcel`). */
 const AREA_ID = 'area';
 
-/** Productivo's context widgets: a fact on one parcel, under Información de contexto on Todas. */
-const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set(['resiliencia']);
+/**
+ * Productivo's context widgets: a fact on one parcel, under Información de contexto on
+ * Todas. The seasons counters describe the parcel like the resilience does.
+ */
+const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set(['resiliencia', 'n_soja', 'n_arroz']);
 
 /** Whether an indicator belongs to productivo's Información de contexto, whatever the scope. */
 export function isContextIndicator(id: string | undefined, riesgo: IndicatorsRiesgo): boolean {

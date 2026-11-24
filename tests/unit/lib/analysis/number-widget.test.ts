@@ -19,9 +19,12 @@ const area: Indicator = {
   indicator_type: { type: 'numeric' },
 };
 
+// A short 0–8 range that is not context (the seasons counters are facts on one parcel).
+const cycles: Indicator = { ...seasons, id: 'Ciclos', name: 'Ciclos detectados' };
+
 const parcels = [
-  parcel('A', { Pro_soja: 3.55, area: 10.2, N_soja: 5, IEP_H5_soja: 62 }),
-  parcel('B', { pro_soja: '3.81', area: 7.3, N_soja: 3, IEP_H5_soja: '87' }),
+  parcel('A', { Pro_soja: 3.55, area: 10.2, Ciclos: 5, IEP_H5_soja: 62 }),
+  parcel('B', { pro_soja: '3.81', area: 7.3, Ciclos: 3, IEP_H5_soja: '87' }),
   parcel('C', { Pro_soja: 'NA' }),
 ];
 
@@ -67,14 +70,14 @@ describe('numberWidgets', () => {
     const [count, stable] = numberWidgets(
       parcels,
       ['A', 'B'],
-      [seasons, stability],
+      [cycles, stability],
       'productivo',
       'individual',
       parcels[1],
     );
 
     expect(count).toMatchObject({
-      id: 'N_soja',
+      id: 'Ciclos',
       unit: null,
       value: 3,
       text: '3',
