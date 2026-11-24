@@ -10,7 +10,8 @@ import type { Filters } from '@/lib/api/metadata/schemas';
  * `production_filters`) reads as "los filtros".
  */
 
-const FILTER_REF = /\{\s*['"]id['"]\s*:\s*['"]([^'"]+)['"]\s*\}/g;
+// Straight or typographic quotes: copy edited outside code tends to curl them.
+const FILTER_REF = /\{\s*['"‘’“”]id['"‘’“”]\s*:\s*['"‘’“”]([^'"‘’“”]+)['"‘’“”]\s*\}/g;
 const FILTER_GROUP = /\b(?:disease|production)_filters\b/g;
 
 export function describeWithFilters(

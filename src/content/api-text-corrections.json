@@ -5,7 +5,7 @@
     "Tizon de la hoja": "Tizón de la hoja",
     "Listado de Zafras de soja": "Listado de zafras de soja",
     "Listado de Zafras de arroz": "Listado de zafras de arroz",
-    "Estación meteorológica usada para analizar los datos observados en las últimas 72 horas previas a {'id': 'date'} proporcionada en disease_filters": "Estación meteorológica usada para analizar los datos observados durante las 72 horas previas a la fecha indicada en los filtros."
+    "Estación meteorológica usada para analizar los datos observados en las últimas 72 horas previas a {'id': 'date'} proporcionada en disease_filters": "Estación meteorológica usada para analizar los datos observados durante las 72 horas previas al {'id': 'date'}, fecha indicada en los filtros."
   },
   "fragments": {
     "P75_arrox": "P75_arroz",
