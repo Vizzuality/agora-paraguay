@@ -15,6 +15,7 @@ import {
   isShortRange,
   RANGE_CLASSES,
   widgetFor,
+  withZafrinasAfterCounters,
   type ParcelScope,
   type RiskClass,
 } from './widget-config';
@@ -331,7 +332,7 @@ export function generalInfo(
     value: factText(value, undefined),
   }));
 
-  return [...known, ...unknown];
+  return [...(riesgo === 'productivo' ? withZafrinasAfterCounters(known) : known), ...unknown];
 }
 
 /** A fact as printed: numbers in the platform's locale with the unit, text as is, "Sin datos" when unreadable. */
