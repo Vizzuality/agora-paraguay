@@ -126,13 +126,20 @@ test('the analysis runs with the default filters, and each change re-runs it', a
   });
   expect(bodies[0].indicators).toContain('asian_rust');
 
+  // Each page names its tab.
+  await expect(page).toHaveTitle('Riesgo sanitario · AGORA');
+
   const filters = await openFilters(page);
   const cultivo = filters.getByRole('combobox', { name: 'Tipo de cultivo' });
   const sowingDate = filters.getByLabel('Fecha de siembra');
-  const date = filters.getByLabel('Fecha', { exact: true });
+  const date = filters.getByRole('button', { name: /^Fecha \d/ });
   await expect(cultivo).toHaveText('Soja');
   await expect(sowingDate).toHaveText(ddmmyyyy(DEFAULT_SOWING_DATE));
   await expect(date).toHaveText(ddmmyyyy(DEFAULT_DATE));
+  // A date field's name carries its date, so a screen reader reads what is picked.
+  await expect(sowingDate).toHaveAccessibleName(
+    `Fecha de siembra ${ddmmyyyy(DEFAULT_SOWING_DATE)}`,
+  );
 
   // The calendar offers 1 September 2024 to today: nothing after today.
   await date.click();

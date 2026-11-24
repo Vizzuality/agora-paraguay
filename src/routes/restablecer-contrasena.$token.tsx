@@ -11,6 +11,7 @@ import { NewPasswordCard } from '@/components/auth/new-password-card';
 import { ResetOutcomeCard } from '@/components/auth/reset-outcome-card';
 import { authQueries } from '@/lib/api/auth/queries';
 import { resetTokenSchema } from '@/lib/api/auth/schemas';
+import { pageHead } from '@/lib/page-title';
 
 /**
  * Where a password reset link lands: `/restablecer-contrasena/{token}`, the link the
@@ -18,6 +19,7 @@ import { resetTokenSchema } from '@/lib/api/auth/schemas';
  * spent link never shows a form it cannot submit.
  */
 export const Route = createFileRoute('/restablecer-contrasena/$token')({
+  head: () => pageHead('Nueva contraseña'),
   component: ResetPasswordPage,
 });
 
