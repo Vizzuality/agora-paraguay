@@ -57,11 +57,14 @@ export function ParcelPicker() {
     setOpen(false);
   };
 
-  // Opened, the picked parcel heads the list. A ref callback, not an effect on `open`: the
-  // popover's portal mounts the list a render after `open` flips.
+  // Opened, the picked parcel heads the list, right under the pinned Todas. A ref callback,
+  // not an effect on `open`: the popover's portal mounts the list a render after `open` flips.
   const headPicked = useCallback((list: HTMLDivElement | null) => {
     const picked = list?.querySelector<HTMLElement>('[aria-selected="true"]');
-    if (list && picked) list.scrollTop = picked.offsetTop;
+    const pinned = list?.querySelector<HTMLElement>('[data-pinned]');
+    if (list && picked && picked !== pinned) {
+      list.scrollTop = picked.offsetTop - (pinned?.offsetHeight ?? 0);
+    }
   }, []);
 
   // Keyboard moves keep the highlighted row in view.
@@ -154,7 +157,13 @@ export function ParcelPicker() {
                   choose(parcel);
                 }}
                 onMouseMove={() => setHighlighted(index)}
-                className="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:ring-1 data-highlighted:ring-ring data-highlighted:ring-inset"
+                // Todas stays pinned over the parcels as they scroll; a parcel scrolled into
+                // view keeps clear of it (`scroll-mt-8`, Todas' row height).
+                data-pinned={parcel === null || undefined}
+                className={cn(
+                  'relative flex cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:ring-1 data-highlighted:ring-ring data-highlighted:ring-inset',
+                  parcel === null ? 'sticky top-0 z-10 bg-popover' : 'scroll-mt-8',
+                )}
               >
                 {optionLabel(parcel)}
                 {parcel === activeId && (
