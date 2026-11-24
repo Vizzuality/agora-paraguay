@@ -7,6 +7,7 @@ import {
   AuthPageFrame,
 } from '@/components/auth/auth-page-frame';
 import { ResetPasswordCard } from '@/components/auth/reset-password-card';
+import { pageHead } from '@/lib/page-title';
 import { loginOpenAtom } from '@/store/auth';
 
 /**
@@ -14,6 +15,7 @@ import { loginOpenAtom } from '@/store/auth';
  * confirmation. Iniciar sesión on either card opens the login modal over the page.
  */
 export const Route = createFileRoute('/restablecer-contrasena/')({
+  head: () => pageHead('Restablecer contraseña'),
   component: ResetRequestPage,
 });
 

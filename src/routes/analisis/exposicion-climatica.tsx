@@ -5,6 +5,7 @@ import { AnalysisActions } from '@/components/analysis-actions';
 import { DistrictPanel } from '@/components/district-panel';
 import { ReportFooter } from '@/components/report-footer';
 import { ExposureMapCard } from '@/components/settings/exposure-area-setting';
+import { pageHead } from '@/lib/page-title';
 import { selectedDistrictAtom } from '@/store/exposure';
 
 /**
@@ -13,6 +14,7 @@ import { selectedDistrictAtom } from '@/store/exposure';
  * column's área de interés and the content column shows the district.
  */
 export const Route = createFileRoute('/analisis/exposicion-climatica')({
+  head: () => pageHead('Exposición climática'),
   component: ExposicionPage,
 });
 
