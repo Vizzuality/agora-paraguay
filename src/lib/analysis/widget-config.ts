@@ -86,11 +86,35 @@ export function widgetFor(
 /** The selection's area: a fact everywhere, summed under Todas (`combinedParcel`). */
 const AREA_ID = 'area';
 
+/** The seasons counters, one per crop. */
+const SEASON_COUNTER_IDS: ReadonlySet<string> = new Set(['n_soja', 'n_arroz']);
+
+/** The zafriñas (second cycles) detected: read right under the seasons counters. */
+const ZAFRINAS_ID = 'n_zafrinas';
+
 /**
  * Productivo's context widgets: a fact on one parcel, under Información de contexto on
- * Todas. The seasons counters describe the parcel like the resilience does.
+ * Todas. The seasons counters and the zafriñas describe the parcel like the resilience does.
  */
-const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set(['resiliencia', 'n_soja', 'n_arroz']);
+const PRODUCTIVO_CONTEXT_IDS: ReadonlySet<string> = new Set([
+  'resiliencia',
+  ...SEASON_COUNTER_IDS,
+  ZAFRINAS_ID,
+]);
+
+/**
+ * Productivo's context in reading order: the zafriñas right after the last seasons
+ * counter, the rest as given (metadata order puts them between the soy and rice entries).
+ */
+export function withZafrinasAfterCounters<T extends { id: string }>(items: readonly T[]): T[] {
+  const zafrinas = items.find((item) => item.id.toLowerCase() === ZAFRINAS_ID);
+  const rest = items.filter((item) => item !== zafrinas);
+  const last = rest.findLastIndex((item) => SEASON_COUNTER_IDS.has(item.id.toLowerCase()));
+
+  if (zafrinas === undefined || last === -1) return [...items];
+
+  return rest.toSpliced(last + 1, 0, zafrinas);
+}
 
 /** Whether an indicator belongs to productivo's Información de contexto, whatever the scope. */
 export function isContextIndicator(id: string | undefined, riesgo: IndicatorsRiesgo): boolean {
