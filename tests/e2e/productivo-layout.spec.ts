@@ -148,23 +148,30 @@ test('the productivo widgets read the selection under Todas and one parcel when 
   ).toContainText('Producción proyectada a escenario pesimista, neutro y optimista');
   const seasons = widget(page, 'Contador de zafras de soja detectadas');
   await expect(seasons.getByRole('listitem')).toHaveText(['3: 1', '5: 1']);
-  // Información de contexto sums the area and counts the parcels per soy season, one a
-  // line, under the indicator's name with its description.
+  // Información de contexto sums the area.
   // The facts list itself: under Todas the section titles it, on a parcel the card does.
   // On screen only: the report's Parámetros del análisis holds a print-only list too.
   const info = page.getByRole('main').locator('dl:visible');
   await expect(info).toContainText('17,5 ha');
-  await expect(
-    info.getByRole('term').filter({ hasText: 'Listado de Zafras de soja' }),
-  ).toBeVisible();
-  await expect(
-    info.getByRole('button', { name: 'Más información sobre Listado de Zafras de soja' }),
-  ).toBeVisible();
-  const zafras = info.getByRole('definition').filter({ hasText: '2022-2023 (2 parcelas)' });
-  await expect(zafras).not.toContainText(',');
-  expect(await zafras.innerText()).toBe(
-    '2017-2018 (1 parcela)\n2018-2019 (1 parcela)\n2019-2020 (1 parcela)\n2020-2021 (1 parcela)\n2022-2023 (2 parcelas)\n2023-2024 (1 parcela)\n2024-2025 (1 parcela)',
+  // The soy seasons are charted there over the years, each as tall as its parcels; the
+  // seasons grown are listed for assistive tech, the one nobody grew (2021-2022) left out.
+  const zafras = widget(page, 'Listado de zafras de soja');
+  await expect(page.getByRole('region', { name: 'Información de contexto' })).toContainText(
+    'Listado de zafras de soja',
   );
+  await expect(info.getByRole('term').filter({ hasText: 'Listado de zafras de soja' })).toHaveCount(
+    0,
+  );
+  await expect(zafras.getByRole('listitem')).toHaveText([
+    '2017-2018: 1 parcela',
+    '2018-2019: 1 parcela',
+    '2019-2020: 1 parcela',
+    '2020-2021: 1 parcela',
+    '2022-2023: 2 parcelas',
+    '2023-2024: 1 parcela',
+    '2024-2025: 1 parcela',
+  ]);
+  await expect(zafras.locator('svg text')).toContainText(['2017', '2025']);
 
   // The arroz indicator belongs to the other crop: no widget.
   await expect(

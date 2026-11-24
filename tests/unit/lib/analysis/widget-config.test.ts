@@ -49,8 +49,11 @@ describe('widgetFor', () => {
       expect(widgetFor(index, { riesgo: 'productivo', scope: 'multiple', id })).toBe('histogram');
     }
     expect(
-      widgetFor({ type: 'list' }, { riesgo: 'productivo', scope: 'multiple', id: 'Zafras_soja' }),
+      widgetFor({ type: 'list' }, { riesgo: 'productivo', scope: 'individual', id: 'Zafras_soja' }),
     ).toBe('fact');
+    expect(
+      widgetFor({ type: 'list' }, { riesgo: 'productivo', scope: 'multiple', id: 'Zafras_soja' }),
+    ).toBe('seasons');
     expect(widgetFor(numeric, { riesgo: 'productivo', scope: 'individual', id: 'Pro_soja' })).toBe(
       'number',
     );
