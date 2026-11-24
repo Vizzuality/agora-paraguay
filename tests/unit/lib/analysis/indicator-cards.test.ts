@@ -437,6 +437,59 @@ describe('generalInfo', () => {
     ]);
   });
 
+  it('under Todas lists each station’s readings, in the order the stations are listed', () => {
+    const reading = (id: string, unit: string): Indicator => ({
+      id,
+      name: id,
+      unit,
+      indicator_type: { type: 'numeric' },
+    });
+    const metadata = [
+      station,
+      reading('temperature_avg', '°C'),
+      reading('rain_accumulated', 'mm'),
+      crop,
+    ];
+    const todas = combinedParcel(
+      [
+        parcel({ weather_station: 'Pindo', temperature_avg: 23, rain_accumulated: 0 }),
+        parcel({ weather_station: 'Santa Teresa', temperature_avg: 25, rain_accumulated: 1.9 }),
+        parcel({ weather_station: 'Pindo', temperature_avg: 23, rain_accumulated: 0 }),
+        parcel({ weather_station: 'Raul Pena', temperature_avg: 23, crop_type: 'Soja' }),
+      ],
+      metadata,
+    );
+
+    expect(generalInfo(todas, metadata).map(({ id, value }) => [id, value])).toEqual([
+      ['weather_station', 'Pindo, Santa Teresa, Raul Pena'],
+      // One per station, even when two stations read the same; a missing one is "Sin datos".
+      ['temperature_avg', '23 °C, 25 °C, 23 °C'],
+      ['rain_accumulated', '0 mm, 1,9 mm, Sin datos'],
+      ['crop_type', 'Soja'],
+    ]);
+  });
+
+  it('keeps a station reading a single figure when the parcels share one station', () => {
+    const temperature: Indicator = {
+      id: 'temperature_avg',
+      name: 'Temperatura',
+      unit: '°C',
+      indicator_type: { type: 'numeric' },
+    };
+    const todas = combinedParcel(
+      [
+        parcel({ weather_station: 'Pindo', temperature_avg: 23 }),
+        parcel({ weather_station: 'Pindo', temperature_avg: 23 }),
+      ],
+      [station, temperature],
+    );
+
+    expect(generalInfo(todas, [station, temperature]).map(({ value }) => value)).toEqual([
+      'Pindo',
+      '23 °C',
+    ]);
+  });
+
   it('keeps one parcel’s fact singular, even with a comma in its value', () => {
     expect(generalInfo(parcel({ weather_station: 'Hohenau, Itapúa' }), [station])).toEqual([
       { id: 'weather_station', label: 'Estación', value: 'Hohenau, Itapúa' },
