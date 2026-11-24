@@ -15,6 +15,7 @@ import {
   isShortRange,
   RANGE_CLASSES,
   widgetFor,
+  withZafrinasAfterCounters,
   type ParcelScope,
   type RiskClass,
 } from './widget-config';
@@ -85,13 +86,58 @@ export function combinedParcel(
   const unreadable = [...new Set(parcels.flatMap((parcel) => parcel.unreadable ?? []))].filter(
     (column) => !(column in properties),
   );
+  const perStation = stationReadings(parcels);
 
   return {
     parcel_id: COMBINED_PARCEL_ID,
     properties,
     ...(unreadable.length > 0 && { unreadable }),
     ...(Object.keys(combinedLists).length > 0 && { lists: combinedLists }),
+    ...(Object.keys(perStation).length > 0 && { perStation }),
   };
+}
+
+const WEATHER_STATION_ID = 'weather_station';
+
+/** The readings the weather station takes, so every parcel under one station shares them. */
+const STATION_READING_IDS = ['temperature_avg', 'humidity_avg', 'rain_accumulated', 'data_quality'];
+
+/**
+ * With parcels under several stations, each station reading per station, in the order the
+ * stations are listed (`distinctList`): averaging them would mix stations into a figure
+ * none of them took. A station's parcels average (they share it); none reading is `null`.
+ * Keyed by column, lower case; empty under a single station.
+ */
+function stationReadings(parcels: AnalysisParcel[]): Record<string, (number | null)[]> {
+  const stationOf = (parcel: AnalysisParcel) => {
+    const reading = readingOf(parcel, WEATHER_STATION_ID);
+
+    return reading === undefined ? undefined : String(reading).trim();
+  };
+  const byStation = Map.groupBy(
+    parcels.filter((parcel) => stationOf(parcel) !== undefined),
+    (parcel) => stationOf(parcel) as string,
+  );
+
+  if (byStation.size < 2) return {};
+
+  return Object.fromEntries(
+    STATION_READING_IDS.flatMap((id) => {
+      const values = [...byStation.values()].map((stationParcels) => {
+        const numbers = stationParcels.flatMap((parcel) => {
+          const reading = readingOf(parcel, id);
+
+          return reading === undefined || Number.isNaN(Number(reading)) ? [] : [Number(reading)];
+        });
+
+        return numbers.length === 0
+          ? null
+          : numbers.reduce((sum, number) => sum + number, 0) / numbers.length;
+      });
+
+      return values.every((value) => value === null) ? [] : [[id, values]];
+    }),
+  );
 }
 
 /** Per list column, each element and how many parcels carry it, sorted by element. */
@@ -145,8 +191,11 @@ function mostFrequent(readings: (string | number)[]): ParcelValue {
   return best?.value ?? null;
 }
 
-/** What joins a text column's distinct values on the combined parcel. */
-const LIST_SEPARATOR = ', ';
+/**
+ * What joins a combined fact's values under Todas: a middle dot, not a comma, which is the
+ * decimal mark here ("92,3 % · 91,8 %"). `GeneralInfoList` reads it to screen readers as a pause.
+ */
+export const LIST_SEPARATOR = ' · ';
 
 function distinctList(readings: (string | number)[]): string {
   return [...new Set(readings.map((value) => String(value).trim()))].join(LIST_SEPARATOR);
@@ -310,7 +359,12 @@ export function generalInfo(
     if (value === undefined && !isUnreadable(parcel, indicator.id)) return [];
 
     const typed = value === undefined ? undefined : typedReading(indicator, value);
-    const text = factText(typed, indicator.unit);
+    const perStation = parcel.perStation?.[indicator.id.toLowerCase()];
+    const text = perStation
+      ? perStation
+          .map((reading) => factText(reading ?? undefined, indicator.unit))
+          .join(LIST_SEPARATOR)
+      : factText(typed, indicator.unit);
     // Only text lists its values; a number or a category combines into one.
     const listed = typeof typed === 'string';
 
@@ -331,7 +385,7 @@ export function generalInfo(
     value: factText(value, undefined),
   }));
 
-  return [...known, ...unknown];
+  return [...(riesgo === 'productivo' ? withZafrinasAfterCounters(known) : known), ...unknown];
 }
 
 /** A fact as printed: numbers in the platform's locale with the unit, text as is, "Sin datos" when unreadable. */
@@ -513,7 +567,8 @@ const DECIMAL = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 });
 function formatValue(value: number, unit: string | null | undefined): string {
   const number = (unit && INTEGER_UNITS.has(unit) ? WHOLE : DECIMAL).format(value);
 
-  return unit ? `${number} ${unit}` : number;
+  // A no-break space: the unit never wraps onto a line of its own.
+  return unit ? `${number}\u00a0${unit}` : number;
 }
 
 function capitalise(text: string): string {

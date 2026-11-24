@@ -8,7 +8,11 @@ import {
 } from '@/lib/analysis/projection';
 import { seasonBarsWidgets, type SeasonBarsWidget } from '@/lib/analysis/season-bars';
 import { valueHistogramWidgets, type ValueHistogramWidget } from '@/lib/analysis/value-histogram';
-import { isContextIndicator, type ParcelScope } from '@/lib/analysis/widget-config';
+import {
+  isContextIndicator,
+  type ParcelScope,
+  withZafrinasAfterCounters,
+} from '@/lib/analysis/widget-config';
 import type { AnalysisParcel } from '@/lib/api/analysis/schemas';
 import type { Indicator, Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
 import { INDICATOR_CATEGORY_TITLES } from '@/lib/platform-metadata';
@@ -136,7 +140,9 @@ export function analysisWidgets({
   const categoryOf = widgetCategory(indicators, riesgo);
 
   // Stable: each group keeps metadata order.
-  return widgets.toSorted((a, b) => rankOf(categoryOf(a)) - rankOf(categoryOf(b)));
+  const sorted = widgets.toSorted((a, b) => rankOf(categoryOf(a)) - rankOf(categoryOf(b)));
+
+  return riesgo === 'productivo' ? withZafrinasAfterCounters(sorted) : sorted;
 }
 
 /** A widget's category: context for the context indicators, the projection's own, else its indicator's. */

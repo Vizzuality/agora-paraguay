@@ -170,6 +170,8 @@ export type AnalysisParcel = {
   unreadable?: string[];
   /** Columns that arrived as lists, element by element; `properties` holds them joined. */
   lists?: Record<string, string[]>;
+  /** Todas only: a station-driven column's reading per weather station, in station order. */
+  perStation?: Record<string, (number | null)[]>;
 };
 
 /**

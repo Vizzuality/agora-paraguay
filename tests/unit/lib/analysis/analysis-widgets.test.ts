@@ -280,6 +280,49 @@ describe('widgetGroups', () => {
     ]);
   });
 
+  it('puts the zafriñas under Información de contexto, right under the seasons counter', () => {
+    const count = (id: string): Indicator => ({
+      id,
+      name: id,
+      category: 'historic',
+      indicator_type: { type: 'range', min: 0, max: 8, step: 1 },
+    });
+    const seasons: Indicator = {
+      id: 'Zafras_soja',
+      name: 'Zafras',
+      category: 'historic',
+      indicator_type: { type: 'list' },
+    };
+    const list = [count('N_soja'), seasons, count('N_zafrinas')];
+    const counted: AnalysisParcel[] = [
+      {
+        parcel_id: 'A',
+        properties: { N_soja: 3, Zafras_soja: '2019-2020', N_zafrinas: 1 },
+        lists: { Zafras_soja: ['2019-2020'] },
+      },
+      {
+        parcel_id: 'B',
+        properties: { N_soja: 2, Zafras_soja: '2020-2021', N_zafrinas: 0 },
+        lists: { Zafras_soja: ['2020-2021'] },
+      },
+    ];
+    const built = analysisWidgets({
+      parcels: counted,
+      parcelIds: ['A', 'B'],
+      indicators: list,
+      riesgo: 'productivo',
+      scope: 'multiple',
+      parcel: combinedParcel(counted, list),
+    });
+
+    expect(
+      widgetGroups(built, list, 'productivo').map(({ key, widgets: run }) => [
+        key,
+        run.map(({ id }) => id),
+      ]),
+    ).toEqual([['context', ['N_soja', 'N_zafrinas', 'Zafras_soja']]]);
+  });
+
   it('is one untitled run when no indicator has a category, as on sanitario', () => {
     const plain = [coverage, production];
 

@@ -201,7 +201,9 @@ test('Identificador de análisis holds for the session, and a cleared selection 
   await expect(page).toHaveURL(/\/analisis\/exposicion-climatica/);
   await expect(await openIdentifier()).toHaveValue('123456ABC');
   await types.getByRole('link', { name: 'Riesgo sanitario' }).click();
-  await page.reload();
+  // A reload, back at farm scale: the links drop the camera, and a drawing on the
+  // country-wide opening view would be larger than an analysis allows.
+  await page.goto(FARM_SCALE_URL_SANITARIO);
   await expect(await openIdentifier()).toHaveValue('123456ABC');
 
   // Clearing the selection takes it along (a new drawing alone keeps it: unit-tested).

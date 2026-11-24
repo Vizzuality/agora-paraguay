@@ -84,7 +84,7 @@ describe('combinedParcel', () => {
       INDICATORS,
     );
 
-    expect(combined?.properties.crop_type).toBe('Soja, Arroz');
+    expect(combined?.properties.crop_type).toBe('Soja · Arroz');
   });
 
   it('skips missing readings and combines the rest', () => {
@@ -119,7 +119,7 @@ describe('combinedParcel', () => {
       INDICATORS,
     );
 
-    expect(combined?.properties).toEqual({ yield: 15, station: 'Norte, Sur' });
+    expect(combined?.properties).toEqual({ yield: 15, station: 'Norte · Sur' });
   });
 
   it('feeds the same cards a single parcel does — a 3 and a 1 read as Moderado', () => {
