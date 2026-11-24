@@ -71,6 +71,13 @@ describe('seasonBarsWidgets', () => {
     ]);
   });
 
+  it('always spans the classifier period, 2017-2018 to 2024-2025, empty edges included', () => {
+    const [widget] = seasonBarsWidgets([east], ['east'], [zafrasSoja], 'productivo', 'multiple');
+
+    expect([widget.from, widget.to]).toEqual([2017, 2025]);
+    expect(widget.bars.map(({ count }) => count)).toEqual([0, 0, 0, 0, 0, 1, 1, 1]);
+  });
+
   it('counts only the submitted parcels', () => {
     const [widget] = seasonBarsWidgets(
       [west, east],
@@ -80,11 +87,14 @@ describe('seasonBarsWidgets', () => {
       'multiple',
     );
 
-    expect(widget.from).toBe(2022);
-    expect(widget.bars.map(({ count }) => count)).toEqual([1, 1, 1]);
+    expect(widget.bars.filter(({ count }) => count > 0).map(({ season }) => season)).toEqual([
+      '2022-2023',
+      '2023-2024',
+      '2024-2025',
+    ]);
   });
 
-  it('shares one axis across crops, so their seasons line up', () => {
+  it('shares one axis across crops, stretched past the period rather than dropping a season', () => {
     const rice = parcel('rice', { Zafras_arroz: ['2015-2016'] });
     const widgets = seasonBarsWidgets(
       [west, rice],
@@ -95,8 +105,8 @@ describe('seasonBarsWidgets', () => {
     );
 
     expect(widgets.map(({ id, from, to }) => [id, from, to])).toEqual([
-      ['Zafras_soja', 2015, 2023],
-      ['Zafras_arroz', 2015, 2023],
+      ['Zafras_soja', 2015, 2025],
+      ['Zafras_arroz', 2015, 2025],
     ]);
   });
 

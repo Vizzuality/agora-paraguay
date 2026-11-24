@@ -6,9 +6,17 @@ import type { Indicators, IndicatorsRiesgo } from '@/lib/api/metadata/schemas';
  * The seasons widget, under Todas: a list of growing seasons (`Zafras_soja`, answered as
  * `["2017-2018", …]` per parcel) charted over the years, one bar per season between its
  * two years, as tall as the analysed parcels that grew it. Every season in the span keeps
- * its slot, so a season nobody grew shows as a gap. All the season lists share one span,
- * so soy and rice line up. Pure, node-tested; `SeasonBars` draws it.
+ * its slot, so a season nobody grew shows as a gap. The span is the classifier's period
+ * (`CLASSIFIER_PERIOD`), stretched only if a season falls outside it, and shared by every
+ * list, so soy and rice line up. Pure, node-tested; `SeasonBars` draws it.
  */
+
+/**
+ * The seasons the crop classifier covers, 2017-2018 to 2024-2025, as the indicators'
+ * descriptions state (`N_soja` counts 0–8 of them). Fixed, so a season at the edge that
+ * no parcel grew still shows as empty instead of falling off the axis.
+ */
+export const CLASSIFIER_PERIOD = { from: 2017, to: 2025 } as const;
 
 export type Season = { start: number; end: number };
 
@@ -23,7 +31,7 @@ export type SeasonBarsWidget = {
   label: string;
   /** The metadata's description, behind the title's info icon. */
   description?: string;
-  /** The axis, in years: the first season's start to the last one's end. */
+  /** The axis, in years: the classifier period, or wider when a season falls outside it. */
   from: number;
   to: number;
   bars: SeasonBar[];
@@ -71,8 +79,8 @@ export function seasonBarsWidgets(
   if (charted.length === 0) return [];
 
   const starts = charted.flatMap(({ counts }) => [...counts.keys()]);
-  const from = Math.min(...starts);
-  const to = Math.max(...starts) + 1;
+  const from = Math.min(CLASSIFIER_PERIOD.from, ...starts);
+  const to = Math.max(CLASSIFIER_PERIOD.to, Math.max(...starts) + 1);
 
   return charted.map(({ indicator, counts }) => ({
     id: indicator.id,
