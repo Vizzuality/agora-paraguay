@@ -190,8 +190,11 @@ function mostFrequent(readings: (string | number)[]): ParcelValue {
   return best?.value ?? null;
 }
 
-/** What joins a text column's distinct values on the combined parcel. */
-const LIST_SEPARATOR = ', ';
+/**
+ * What joins a combined fact's values under Todas: a middle dot, not a comma, which is the
+ * decimal mark here ("92,3 % · 91,8 %"). `GeneralInfoList` reads it to screen readers as a pause.
+ */
+export const LIST_SEPARATOR = ' · ';
 
 function distinctList(readings: (string | number)[]): string {
   return [...new Set(readings.map((value) => String(value).trim()))].join(LIST_SEPARATOR);
@@ -563,7 +566,8 @@ const DECIMAL = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 });
 function formatValue(value: number, unit: string | null | undefined): string {
   const number = (unit && INTEGER_UNITS.has(unit) ? WHOLE : DECIMAL).format(value);
 
-  return unit ? `${number} ${unit}` : number;
+  // A no-break space: the unit never wraps onto a line of its own.
+  return unit ? `${number}\u00a0${unit}` : number;
 }
 
 function capitalise(text: string): string {
