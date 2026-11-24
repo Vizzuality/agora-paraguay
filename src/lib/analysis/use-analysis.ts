@@ -28,6 +28,7 @@ export function useAnalysis(riesgo: Riesgo) {
           parcelIds,
           resolvedFilters,
           requestedIndicatorIds(indicators.data, selectedIndicators, riesgo),
+          riesgo,
         )
       : null;
 

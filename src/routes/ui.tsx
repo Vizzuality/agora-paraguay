@@ -595,6 +595,7 @@ function AnalysisCardsDemo() {
         ['D07D21P00000001'],
         { crop_type: 'soja', date: '2026-09-17' },
         requestedIndicatorIds(indicators, null, 'sanitario'),
+        'sanitario',
       )
     : null;
   const { data: analysis } = useQuery(analysisQueries.result('public', request));

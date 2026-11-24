@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+import { EAST_PARCEL_ID, stubFilterParcels, WEST_PARCEL_ID } from './fixtures/api';
 import { analyseOnRedesign } from './fixtures/redesign';
 
 /** A local calendar day as the date fields write it, `offset` days from today. */
@@ -158,7 +159,19 @@ test('the analysis runs with the default filters, and each change re-runs it', a
   await cultivo.click();
   await page.getByRole('option', { name: 'Arroz' }).click();
   await expect.poll(() => bodies.length).toBe(3);
-  expect(bodies[2]).toMatchObject({ crop_type: 'rice' });
+  expect(bodies[2]).toMatchObject({ crop_type: 'arroz', year: '2025' });
+});
+
+test('Tipo de cultivo offers rice or soy, never Todos, even when the parcels grew both', async ({
+  page,
+}) => {
+  await analyseOnRedesign(page, '/analisis/sanitario', (target) =>
+    stubFilterParcels(target, { [WEST_PARCEL_ID]: 'Soja', [EAST_PARCEL_ID]: 'Arroz' }),
+  );
+
+  const filters = await openFilters(page);
+  await filters.getByRole('combobox', { name: 'Tipo de cultivo' }).click();
+  await expect(page.getByRole('option')).toHaveText(['Arroz', 'Soja']);
 });
 
 test('Personalizar indicadores drops an indicator from the analysis and its card', async ({

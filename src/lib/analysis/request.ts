@@ -18,6 +18,7 @@ import {
   isCrop,
   type Indicators,
   type Riesgo,
+  toWireCrop,
 } from '@/lib/api/metadata/schemas';
 
 /*
@@ -53,17 +54,25 @@ export function requestedIndicatorIds(
     .map((indicator) => indicator.id);
 }
 
+/** The year the diseases analysis (sanitario) is always asked for; its hero has no year. */
+export const DISEASES_YEAR = '2025';
+
 /**
  * The selection as picked in the hero (filter id → value), the parcels and the
- * indicators, flat. Todos sends no crop: the analysis answers every crop's columns.
+ * indicators, flat. The crop goes under its wire name (`toWireCrop`); Todos sends none.
+ * Sanitario adds `DISEASES_YEAR`.
  */
 export function toAnalysisRequest(
   parcelIds: string[],
   selection: AnalysisFilterSelection,
   indicators: string[],
+  riesgo?: Riesgo,
 ): AnalysisRequest {
   const { [CROP_FILTER_ID]: crop, ...rest } = selection;
-  const filters = crop === undefined || crop === ALL_CROPS ? rest : selection;
+  const filters: Record<string, string> = { ...rest };
+
+  if (crop !== undefined && crop !== ALL_CROPS) filters[CROP_FILTER_ID] = toWireCrop(crop);
+  if (riesgo === 'sanitario') filters[YEAR_FILTER_ID] = DISEASES_YEAR;
 
   return { ...filters, parcels: parcelIds, indicators };
 }
