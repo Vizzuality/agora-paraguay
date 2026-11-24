@@ -57,20 +57,11 @@ export const PARAGUAY_VIEW_STATE = {
   zoom: 5.5,
 } as const satisfies MapViewState;
 
-/**
- * Where the map opens. Temporary: Alto Paraná, the one department the cadastre covers
- * today, so a drawing lands on parcels instead of being rejected; `DevFocusBanner` says
- * so on the map.
- *
- * Once the cadastre covers the whole country, the map opens on the whole country instead:
- * set this to `{ longitude: -58.40531, latitude: -23.53009, zoom: 5.84 }` (the agreed
- * default view) and remove `DevFocusBanner` in the same change. The e2e specs read this
- * constant and assert the banner, so they fail until both are done.
- */
+/** Where the map opens: Paraguay, centred. The e2e specs read this constant. */
 export const INITIAL_VIEW_STATE = {
-  longitude: -54.95,
-  latitude: -25.3,
-  zoom: 8.5,
+  longitude: -58.40531,
+  latitude: -23.53009,
+  zoom: 5.84,
 } as const satisfies MapViewState;
 
 export function normalizeViewState(viewState: MapViewState): MapViewState {
