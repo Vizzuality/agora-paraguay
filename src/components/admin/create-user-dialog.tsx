@@ -136,7 +136,7 @@ function CreateUserForm({ onCreated }: Readonly<{ onCreated: (created: CreatedUs
         </DialogClose>
 
         {mutation.isError && (
-          <p id={errorId} role="alert" className="text-sm text-destructive">
+          <p id={errorId} role="alert" className="text-sm text-destructive-text">
             {failureMessage(mutation.error)}
           </p>
         )}

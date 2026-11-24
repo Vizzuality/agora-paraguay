@@ -49,7 +49,7 @@ export function DistrictPanel() {
           <p className="text-sm text-muted-foreground">Cargando indicadores…</p>
         )}
         {indicators.isError && (
-          <p className="text-sm text-destructive">No se pudieron cargar los indicadores.</p>
+          <p className="text-sm text-destructive-text">No se pudieron cargar los indicadores.</p>
         )}
       </div>
       <WidgetGrid>

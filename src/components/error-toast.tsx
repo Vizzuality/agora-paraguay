@@ -27,7 +27,7 @@ export function ErrorToast({
       </button>
 
       <p className="font-semibold">Ha habido un error.</p>
-      <div className="flex flex-col gap-2 opacity-90">{children}</div>
+      <div className="flex flex-col gap-2">{children}</div>
     </section>
   );
 }

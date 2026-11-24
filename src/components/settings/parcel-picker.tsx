@@ -95,7 +95,7 @@ export function ParcelPicker() {
             disabled={parcels.length === 1}
             className={cn(
               FLOATING_FIELD_CLASS,
-              'flex cursor-pointer items-center justify-between gap-2 border text-left whitespace-nowrap text-primary outline-none disabled:cursor-not-allowed disabled:opacity-50',
+              'flex cursor-pointer items-center justify-between gap-2 border text-left whitespace-nowrap text-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
             <span className="truncate">{optionLabel(activeId)}</span>
@@ -154,7 +154,7 @@ export function ParcelPicker() {
                   choose(parcel);
                 }}
                 onMouseMove={() => setHighlighted(index)}
-                className="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+                className="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:ring-1 data-highlighted:ring-ring data-highlighted:ring-inset"
               >
                 {optionLabel(parcel)}
                 {parcel === activeId && (

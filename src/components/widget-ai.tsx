@@ -81,7 +81,7 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
           </div>
 
           {status === 'error' && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-sm text-destructive-text">
               No se pudo generar el resumen: {errorReason(mutation.error)}
             </p>
           )}

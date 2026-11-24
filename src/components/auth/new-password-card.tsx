@@ -130,7 +130,7 @@ export function NewPasswordCard({
           </Button>
 
           {error !== null && (
-            <p id={errorId} role="alert" className="text-sm text-destructive">
+            <p id={errorId} role="alert" className="text-sm text-destructive-text">
               {error}
             </p>
           )}

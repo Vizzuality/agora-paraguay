@@ -46,7 +46,7 @@ export function HeroFilters({ riesgo }: Readonly<{ riesgo: Riesgo }>) {
 
   if (error) {
     return (
-      <p role="alert" className="text-sm text-destructive">
+      <p role="alert" className="text-sm text-destructive-text">
         No se pudieron cargar los filtros: {error.message}
       </p>
     );
