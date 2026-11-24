@@ -45,16 +45,19 @@ export function SettingsSection({
             open ? 'pb-0' : 'pb-4',
           )}
         >
-          <span className="flex-1 text-base tracking-[0.28px] text-foreground">
-            {name}
-            {/* The report keeps its sections open, so the choice prints beside the name. */}
-            {open && selection && <span className="hidden print:inline"> - {selection}</span>}
-          </span>
-          {!open && selection && (
-            <span className="animate-in text-xs whitespace-nowrap text-muted-foreground fade-in motion-reduce:animate-none">
-              {selection}
+          {/* Name and choice side by side; on a phone, the choice on the line under the name. */}
+          <span className="flex min-w-0 flex-1 items-center gap-1 max-md:flex-col max-md:items-start max-md:gap-0.5">
+            <span className="flex-1 text-base tracking-[0.28px] text-foreground">
+              {name}
+              {/* The report keeps its sections open, so the choice prints beside the name. */}
+              {open && selection && <span className="hidden print:inline"> - {selection}</span>}
             </span>
-          )}
+            {!open && selection && (
+              <span className="animate-in text-xs whitespace-nowrap text-muted-foreground fade-in motion-reduce:animate-none max-md:max-w-full max-md:truncate">
+                {selection}
+              </span>
+            )}
+          </span>
           <span
             aria-hidden
             className={cn(
