@@ -598,7 +598,7 @@ function AnalysisCardsDemo() {
         'sanitario',
       )
     : null;
-  const { data: analysis } = useQuery(analysisQueries.result('public', request ? [request] : null));
+  const { data: analysis } = useQuery(analysisQueries.result('public', request));
 
   const parcel = analysis?.indicators[0];
   const info = generalInfo(parcel, indicators, 'sanitario');

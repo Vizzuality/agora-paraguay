@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 
-import { requestedIndicatorIds, toAnalysisRequests, visibilityOf } from '@/lib/analysis/request';
+import { requestedIndicatorIds, toAnalysisRequest, visibilityOf } from '@/lib/analysis/request';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { useIndicators } from '@/lib/analysis/use-indicators';
-import { useParcelCrops } from '@/lib/analysis/use-parcel-crops';
 import { analysisQueries } from '@/lib/api/analysis/queries';
 import type { Riesgo } from '@/lib/api/metadata/schemas';
 import { analysedParcelIdsAtom, selectedIndicatorIdsAtom } from '@/store/analysis';
@@ -23,20 +22,17 @@ export function useAnalysis(riesgo: Riesgo) {
 
   const { resolvedFilters } = useHeroFilters(riesgo);
   const indicators = useIndicators(riesgo);
-  const { byParcel } = useParcelCrops();
-  const requests =
+  const request =
     resolvedFilters !== null && indicators.data !== undefined && parcelIds.length > 0
-      ? toAnalysisRequests(
+      ? toAnalysisRequest(
           parcelIds,
           resolvedFilters,
           requestedIndicatorIds(indicators.data, selectedIndicators, riesgo),
-          indicators.data,
           riesgo,
-          byParcel,
         )
       : null;
 
-  const analysis = useQuery(analysisQueries.result(visibility, requests));
+  const analysis = useQuery(analysisQueries.result(visibility, request));
 
   return {
     analysis,

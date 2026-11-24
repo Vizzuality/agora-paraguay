@@ -11,7 +11,7 @@ import { analysisFiltersAtom } from '@/store/analysis';
 /**
  * The hero filters of a riesgo and what they resolve to — the user's picks over the
  * API's defaults (`resolveFilterSelection`). The crop dropdown offers the crops the
- * analysed parcels grew, Todos too when more than one (`withParcelCropOptions`), and
+ * analysed parcels grew, Todos too on productivo when more than one (`withParcelCropOptions`), and
  * starts at what the parcels in view last grew (`useParcelCrops`). The list depends on
  * the crop, so it is keyed by the crop in force: the user's pick, else the default crop.
  * Soy's list is the first one asked, so landing makes one request, re-picking soy makes
@@ -23,7 +23,7 @@ export function useHeroFilters(riesgo: Riesgo) {
   const selected = useAtomValue(analysisFiltersAtom);
   const { lastCrop, crops } = useParcelCrops();
   const seed = useQuery(metadataQueries.filters({ riesgo }));
-  const seedFilters = seed.data && withParcelCropOptions(seed.data, crops);
+  const seedFilters = seed.data && withParcelCropOptions(seed.data, crops, riesgo);
   const picked = seedFilters
     ? resolveFilterSelection(selected, seedFilters, lastCrop)[CROP_FILTER_ID]
     : undefined;
@@ -33,7 +33,7 @@ export function useHeroFilters(riesgo: Riesgo) {
     enabled: crop !== undefined,
   });
   const source = byCrop.data ? byCrop : seed;
-  const data = source.data && withParcelCropOptions(source.data, crops);
+  const data = source.data && withParcelCropOptions(source.data, crops, riesgo);
   const resolvedFilters = data ? resolveFilterSelection(selected, data, lastCrop) : null;
 
   return { filters: { data, error: source.error }, resolvedFilters, lastCrop };

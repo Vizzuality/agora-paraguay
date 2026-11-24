@@ -1,5 +1,5 @@
 import { CROP_FILTER_ID } from '@/lib/analysis/filters';
-import { CROPS, type Crop, type Filters } from '@/lib/api/metadata/schemas';
+import { CROPS, type Crop, type Filters, type Riesgo } from '@/lib/api/metadata/schemas';
 import type { FilteredParcel } from '@/lib/api/parcels/schemas';
 import { ALL_CROPS_LABEL, CROP_NAMES } from '@/lib/platform-metadata';
 
@@ -21,10 +21,14 @@ export function parcelCrops(parcels: readonly FilteredParcel[], ids: readonly st
 
 /**
  * The filters with the crop dropdown offering the parcels' crops — Todos first when they
- * grew more than one — labelled as the API labels them. Left as the API lists it while no
- * parcel's crops are known.
+ * grew more than one, productivo only: the diseases analysis reads one crop — labelled as
+ * the API labels them. Left as the API lists it while no parcel's crops are known.
  */
-export function withParcelCropOptions(filters: Filters, crops: readonly Crop[]): Filters {
+export function withParcelCropOptions(
+  filters: Filters,
+  crops: readonly Crop[],
+  riesgo: Riesgo = 'productivo',
+): Filters {
   if (crops.length === 0) return filters;
 
   return filters.map((filter) => {
@@ -41,7 +45,9 @@ export function withParcelCropOptions(filters: Filters, crops: readonly Crop[]):
       field_type: {
         ...field,
         options:
-          crops.length > 1 ? [{ value: ALL_CROPS, label: ALL_CROPS_LABEL }, ...options] : options,
+          crops.length > 1 && riesgo === 'productivo'
+            ? [{ value: ALL_CROPS, label: ALL_CROPS_LABEL }, ...options]
+            : options,
       },
     };
   });
