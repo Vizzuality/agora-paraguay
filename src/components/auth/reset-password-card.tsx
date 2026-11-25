@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { FLOATING_FIELD_CLASS, FloatingLabel } from '@/components/ui/floating-label';
 import { Input } from '@/components/ui/input';
+import { env } from '@/env';
 import { resetRequestMailto } from '@/lib/auth/reset-request';
 
 /**
@@ -19,8 +20,8 @@ import { resetRequestMailto } from '@/lib/auth/reset-request';
  * (`/restablecer-contrasena`), reached from the login modal.
  *
  * There is no request-reset endpoint and no mail server, so Solicitar opens the user's
- * mail client addressed to the admin (`resetRequestMailto`) and the card turns into the
- * confirmation (`RequestSentCard`).
+ * mail client addressed to the admins (`VITE_ADMIN_EMAILS`) and the card turns into the
+ * confirmation (`RequestSentCard`). Without admins configured, Solicitar is disabled.
  */
 export function ResetPasswordCard({
   className,
@@ -28,6 +29,7 @@ export function ResetPasswordCard({
 }: Readonly<{ className?: string; onBackToLogin: () => void }>) {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const fieldId = useId();
+  const admins = env.VITE_ADMIN_EMAILS;
 
   if (sentTo !== null) {
     return (
@@ -49,11 +51,11 @@ export function ResetPasswordCard({
 
           const email = new FormData(event.currentTarget).get('email');
 
-          if (typeof email !== 'string') return;
+          if (typeof email !== 'string' || !admins) return;
 
           // `assign`, not `open`: a mailto never replaces the page, it hands off to the
           // mail client and leaves the tab where it is.
-          window.location.assign(resetRequestMailto(email));
+          window.location.assign(resetRequestMailto(email, admins));
           setSentTo(email);
         }}
       >
@@ -83,9 +85,15 @@ export function ResetPasswordCard({
         </CardContent>
 
         <CardFooter className="flex-col gap-6 px-10">
-          <Button type="submit" className="h-11 w-full rounded-2xl font-normal">
+          <Button type="submit" disabled={!admins} className="h-11 w-full rounded-2xl font-normal">
             Solicitar
           </Button>
+
+          {!admins && (
+            <p className="w-full text-sm text-muted-foreground">
+              Solicitud no disponible: contacte con el administrador.
+            </p>
+          )}
 
           <p className="w-full text-sm text-muted-foreground">
             <AuthLinkButton onClick={onBackToLogin}>Iniciar sesión</AuthLinkButton> con sus
