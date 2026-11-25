@@ -15,6 +15,7 @@ import type {
 } from '@/lib/api/analysis/schemas';
 import {
   type Crop,
+  CROP_WIRE_VALUES,
   CROPS,
   DEFAULT_CROP,
   isCrop,
@@ -109,7 +110,7 @@ export function toAnalysisRequests(
 }
 
 /**
- * The AI summary's body: the hero's year and crop, and the parcels in view —
+ * The AI summary's body: the hero's year and crop (under its wire name), and the parcels in view —
  * the open tab's parcel alone, or under Todas (`activeId` null) every analysed one.
  * Under Todos the summary still needs one crop: what the parcels last grew, else soy.
  * `null` until there is something to summarise — no parcels, or the filters not
@@ -128,7 +129,7 @@ export function toSummaryRequest(
 
   if (parcels.length === 0 || !isCrop(crop) || !year) return null;
 
-  return { parcels, year, crop_type: crop };
+  return { parcels, year, crop_type: CROP_WIRE_VALUES[crop] };
 }
 
 /** Whether a summary asked with `asked` still describes `current`: same parcels, year and crop. */

@@ -290,7 +290,7 @@ describe('generateSummary', () => {
     fetchMock.mockResolvedValueOnce(Response.json({ detail: 'LLM unavailable' }, { status: 503 }));
 
     await expect(
-      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'rice' }),
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'arroz' }),
     ).rejects.toMatchObject({
       name: 'ApiError',
       status: 503,

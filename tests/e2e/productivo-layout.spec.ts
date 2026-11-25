@@ -353,6 +353,7 @@ test('Generar resumen asks for the open selection, starts over on a new crop, th
   await expect(description).toBeVisible();
   await page.getByRole('button', { name: 'Generar resumen' }).click();
   await expect(page.getByRole('heading', { name: 'Resumen de 1 parcelas' })).toBeVisible();
+  await expect(page.getByText('Cultivo: arroz')).toBeVisible();
 });
 
 test('Restablecer contraseña leaves the login modal for its page, and Iniciar sesión brings the modal back', async ({
