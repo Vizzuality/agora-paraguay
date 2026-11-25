@@ -36,5 +36,5 @@ export function useHeroFilters(riesgo: Riesgo) {
   const data = source.data && withCropOptions(source.data, riesgo);
   const resolvedFilters = data ? resolveFilterSelection(selected, data, lastCrop) : null;
 
-  return { filters: { data, error: source.error }, resolvedFilters, lastCrop };
+  return { filters: { data, error: source.error }, resolvedFilters };
 }

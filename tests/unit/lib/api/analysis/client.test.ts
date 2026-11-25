@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { generateSummary, runAnalysis } from '@/lib/api/analysis/client';
+import { generateSummaries, generateSummary, runAnalysis } from '@/lib/api/analysis/client';
 import {
   analysisPath,
   analysisRequestSchema,
@@ -290,7 +290,7 @@ describe('generateSummary', () => {
     fetchMock.mockResolvedValueOnce(Response.json({ detail: 'LLM unavailable' }, { status: 503 }));
 
     await expect(
-      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'rice' }),
+      generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'arroz' }),
     ).rejects.toMatchObject({
       name: 'ApiError',
       status: 503,
@@ -322,5 +322,44 @@ describe('generateSummary', () => {
       generateSummary({ parcels: ['D07D23P00000002'], year: '2025', crop_type: 'maiz' }),
     ).rejects.toThrow(ZodError);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('generateSummaries', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+  const request = { parcels: ['D07D23P00000002'], year: '2025' };
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('document', { cookie: 'csrftoken=abc' });
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns one summary as it came', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('Soja va bien.'));
+
+    await expect(generateSummaries([{ ...request, crop_type: 'soja' }])).resolves.toBe(
+      'Soja va bien.',
+    );
+  });
+
+  it('asks every crop and joins the answers in request order, each under its crop', async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response('Soja va bien.'))
+      .mockResolvedValueOnce(new Response('Arroz va mal.'));
+
+    await expect(
+      generateSummaries([
+        { ...request, crop_type: 'soja' },
+        { ...request, crop_type: 'arroz' },
+      ]),
+    ).resolves.toBe('# Soja\n\nSoja va bien.\n\n# Arroz\n\nArroz va mal.');
+    expect(
+      fetchMock.mock.calls.map(([, init]) => JSON.parse(String(init?.body)).crop_type),
+    ).toEqual(['soja', 'arroz']);
   });
 });
