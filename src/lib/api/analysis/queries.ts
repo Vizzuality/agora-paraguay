@@ -1,6 +1,6 @@
 import { keepPreviousData, mutationOptions, queryOptions, skipToken } from '@tanstack/react-query';
 
-import { generateSummary, runAnalyses } from './client';
+import { generateSummaries, runAnalyses } from './client';
 import type { AnalysisRequest, AnalysisVisibility, SummaryRequest } from './schemas';
 
 export const analysisQueries = {
@@ -26,11 +26,11 @@ export const analysisMutations = {
   /**
    * The AI summary is a mutation, not a query: the analyst asks for it with a click, the
    * text costs an LLM call each time, and a re-run on the same parcels is a deliberate
-   * "generate again", never a cache hit.
+   * "generate again", never a cache hit. Several requests (Todos, one per crop) are one text.
    */
   summary: () =>
     mutationOptions({
       mutationKey: ['analysis', 'summary'] as const,
-      mutationFn: (request: SummaryRequest) => generateSummary(request),
+      mutationFn: (requests: SummaryRequest[]) => generateSummaries(requests),
     }),
 };

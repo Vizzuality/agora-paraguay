@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { AnalysisFilterSelection } from '@/lib/analysis/filters';
 import {
-  isSameSummaryRequest,
+  isSameSummaryRequests,
   requestedIndicatorIds,
   toAnalysisRequest,
   toAnalysisRequests,
-  toSummaryRequest,
+  toSummaryRequests,
   visibilityOf,
 } from '@/lib/analysis/request';
 import type { SummaryRequest } from '@/lib/api/analysis/schemas';
@@ -206,54 +206,51 @@ describe('toAnalysisRequests', () => {
   });
 });
 
-describe('toSummaryRequest', () => {
-  it('sends every analysed parcel under Todas, with the hero year and crop', () => {
-    expect(toSummaryRequest(['P1', 'P2'], null, { crop_type: 'rice', year: '2026' })).toEqual({
-      parcels: ['P1', 'P2'],
-      crop_type: 'rice',
-      year: '2026',
-    });
+describe('toSummaryRequests', () => {
+  it("sends every analysed parcel under Todas, with the hero year and crop under the backend's name", () => {
+    expect(toSummaryRequests(['P1', 'P2'], null, { crop_type: 'rice', year: '2026' })).toEqual([
+      { parcels: ['P1', 'P2'], crop_type: 'arroz', year: '2026' },
+    ]);
   });
 
   it("sends only the open tab's parcel", () => {
-    expect(toSummaryRequest(['P1', 'P2'], 'P2', { crop_type: 'soja', year: '2025' })).toEqual({
-      parcels: ['P2'],
-      year: '2025',
-      crop_type: 'soja',
-    });
+    expect(toSummaryRequests(['P1', 'P2'], 'P2', { crop_type: 'soja', year: '2025' })).toEqual([
+      { parcels: ['P2'], year: '2025', crop_type: 'soja' },
+    ]);
   });
 
-  it('under Todos summarises the crop the parcels last grew, else soy', () => {
-    const todos = { crop_type: 'todos', year: '2026' };
-
-    expect(toSummaryRequest(['P1'], null, todos, 'rice')?.crop_type).toBe('rice');
-    expect(toSummaryRequest(['P1'], null, todos)?.crop_type).toBe('soja');
+  it('under Todos asks once per crop, soy first', () => {
+    expect(toSummaryRequests(['P1'], null, { crop_type: 'todos', year: '2026' })).toEqual([
+      { parcels: ['P1'], year: '2026', crop_type: 'soja' },
+      { parcels: ['P1'], year: '2026', crop_type: 'arroz' },
+    ]);
   });
 
   it('is null with no parcels, filters not resolved yet, no year, or a crop the analysis does not cover', () => {
-    expect(toSummaryRequest(['P1'], null, { crop_type: 'soja' })).toBeNull();
-    expect(toSummaryRequest([], null, { crop_type: 'soja', year: '2025' })).toBeNull();
-    expect(toSummaryRequest(['P1'], null, null)).toBeNull();
-    expect(toSummaryRequest(['P1'], null, {})).toBeNull();
-    expect(toSummaryRequest(['P1'], null, { crop_type: 'maiz', year: '2025' })).toBeNull();
+    expect(toSummaryRequests(['P1'], null, { crop_type: 'soja' })).toBeNull();
+    expect(toSummaryRequests([], null, { crop_type: 'soja', year: '2025' })).toBeNull();
+    expect(toSummaryRequests(['P1'], null, null)).toBeNull();
+    expect(toSummaryRequests(['P1'], null, {})).toBeNull();
+    expect(toSummaryRequests(['P1'], null, { crop_type: 'maiz', year: '2025' })).toBeNull();
   });
 });
 
-describe('isSameSummaryRequest', () => {
+describe('isSameSummaryRequests', () => {
   const asked: SummaryRequest = { parcels: ['P1', 'P2'], year: '2025', crop_type: 'soja' };
 
-  it('holds for the same parcels, year and crop, even as a new object', () => {
-    expect(isSameSummaryRequest(asked, { ...asked, parcels: ['P1', 'P2'] })).toBe(true);
+  it('holds for the same parcels, year and crops, even as new objects', () => {
+    expect(isSameSummaryRequests([asked], [{ ...asked, parcels: ['P1', 'P2'] }])).toBe(true);
   });
 
-  it('breaks on another crop, year or parcel set', () => {
-    expect(isSameSummaryRequest(asked, { ...asked, crop_type: 'rice' })).toBe(false);
-    expect(isSameSummaryRequest(asked, { ...asked, year: '2026' })).toBe(false);
-    expect(isSameSummaryRequest(asked, { ...asked, parcels: ['P2'] })).toBe(false);
+  it('breaks on another crop, year, parcel set or number of crops', () => {
+    expect(isSameSummaryRequests([asked], [{ ...asked, crop_type: 'arroz' }])).toBe(false);
+    expect(isSameSummaryRequests([asked], [{ ...asked, year: '2026' }])).toBe(false);
+    expect(isSameSummaryRequests([asked], [{ ...asked, parcels: ['P2'] }])).toBe(false);
+    expect(isSameSummaryRequests([asked], [asked, { ...asked, crop_type: 'arroz' }])).toBe(false);
   });
 
   it('breaks when nothing was asked or nothing can be asked now', () => {
-    expect(isSameSummaryRequest(undefined, asked)).toBe(false);
-    expect(isSameSummaryRequest(asked, null)).toBe(false);
+    expect(isSameSummaryRequests(undefined, [asked])).toBe(false);
+    expect(isSameSummaryRequests([asked], null)).toBe(false);
   });
 });
