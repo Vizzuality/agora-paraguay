@@ -126,11 +126,18 @@ export function toSummaryRequests(
   const picked = selection?.[CROP_FILTER_ID];
   const year = selection?.[YEAR_FILTER_ID];
   const parcels = activeId === null ? parcelIds : [activeId];
-  const crops = picked === ALL_CROPS ? SUMMARY_CROPS : isCrop(picked) ? [picked] : [];
+  const crops = summaryCrops(picked);
 
   if (parcels.length === 0 || crops.length === 0 || !year) return null;
 
   return crops.map((crop) => ({ parcels, year, crop_type: CROP_WIRE_VALUES[crop] }));
+}
+
+/** The crops to summarise for the hero's crop pick: every summary crop under Todos. */
+function summaryCrops(picked: string | undefined): readonly Crop[] {
+  if (picked === ALL_CROPS) return SUMMARY_CROPS;
+  if (isCrop(picked)) return [picked];
+  return [];
 }
 
 function isSameSummaryRequest(asked: SummaryRequest, current: SummaryRequest): boolean {
