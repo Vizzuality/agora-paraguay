@@ -18,6 +18,9 @@ COPY . .
 # Origin of the API. Leave unset when the backend serves this app under /api.
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+# Comma-separated inboxes reset-password requests are mailed to. Unset disables Solicitar.
+ARG VITE_ADMIN_EMAILS
+ENV VITE_ADMIN_EMAILS=$VITE_ADMIN_EMAILS
 # Backend origin the server relays /api to (`routeRules` in vite.config.ts), baked into
 # the build. Required: without it /api would target the container itself.
 ARG API_PROXY_TARGET

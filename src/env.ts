@@ -19,6 +19,21 @@ export const env = createEnv({
      * first-party.
      */
     VITE_API_URL: z.url().optional(),
+
+    /**
+     * Comma-separated inboxes the reset-password Solicitar mail is addressed to.
+     * Unset, Solicitar is disabled.
+     */
+    VITE_ADMIN_EMAILS: z
+      .string()
+      .transform((value) =>
+        value
+          .split(',')
+          .map((address) => address.trim())
+          .filter(Boolean),
+      )
+      .pipe(z.array(z.email()).min(1))
+      .optional(),
   },
   runtimeEnv: import.meta.env,
   emptyStringAsUndefined: true,
