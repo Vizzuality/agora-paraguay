@@ -6,7 +6,7 @@ import { lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SkeletonParagraph } from '@/components/ui/skeleton-paragraph';
-import { isSameSummaryRequest, toSummaryRequest } from '@/lib/analysis/request';
+import { isSameSummaryRequests, toSummaryRequests } from '@/lib/analysis/request';
 import { useHeroFilters } from '@/lib/analysis/use-hero-filters';
 import { analysisMutations } from '@/lib/api/analysis/queries';
 import { errorReason } from '@/lib/api/http';
@@ -43,21 +43,22 @@ function SummaryBody({ status, text }: Readonly<{ status: MutationStatus; text?:
 }
 
 /**
- * Productivo's AI summary for the hero's crop: of the open tab's parcel, or under Todas of
- * every analysed one. Reads atoms, so render inside `<ClientOnly>`.
+ * Productivo's AI summary for the hero's crop (Todos: soy and rice, one section each): of the
+ * open tab's parcel, or under Todas of every analysed one. Reads atoms, so render inside
+ * `<ClientOnly>`.
  */
 export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
   const mutation = useMutation(analysisMutations.summary());
   const activeId = useAtomValue(activeParcelIdAtom);
-  const { resolvedFilters, lastCrop } = useHeroFilters('productivo');
-  const request = toSummaryRequest(parcels, activeId, resolvedFilters, lastCrop);
-  const generate = () => request && mutation.mutate(request);
+  const { resolvedFilters } = useHeroFilters('productivo');
+  const requests = toSummaryRequests(parcels, activeId, resolvedFilters);
+  const generate = () => requests && mutation.mutate(requests);
   // A summary (or its error) asked for another crop, year or parcel set no longer applies:
   // the card starts over rather than show, or print, it under the new filters.
   const stale =
     !mutation.isPending &&
     mutation.variables !== undefined &&
-    !isSameSummaryRequest(mutation.variables, request);
+    !isSameSummaryRequests(mutation.variables, requests);
   const status = stale ? 'idle' : mutation.status;
 
   return (
@@ -92,7 +93,7 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
             type="button"
             variant="outline"
             className="h-11 shrink-0 rounded-2xl px-8 font-normal print:hidden"
-            disabled={request === null}
+            disabled={requests === null}
             onClick={generate}
           >
             <RefreshCw aria-hidden />
@@ -106,7 +107,7 @@ export function WidgetAI({ parcels, className }: Readonly<WidgetAIProps>) {
               'h-11 shrink-0 rounded-2xl px-8 font-normal print:hidden',
               mutation.isPending && 'disabled:opacity-100',
             )}
-            disabled={mutation.isPending || request === null}
+            disabled={mutation.isPending || requests === null}
             onClick={generate}
           >
             {mutation.isPending ? (

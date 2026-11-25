@@ -50,3 +50,23 @@ export async function generateSummary(request: SummaryRequest): Promise<SummaryR
 
   return summaryResponseSchema.parse(await postText(SUMMARY_PATH, parsed));
 }
+
+/** How a crop's section is titled when one summary holds several crops. */
+const SUMMARY_CROP_TITLES: Readonly<Record<SummaryRequest['crop_type'], string>> = {
+  soja: 'Soja',
+  arroz: 'Arroz',
+};
+
+/**
+ * Asks every summary side by side and joins them in request order. One summary comes back
+ * as is; several (Todos, one per crop) each go under their crop's title.
+ */
+export async function generateSummaries(requests: SummaryRequest[]): Promise<SummaryResponse> {
+  const texts = await Promise.all(requests.map((request) => generateSummary(request)));
+
+  if (texts.length === 1) return texts[0];
+
+  return texts
+    .map((text, index) => `# ${SUMMARY_CROP_TITLES[requests[index].crop_type]}\n\n${text}`)
+    .join('\n\n');
+}

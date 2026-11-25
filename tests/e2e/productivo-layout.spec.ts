@@ -354,6 +354,21 @@ test('Generar resumen asks for the open selection, starts over on a new crop, th
   await page.getByRole('button', { name: 'Generar resumen' }).click();
   await expect(page.getByRole('heading', { name: 'Resumen de 1 parcelas' })).toBeVisible();
   await expect(page.getByText('Cultivo: arroz')).toBeVisible();
+
+  // Todos: one summary per crop, soy then rice, each under its crop's title.
+  await openSection(page, 'Cultivo y fechas');
+  await page
+    .getByRole('region', { name: 'Cultivo y fechas' })
+    .getByRole('combobox', { name: 'Tipo de cultivo' })
+    .click();
+  await page.getByRole('option', { name: 'Todos' }).click();
+  await expect(description).toBeVisible();
+  await page.getByRole('button', { name: 'Generar resumen' }).click();
+  await expect(page.getByRole('heading', { name: 'Resumen de 1 parcelas' })).toHaveCount(2);
+  await expect(page.getByText(/^Cultivo: (soja|arroz)$/)).toHaveText([
+    'Cultivo: soja',
+    'Cultivo: arroz',
+  ]);
 });
 
 test('Restablecer contraseña leaves the login modal for its page, and Iniciar sesión brings the modal back', async ({
