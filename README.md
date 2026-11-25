@@ -22,6 +22,8 @@ pnpm dev            # http://localhost:3000
 No `.env` file is needed — the app runs with sensible defaults (a local backend behind the proxy,
 built-in satellite basemap). Copy `.env.example` to `.env` only to override them; note that setting
 `VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
+`VITE_ADMIN_EMAILS` (comma-separated) lists the inboxes the reset-password Solicitar mail goes
+to; unset, Solicitar is disabled.
 
 Auth, parcel filtering, metadata and analysis call the real backend API (see
 [Data layer](#data-layer)): the app proxies `/api` to the backend — Vite in dev, Nitro in the

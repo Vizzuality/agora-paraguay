@@ -28,5 +28,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Solicitar is disabled without admins to address the reset request to.
+    env: { VITE_ADMIN_EMAILS: 'admin@example.org' },
   },
 });
