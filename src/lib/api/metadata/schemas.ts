@@ -83,7 +83,12 @@ export function isCrop(value: string | undefined): value is Crop {
 }
 
 /** Each crop as the backend's `crop_type` options name it: `soja`, `arroz`. */
-export const CROP_WIRE_VALUES: Readonly<Record<Crop, string>> = { rice: 'arroz', soja: 'soja' };
+export const CROP_WIRE_VALUES = { rice: 'arroz', soja: 'soja' } as const satisfies Record<
+  Crop,
+  string
+>;
+
+export type WireCrop = (typeof CROP_WIRE_VALUES)[Crop];
 
 /** A crop filter value as sent: a known crop under its wire name, anything else as is. */
 export function toWireCrop(value: string): string {

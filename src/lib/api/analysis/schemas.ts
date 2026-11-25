@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CROPS, type IndicatorType } from '@/lib/api/metadata/schemas';
+import { CROP_WIRE_VALUES, type IndicatorType } from '@/lib/api/metadata/schemas';
 
 /*
  * Analysis contract: `POST` runs the enumerated indicators over the selected parcels.
@@ -254,7 +254,7 @@ export const SUMMARY_PATH = '/api/parcels/analysis/summary/';
 export const summaryRequestSchema = z.looseObject({
   parcels: idListSchema,
   year: z.string().trim().min(4).max(4),
-  crop_type: z.enum(CROPS),
+  crop_type: z.enum([CROP_WIRE_VALUES.soja, CROP_WIRE_VALUES.rice]),
 });
 
 export type SummaryRequest = z.infer<typeof summaryRequestSchema>;

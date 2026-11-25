@@ -15,8 +15,8 @@ import type {
 } from '@/lib/api/analysis/schemas';
 import {
   type Crop,
+  CROP_WIRE_VALUES,
   CROPS,
-  DEFAULT_CROP,
   isCrop,
   type Indicators,
   type Riesgo,
@@ -108,40 +108,53 @@ export function toAnalysisRequests(
   );
 }
 
+/** The order Todos asks for its summaries in, and so the order they read in. */
+const SUMMARY_CROPS: readonly Crop[] = ['soja', 'rice'];
+
 /**
- * The AI summary's body: the hero's year and crop, and the parcels in view —
- * the open tab's parcel alone, or under Todas (`activeId` null) every analysed one.
- * Under Todos the summary still needs one crop: what the parcels last grew, else soy.
- * `null` until there is something to summarise — no parcels, or the filters not
- * resolved to a year and a known crop yet.
+ * The AI summary's bodies: the hero's year and crop (under its wire name), and the parcels
+ * in view — the open tab's parcel alone, or under Todas (`activeId` null) every analysed
+ * one. A summary reads one crop, so Todos asks once per crop, soy first. `null` until
+ * there is something to summarise — no parcels, or the filters not resolved to a year and
+ * a known crop yet.
  */
-export function toSummaryRequest(
+export function toSummaryRequests(
   parcelIds: string[],
   activeId: string | null,
   selection: AnalysisFilterSelection | null,
-  lastCrop?: Crop,
-): SummaryRequest | null {
+): SummaryRequest[] | null {
   const picked = selection?.[CROP_FILTER_ID];
-  const crop = picked === ALL_CROPS ? (lastCrop ?? DEFAULT_CROP) : picked;
   const year = selection?.[YEAR_FILTER_ID];
   const parcels = activeId === null ? parcelIds : [activeId];
+  const crops = summaryCrops(picked);
 
-  if (parcels.length === 0 || !isCrop(crop) || !year) return null;
+  if (parcels.length === 0 || crops.length === 0 || !year) return null;
 
-  return { parcels, year, crop_type: crop };
+  return crops.map((crop) => ({ parcels, year, crop_type: CROP_WIRE_VALUES[crop] }));
 }
 
-/** Whether a summary asked with `asked` still describes `current`: same parcels, year and crop. */
-export function isSameSummaryRequest(
-  asked: SummaryRequest | undefined,
-  current: SummaryRequest | null,
-): boolean {
-  if (!asked || !current) return false;
+/** The crops to summarise for the hero's crop pick: every summary crop under Todos. */
+function summaryCrops(picked: string | undefined): readonly Crop[] {
+  if (picked === ALL_CROPS) return SUMMARY_CROPS;
+  if (isCrop(picked)) return [picked];
+  return [];
+}
 
+function isSameSummaryRequest(asked: SummaryRequest, current: SummaryRequest): boolean {
   return (
     asked.crop_type === current.crop_type &&
     asked.year === current.year &&
     asked.parcels.length === current.parcels.length &&
     asked.parcels.every((id, index) => id === current.parcels[index])
   );
+}
+
+/** Whether summaries asked with `asked` still describe `current`: same parcels, year and crops. */
+export function isSameSummaryRequests(
+  asked: SummaryRequest[] | undefined,
+  current: SummaryRequest[] | null,
+): boolean {
+  if (!asked || !current || asked.length !== current.length) return false;
+
+  return asked.every((request, index) => isSameSummaryRequest(request, current[index]));
 }
