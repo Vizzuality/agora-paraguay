@@ -14,8 +14,8 @@ export default defineConfig(({ mode }) => {
    * Where `/api` is forwarded, in dev and in the built server alike. The backend sets a
    * session cookie, and a cookie from another origin over plain http never sticks
    * in a browser — so the app talks to itself and relays: Vite in dev, Nitro in
-   * production (Vercel, the container). Defaults to a local backend; set
-   * `API_PROXY_TARGET` (shell, `.env`, or the Vercel project's build env) to reach a
+   * production (the container). Defaults to a local backend; set
+   * `API_PROXY_TARGET` (shell, `.env`, Railway variable or Docker build arg) to reach a
    * shared backend. Read at build time: the rule is baked into the output.
    */
   const API_PROXY_TARGET = proxyTarget(loadEnv(mode, process.cwd(), '').API_PROXY_TARGET);
@@ -53,10 +53,8 @@ export default defineConfig(({ mode }) => {
       tanstackStart(),
       nitroV2Plugin({
         compatibilityDate: '2026-08-11',
-        // Unset locally and in Docker -> Nitro's default `node-server`, which emits
-        // .output/server/index.mjs (the container entrypoint). Vercel sets
-        // NITRO_PRESET=vercel so the target is chosen explicitly rather than sniffed.
-        preset: process.env.NITRO_PRESET,
+        // Emits .output/server/index.mjs, the container entrypoint.
+        preset: 'node-server',
         // Traced lucide-react ships only dist/esm, but Node resolves its `node` export to dist/cjs.
         externals: { inline: ['lucide-react'] },
         // The production counterpart of `server.proxy` above: the deployed server relays

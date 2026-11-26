@@ -98,6 +98,26 @@ The request also carries the hero filters flat (`crop_type`, `sowing_date`, `dat
 `GET /api/parcels/filters/` lists). Any of parcels, filters or indicators changing re-POSTs;
 `keepPreviousData` keeps the cards up meanwhile.
 
+### Crop
+
+The hero's `crop_type` dropdown offers every crop, whatever the parcels grew
+(`withCropOptions`). On the wire the crop is the backend's Spanish value: `soja` or `arroz`
+(the app's `rice` id is sent as `arroz`, `toWireCrop` / `CROP_WIRE_VALUES`).
+
+The API answers one crop per call, so the client fans out where the user asks for several:
+
+| Request                                         | Sanitario                    | Productivo: one crop | Productivo: Todos                                                                                             |
+| ----------------------------------------------- | ---------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Analysis (`…/analysis/{diseases\|production}/`) | One call, `soja` or `arroz`  | One call             | Two calls, one per crop: every parcel, that crop's indicators plus the shared ones; answers merged per parcel |
+| AI summary (`…/analysis/summary/`)              | One call for the crop picked | One call             | Two calls, `soja` then `arroz`; the texts join into one, each under its crop's title                          |
+
+- **Sanitario has no Todos.** The diseases analysis reads one crop; the user switches between
+  soja and arroz.
+- **Productivo's Todos** is built in `toAnalysisRequests` and merged by
+  `mergeAnalysisResponses`; the summary's per-crop bodies come from `toSummaryRequests` and are
+  joined in `src/lib/api/analysis/client.ts`. Both are workarounds: drop the fan-out once the
+  API answers several crops in one call (follow-up 15).
+
 ### Sanitario (public)
 
 | Type       | One parcel                                   | Todas                                                                                                     |
@@ -392,3 +412,8 @@ Read off the list:
     `low`, `mid`, `high`, `h5`, `h10`) or a client convention on the id prefix, like the crop
     suffix rule and with the same `TODO(api-filters)` caveat. There is no design for the grouped
     widgets yet.
+
+15. **One crop per call.** The production analysis and the AI summary each read one crop, so
+    productivo's Todos sends one request per crop and merges the answers client-side (see
+    [Crop](#crop)). When the API accepts several crops in one call, send one request and drop
+    `toAnalysisRequests`' fan-out, `mergeAnalysisResponses` and the summary join.

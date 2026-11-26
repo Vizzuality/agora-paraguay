@@ -6,7 +6,6 @@ node_modules
 .tanstack
 dist
 coverage
-.vercel
 .env
 .env.*
 !.env.example

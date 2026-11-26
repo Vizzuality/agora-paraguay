@@ -20,19 +20,28 @@ pnpm dev            # http://localhost:3000
 ```
 
 No `.env` file is needed — the app runs with sensible defaults (a local backend behind the proxy,
-built-in satellite basemap). Copy `.env.example` to `.env` only to override them; note that setting
-`VITE_BASEMAP_STYLE_URL` makes the e2e tests hit the network for the style.
-`VITE_ADMIN_EMAILS` (comma-separated) lists the inboxes the reset-password Solicitar mail goes
-to; unset, Solicitar is disabled.
+built-in satellite basemap). Copy `.env.example` to `.env` only to override them.
+
+### Environment variables
+
+Both are read by the **build**: changing one means rebuilding. Locally they go in `.env`;
+deployed, they are Railway service variables or `docker build --build-arg`s (see
+[Deployment](#deployment)).
+
+| Variable            | Default                 | What it does                                                                                     |
+| ------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `API_PROXY_TARGET`  | `http://localhost:8000` | Backend origin the app relays `/api` to. **Required** by the Docker build.                       |
+| `VITE_ADMIN_EMAILS` | unset                   | Comma-separated inboxes the reset-password Solicitar mail goes to. Unset, Solicitar is disabled. |
+
+`VITE_ADMIN_EMAILS` is validated in `src/env.ts`; `API_PROXY_TARGET` is read in `vite.config.ts`.
+`src/env.ts` also accepts two optional overrides no deployment sets today: `VITE_API_URL` (the
+browser calls the API directly instead of through the proxy) and `VITE_BASEMAP_STYLE_URL`
+(replaces the built-in Esri satellite basemap; makes the e2e tests hit the network).
 
 Auth, parcel filtering, metadata and analysis call the real backend API (see
-[Data layer](#data-layer)): the app proxies `/api` to the backend — Vite in dev, Nitro in the
-built server (`routeRules` in `vite.config.ts`) — so its session cookie stays first-party and
-an https page never calls the plain-http API directly. The default target is a local backend on
-port 8000; set `API_PROXY_TARGET` to reach the shared backend instead: in `.env` locally, in
-the project's build environment on Vercel. It is read at build time, so changing it means
-rebuilding. `VITE_API_URL` remains for a deployment where the browser can reach the API
-directly (https, CORS and cookies configured on the backend). The e2e specs stub the auth routes
+[Data layer](#data-layer)): the app proxies `/api` to `API_PROXY_TARGET` — Vite in dev, Nitro in
+the built server (`routeRules` in `vite.config.ts`) — so its session cookie stays first-party
+and an https page never calls the plain-http API directly. The e2e specs stub the auth routes
 (`tests/e2e/fixtures/auth.ts`); signing in against the real backend is a manual check with a
 personal account.
 
@@ -145,6 +154,10 @@ Rules that keep the swap cheap:
   add fields without breaking the parse; tighten them as the contract settles.
 - How indicators are typed, what each riesgo does with them and which widget each renders:
   [`docs/indicators.md`](docs/indicators.md).
+- **One crop per call.** Crop values on the wire are the backend's Spanish ones (`soja`,
+  `arroz`). Sanitario analyses one crop at a time. Productivo also offers Todos, and because the
+  API answers one crop per call, Todos sends one analysis and one AI summary request per crop
+  and merges the answers ([`docs/indicators.md#crop`](docs/indicators.md#crop)).
 
 Query state is fetched on the client after hydration; SSR sends the shell and a loading state.
 Wiring server-side prefetch (`@tanstack/react-router-ssr-query`) was deliberately deferred until
@@ -152,41 +165,34 @@ there is a real API and real payload sizes to justify it.
 
 ## Deployment
 
-One build, two targets, both driven by Nitro. The preset comes from `NITRO_PRESET`
-(see `vite.config.ts`).
+One artifact: the `Dockerfile` builds a Node server (Nitro `node-server` preset, output in
+`.output`) that listens on port 3000. CI builds the image on every pull request.
 
-### Vercel — current
+Every [environment variable](#environment-variables) is read by the **build**, so each is an
+`ARG` in the `Dockerfile`, not a runtime environment variable: changing a value means
+rebuilding the image. The build fails without `API_PROXY_TARGET`.
 
-Configuration lives in `vercel.json`, so it is versioned rather than set by hand in the dashboard:
-framework `null`, `pnpm install --frozen-lockfile`, `pnpm build`, and `NITRO_PRESET=vercel` for the
-build step. The one value that is not versioned is the backend: set `API_PROXY_TARGET` (the
-backend origin, e.g. `http://<backend-host>:<port>`) as a build-time environment variable in the
-Vercel project, then redeploy; `/api/*` on the deployment is relayed there by the server function.
+### Railway — development deployment
 
-With that preset Nitro emits the [Build Output API v3](https://vercel.com/docs/build-output-api/v3)
-layout at **`.vercel/output`** — _not_ `.output`. Vercel detects that directory automatically, so
-no output directory needs configuring. Confirm the build log reports the `vercel` preset rather
-than `node-server`.
+Railway builds the `Dockerfile` from this repository. Set the variables as service variables on
+the Railway service, then redeploy. Railway hands a service variable to the Docker build only
+when the `Dockerfile` declares a matching `ARG`, so a new `VITE_*` variable needs both: an
+`ARG` + `ENV` pair in the `Dockerfile` and the service variable on Railway.
 
-Connecting the repo to a Vercel project is a one-time manual step (`vercel link`, or importing the
-repo in the dashboard).
+### Production — GMV
 
-### Docker — handover
-
-The client's backend team deploys the container. CI builds the image on every PR so it cannot rot
-between now and then.
+GMV deploys production on their own infrastructure, from the same `Dockerfile`:
 
 ```sh
-docker build --build-arg API_PROXY_TARGET=http://<backend-host>:<port> -t agora-paraguay .
+docker build \
+  --build-arg API_PROXY_TARGET=http://<backend-host>:<port> \
+  --build-arg VITE_ADMIN_EMAILS=admin1@example.org,admin2@example.org \
+  -t agora-paraguay .
 docker run -p 3000:3000 agora-paraguay
 ```
 
-`API_PROXY_TARGET` is where the server relays `/api`, and the build fails without it. When the
-container shares a network with the backend, use the internal address (e.g. `http://backend:8000`)
-so the backend port need not be public.
-
-`VITE_*` variables and `API_PROXY_TARGET` are read by the **build**, so they are `ARG`s in the
-Dockerfile, not runtime environment variables.
+When the container shares a network with the backend, point `API_PROXY_TARGET` at the internal
+address (e.g. `http://backend:8000`) so the backend port need not be public.
 
 ## Decisions
 
@@ -208,10 +214,9 @@ on 2026-08-11.
 - **prek for git hooks, not Husky.** Husky is the Adopt-tier default and prek is Trial, so this is a
   deliberate exception following the `climate_risk_index_for_biodiversity` precedent. Do not install
   Husky alongside it: Husky sets `core.hooksPath=.husky`, which silently disables prek's hook.
-- **Node 24, not 26.** Vercel only offers `20.x`, `22.x` and `24.x`, and Node 26 is still in its
-  Current phase — it reaches LTS around October 2026, which is also when Vercel is expected to offer
-  it. Dependabot is configured to ignore major bumps of `node` and `@types/node` so local, CI,
-  Vercel and the container stay on the same major. Revisit in October.
+- **Node 24, not 26.** Node 26 was still in its Current phase when the project started.
+  Dependabot is configured to ignore major bumps of `node` and `@types/node` so local, CI and
+  the container stay on the same major; moving to a new major is a deliberate change.
 - **Native `queryOptions`**, not `query-key-factory` (Hold tier, unmaintained).
 - **Query data loads client-side after hydration.** SSR prefetch via
   `@tanstack/react-router-ssr-query` was deferred until there is a real API and real payload sizes.
