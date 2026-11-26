@@ -1,5 +1,71 @@
 # Changelog
 
+## [0.8.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.7.0...v0.8.0) (2026-11-26)
+
+
+### Features
+
+* Acerca de in the top bar opens what AGORA is and what each module covers (AGP-146) ([#335](https://github.com/Vizzuality/agora-paraguay/issues/335)) ([c679b10](https://github.com/Vizzuality/agora-paraguay/commit/c679b105376cd6ead78b456fae14295c7a321e8a))
+* analysis pages explain themselves, Exposición climática's intro replacing the district prompt ([#333](https://github.com/Vizzuality/agora-paraguay/issues/333)) ([9ce9df5](https://github.com/Vizzuality/agora-paraguay/commit/9ce9df551ccde7f6dfd3d073ebce0267ffc1cf47))
+* closed ID y tipo de análisis carries the analysis identifier before the type ([#334](https://github.com/Vizzuality/agora-paraguay/issues/334)) ([b86d4af](https://github.com/Vizzuality/agora-paraguay/commit/b86d4af63dc0659d7d039d16873fb035106a7a6e))
+* Exposición climática gets Personalizar and Exportar informe, its report printing the district map (AGP-138) ([#331](https://github.com/Vizzuality/agora-paraguay/issues/331)) ([e862240](https://github.com/Vizzuality/agora-paraguay/commit/e862240b77fcaf462d9b28e4f9e1b351aa31b47a))
+* Personalizar groups productivo's indicators under the historic and projected titles, and the analysis copy comes from the metadata files ([#353](https://github.com/Vizzuality/agora-paraguay/issues/353)) ([2f3d2be](https://github.com/Vizzuality/agora-paraguay/commit/2f3d2be164736cb5b32e8670c95f203437598a10))
+* Personalizar lists only the indicators of the selected crop and the parcels in view ([#361](https://github.com/Vizzuality/agora-paraguay/issues/361)) ([828c407](https://github.com/Vizzuality/agora-paraguay/commit/828c40702fe8f97a025242a5adc5ba5285a00941))
+* productivo's Todos runs one analysis per crop, and the crop dropdown offers every crop ([#378](https://github.com/Vizzuality/agora-paraguay/issues/378)) ([96167e5](https://github.com/Vizzuality/agora-paraguay/commit/96167e50ba799a7a2ab78142888c3263a15d76ef))
+* the AGORA logo replaces the LOGO placeholder, 24px in the top bar ([#326](https://github.com/Vizzuality/agora-paraguay/issues/326)) ([06450dc](https://github.com/Vizzuality/agora-paraguay/commit/06450dc8523ba6a441c1df3bf7b13ecf23acb60a))
+* the analysis info card reopens on each type change and visit, and its close button drops the hover circle ([#340](https://github.com/Vizzuality/agora-paraguay/issues/340)) ([0171561](https://github.com/Vizzuality/agora-paraguay/commit/01715611fc9646625e99d579f1c94586f3f33a79))
+* the analysis types get their own icons, drawn in the text colour and hidden from screen readers beside their label ([#341](https://github.com/Vizzuality/agora-paraguay/issues/341)) ([9165630](https://github.com/Vizzuality/agora-paraguay/commit/9165630ccc5d532df569f3f60e809525fa2b1a76))
+* the exposure legend gives each class its range, with a footnote on how exposed soy is counted ([#327](https://github.com/Vizzuality/agora-paraguay/issues/327)) ([6914b07](https://github.com/Vizzuality/agora-paraguay/commit/6914b07b9e6f7fc7b6cf00622b03ef02b507c2aa))
+* the footer links to the three analysis types ([#348](https://github.com/Vizzuality/agora-paraguay/issues/348)) ([c3dd9ab](https://github.com/Vizzuality/agora-paraguay/commit/c3dd9abc2690c19f58d61f1c8f47e3ba4e5f1169))
+* the landing and the info cards share one description per analysis type, as the design words it ([#337](https://github.com/Vizzuality/agora-paraguay/issues/337)) ([9769b0c](https://github.com/Vizzuality/agora-paraguay/commit/9769b0c6301e428016defc80612fb465f3a9d2c1))
+* the landing cards drop their border and Saber más, and the Identificador de análisis sits under them ([#339](https://github.com/Vizzuality/agora-paraguay/issues/339)) ([2bfe587](https://github.com/Vizzuality/agora-paraguay/commit/2bfe587ef3da46bf5f44396114823e86db80c63f))
+* the login dialog reads Iniciar sesión, closes from its own ×, and spaces like the design ([#336](https://github.com/Vizzuality/agora-paraguay/issues/336)) ([6851d44](https://github.com/Vizzuality/agora-paraguay/commit/6851d44ff435e0b19d51d27ec92173d41d4165d0))
+* the map opens on Paraguay without the development banner, and the zafriñas join Información de contexto ([#375](https://github.com/Vizzuality/agora-paraguay/issues/375)) ([66722cc](https://github.com/Vizzuality/agora-paraguay/commit/66722cc67ad60aa3d32239a7bcf04a7af6ddeaef))
+* the report footer closes every dashboard, naming the analysis identifier and the date (AGP-142) ([#330](https://github.com/Vizzuality/agora-paraguay/issues/330)) ([09a2198](https://github.com/Vizzuality/agora-paraguay/commit/09a219837a9ed8c66cbcad32225ac77dd6996864))
+* the report opens on its title and productivo's historic analysis on a new page; Todas comes back as a button on one parcel ([#350](https://github.com/Vizzuality/agora-paraguay/issues/350)) ([22344cb](https://github.com/Vizzuality/agora-paraguay/commit/22344cb0806dd71e407fd004b8e9e69226b4e18d))
+* the report opens with the analysis title and its Identificador de análisis ([#329](https://github.com/Vizzuality/agora-paraguay/issues/329)) ([03f2ee0](https://github.com/Vizzuality/agora-paraguay/commit/03f2ee023bf21170a01d6e0ad703892e79ae4218))
+* the report sums the analysis up in Parámetros del análisis, the área's map beside its filters and hectares ([#345](https://github.com/Vizzuality/agora-paraguay/issues/345)) ([53ef6f0](https://github.com/Vizzuality/agora-paraguay/commit/53ef6f0099f2d6cc26d8a4df87d0a8adf6614534))
+* the seasons chart over the years under Todas, and the seasons counters join Información de contexto ([#371](https://github.com/Vizzuality/agora-paraguay/issues/371)) ([36520a6](https://github.com/Vizzuality/agora-paraguay/commit/36520a6a11fc11790a52363b0f8d4c48ae311641))
+* under Todas the station readings list one value per weather station, in the stations' order ([#376](https://github.com/Vizzuality/agora-paraguay/issues/376)) ([271a598](https://github.com/Vizzuality/agora-paraguay/commit/271a598b0f408ca7158abcf1ad94131a496f6b94))
+
+
+### Bug Fixes
+
+* AI summary asks for arroz, and for both crops under Todos ([#389](https://github.com/Vizzuality/agora-paraguay/issues/389)) ([14a4a8d](https://github.com/Vizzuality/agora-paraguay/commit/14a4a8d683bc23327cad67b11442047a9f2be64f))
+* dark mode hovers secondary surfaces in deep navy and leaves form fields unfilled, as the landing design shows ([#342](https://github.com/Vizzuality/agora-paraguay/issues/342)) ([3f188b0](https://github.com/Vizzuality/agora-paraguay/commit/3f188b009dae1c03934be036024060d64be75d8e))
+* error text, small captions and focus rings meet WCAG contrast in both themes ([#367](https://github.com/Vizzuality/agora-paraguay/issues/367)) ([bce7442](https://github.com/Vizzuality/agora-paraguay/commit/bce7442901e15d9fbed333c798c5a9de4c2a9bd6))
+* failed queries retry only on outages and server errors ([#357](https://github.com/Vizzuality/agora-paraguay/issues/357)) ([e86b807](https://github.com/Vizzuality/agora-paraguay/commit/e86b8079746a703f8383497679db2de74d17dc1a))
+* focus rings in the settings column are no longer cut at its edges ([#349](https://github.com/Vizzuality/agora-paraguay/issues/349)) ([2672f7a](https://github.com/Vizzuality/agora-paraguay/commit/2672f7a2de4c983bec677160c61ac0a918f53c00))
+* logout drops the admin's cached user list ([#358](https://github.com/Vizzuality/agora-paraguay/issues/358)) ([b819689](https://github.com/Vizzuality/agora-paraguay/commit/b81968990dc261a1e0f4870c40323e6c34c5d862))
+* map legend footnotes read in italics ([#344](https://github.com/Vizzuality/agora-paraguay/issues/344)) ([8d82877](https://github.com/Vizzuality/agora-paraguay/commit/8d828773bf664961e8ab9856b3aeda4f7e975c9f))
+* mobile fixes ([#354](https://github.com/Vizzuality/agora-paraguay/issues/354)) ([a0ce542](https://github.com/Vizzuality/agora-paraguay/commit/a0ce5427013c781ab0fc958a4752c3b6e93506c6))
+* mobile layout of Área de interés and the folded settings sections ([#366](https://github.com/Vizzuality/agora-paraguay/issues/366)) ([df86b72](https://github.com/Vizzuality/agora-paraguay/commit/df86b7291b1bc55b85f5e6a8033a8811e86d38a9))
+* pages name their tab, date fields announce their date, and the fly-to-district honours reduced motion ([#368](https://github.com/Vizzuality/agora-paraguay/issues/368)) ([8f21e80](https://github.com/Vizzuality/agora-paraguay/commit/8f21e8024a6510e9ad387c449562c8be86227886))
+* password reset requests go to both GMV admin inboxes ([#388](https://github.com/Vizzuality/agora-paraguay/issues/388)) ([6978af1](https://github.com/Vizzuality/agora-paraguay/commit/6978af10fc250f734097f55efab338188c1735ff))
+* the /api relay drops a trailing slash from API_PROXY_TARGET, so POSTs pass the backend's CSRF Origin check ([#338](https://github.com/Vizzuality/agora-paraguay/issues/338)) ([bbe6485](https://github.com/Vizzuality/agora-paraguay/commit/bbe6485af98847afae6077c3a85ead04aa8cdf38))
+* the AI summary starts over when the crop, year or parcels change ([#359](https://github.com/Vizzuality/agora-paraguay/issues/359)) ([1e41606](https://github.com/Vizzuality/agora-paraguay/commit/1e41606db38d23b0ebfe7869862a49bf8e8a2f2a))
+* the backend's typos show corrected, and the map layers, analysis types and parcel legend read their metadata from files shaped like the API ([#352](https://github.com/Vizzuality/agora-paraguay/issues/352)) ([3cbfcbf](https://github.com/Vizzuality/agora-paraguay/commit/3cbfcbf2e7296d6410f1e07cca38851c9a3750b4))
+* the diseases analysis asks for 2025 and one crop, rice as arroz ([#374](https://github.com/Vizzuality/agora-paraguay/issues/374)) ([6732dc2](https://github.com/Vizzuality/agora-paraguay/commit/6732dc258e2ac0bc88db1b4552bccdf2a0868928))
+* the exposure map asks the new backend for its layers by their new ids (1–4) ([#343](https://github.com/Vizzuality/agora-paraguay/issues/343)) ([e33e854](https://github.com/Vizzuality/agora-paraguay/commit/e33e8543bae92deb03852befbef2e3713faadf1b))
+* the exposure map keeps its legend colours in both themes, leaves flood whole on a pick, drops the mask on Nivel de exposición and uses the analysis icons; the identifier caption fits dark mode ([#351](https://github.com/Vizzuality/agora-paraguay/issues/351)) ([ab88055](https://github.com/Vizzuality/agora-paraguay/commit/ab880555cc17f5afd99af2839dd14081275305e8))
+* the map credits read white on the dark theme ([#373](https://github.com/Vizzuality/agora-paraguay/issues/373)) ([82e6ce3](https://github.com/Vizzuality/agora-paraguay/commit/82e6ce377cbd9d269ca571319ef04b3b81ca7ee6))
+* the new user's setup link points at the app, not at the backend's address ([#346](https://github.com/Vizzuality/agora-paraguay/issues/346)) ([e6ce1ed](https://github.com/Vizzuality/agora-paraguay/commit/e6ce1edbab3747b74be7a79a5a0f26813675115c))
+* the printed report starts on its first page instead of leaving it blank ([#372](https://github.com/Vizzuality/agora-paraguay/issues/372)) ([8226341](https://github.com/Vizzuality/agora-paraguay/commit/822634102bef90cd6dd3125065a2c41a0b8c2479))
+* the report footer prints only, off the screen (AGP-142) ([#332](https://github.com/Vizzuality/agora-paraguay/issues/332)) ([db97c89](https://github.com/Vizzuality/agora-paraguay/commit/db97c89ad92978e15c8ad018d18c96b21ab86797))
+* the report prints with minimal 5mm page margins (AGP-77) ([#356](https://github.com/Vizzuality/agora-paraguay/issues/356)) ([e9d623c](https://github.com/Vizzuality/agora-paraguay/commit/e9d623ce2b249f51d6a21f317bc0641653128882))
+* the user dialogs keep a long email inside their card and fit a phone's width ([#347](https://github.com/Vizzuality/agora-paraguay/issues/347)) ([bf678e6](https://github.com/Vizzuality/agora-paraguay/commit/bf678e63747ef469d3407131914b48e055b12c9e))
+* the weather station description shows the picked date again ([#370](https://github.com/Vizzuality/agora-paraguay/issues/370)) ([9b01a33](https://github.com/Vizzuality/agora-paraguay/commit/9b01a337cef7eda44be6cf5971c2525cc0e80d76))
+* Todas stays pinned at the top of the Parcela dropdown while the parcels scroll ([#377](https://github.com/Vizzuality/agora-paraguay/issues/377)) ([6543f23](https://github.com/Vizzuality/agora-paraguay/commit/6543f232991bdc215f7924ed3fbabf0ed520bd42))
+
+
+### Performance Improvements
+
+* drawing and panning no longer re-render the whole map ([#360](https://github.com/Vizzuality/agora-paraguay/issues/360)) ([ce7da5b](https://github.com/Vizzuality/agora-paraguay/commit/ce7da5bffb0fa35ea2715c1942bc530921aefa80))
+* hovering the map re-renders and hit-tests only what it needs to ([#365](https://github.com/Vizzuality/agora-paraguay/issues/365)) ([f38c618](https://github.com/Vizzuality/agora-paraguay/commit/f38c61884f3ee48905917e8a533381e82f5d1561))
+* readings look columns up by index, formatters are built once, and Markdown loads with the first summary ([#364](https://github.com/Vizzuality/agora-paraguay/issues/364)) ([d3a221f](https://github.com/Vizzuality/agora-paraguay/commit/d3a221f493fc6a02266ff423295e031cd1c74951))
+* superseded analysis, parcel and metadata requests are cancelled ([#363](https://github.com/Vizzuality/agora-paraguay/issues/363)) ([fb11e09](https://github.com/Vizzuality/agora-paraguay/commit/fb11e0962eb1413898e4e683e33513ef92eaaa89))
+* the parcels query keys the areas once per change, and the selection saves only when it changes ([#362](https://github.com/Vizzuality/agora-paraguay/issues/362)) ([ba38f51](https://github.com/Vizzuality/agora-paraguay/commit/ba38f515661a61341a219beffee03332a02dff81))
+
 ## [0.7.0](https://github.com/Vizzuality/agora-paraguay/compare/v0.6.0...v0.7.0) (2026-11-19)
 
 
